@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -168,9 +167,8 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	output, err := conn.DescribeBackupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -185,8 +183,8 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	return output.BackupPolicy, nil
 }
 
-func statusBackupPolicy(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBackupPolicy(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBackupPolicyByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -205,10 +203,10 @@ func waitBackupPolicyEnabled(ctx context.Context, conn *efs.Client, id string) (
 	const (
 		backupPoltimeoutcyEnabledTimeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusEnabling),
 		Target:  enum.Slice(awstypes.StatusEnabled),
-		Refresh: statusBackupPolicy(ctx, conn, id),
+		Refresh: statusBackupPolicy(conn, id),
 		Timeout: backupPoltimeoutcyEnabledTimeout,
 	}
 
@@ -225,10 +223,10 @@ func waitBackupPolicyDisabled(ctx context.Context, conn *efs.Client, id string) 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusDisabling),
 		Target:  enum.Slice(awstypes.StatusDisabled),
-		Refresh: statusBackupPolicy(ctx, conn, id),
+		Refresh: statusBackupPolicy(conn, id),
 		Timeout: timeout,
 	}
 

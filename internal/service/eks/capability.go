@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,15 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -38,11 +37,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_eks_capability", name="Capability")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("capability_name")
+// @ImportIDHandler("capabilityImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Capability")
+// @Testing(importStateIdFunc=testAccCapabilityImportStateIDFunc)
+// @Testing(importStateIdAttribute="arn")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capabilityResource{}
 
@@ -56,6 +64,7 @@ func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, e
 type capabilityResource struct {
 	framework.ResourceWithModel[capabilityResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *capabilityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -243,7 +252,7 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateCapability(ctx, &input)
@@ -342,7 +351,7 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 		}
 
 		// Additional fields.
-		input.ClientRequestToken = aws.String(sdkid.UniqueId())
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 		// argo_cd block can only be modified in-place (not added or removed).
 		var oldConfiguration, newConfiguration awstypes.CapabilityConfigurationRequest
@@ -427,22 +436,6 @@ func (r *capabilityResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *capabilityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const (
-		capability = 2
-	)
-	parts, err := intflex.ExpandResourceId(request.ID, capability, true)
-
-	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])
-	response.State.SetAttribute(ctx, path.Root("capability_name"), parts[1])
-}
-
 func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) (*awstypes.Capability, error) {
 	input := eks.DescribeCapabilityInput{
 		CapabilityName: aws.String(capabilityName),
@@ -456,9 +449,8 @@ func findCapability(ctx context.Context, conn *eks.Client, input *eks.DescribeCa
 	output, err := conn.DescribeCapability(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -483,8 +475,8 @@ func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, c
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapability(conn *eks.Client, clusterName, capabilityName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 
 		if retry.NotFound(err) {
@@ -499,8 +491,8 @@ func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabi
 	}
 }
 
-func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapabilityUpdate(conn *eks.Client, clusterName, capabilityName, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapabilityUpdateByThreePartKey(ctx, conn, clusterName, capabilityName, id)
 
 		if retry.NotFound(err) {
@@ -516,10 +508,10 @@ func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, 
 }
 
 func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapabilityStatusCreating),
 		Target:  enum.Slice(awstypes.CapabilityStatusActive),
-		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Refresh: statusCapability(conn, clusterName, capabilityName),
 		Timeout: timeout,
 	}
 
@@ -537,10 +529,10 @@ func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapabilityStatusActive, awstypes.CapabilityStatusDeleting),
 		Target:  []string{},
-		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Refresh: statusCapability(conn, clusterName, capabilityName),
 		Timeout: timeout,
 	}
 
@@ -558,10 +550,10 @@ func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string, timeout time.Duration) (*awstypes.Update, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.UpdateStatusSuccessful),
-		Refresh: statusCapabilityUpdate(ctx, conn, clusterName, capabilityName, id),
+		Refresh: statusCapabilityUpdate(conn, clusterName, capabilityName, id),
 		Timeout: timeout,
 	}
 
@@ -637,4 +629,34 @@ type argoCDRoleMappingModel struct {
 type SSOIdentity struct {
 	ID   types.String                                 `tfsdk:"id"`
 	Type fwtypes.StringEnum[awstypes.SsoIdentityType] `tfsdk:"type"`
+}
+
+const capabilityImportIDSeparator = intflex.ResourceIdSeparator
+
+func capabilityParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, capabilityImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]scapability-name", id, capabilityImportIDSeparator)
+}
+
+var _ inttypes.ImportIDParser = capabilityImportID{}
+
+type capabilityImportID struct{}
+
+func (capabilityImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, capabilityName, err := capabilityParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"capability_name":     capabilityName,
+		names.AttrClusterName: clusterName,
+	}
+
+	return id, result, nil
 }

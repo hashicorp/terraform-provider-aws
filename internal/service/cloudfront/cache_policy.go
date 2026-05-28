@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -91,7 +90,7 @@ func resourceCachePolicy() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -127,7 +126,7 @@ func resourceCachePolicy() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -155,7 +154,7 @@ func resourceCachePolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"items": {
+												attrItems: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -311,9 +310,8 @@ func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 	output, err := conn.GetCachePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -383,7 +381,7 @@ func expandCookieNames(tfMap map[string]any) *awstypes.CookieNames {
 
 	apiObject := &awstypes.CookieNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -417,7 +415,7 @@ func expandHeaders(tfMap map[string]any) *awstypes.Headers {
 
 	apiObject := &awstypes.Headers{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -451,7 +449,7 @@ func expandQueryStringNames(tfMap map[string]any) *awstypes.QueryStringNames {
 
 	apiObject := &awstypes.QueryStringNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -514,7 +512,7 @@ func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -544,7 +542,7 @@ func flattenHeaders(apiObject *awstypes.Headers) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -574,7 +572,7 @@ func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]an
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

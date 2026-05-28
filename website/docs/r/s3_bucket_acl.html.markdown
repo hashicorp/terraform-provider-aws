@@ -127,7 +127,7 @@ This resource supports the following arguments:
 * `acl` - (Optional, either `access_control_policy` or `acl` is required) Specifies the Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
 * `access_control_policy` - (Optional, either `access_control_policy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 
 ### access_control_policy
 
@@ -191,8 +191,6 @@ resource "aws_s3_bucket_acl" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `acl` (String) Canned ACL to apply to the bucket.
-* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -371,9 +370,8 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	output, err := conn.DescribeClusters(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -416,17 +414,16 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	}
 
 	if status := aws.ToString(output.Status); status == clusterStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -445,10 +442,10 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusProvisioning},
 		Target:  []string{clusterStatusActive},
-		Refresh: statusCluster(ctx, conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -463,10 +460,10 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 }
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
 		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 	}
 

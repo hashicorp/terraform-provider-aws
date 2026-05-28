@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,12 +76,12 @@ func TestUploadBufferParseResourceID(t *testing.T) {
 
 func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,7 +91,7 @@ func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 			{
 				Config: testAccUploadBufferConfig_diskID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadBufferExists(ctx, resourceName),
+					testAccCheckUploadBufferExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
@@ -111,12 +109,12 @@ func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809.
 func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -125,7 +123,7 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 			{
 				Config: testAccUploadBufferConfig_diskPath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadBufferExists(ctx, resourceName),
+					testAccCheckUploadBufferExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "disk_id", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
@@ -140,14 +138,14 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 	})
 }
 
-func testAccCheckUploadBufferExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckUploadBufferExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.UploadBufferParseResourceID(rs.Primary.ID)
 		if err != nil {

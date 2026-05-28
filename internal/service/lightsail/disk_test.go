@@ -12,11 +12,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -25,10 +24,10 @@ import (
 
 func TestAccLightsailDisk_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -36,12 +35,12 @@ func TestAccLightsailDisk_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy(ctx),
+		CheckDestroy:             testAccCheckDiskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Disk/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -61,10 +60,10 @@ func TestAccLightsailDisk_basic(t *testing.T) {
 
 func TestAccLightsailDisk_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -72,12 +71,12 @@ func TestAccLightsailDisk_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy(ctx),
+		CheckDestroy:             testAccCheckDiskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -90,7 +89,7 @@ func TestAccLightsailDisk_tags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -99,7 +98,7 @@ func TestAccLightsailDisk_tags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -110,10 +109,10 @@ func TestAccLightsailDisk_tags(t *testing.T) {
 
 func TestAccLightsailDisk_keyOnlyTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -121,12 +120,12 @@ func TestAccLightsailDisk_keyOnlyTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy(ctx),
+		CheckDestroy:             testAccCheckDiskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_tags1(rName, acctest.CtKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
@@ -139,7 +138,7 @@ func TestAccLightsailDisk_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
@@ -148,7 +147,7 @@ func TestAccLightsailDisk_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags1(rName, acctest.CtKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
@@ -157,7 +156,7 @@ func TestAccLightsailDisk_keyOnlyTags(t *testing.T) {
 	})
 }
 
-func testAccCheckDiskExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDiskExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -168,7 +167,7 @@ func testAccCheckDiskExists(ctx context.Context, n string) resource.TestCheckFun
 			return errors.New("No LightsailDisk ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		resp, err := tflightsail.FindDiskById(ctx, conn, rs.Primary.ID)
 
@@ -186,10 +185,10 @@ func testAccCheckDiskExists(ctx context.Context, n string) resource.TestCheckFun
 
 func TestAccLightsailDisk_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -197,28 +196,36 @@ func TestAccLightsailDisk_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy(ctx),
+		CheckDestroy:             testAccCheckDiskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(ctx, resourceName),
+					testAccCheckDiskExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDisk(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDiskDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDiskDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_disk" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			_, err := tflightsail.FindDiskById(ctx, conn, rs.Primary.ID)
 

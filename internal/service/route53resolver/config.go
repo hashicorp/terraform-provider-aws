@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -142,9 +141,8 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -162,8 +160,8 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 	return nil, tfresource.NewEmptyResultError()
 }
 
-func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAutodefinedReverse(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverConfigByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -191,10 +189,10 @@ func waitAutodefinedReverseUpdated(ctx context.Context, conn *route53resolver.Cl
 }
 
 func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabled),
-		Refresh: statusAutodefinedReverse(ctx, conn, id),
+		Refresh: statusAutodefinedReverse(conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 
@@ -208,10 +206,10 @@ func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Cl
 }
 
 func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabled),
-		Refresh: statusAutodefinedReverse(ctx, conn, id),
+		Refresh: statusAutodefinedReverse(conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 

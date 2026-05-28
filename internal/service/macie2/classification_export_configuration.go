@@ -24,7 +24,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,

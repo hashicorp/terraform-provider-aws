@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,13 +14,13 @@ import (
 
 func TestAccQuickSightAnalysisDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_analysis.test"
 	dataSourceName := "data.aws_quicksight_analysis.test"
 	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT" //lintignore:AWSAT005
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

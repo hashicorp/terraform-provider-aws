@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 // TestPrimitivesRoundtrip is the proof of concept for string roundtrip testing
@@ -113,7 +113,7 @@ func testStringRoundtrip(t *testing.T) {
 		// Random value for property-based testing feel
 		{
 			name:        "random_value",
-			stringValue: acctest.RandomWithPrefix("tf-test"),
+			stringValue: sdkacctest.RandomWithPrefix("tf-test"), // nosemgrep:ci.semgrep.acctest.vcr.use-acctest-randomwithprefix
 			variants:    []string{"standard", "legacy", "tf_to_aws_pointer", "legacy_tf_to_aws_pointer"},
 		},
 		// Omitempty tests - flatten-only (expand direction not defined in original tests)
@@ -176,7 +176,7 @@ func testStringRoundtrip(t *testing.T) {
 					runFlattenOnlyTest(t, testName, awsStruct, expectedTFResult)
 				} else {
 					// Use helper for all standard roundtrip cases
-					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{CompareTarget: true, GoldenLogs: true})
+					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{})
 				}
 			})
 		}
@@ -231,7 +231,7 @@ func testBoolRoundtrip(t *testing.T) {
 				// Use helper for all standard roundtrip cases
 				// Note: false value should be treated as "zero" for legacy mode
 				isZero := !tc.boolValue && !tc.isNull
-				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{})
 			})
 		}
 	}
@@ -279,7 +279,7 @@ func testInt64Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -327,7 +327,7 @@ func testInt32Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -381,7 +381,7 @@ func testFloat64Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -435,7 +435,7 @@ func testFloat32Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -477,7 +477,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr {
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -491,7 +491,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr {
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -505,7 +505,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr {
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
@@ -523,7 +523,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			awsFieldType := field.Type()
 			// For null values with non-pointer AWS fields, set to zero value
 			// For pointer fields, leave unset (nil is already the zero value)
-			if awsFieldType.Kind() != reflect.Ptr {
+			if awsFieldType.Kind() != reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetZeroValue()))
 				}
@@ -533,7 +533,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr {
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
@@ -605,7 +605,7 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 
 	// Set up logging if golden logs are requested
 	var buf bytes.Buffer
-	if checks.GoldenLogs {
+	if !checks.SkipGoldenLogs {
 		ctx = tflogtest.RootLogger(ctx, &buf)
 		ctx = registerTestingLogger(ctx)
 	}
@@ -614,11 +614,8 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 	expandedAWS := reflect.New(reflect.TypeOf(tc.AWSStruct).Elem()).Interface()
 	expandDiags := Expand(ctx, tc.TFStruct, expandedAWS, tc.Options...)
 
-	// Check diagnostics if requested
-	if checks.CompareDiags {
-		if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
-			t.Errorf("unexpected expand diagnostics difference: %s", diff)
-		}
+	if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
+		t.Errorf("unexpected expand diagnostics difference: %s", diff)
 	}
 
 	if tc.ExpectError {
@@ -695,38 +692,24 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 		}
 	}
 
-	if checks.CompareTarget {
-		if diff := cmp.Diff(expectedTF, flattenedTF); diff != "" {
-			t.Errorf("Roundtrip mismatch for %s (+got, -want): %s", tc.Name, diff)
-		}
+	if diff := cmp.Diff(expectedTF, flattenedTF); diff != "" {
+		t.Errorf("Roundtrip mismatch for %s (+got, -want): %s", tc.Name, diff)
+	}
 
-		// Step 4: Verify AWS structure matches expected
-		if diff := cmp.Diff(tc.AWSStruct, expandedAWS); diff != "" {
-			t.Errorf("AWS structure mismatch for %s (+got, -want): %s", tc.Name, diff)
-		}
+	// Step 4: Verify AWS structure matches expected
+	if diff := cmp.Diff(tc.AWSStruct, expandedAWS); diff != "" {
+		t.Errorf("AWS structure mismatch for %s (+got, -want): %s", tc.Name, diff)
 	}
 
 	// Golden log validation (if requested)
-	if checks.GoldenLogs {
+	if !checks.SkipGoldenLogs {
 		lines, err := tflogtest.MultilineJSONDecode(&buf)
 		if err != nil {
 			t.Fatalf("decoding log lines: %s", err)
 		}
 		normalizedLines := normalizeLogs(lines)
 
-		// Auto-generate golden path from test hierarchy
-		// Use the full test name which includes the primitive type in the hierarchy
-		// Extract the primitive type and test case name from the full test name
-		// e.g., "TestPrimitivesRoundtrip/Int32/value_standard" -> "Int32_value_standard"
-		fullTestName := t.Name()
-		testCaseName := ""
-		if parts := strings.Split(fullTestName, "/"); len(parts) >= 3 {
-			// parts[0] = "TestPrimitivesRoundtrip", parts[1] = "Int32", parts[2] = "value_standard"
-			testCaseName = strings.ToLower(parts[1]) + "_" + parts[2]
-		} else if lastSlash := strings.LastIndex(fullTestName, "/"); lastSlash != -1 {
-			testCaseName = fullTestName[lastSlash+1:]
-		}
-		goldenFileName := autoGenerateGoldenPath(t, fullTestName, testCaseName)
+		goldenFileName := autoGenerateGoldenPath(t, t.Name())
 		goldenPath := filepath.Join("testdata", goldenFileName)
 		compareWithGolden(t, goldenPath, normalizedLines)
 	}

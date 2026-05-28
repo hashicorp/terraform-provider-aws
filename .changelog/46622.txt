@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix `couldn't find resource (21 retries)` errors updating `load_balancers`, `target_group_arns`, and `traffic_source` 
+```

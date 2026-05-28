@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +26,6 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(serialize=true)
@@ -176,9 +174,8 @@ func findDomainPermissionsPolicyByTwoPartKey(ctx context.Context, conn *codearti
 	output, err := conn.GetDomainPermissionsPolicy(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

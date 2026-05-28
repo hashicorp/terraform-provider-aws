@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,7 +37,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")
 // @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
@@ -168,9 +166,8 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 	output, err := conn.GetAppBundle(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

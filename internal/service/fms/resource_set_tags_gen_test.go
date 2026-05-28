@@ -25,25 +25,25 @@ func testAccFMSResourceSet_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccFMSResourceSet_tags,
-		"null":                                      testAccFMSResourceSet_tags_null,
-		"EmptyMap":                                  testAccFMSResourceSet_tags_EmptyMap,
-		"AddOnUpdate":                               testAccFMSResourceSet_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccFMSResourceSet_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccFMSResourceSet_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccFMSResourceSet_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccFMSResourceSet_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccFMSResourceSet_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccFMSResourceSet_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccFMSResourceSet_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccFMSResourceSet_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccFMSResourceSet_Tags_null,
+		"EmptyMap":                                  testAccFMSResourceSet_Tags_emptyMap,
+		"AddOnUpdate":                               testAccFMSResourceSet_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccFMSResourceSet_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccFMSResourceSet_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccFMSResourceSet_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccFMSResourceSet_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccFMSResourceSet_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccFMSResourceSet_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccFMSResourceSet_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccFMSResourceSet_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccFMSResourceSet_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccFMSResourceSet_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccFMSResourceSet_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccFMSResourceSet_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccFMSResourceSet_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccFMSResourceSet_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccFMSResourceSet_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccFMSResourceSet_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -62,7 +62,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -118,7 +118,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -166,7 +166,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -207,7 +207,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -235,7 +235,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_null(t *testing.T) {
+func testAccFMSResourceSet_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -248,7 +248,7 @@ func testAccFMSResourceSet_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -260,7 +260,7 @@ func testAccFMSResourceSet_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -301,7 +301,7 @@ func testAccFMSResourceSet_tags_null(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_EmptyMap(t *testing.T) {
+func testAccFMSResourceSet_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -314,7 +314,7 @@ func testAccFMSResourceSet_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -324,7 +324,7 @@ func testAccFMSResourceSet_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -355,7 +355,7 @@ func testAccFMSResourceSet_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_AddOnUpdate(t *testing.T) {
+func testAccFMSResourceSet_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -368,7 +368,7 @@ func testAccFMSResourceSet_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -378,7 +378,7 @@ func testAccFMSResourceSet_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -401,7 +401,7 @@ func testAccFMSResourceSet_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -439,7 +439,7 @@ func testAccFMSResourceSet_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccFMSResourceSet_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -452,7 +452,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -464,7 +464,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -505,7 +505,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -533,7 +533,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccFMSResourceSet_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -546,7 +546,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -558,7 +558,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -590,7 +590,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -638,7 +638,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -676,7 +676,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccFMSResourceSet_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -689,7 +689,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -701,7 +701,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -732,7 +732,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -770,7 +770,7 @@ func testAccFMSResourceSet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -783,7 +783,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -796,7 +796,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -840,7 +840,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -886,7 +886,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -926,7 +926,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -955,7 +955,7 @@ func testAccFMSResourceSet_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -968,7 +968,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -983,7 +983,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1037,7 +1037,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1090,7 +1090,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1119,7 +1119,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1132,7 +1132,7 @@ func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1147,7 +1147,7 @@ func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1200,7 +1200,7 @@ func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1257,7 +1257,7 @@ func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1299,7 +1299,7 @@ func testAccFMSResourceSet_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1312,7 +1312,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1324,7 +1324,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1357,7 +1357,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1393,7 +1393,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1406,7 +1406,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1419,7 +1419,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1447,7 +1447,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1486,7 +1486,7 @@ func testAccFMSResourceSet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1499,7 +1499,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1514,7 +1514,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1556,7 +1556,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1569,7 +1569,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1582,7 +1582,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1618,7 +1618,7 @@ func testAccFMSResourceSet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1631,7 +1631,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1646,7 +1646,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1691,7 +1691,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 	})
 }
 
-func testAccFMSResourceSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1704,7 +1704,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1719,7 +1719,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1766,7 +1766,7 @@ func testAccFMSResourceSet_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 	})
 }
 
-func testAccFMSResourceSet_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccFMSResourceSet_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1779,7 +1779,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1789,7 +1789,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1825,7 +1825,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccFMSResourceSet_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1838,7 +1838,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1850,7 +1850,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1882,7 +1882,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1926,7 +1926,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccFMSResourceSet_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -1939,7 +1939,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1951,7 +1951,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1981,7 +1981,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2017,7 +2017,7 @@ func testAccFMSResourceSet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -2030,7 +2030,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2049,7 +2049,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2098,7 +2098,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2147,7 +2147,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2183,7 +2183,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccFMSResourceSet_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v fms.GetResourceSetOutput
@@ -2196,7 +2196,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
-		CheckDestroy: testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy: testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2213,7 +2213,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2271,7 +2271,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2328,7 +2328,7 @@ func testAccFMSResourceSet_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &v),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

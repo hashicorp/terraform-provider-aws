@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,7 +22,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	var v awstypes.ResourceGroup
 	resourceName := "aws_inspector_resource_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -35,7 +34,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 			{
 				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					testAccCheckResourceGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector", regexache.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
@@ -45,14 +44,14 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceGroupExists(ctx context.Context, n string, v *awstypes.ResourceGroup) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
 
 		output, err := tfinspector.FindResourceGroupByARN(ctx, conn, rs.Primary.ID)
 

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,10 +24,10 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 	}
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -37,12 +35,12 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "vocabulary_name"),
@@ -67,12 +65,12 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 	}
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
 	file1 := "test1.txt"
 	file2 := "test2.txt"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -80,12 +78,12 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
@@ -93,7 +91,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
@@ -109,10 +107,10 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 	}
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -120,12 +118,12 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -133,7 +131,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -142,7 +140,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -158,10 +156,10 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 	}
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -169,12 +167,12 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, t, resourceName, &medicalVocabulary),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceMedicalVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -183,9 +181,9 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMedicalVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMedicalVocabularyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_medical_vocabulary" {
@@ -209,7 +207,7 @@ func testAccCheckMedicalVocabularyDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckMedicalVocabularyExists(ctx context.Context, name string, medicalVocabulary *transcribe.GetMedicalVocabularyOutput) resource.TestCheckFunc {
+func testAccCheckMedicalVocabularyExists(ctx context.Context, t *testing.T, name string, medicalVocabulary *transcribe.GetMedicalVocabularyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -220,7 +218,7 @@ func testAccCheckMedicalVocabularyExists(ctx context.Context, name string, medic
 			return fmt.Errorf("No Transcribe MedicalVocabulary is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindMedicalVocabularyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -234,7 +232,7 @@ func testAccCheckMedicalVocabularyExists(ctx context.Context, name string, medic
 }
 
 func testAccMedicalVocabularyPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 	input := &transcribe.ListMedicalVocabulariesInput{}
 

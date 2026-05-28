@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -82,7 +82,7 @@ func validPrefix(v any, k string) (ws []string, errors []error) {
 			"only alphanumeric characters and hyphens allowed in %q: %q",
 			k, value))
 	}
-	maxLength := 63 - id.UniqueIDSuffixLength
+	maxLength := 63 - sdkid.UniqueIDSuffixLength
 	if len(value) > maxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters: %q", k, maxLength, value))

@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -67,7 +67,7 @@ func resourceKeyPair() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
 				ConflictsWith: []string{"key_name"},
 			},
 			"key_pair_id": {
@@ -101,7 +101,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
+	keyName := create.Name(ctx, d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),

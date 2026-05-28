@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +25,7 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_basic(t *testing.T) {
 	dataProtectionSettingsResourceName := "aws_workspacesweb_data_protection_settings.test"
 	portalResourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -34,12 +33,12 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsAssociationExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName, "data_protection_settings_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
@@ -73,7 +72,7 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_disappears(t *testing
 	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -81,12 +80,12 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_disappears(t *testing
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsAssociationExists(ctx, t, resourceName, &dataProtectionSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceDataProtectionSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,9 +94,9 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_disappears(t *testing
 	})
 }
 
-func testAccCheckDataProtectionSettingsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataProtectionSettingsAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_data_protection_settings_association" {
@@ -125,14 +124,14 @@ func testAccCheckDataProtectionSettingsAssociationDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckDataProtectionSettingsAssociationExists(ctx context.Context, n string, v *awstypes.DataProtectionSettings) resource.TestCheckFunc {
+func testAccCheckDataProtectionSettingsAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.DataProtectionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindDataProtectionSettingsByARN(ctx, conn, rs.Primary.Attributes["data_protection_settings_arn"])
 

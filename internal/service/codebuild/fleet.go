@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -466,9 +464,8 @@ func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*t
 	}
 
 	if statusCode := output.Status.StatusCode; statusCode == types.FleetStatusCodePendingDeletion {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(statusCode),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(statusCode),
 		}
 	}
 
@@ -501,8 +498,8 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 	return output.Fleets, nil
 }
 
-func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -518,10 +515,10 @@ func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) sdkret
 }
 
 func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -539,10 +536,10 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeUpdating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -560,10 +557,10 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeDeleting),
 		Target:     []string{},
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,

@@ -55,13 +55,13 @@ func (resourceImportID) Create(d *schema.ResourceData) string {
 	return createResourceID(bucket, expectedBucketOwner)
 }
 
-func (resourceImportID) Parse(id string) (string, map[string]string, error) {
+func (resourceImportID) Parse(id string) (string, map[string]any, error) {
 	bucket, expectedBucketOwner, err := parseResourceID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		names.AttrBucket: bucket,
 	}
 	if expectedBucketOwner != "" {

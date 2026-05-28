@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,16 +14,16 @@ import (
 
 func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 	dataSource1Name := "data.aws_cloudwatch_event_buses.by_name_prefix"
 	dataSource2Name := "data.aws_cloudwatch_event_buses.all"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventBusesDataSourceConfig_basic(busName),

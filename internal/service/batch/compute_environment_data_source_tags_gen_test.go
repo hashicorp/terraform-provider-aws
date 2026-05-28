@@ -55,7 +55,7 @@ func TestAccBatchComputeEnvironmentDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_tags_NullMap(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_compute_environment.test"
@@ -83,7 +83,7 @@ func TestAccBatchComputeEnvironmentDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_compute_environment.test"
@@ -111,7 +111,7 @@ func TestAccBatchComputeEnvironmentDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_compute_environment.test"
@@ -147,7 +147,7 @@ func TestAccBatchComputeEnvironmentDataSource_tags_DefaultTags_nonOverlapping(t 
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_compute_environment.test"
@@ -189,7 +189,7 @@ func TestAccBatchComputeEnvironmentDataSource_tags_IgnoreTags_Overlap_DefaultTag
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_compute_environment.test"

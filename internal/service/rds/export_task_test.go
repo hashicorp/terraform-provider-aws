@@ -11,12 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,22 +23,22 @@ import (
 func TestAccRDSExportTask_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var exportTask types.ExportTask
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_export_task.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
+					testAccCheckExportTaskExists(ctx, t, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
@@ -61,23 +59,23 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 func TestAccRDSExportTask_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	var exportTask types.ExportTask
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_export_task.test"
 	s3Prefix := "test_prefix/test-export"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_optional(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
+					testAccCheckExportTaskExists(ctx, t, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
@@ -98,9 +96,9 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	})
 }
 
-func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckExportTaskDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_export_task" {
@@ -131,14 +129,14 @@ func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckExportTaskExists(ctx context.Context, n string, v *types.ExportTask) resource.TestCheckFunc {
+func testAccCheckExportTaskExists(ctx context.Context, t *testing.T, n string, v *types.ExportTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
 

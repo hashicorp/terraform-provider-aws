@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -43,7 +42,6 @@ import (
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 // @Testing(preIdentityVersion="6.4.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -866,54 +864,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
-	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_properties", containerProperties)
-	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("ecs_properties", ecsProperties)
-	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
-	}
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
-	}
-	d.Set(names.AttrParameters, jobDefinition.Parameters)
-	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
-	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
-	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
-		}
-	} else {
-		d.Set("retry_strategy", nil)
-	}
-	d.Set("revision", revision)
-	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
-	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
-		}
-	} else {
-		d.Set(names.AttrTimeout, nil)
-	}
-	d.Set(names.AttrType, jobDefinition.Type)
-
-	setTagsOut(ctx, jobDefinition.Tags)
-
-	return diags
+	return append(diags, resourceJobDefinitionFlatten(ctx, jobDefinition, d)...)
 }
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1082,9 +1033,8 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 	}
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
@@ -1775,4 +1725,50 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	}
 
 	return tfList
+}
+
+func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.JobDefinition, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
+	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("container_properties", containerProperties)
+	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("ecs_properties", ecsProperties)
+
+	d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties))
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
+	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("node_properties", nodeProperties)
+	d.Set(names.AttrParameters, jobDefinition.Parameters)
+	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
+	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
+	if jobDefinition.RetryStrategy != nil {
+		d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)})
+	} else {
+		d.Set("retry_strategy", nil)
+	}
+	d.Set("revision", revision)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
+	if jobDefinition.Timeout != nil {
+		d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)})
+	} else {
+		d.Set(names.AttrTimeout, nil)
+	}
+	d.Set(names.AttrType, jobDefinition.Type)
+
+	setTagsOut(ctx, jobDefinition.Tags)
+
+	return diags
 }

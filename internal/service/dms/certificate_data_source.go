@@ -22,7 +22,6 @@ import (
 
 // @SDKDataSource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,

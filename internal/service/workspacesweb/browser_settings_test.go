@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,7 +41,7 @@ func TestAccWorkSpacesWebBrowserSettings_basic(t *testing.T) {
 	var browserSettings awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -50,12 +49,12 @@ func TestAccWorkSpacesWebBrowserSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsConfig_basic(browserPolicy1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "browser_settings_arn", "workspaces-web", regexache.MustCompile(`browserSettings/.+$`)),
 				),
@@ -70,7 +69,7 @@ func TestAccWorkSpacesWebBrowserSettings_basic(t *testing.T) {
 			{
 				Config: testAccBrowserSettingsConfig_basic(browserPolicy2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "browser_settings_arn", "workspaces-web", regexache.MustCompile(`browserSettings/.+$`)),
 				),
@@ -98,7 +97,7 @@ func TestAccWorkSpacesWebBrowserSettings_disappears(t *testing.T) {
 	var browserSettings awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -106,12 +105,12 @@ func TestAccWorkSpacesWebBrowserSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsConfig_basic(browserPolicy),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceBrowserSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -148,7 +147,7 @@ func TestAccWorkSpacesWebBrowserSettings_additionalEncryptionContext(t *testing.
 	var browserSettings awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -156,12 +155,12 @@ func TestAccWorkSpacesWebBrowserSettings_additionalEncryptionContext(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsConfig_additionalEncryptionContext(browserPolicy1, encryptionContext1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "finance"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "alpha"),
@@ -177,7 +176,7 @@ func TestAccWorkSpacesWebBrowserSettings_additionalEncryptionContext(t *testing.
 			{
 				Config: testAccBrowserSettingsConfig_additionalEncryptionContext(browserPolicy2, encryptionContext2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "hr"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "beta"),
@@ -216,7 +215,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 	customerManagedKey1 := "aws_kms_key.test1"
 	customerManagedKey2 := "aws_kms_key.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -224,12 +223,12 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy1, customerManagedKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", customerManagedKey1, names.AttrARN),
 				),
@@ -244,7 +243,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 			{
 				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy2, customerManagedKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", customerManagedKey2, names.AttrARN),
 				),
@@ -284,7 +283,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 	resourceName := "aws_workspacesweb_browser_settings.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -292,12 +291,12 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsConfig_complete(browserPolicy1, encryptionContext),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "finance"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "alpha"),
@@ -314,7 +313,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 			{
 				Config: testAccBrowserSettingsConfig_complete(browserPolicy2, encryptionContext),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "finance"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "alpha"),
@@ -332,9 +331,9 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckBrowserSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBrowserSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_browser_settings" {
@@ -358,14 +357,14 @@ func testAccCheckBrowserSettingsDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckBrowserSettingsExists(ctx context.Context, n string, v *awstypes.BrowserSettings) resource.TestCheckFunc {
+func testAccCheckBrowserSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.BrowserSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindBrowserSettingsByARN(ctx, conn, rs.Primary.Attributes["browser_settings_arn"])
 
@@ -380,7 +379,7 @@ func testAccCheckBrowserSettingsExists(ctx context.Context, n string, v *awstype
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.ListBrowserSettingsInput{}
 

@@ -28,7 +28,6 @@ import (
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,

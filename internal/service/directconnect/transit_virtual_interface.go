@@ -29,7 +29,6 @@ import (
 
 // @SDKResource("aws_dx_transit_virtual_interface", name="Transit Virtual Interface")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,

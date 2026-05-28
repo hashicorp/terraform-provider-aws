@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,6 +49,7 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			names.AttrStatus: {
 				Type:             schema.TypeString,
@@ -69,7 +69,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketAccelerateConfigurationInput{
+	input := s3.PutBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 		AccelerateConfiguration: &types.AccelerateConfiguration{
 			Status: types.BucketAccelerateStatus(d.Get(names.AttrStatus).(string)),
@@ -80,7 +80,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketAccelerateConfiguration(ctx, input)
+		return conn.PutBucketAccelerateConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -149,7 +149,7 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketAccelerateConfigurationInput{
+	input := s3.PutBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 		AccelerateConfiguration: &types.AccelerateConfiguration{
 			Status: types.BucketAccelerateStatus(d.Get(names.AttrStatus).(string)),
@@ -159,7 +159,7 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
+	_, err = conn.PutBucketAccelerateConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
@@ -181,7 +181,7 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketAccelerateConfigurationInput{
+	input := s3.PutBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 		AccelerateConfiguration: &types.AccelerateConfiguration{
 			Status: types.BucketAccelerateStatusSuspended,
@@ -192,7 +192,7 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Accelerate Configuration: %s", d.Id())
-	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
+	_, err = conn.PutBucketAccelerateConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return diags
@@ -208,19 +208,18 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 }
 
 func findBucketAccelerateConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	input := &s3.GetBucketAccelerateConfigurationInput{
+	input := s3.GetBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketAccelerateConfiguration(ctx, input)
+	output, err := conn.GetBucketAccelerateConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

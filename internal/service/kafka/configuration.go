@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -194,9 +193,8 @@ func findConfigurationByARN(ctx context.Context, conn *kafka.Client, arn string)
 	output, err := conn.DescribeConfiguration(ctx, input)
 
 	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Configuration ARN does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -230,8 +228,8 @@ func findConfigurationRevisionByTwoPartKey(ctx context.Context, conn *kafka.Clie
 	return output, nil
 }
 
-func statusConfigurationState(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConfigurationState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -250,10 +248,10 @@ func waitConfigurationDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationStateDeleting),
 		Target:  []string{},
-		Refresh: statusConfigurationState(ctx, conn, arn),
+		Refresh: statusConfigurationState(conn, arn),
 		Timeout: timeout,
 	}
 

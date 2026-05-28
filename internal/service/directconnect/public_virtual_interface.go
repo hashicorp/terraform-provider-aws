@@ -29,7 +29,6 @@ import (
 
 // @SDKResource("aws_dx_public_virtual_interface", name="Public Virtual Interface")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicVirtualInterfaceCreate,

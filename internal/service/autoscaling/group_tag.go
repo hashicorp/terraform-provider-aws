@@ -70,7 +70,7 @@ func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta an
 	tags := d.Get("tag").([]any)
 	key := tags[0].(map[string]any)[names.AttrKey].(string)
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, nil, tags); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, nil, tags); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
@@ -88,7 +88,7 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
-	value, err := findTag(ctx, conn, identifier, TagResourceTypeGroup, key)
+	value, err := findTag(ctx, conn, identifier, tagResourceTypeGroup, key)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AutoScaling Group (%s) tag (%s), removing from state", identifier, key)
@@ -122,7 +122,7 @@ func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "updating AutoScaling Group Tag (%s): %s", d.Id(), err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, nil, d.Get("tag")); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, nil, d.Get("tag")); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
@@ -138,7 +138,7 @@ func resourceGroupTagDelete(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "deleting AutoScaling Group Tag (%s): %s", d.Id(), err)
 	}
 
-	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, d.Get("tag"), nil); err != nil {
+	if err := updateTags(ctx, conn, identifier, tagResourceTypeGroup, d.Get("tag"), nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 

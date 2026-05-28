@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -73,7 +72,7 @@ func TestAccWorkSpacesWebIdentityProvider_basic(t *testing.T) {
 	resourceName := "aws_workspacesweb_identity_provider.test"
 	portalResourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -81,12 +80,12 @@ func TestAccWorkSpacesWebIdentityProvider_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_provider_details.MetadataFile"),
@@ -110,7 +109,7 @@ func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
 	var identityProvider awstypes.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -118,12 +117,12 @@ func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIdentityProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -137,7 +136,7 @@ func TestAccWorkSpacesWebIdentityProvider_oidc_basic(t *testing.T) {
 	var identityProvider awstypes.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -145,12 +144,12 @@ func TestAccWorkSpacesWebIdentityProvider_oidc_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test-updated"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeOidc)),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_id", "test-client-id"),
@@ -176,7 +175,7 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 	var identityProvider awstypes.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -184,12 +183,12 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_provider_details.MetadataFile"),
@@ -198,7 +197,7 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 			{
 				Config: testAccIdentityProviderConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test-updated"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeOidc)),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_id", "test-client-id"),
@@ -219,9 +218,9 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentityProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_identity_provider" {
@@ -245,14 +244,14 @@ func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *awstypes.IdentityProvider) resource.TestCheckFunc {
+func testAccCheckIdentityProviderExists(ctx context.Context, t *testing.T, n string, v *awstypes.IdentityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, _, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
 

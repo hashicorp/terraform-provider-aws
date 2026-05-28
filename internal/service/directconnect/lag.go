@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -31,7 +30,6 @@ import (
 
 // @SDKResource("aws_dx_lag", name="LAG")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLagCreate,
@@ -253,9 +251,8 @@ func findLagByID(ctx context.Context, conn *directconnect.Client, id string) (*a
 	}
 
 	if state := output.LagState; state == awstypes.LagStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -276,9 +273,8 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	output, err := conn.DescribeLags(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -293,8 +289,8 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	return tfslices.Filter(output.Lags, tfslices.PredicateValue(filter)), nil
 }
 
-func statusLag(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLag(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLagByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -313,10 +309,10 @@ func waitLagDeleted(ctx context.Context, conn *directconnect.Client, id string) 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LagStateAvailable, awstypes.LagStateRequested, awstypes.LagStatePending, awstypes.LagStateDeleting),
 		Target:  []string{},
-		Refresh: statusLag(ctx, conn, id),
+		Refresh: statusLag(conn, id),
 		Timeout: timeout,
 	}
 

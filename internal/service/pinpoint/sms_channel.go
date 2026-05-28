@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -90,7 +89,7 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.UpdateSmsChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting Pinpoint SMS Channel for application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "putting End User Messaging SMS Channel for application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -102,18 +101,18 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging SMS Channel  for application %s", d.Id())
 
 	output, err := findSMSChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint SMS Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging SMS Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint SMS Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging SMS Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -129,7 +128,7 @@ func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging SMS Channel for application %s", d.Id())
 	_, err := conn.DeleteSmsChannel(ctx, &pinpoint.DeleteSmsChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -139,7 +138,7 @@ func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint SMS Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging SMS Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
 }
@@ -151,9 +150,8 @@ func findSMSChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, a
 
 	output, err := conn.GetSmsChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {

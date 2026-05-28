@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +25,7 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_basic(t *testing.T) {
 	ipAccessSettingsResourceName := "aws_workspacesweb_ip_access_settings.test"
 	portalResourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -34,12 +33,12 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsAssociationExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "ip_access_settings_arn", ipAccessSettingsResourceName, "ip_access_settings_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
@@ -73,7 +72,7 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -81,12 +80,12 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsAssociationExists(ctx, t, resourceName, &ipAccessSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,9 +94,9 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAccessSettingsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAccessSettingsAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_ip_access_settings_association" {
@@ -125,14 +124,14 @@ func testAccCheckIPAccessSettingsAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckIPAccessSettingsAssociationExists(ctx context.Context, n string, v *awstypes.IpAccessSettings) resource.TestCheckFunc {
+func testAccCheckIPAccessSettingsAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpAccessSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindIPAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
 

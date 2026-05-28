@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccVPCLatticeResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcepolicy vpclattice.GetResourcePolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -34,12 +32,12 @@ func TestAccVPCLatticeResourcePolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_vpclattice_service_network.test", names.AttrARN),
 				),
@@ -56,10 +54,10 @@ func TestAccVPCLatticeResourcePolicy_basic(t *testing.T) {
 func TestAccVPCLatticeResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcepolicy vpclattice.GetResourcePolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -67,12 +65,12 @@ func TestAccVPCLatticeResourcePolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,9 +79,9 @@ func TestAccVPCLatticeResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_resource_policy" {
@@ -107,14 +105,14 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *vpclattice.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindResourcePolicyByID(ctx, conn, rs.Primary.ID)
 

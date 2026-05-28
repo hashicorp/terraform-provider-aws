@@ -43,7 +43,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/invoicing;invoicing.GetInvoiceUnitOutput")
 // @Testing(requireEnvVar="INVOICING_INVOICE_TESTS_ENABLED")
 // @Testing(preIdentityVersion="6.28.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Testing(tagsTest=false)
 // @Testing(serialize=true)
 func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, error) {

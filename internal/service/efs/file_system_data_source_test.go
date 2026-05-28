@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +19,7 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +51,7 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,7 +83,7 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -115,7 +114,7 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -135,9 +134,9 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -145,7 +144,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_dataSourceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(ctx, resourceName, &desc),
+					testAccCheckFileSystem(ctx, t, resourceName, &desc),
 				),
 			},
 			{

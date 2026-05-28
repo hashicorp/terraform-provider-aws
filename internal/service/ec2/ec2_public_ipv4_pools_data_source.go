@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_public_ipv4_pools, name="Public IPv4 Pools")
+// @SDKDataSource("aws_ec2_public_ipv4_pools", name="Public IPv4 Pools")
 func dataSourcePublicIPv4Pools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_target_group_attachment: Add resource identity
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group_attachment: Add import support
+```

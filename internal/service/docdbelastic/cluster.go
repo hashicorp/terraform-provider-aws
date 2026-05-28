@@ -19,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -141,6 +141,13 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					int64validator.Between(1, 32),
 				},
 			},
+			"shard_instance_count": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
 				Optional:   true,
@@ -191,7 +198,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	createOut, err := conn.CreateCluster(ctx, &input)
@@ -297,7 +304,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.ClientToken = aws.String(id.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ClusterArn = plan.ID.ValueStringPointer()
 
 		_, err := conn.UpdateCluster(ctx, &input)
@@ -392,6 +399,7 @@ type clusterResourceModel struct {
 	PreferredMaintenanceWindow fwtypes.OnceAWeekWindow           `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
+	ShardInstanceCount         types.Int64                       `tfsdk:"shard_instance_count"`
 	SubnetIds                  fwtypes.SetValueOf[types.String]  `tfsdk:"subnet_ids"`
 	Tags                       tftags.Map                        `tfsdk:"tags"`
 	TagsAll                    tftags.Map                        `tfsdk:"tags_all"`

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,7 +34,6 @@ const contactFlowMutexKey = `aws_connect_contact_flow`
 
 // @SDKResource("aws_connect_contact_flow", name="Contact Flow")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactFlowCreate,
@@ -300,9 +298,8 @@ func findContactFlow(ctx context.Context, conn *connect.Client, input *connect.D
 	output, err := conn.DescribeContactFlow(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

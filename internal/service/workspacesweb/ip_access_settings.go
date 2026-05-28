@@ -23,8 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -42,7 +41,6 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
 // @Testing(importStateIdAttribute="ip_access_settings_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIPAccessSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ipAccessSettingsResource{}, nil
 }
@@ -141,7 +139,7 @@ func (r *ipAccessSettingsResource) Create(ctx context.Context, request resource.
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIpAccessSettings(ctx, &input)
@@ -220,7 +218,7 @@ func (r *ipAccessSettingsResource) Update(ctx context.Context, request resource.
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateIpAccessSettings(ctx, &input)
 
@@ -268,9 +266,8 @@ func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, 
 	output, err := conn.GetIpAccessSettings(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

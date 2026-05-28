@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +21,19 @@ import (
 func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeMlflowTrackingServerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMlflowTrackingServerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
@@ -52,7 +51,7 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 			{
 				Config: testAccMlflowTrackingServerConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Medium"),
@@ -70,19 +69,19 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 func TestAccSageMakerMlflowTrackingServer_mlflowVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeMlflowTrackingServerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMlflowTrackingServerConfig_mflowVersion(rName, "2.16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mlflow_version", "2.16"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtFalse),
@@ -100,19 +99,19 @@ func TestAccSageMakerMlflowTrackingServer_mlflowVersion(t *testing.T) {
 func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeMlflowTrackingServerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMlflowTrackingServerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -125,7 +124,7 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 			{
 				Config: testAccMlflowTrackingServerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -134,7 +133,7 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 			{
 				Config: testAccMlflowTrackingServerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -146,30 +145,38 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 func TestAccSageMakerMlflowTrackingServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeMlflowTrackingServerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMlflowTrackingServerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					testAccCheckMlflowTrackingServerExists(ctx, t, resourceName, &mpg),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_mlflow_tracking_server.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_mlflow_tracking_server.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMlflowTrackingServerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_mlflow_tracking_server" {
@@ -193,7 +200,7 @@ func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckMlflowTrackingServerExists(ctx context.Context, n string, mpg *sagemaker.DescribeMlflowTrackingServerOutput) resource.TestCheckFunc {
+func testAccCheckMlflowTrackingServerExists(ctx context.Context, t *testing.T, n string, mpg *sagemaker.DescribeMlflowTrackingServerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -204,7 +211,7 @@ func testAccCheckMlflowTrackingServerExists(ctx context.Context, n string, mpg *
 			return fmt.Errorf("No sagmaker Mlflow Tracking Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindMlflowTrackingServerByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

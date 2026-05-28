@@ -38,7 +38,6 @@ import (
 // @IdentityAttribute("key")
 // @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -114,6 +113,8 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Additional fields.
 	input.IfMatch = etag
+	// Manually set Value to avoid JSON encoding by AutoFlEx.
+	input.Value = data.Value.ValueStringPointer()
 
 	output, err := conn.PutKey(ctx, input)
 
@@ -160,6 +161,11 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 		return
 	}
 
+	// Manually set Value to avoid JSON decoding by AutoFlEx.
+	if output.Value != nil {
+		data.Value = types.StringValue(*output.Value)
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -201,6 +207,8 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 
 		// Additional fields.
 		input.IfMatch = etag
+		// Manually set Value to avoid JSON encoding by AutoFlEx.
+		input.Value = new.Value.ValueStringPointer()
 
 		output, err := conn.PutKey(ctx, input)
 
@@ -341,13 +349,13 @@ var (
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]any, error) {
 	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"key_value_store_arn": kvsARN,
 		names.AttrKey:         key,
 	}

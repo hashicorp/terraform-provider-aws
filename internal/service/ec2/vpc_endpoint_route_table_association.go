@@ -20,18 +20,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_route_table_association", name="VPC Endpoint Route Table Association")
+// @IdentityAttribute("vpc_endpoint_id")
+// @IdentityAttribute("route_table_id")
+// @ImportIDHandler("vpcEndpointRouteTableAssociationImportID")
+// @Testing(preIdentityVersion="v6.43.0")
+// @Testing(importStateIdFunc="testAccVPCEndpointRouteTableAssociationImportStateIdFunc")
 func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRouteTableAssociationRead,
 		DeleteWithoutTimeout: resourceVPCEndpointRouteTableAssociationDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceVPCEndpointRouteTableAssociationImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"route_table_id": {
@@ -139,19 +142,27 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
+var _ inttypes.SDKv2ImportID = vpcEndpointRouteTableAssociationImportID{}
+
+type vpcEndpointRouteTableAssociationImportID struct{}
+
+func (vpcEndpointRouteTableAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/route-table-id'", d.Id())
+		return "", nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/route-table-id'", id)
 	}
 
 	endpointID := parts[0]
 	routeTableID := parts[1]
-	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
-	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
-	d.Set(names.AttrVPCEndpointID, endpointID)
-	d.Set("route_table_id", routeTableID)
+	result := map[string]any{
+		names.AttrVPCEndpointID: endpointID,
+		"route_table_id":        routeTableID,
+	}
 
-	return []*schema.ResourceData{d}, nil
+	return vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID), result, nil
+}
+
+func (vpcEndpointRouteTableAssociationImportID) Create(d *schema.ResourceData) string {
+	return vpcEndpointRouteTableAssociationCreateID(d.Get(names.AttrVPCEndpointID).(string), d.Get("route_table_id").(string))
 }

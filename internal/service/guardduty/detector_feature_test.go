@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +21,7 @@ func testAccDetectorFeature_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_detector_feature.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -34,7 +33,7 @@ func testAccDetectorFeature_basic(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
@@ -49,7 +48,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_detector_feature.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -61,7 +60,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
@@ -72,7 +71,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("DISABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
@@ -83,7 +82,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
@@ -99,7 +98,7 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_detector_feature.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -111,7 +110,7 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
 						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
@@ -130,7 +129,7 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
 						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
@@ -150,7 +149,7 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 	resource2Name := "aws_guardduty_detector_feature.test2"
 	resource3Name := "aws_guardduty_detector_feature.test3"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -162,9 +161,9 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_multiple("ENABLED", "DISABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resource1Name),
-					testAccCheckDetectorFeatureExists(ctx, resource2Name),
-					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "ENABLED"),
@@ -179,9 +178,9 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_multiple("DISABLED", "ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resource1Name),
-					testAccCheckDetectorFeatureExists(ctx, resource2Name),
-					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "DISABLED"),
@@ -196,9 +195,9 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 			{
 				Config: testAccDetectorFeatureConfig_multiple("DISABLED", "DISABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resource1Name),
-					testAccCheckDetectorFeatureExists(ctx, resource2Name),
-					testAccCheckDetectorFeatureExists(ctx, resource3Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource1Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource2Name),
+					testAccCheckDetectorFeatureExists(ctx, t, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "DISABLED"),
@@ -218,7 +217,7 @@ func testAccDetectorFeature_additionalConfiguration_migrateListToSet(t *testing.
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_detector_feature.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -235,7 +234,7 @@ func testAccDetectorFeature_additionalConfiguration_migrateListToSet(t *testing.
 				},
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 				),
 			},
@@ -252,14 +251,14 @@ func testAccDetectorFeature_additionalConfiguration_migrateListToSet(t *testing.
 	})
 }
 
-func testAccCheckDetectorFeatureExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDetectorFeatureExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		_, err := tfguardduty.FindDetectorFeatureByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrName])
 

@@ -20,9 +20,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +62,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
 // @Testing(tlsKey=true)
-// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(importIgnore="certificate_body;private_key")
 // @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
@@ -80,12 +81,11 @@ func resourceCertificate() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "validation_method"},
+				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "private_key_wo", "validation_method"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				RequiredWith:  []string{names.AttrPrivateKey},
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
 			names.AttrCertificateChain: {
@@ -99,7 +99,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey},
+				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
 				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"domain_validation_options": {
@@ -180,7 +180,19 @@ func resourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey},
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+			},
+			"private_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				WriteOnly:    true,
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+				RequiredWith: []string{"private_key_wo_version"},
+			},
+			"private_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"private_key_wo"},
 			},
 			"renewal_eligibility": {
 				Type:     schema.TypeString,
@@ -353,7 +365,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		domainName := d.Get(names.AttrDomainName).(string)
 		input := acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
-			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
+			IdempotencyToken: aws.String(sdkid.PrefixedUniqueId("tf")), // 32 character limit
 			Tags:             getTagsIn(ctx),
 		}
 
@@ -389,9 +401,18 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
+		privateKey := d.Get(names.AttrPrivateKey).(string)
+		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+		if privateKeyWo != "" {
+			privateKey = privateKeyWo
+		}
 		input := acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
-			PrivateKey:  []byte(d.Get(names.AttrPrivateKey).(string)),
+			PrivateKey:  []byte(privateKey),
 			Tags:        getTagsIn(ctx),
 		}
 
@@ -491,16 +512,25 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain) {
+	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain, "private_key_wo_version") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange(names.AttrCertificateChain)
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
-		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) || d.HasChange("private_key_wo_version") {
+			privateKey := d.Get(names.AttrPrivateKey).(string)
+			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if privateKeyWo != "" {
+				privateKey = privateKeyWo
+			}
 			input := acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
 				CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
-				PrivateKey:     []byte(d.Get(names.AttrPrivateKey).(string)),
+				PrivateKey:     []byte(privateKey),
 			}
 
 			if chain, ok := d.GetOk(names.AttrCertificateChain); ok {

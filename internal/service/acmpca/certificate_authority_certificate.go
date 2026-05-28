@@ -28,9 +28,8 @@ import (
 // @ArnIdentity("certificate_authority_arn")
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca;acmpca.GetCertificateAuthorityCertificateOutput")
-// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(generator="acctest.RandomDomainName(t)")
 // @Testing(checkDestroyNoop=true)
-// @Testing(existsTakesT=true)
 func resourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,

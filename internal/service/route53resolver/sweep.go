@@ -4,101 +4,38 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_route53_resolver_dnssec_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_dnssec_config",
-		F:    sweepDNSSECConfig,
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_endpoint", &resource.Sweeper{
-		Name: "aws_route53_resolver_endpoint",
-		F:    sweepEndpoints,
-		Dependencies: []string{
-			"aws_route53_resolver_rule",
-		},
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_config",
-		F:    sweepFirewallConfigs,
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_domain_list",
-		F:    sweepFirewallDomainLists,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule",
-		},
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule_group_association",
-		F:    sweepFirewallRuleGroupAssociations,
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule_group",
-		F:    sweepFirewallRuleGroups,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule",
-			"aws_route53_resolver_firewall_rule_group_association",
-		},
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule",
-		F:    sweepFirewallRules,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule_group_association",
-		},
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config_association",
-		F:    sweepQueryLogConfigAssociations,
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config",
-		F:    sweepQueryLogsConfig,
-		Dependencies: []string{
-			"aws_route53_resolver_query_log_config_association",
-		},
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_rule_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule_association",
-		F:    sweepRuleAssociations,
-	})
-
-	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule",
-		F:    sweepRules,
-		Dependencies: []string{
-			"aws_route53_resolver_rule_association",
-		},
-	})
+	awsv2.Register("aws_route53_resolver_dnssec_config", sweepDNSSECConfig)
+	awsv2.Register("aws_route53_resolver_endpoint", sweepEndpoints, "aws_route53_resolver_rule")
+	awsv2.Register("aws_route53_resolver_firewall_config", sweepFirewallConfigs)
+	awsv2.Register("aws_route53_resolver_firewall_domain_list", sweepFirewallDomainLists, "aws_route53_resolver_firewall_rule")
+	awsv2.Register("aws_route53_resolver_firewall_rule_group_association", sweepFirewallRuleGroupAssociations)
+	awsv2.Register("aws_route53_resolver_firewall_rule_group", sweepFirewallRuleGroups,
+		"aws_route53_resolver_firewall_rule",
+		"aws_route53_resolver_firewall_rule_group_association",
+	)
+	awsv2.Register("aws_route53_resolver_firewall_rule", sweepFirewallRules, "aws_route53_resolver_firewall_rule_group_association")
+	awsv2.Register("aws_route53_resolver_query_log_config_association", sweepQueryLogConfigAssociations)
+	awsv2.Register("aws_route53_resolver_query_log_config", sweepQueryLogsConfig, "aws_route53_resolver_query_log_config_association")
+	awsv2.Register("aws_route53_resolver_rule_association", sweepRuleAssociations)
+	awsv2.Register("aws_route53_resolver_rule", sweepRules, "aws_route53_resolver_rule_association")
 }
 
-func sweepDNSSECConfig(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepDNSSECConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -106,14 +43,8 @@ func sweepDNSSECConfig(region string) error {
 	pages := route53resolver.NewListResolverDnssecConfigsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver DNSSEC Config sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver DNSSEC Configs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverDnssecConfigs {
@@ -126,21 +57,10 @@ func sweepDNSSECConfig(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver DNSSEC Configs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepEndpoints(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -148,14 +68,8 @@ func sweepEndpoints(region string) error {
 	pages := route53resolver.NewListResolverEndpointsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Endpoints (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverEndpoints {
@@ -167,21 +81,10 @@ func sweepEndpoints(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Endpoints (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFirewallConfigs(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFirewallConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -189,14 +92,8 @@ func sweepFirewallConfigs(region string) error {
 	pages := route53resolver.NewListFirewallConfigsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Firewall Config sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Firewall Configs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FirewallConfigs {
@@ -209,21 +106,10 @@ func sweepFirewallConfigs(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Firewall Configs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFirewallDomainLists(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFirewallDomainLists(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallDomainListsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -231,14 +117,8 @@ func sweepFirewallDomainLists(region string) error {
 	pages := route53resolver.NewListFirewallDomainListsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Firewall Domain List sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FirewallDomainLists {
@@ -250,21 +130,10 @@ func sweepFirewallDomainLists(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFirewallRuleGroupAssociations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFirewallRuleGroupAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -272,14 +141,8 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 	pages := route53resolver.NewListFirewallRuleGroupAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Firewall Rule Group Association sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FirewallRuleGroupAssociations {
@@ -291,21 +154,10 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFirewallRuleGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFirewallRuleGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -313,14 +165,8 @@ func sweepFirewallRuleGroups(region string) error {
 	pages := route53resolver.NewListFirewallRuleGroupsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Firewall Rule Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FirewallRuleGroups {
@@ -339,21 +185,10 @@ func sweepFirewallRuleGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFirewallRules(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFirewallRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupsInput{}
 	var sweeperErrs *multierror.Error
@@ -362,14 +197,13 @@ func sweepFirewallRules(region string) error {
 	pages := route53resolver.NewListFirewallRuleGroupsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
 		if awsv2.SkipSweepError(err) {
-			log.Print(fmt.Errorf("[WARN] Skipping Route53 Resolver Firewall Rule sweep for %s: %w", region, err))
-			return sweeperErrs.ErrorOrNil()
+			return nil, err
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err))
+			sweeperErrs = multierror.Append(sweeperErrs, err)
+			continue
 		}
 
 		for _, v := range page.FirewallRuleGroups {
@@ -393,7 +227,8 @@ func sweepFirewallRules(region string) error {
 				}
 
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Resolver Firewall Rules (%s): %w", region, err))
+					sweeperErrs = multierror.Append(sweeperErrs, err)
+					continue
 				}
 
 				for _, v := range page.FirewallRules {
@@ -407,21 +242,10 @@ func sweepFirewallRules(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 Resolver Firewall Rules (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, sweeperErrs.ErrorOrNil()
 }
 
-func sweepQueryLogConfigAssociations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepQueryLogConfigAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverQueryLogConfigAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -429,14 +253,8 @@ func sweepQueryLogConfigAssociations(region string) error {
 	pages := route53resolver.NewListResolverQueryLogConfigAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Query Log Config Association sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Query Log Config Associations (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverQueryLogConfigAssociations {
@@ -450,21 +268,10 @@ func sweepQueryLogConfigAssociations(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Query Log Config Associations (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepQueryLogsConfig(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepQueryLogsConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -472,14 +279,8 @@ func sweepQueryLogsConfig(region string) error {
 	pages := route53resolver.NewListResolverQueryLogConfigsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Query Log Config sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Query Log Configs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverQueryLogConfigs {
@@ -491,21 +292,10 @@ func sweepQueryLogsConfig(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Query Log Configs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepRuleAssociations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepRuleAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverRuleAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -513,20 +303,21 @@ func sweepRuleAssociations(region string) error {
 	pages := route53resolver.NewListResolverRuleAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Rule Association sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Rule Associations (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverRuleAssociations {
+			id := aws.ToString(v.Id)
+			// Cannot associate or disassociate system defined rules
+			if strings.Contains(strings.ToLower(id), "autodefined") {
+				log.Printf("[INFO] Skipping Route53 Resolver Rule Associations %s: System Defined", id)
+				continue
+			}
+
 			r := resourceRuleAssociation()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Id))
+			d.SetId(id)
 			d.Set("resolver_rule_id", v.ResolverRuleId)
 			d.Set(names.AttrVPCID, v.VPCId)
 
@@ -534,21 +325,10 @@ func sweepRuleAssociations(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Rule Associations (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepRules(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverRulesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -556,14 +336,8 @@ func sweepRules(region string) error {
 	pages := route53resolver.NewListResolverRulesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver Rule sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Route53 Resolver Rules (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ResolverRules {
@@ -579,11 +353,5 @@ func sweepRules(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Route53 Resolver Rules (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

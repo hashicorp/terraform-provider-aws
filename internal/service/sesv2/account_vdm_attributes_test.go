@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,11 +35,11 @@ func testAccAccountVDMAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountVDMAttributesConfig_basic(),
@@ -60,11 +60,11 @@ func testAccAccountVDMAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountVDMAttributesConfig_basic(),
@@ -72,6 +72,14 @@ func testAccAccountVDMAttributes_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceAccountVDMAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_account_vdm_attributes.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_account_vdm_attributes.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -81,11 +89,11 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusEnabled)),
@@ -114,11 +122,11 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_vdm_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountVDMAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusEnabled)),
@@ -143,9 +151,9 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountVDMAttributesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountVDMAttributesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_account_vdm_attributes" {

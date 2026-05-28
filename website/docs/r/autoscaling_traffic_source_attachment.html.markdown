@@ -47,3 +47,20 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Auto Scaling Traffic Source Attachments using `autoscaling_group_name`, `traffic_source_type`, and `traffic_source_identifier` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_traffic_source_attachment.example
+  id = "example,elbv2,arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/example/1234567890123456"
+}
+```
+
+Using `terraform import`, import Auto Scaling Traffic Source Attachments using `autoscaling_group_name`, `traffic_source_type`, and `traffic_source_identifier` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_autoscaling_traffic_source_attachment.example example,elbv2,arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/example/1234567890123456
+```

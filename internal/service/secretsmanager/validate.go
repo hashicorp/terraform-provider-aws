@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validSecretName(v any, k string) (ws []string, errors []error) {
@@ -29,7 +29,7 @@ func validSecretNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and /_+=.@- special characters are allowed in %q", k))
 	}
-	prefixMaxLength := 512 - id.UniqueIDSuffixLength
+	prefixMaxLength := 512 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))

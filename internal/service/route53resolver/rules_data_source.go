@@ -72,33 +72,28 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := &route53resolver.ListResolverRulesInput{}
 	var ruleIDs []*string
 
-	pages := route53resolver.NewListResolverRulesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
+	for rule, err := range listResolverRules(ctx, conn, input) {
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Rules: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		for _, rule := range page.ResolverRules {
-			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(rule.Name)) {
-				continue
-			}
-			if v, ok := d.GetOk(names.AttrOwnerID); ok && aws.ToString(rule.OwnerId) != v.(string) {
-				continue
-			}
-			if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.ToString(rule.ResolverEndpointId) != v.(string) {
-				continue
-			}
-			if v, ok := d.GetOk("rule_type"); ok && string(rule.RuleType) != v.(string) {
-				continue
-			}
-			if v, ok := d.GetOk("share_status"); ok && string(rule.ShareStatus) != v.(string) {
-				continue
-			}
-
-			ruleIDs = append(ruleIDs, rule.Id)
+		if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(rule.Name)) {
+			continue
 		}
+		if v, ok := d.GetOk(names.AttrOwnerID); ok && aws.ToString(rule.OwnerId) != v.(string) {
+			continue
+		}
+		if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.ToString(rule.ResolverEndpointId) != v.(string) {
+			continue
+		}
+		if v, ok := d.GetOk("rule_type"); ok && string(rule.RuleType) != v.(string) {
+			continue
+		}
+		if v, ok := d.GetOk("share_status"); ok && string(rule.ShareStatus) != v.(string) {
+			continue
+		}
+
+		ruleIDs = append(ruleIDs, rule.Id)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))

@@ -29,7 +29,6 @@ import (
 
 // @SDKResource("aws_dx_private_virtual_interface", name="Private Virtual Interface")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrivateVirtualInterfaceCreate,

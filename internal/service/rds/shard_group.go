@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -336,9 +335,8 @@ func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.Describ
 	})
 
 	if errs.IsA[*awstypes.DBShardGroupNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -349,8 +347,8 @@ func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.Describ
 	return output, nil
 }
 
-func statusShardGroup(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusShardGroup(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBShardGroupByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -373,10 +371,10 @@ const (
 )
 
 func waitShardGroupCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.DBShardGroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusCreating},
 		Target:  []string{shardGroupStatusAvailable},
-		Refresh: statusShardGroup(ctx, conn, id),
+		Refresh: statusShardGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -393,10 +391,10 @@ func waitShardGroupUpdated(ctx context.Context, conn *rds.Client, id string, tim
 	const (
 		delay = 1 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusModifying},
 		Target:  []string{shardGroupStatusAvailable},
-		Refresh: statusShardGroup(ctx, conn, id),
+		Refresh: statusShardGroup(conn, id),
 		Delay:   delay,
 		Timeout: timeout,
 	}
@@ -414,10 +412,10 @@ func waitShardGroupDeleted(ctx context.Context, conn *rds.Client, id string, tim
 	const (
 		delay = 1 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{shardGroupStatusDeleting},
 		Target:  []string{},
-		Refresh: statusShardGroup(ctx, conn, id),
+		Refresh: statusShardGroup(conn, id),
 		Delay:   delay,
 		Timeout: timeout,
 	}

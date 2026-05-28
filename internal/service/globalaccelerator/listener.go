@@ -14,11 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -30,7 +29,6 @@ import (
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -97,7 +95,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := &globalaccelerator.CreateListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
 		ClientAffinity:   awstypes.ClientAffinity(d.Get("client_affinity").(string)),
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 		Protocol:         awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
@@ -210,9 +208,8 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	output, err := conn.DescribeListener(ctx, input)
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

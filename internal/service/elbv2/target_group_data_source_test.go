@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,12 +14,12 @@ import (
 
 func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	datasourceNameByARN := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	datasourceNameByName := "data.aws_lb_target_group.alb_tg_test_with_name"
 	resourceName := "aws_lb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,11 +85,11 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 
 func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	resourceName := "aws_lb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -132,12 +131,12 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 
 func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	datasourceNameByARN := "data.aws_alb_target_group.alb_tg_test_with_arn"
 	datasourceNameByName := "data.aws_alb_target_group.alb_tg_test_with_name"
 	resourceName := "aws_alb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -197,8 +196,8 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 
 func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceTg1 := "aws_lb_target_group.test1"
 	resourceTg2 := "aws_lb_target_group.test2"
@@ -207,7 +206,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 	dataSourceMatchSecondTag := "data.aws_lb_target_group.tag_match_second"
 	dataSourceMatchFirstTagAndName := "data.aws_lb_target_group.tag_and_arn_match_first"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

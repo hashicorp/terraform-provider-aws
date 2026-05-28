@@ -34,7 +34,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"IdentityCenterConfiguration": {
 			acctest.CtBasic:      testAccLakeFormationIdentityCenterConfiguration_basic,
 			acctest.CtDisappears: testAccLakeFormationIdentityCenterConfiguration_disappears,
-			"Identity":           testAccLakeFormationIdentityCenterConfiguration_IdentitySerial,
+			"Identity":           testAccLakeFormationIdentityCenterConfiguration_identitySerial,
 		},
 		"OptIn": {
 			acctest.CtBasic:      testAccOptIn_basic,

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,7 +29,6 @@ import (
 // @IdentityAttribute("repository")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(idAttrDuplicates="repository")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPolicyPut,
@@ -111,11 +109,15 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("registry_id", output.RegistryId)
-	d.Set("repository", output.RepositoryName)
+	resourceRepositoryPolicyFlatten(d, output, policyToSet)
 
 	return diags
+}
+
+func resourceRepositoryPolicyFlatten(d *schema.ResourceData, output *ecr.GetRepositoryPolicyOutput, policy string) {
+	d.Set(names.AttrPolicy, policy)
+	d.Set("registry_id", output.RegistryId)
+	d.Set("repository", output.RepositoryName)
 }
 
 func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -147,9 +149,8 @@ func findRepositoryPolicyByRepositoryName(ctx context.Context, conn *ecr.Client,
 	output, err := conn.GetRepositoryPolicy(ctx, input)
 
 	if errs.IsA[*types.RepositoryNotFoundException](err) || errs.IsA[*types.RepositoryPolicyNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

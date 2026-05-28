@@ -91,7 +91,13 @@ func (r ResourceIdentity) IdentityAttribute() string {
 }
 
 func (r ResourceIdentity) IdentityAttributeName() string {
-	return r.identityAttributeName
+	if r.identityAttributeName != "" {
+		return r.identityAttributeName
+	}
+	if len(r.IdentityAttributes) == 1 {
+		return r.IdentityAttributes[0].Name_
+	}
+	return ""
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
@@ -118,6 +124,7 @@ type IdentityAttribute struct {
 	Optional               bool
 	ResourceAttributeName_ string
 	TestNotNull            bool
+	ValueType              string
 }
 
 func (a IdentityAttribute) Name() string {
@@ -180,6 +187,22 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		for k := range args.Keyword {
 			switch k {
+			// Needs to be handled differently than in `parseIdentityDuplicateAttrNames`
+			case "identityDuplicateAttributes":
+				attr := args.Keyword[k]
+				attrs := strings.Split(attr, ";")
+				// Sort `id` to first position, the rest alphabetically
+				slices.SortFunc(attrs, func(a, b string) int {
+					if a == "id" {
+						return -1
+					} else if b == "id" {
+						return 1
+					} else {
+						return strings.Compare(a, b)
+					}
+				})
+				d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+
 			case "optional":
 				attr := args.Keyword[k]
 				if b, err := ParseBoolAttr("optional", attr); err != nil {
@@ -198,6 +221,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 				} else {
 					identityAttribute.TestNotNull = b
 				}
+
+			case "valueType":
+				identityAttribute.ValueType = args.Keyword[k]
 
 			default:
 				errs = errors.Join(errs, fmt.Errorf("annotation \"@IdentityAttribute\": unexpected keyword parameter %q", k))

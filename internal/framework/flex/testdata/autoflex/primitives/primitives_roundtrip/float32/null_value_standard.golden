@@ -1,0 +1,92 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Float32Value",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "float32"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding null value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Float32Value",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "float32"
+  },
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "float32",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Float32Value"
+  }
+]

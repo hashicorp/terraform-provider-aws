@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -134,7 +133,7 @@ func findConnectionLAGAssociation(ctx context.Context, conn *directconnect.Clien
 	}
 
 	if lagID != aws.ToString(connection.LagId) {
-		return &sdkretry.NotFoundError{}
+		return &retry.NotFoundError{}
 	}
 
 	return nil

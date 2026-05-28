@@ -16,7 +16,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,7 +37,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
 // @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
@@ -384,9 +382,8 @@ func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -430,9 +427,8 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -446,8 +442,8 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 	return output, nil
 }
 
-func statusReplication(ctx context.Context, conn *dms.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplication(conn *dms.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -476,7 +472,7 @@ func setLastReplicationError(err error, replication *awstypes.Replication) {
 }
 
 func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			replicationStatusReady,
 			replicationStatusInitialising,
@@ -488,7 +484,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, t
 			replicationStatusReplicationStarting,
 		},
 		Target:     []string{replicationStatusRunning, replicationStatusStopped},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -505,10 +501,10 @@ func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      60 * time.Second,
@@ -525,10 +521,10 @@ func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationDeleted(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

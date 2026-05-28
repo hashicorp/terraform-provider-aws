@@ -165,7 +165,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("terraform_"),
-	).Generate()
+	).Generate(ctx)
 	input := &signer.PutSigningProfileInput{
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
 		ProfileName: aws.String(name),

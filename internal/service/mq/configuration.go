@@ -35,7 +35,7 @@ func resourceConfiguration() *schema.Resource {
 		CreateWithoutTimeout: resourceConfigurationCreate,
 		ReadWithoutTimeout:   resourceConfigurationRead,
 		UpdateWithoutTimeout: resourceConfigurationUpdate,
-		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
+		DeleteWithoutTimeout: resourceConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -98,6 +98,10 @@ func resourceConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -221,6 +225,32 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
+}
+
+func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQClient(ctx)
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining MQ Configuration: %s", d.Id())
+		return diags
+	}
+
+	log.Printf("[INFO] Deleting MQ Configuration: %s", d.Id())
+	_, err := conn.DeleteConfiguration(ctx, &mq.DeleteConfigurationInput{
+		ConfigurationId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MQ Configuration (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func findConfigurationByID(ctx context.Context, conn *mq.Client, id string) (*mq.DescribeConfigurationOutput, error) {

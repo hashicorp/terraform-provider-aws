@@ -16,7 +16,7 @@ func testAccResourceCollectionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_devopsguru_resource_collection.test"
 	resourceName := "aws_devopsguru_resource_collection.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -24,7 +24,7 @@ func testAccResourceCollectionDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionDataSourceConfig_basic(),

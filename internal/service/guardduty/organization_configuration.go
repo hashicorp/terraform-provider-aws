@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -168,7 +167,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	output, err := FindOrganizationConfigurationByID(ctx, conn, d.Id())
+	output, err := findOrganizationConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration (%s) not found, removing from state", d.Id())
@@ -178,10 +177,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", d.Id(), err)
-	}
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): empty response", d.Id())
 	}
 
 	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
@@ -424,17 +419,16 @@ func flattenOrganizationEbsVolumesResult(apiObject *awstypes.OrganizationEbsVolu
 	return tfMap
 }
 
-func FindOrganizationConfigurationByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.DescribeOrganizationConfigurationOutput, error) {
-	input := &guardduty.DescribeOrganizationConfigurationInput{
+func findOrganizationConfigurationByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.DescribeOrganizationConfigurationOutput, error) {
+	input := guardduty.DescribeOrganizationConfigurationInput{
 		DetectorId: aws.String(id),
 	}
 
-	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
+	output, err := conn.DescribeOrganizationConfiguration(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

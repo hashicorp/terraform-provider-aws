@@ -25,25 +25,25 @@ func testAccAccessAnalyzerAnalyzer_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAccessAnalyzerAnalyzer_tags,
-		"null":                                      testAccAccessAnalyzerAnalyzer_tags_null,
-		"EmptyMap":                                  testAccAccessAnalyzerAnalyzer_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAccessAnalyzerAnalyzer_Tags_null,
+		"EmptyMap":                                  testAccAccessAnalyzerAnalyzer_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAccessAnalyzerAnalyzer_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAccessAnalyzerAnalyzer_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAccessAnalyzerAnalyzer_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -238,7 +238,7 @@ func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_null(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -312,7 +312,7 @@ func testAccAccessAnalyzerAnalyzer_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_EmptyMap(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -382,7 +382,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -470,7 +470,7 @@ func testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -566,7 +566,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -710,7 +710,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -806,7 +806,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -994,7 +994,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1161,7 +1161,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1344,7 +1344,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1441,7 +1441,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToProviderOnly(t *test
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1537,7 +1537,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToResourceOnly(t *test
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1609,7 +1609,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag(t *testing.
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1673,7 +1673,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyProviderOnlyTag(t *test
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1742,7 +1742,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag(t
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1811,7 +1811,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTa
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1873,7 +1873,7 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -1977,7 +1977,7 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -2071,7 +2071,7 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace(t *testing.
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary
@@ -2240,7 +2240,7 @@ func testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	})
 }
 
-func testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAccessAnalyzerAnalyzer_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AnalyzerSummary

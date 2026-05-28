@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +40,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowTaskOutput")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(importStateIdFunc="testAccMaintenanceWindowTaskImportStateIdFunc")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
@@ -520,9 +518,8 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	output, err := conn.GetMaintenanceWindowTask(ctx, input)
 
 	if errs.IsA[*awstypes.DoesNotExistException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -870,7 +867,7 @@ func (maintenanceWindowTaskImportID) Create(d *schema.ResourceData) string {
 	return d.Id()
 }
 
-func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string, error) {
+func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 {
 		return id, nil, fmt.Errorf("maintenance_window_task id must be of the form <window_id>/<task_id>")
@@ -879,7 +876,7 @@ func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string
 	windowID := parts[0]
 	taskID := parts[1]
 
-	result := map[string]string{
+	result := map[string]any{
 		"window_id": windowID,
 	}
 	return taskID, result, nil

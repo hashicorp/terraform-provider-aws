@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,7 +34,6 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalyMonitor")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
@@ -223,9 +221,8 @@ func findAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.Client, arn
 	output, err := conn.GetAnomalyMonitors(ctx, input)
 
 	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -5,6 +5,7 @@ package glue
 
 // Exports for use in tests only.
 var (
+	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
@@ -26,19 +27,20 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer    = findCatalogTableOptimizer
-	FindClassifierByName         = findClassifierByName
-	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
-	FindCrawlerByName            = findCrawlerByName
-	FindDatabaseByName           = findDatabaseByName
-	FindDataQualityRulesetByName = findDataQualityRulesetByName
-	FindDevEndpointByName        = findDevEndpointByName
-	FindJobByName                = findJobByName
-	FindPartitionByValues        = findPartitionByValues
-	FindPartitionIndexByName     = findPartitionIndexByName
-	FindRegistryByID             = findRegistryByID
-	FindResourcePolicy           = findResourcePolicy
-	FindSchemaByID               = findSchemaByID
-	FindTableByName              = findTableByName
-	FindTriggerByName            = findTriggerByName
+	FindCatalogByName               = findCatalogByName
+	FindCatalogTableOptimizer       = findCatalogTableOptimizer
+	FindClassifierByName            = findClassifierByName
+	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
+	FindCrawlerByName               = findCrawlerByName
+	FindDatabaseByTwoPartKey        = findDatabaseByTwoPartKey
+	FindDataQualityRulesetByName    = findDataQualityRulesetByName
+	FindDevEndpointByName           = findDevEndpointByName
+	FindJobByName                   = findJobByName
+	FindPartitionByValues           = findPartitionByValues
+	FindPartitionIndexByFourPartKey = findPartitionIndexByFourPartKey
+	FindRegistryByID                = findRegistryByID
+	FindResourcePolicy              = findResourcePolicy
+	FindSchemaByID                  = findSchemaByID
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTriggerByName               = findTriggerByName
 )

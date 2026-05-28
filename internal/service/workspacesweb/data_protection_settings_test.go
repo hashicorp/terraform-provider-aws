@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -32,12 +31,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_protection_settings_arn", "workspaces-web", regexache.MustCompile(`dataProtectionSettings/.+$`)),
 				),
@@ -58,7 +57,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_disappears(t *testing.T) {
 	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -66,12 +65,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceDataProtectionSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,7 +85,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_complete(t *testing.T) {
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -94,12 +93,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_complete(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-complete"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
@@ -146,7 +145,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_additionalEncryptionContextUpdat
 	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -154,12 +153,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_additionalEncryptionContextUpdat
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_additionalEncryptionContextBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Test"),
 				),
@@ -174,7 +173,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_additionalEncryptionContextUpdat
 			{
 				Config: testAccDataProtectionSettingsConfig_additionalEncryptionContextAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Live"),
 				),
@@ -190,7 +189,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_customerManagedKeyUpdate(t *test
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -198,12 +197,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_customerManagedKeyUpdate(t *test
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_customerManagedKeyBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName1, names.AttrARN),
 				),
 			},
@@ -217,7 +216,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_customerManagedKeyUpdate(t *test
 			{
 				Config: testAccDataProtectionSettingsConfig_customerManagedKeyAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName2, names.AttrARN),
 				),
 			},
@@ -230,7 +229,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -238,12 +237,12 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionSettingsConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description before"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
@@ -280,7 +279,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 			{
 				Config: testAccDataProtectionSettingsConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					testAccCheckDataProtectionSettingsExists(ctx, t, resourceName, &dataProtectionSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update-after"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description after"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
@@ -316,9 +315,9 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDataProtectionSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataProtectionSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_data_protection_settings" {
@@ -342,14 +341,14 @@ func testAccCheckDataProtectionSettingsDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckDataProtectionSettingsExists(ctx context.Context, n string, v *awstypes.DataProtectionSettings) resource.TestCheckFunc {
+func testAccCheckDataProtectionSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.DataProtectionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindDataProtectionSettingsByARN(ctx, conn, rs.Primary.Attributes["data_protection_settings_arn"])
 

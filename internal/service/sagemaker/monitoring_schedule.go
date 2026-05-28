@@ -15,11 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -498,7 +497,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = id.UniqueId()
+		name = create.UniqueId(ctx)
 	}
 	input := sagemaker.CreateMonitoringScheduleInput{
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]any)),
@@ -610,9 +609,8 @@ func findMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, input *
 	output, err := conn.DescribeMonitoringSchedule(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -627,8 +625,8 @@ func findMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, input *
 	return output, nil
 }
 
-func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMonitoringSchedule(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMonitoringScheduleByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -647,10 +645,10 @@ func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScheduleStatusPending),
 		Target:  enum.Slice(awstypes.ScheduleStatusScheduled),
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
+		Refresh: statusMonitoringSchedule(conn, name),
 		Timeout: timeout,
 	}
 
@@ -671,10 +669,10 @@ func waitMonitoringScheduleDeleted(ctx context.Context, conn *sagemaker.Client, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScheduleStatusScheduled, awstypes.ScheduleStatusPending, awstypes.ScheduleStatusStopped),
 		Target:  []string{},
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
+		Refresh: statusMonitoringSchedule(conn, name),
 		Timeout: timeout,
 	}
 
