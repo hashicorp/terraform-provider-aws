@@ -197,7 +197,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_withFinalSnapshot(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
-					resource.TestCheckResourceAttr(instanceResourceName, "skip_final_snapshot", "false"),
+					resource.TestCheckResourceAttr(instanceResourceName, "skip_final_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttr(instanceResourceName, names.AttrFinalSnapshotIdentifier, rName),
 				),
 			},
