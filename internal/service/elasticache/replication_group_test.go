@@ -3921,7 +3921,7 @@ func TestAccElastiCacheReplicationGroup_Snapshot_ClusterModeDisabled_Redis7(t *t
 						t.Fatalf("error changing primary cache cluster: %s", err)
 					}
 
-					if _, err := tfelasticache.WaitCacheClusterAvailable(ctx, conn, oldPrimary, 1*time.Minute); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterAvailable(ctx, conn, oldPrimary, timeout); err != nil {
 						t.Fatalf("error Cache Cluster Unavailable (%s): %s", oldPrimary, err)
 					}
 				},
@@ -4038,7 +4038,7 @@ func TestAccElastiCacheReplicationGroup_Snapshot_ClusterModeDisabled_Valkey7(t *
 						t.Fatalf("error changing primary cache cluster: %s", err)
 					}
 
-					if _, err := tfelasticache.WaitCacheClusterAvailable(ctx, conn, oldPrimary, 1*time.Minute); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterAvailable(ctx, conn, oldPrimary, timeout); err != nil {
 						t.Fatalf("error Cache Cluster Unavailable (%s): %s", oldPrimary, err)
 					}
 				},
