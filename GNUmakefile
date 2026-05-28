@@ -447,7 +447,7 @@ lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test
 
 makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 	@echo "make: Makefile Linting / alignment check..."
-	@cd tools/makelign && $(GO_VER) run . ../..
+	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
