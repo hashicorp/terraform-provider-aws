@@ -205,7 +205,6 @@ func TestAccRDSInstanceAutomatedBackupsReplication_withFinalSnapshot(t *testing.
 	})
 }
 func testAccCheckInstanceAutomatedBackupsReplicationExist(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -330,8 +329,8 @@ resource "aws_db_instance" "test" {
   backup_retention_period = 7
   skip_final_snapshot     = %[3]t
   %[2]s
-  storage_encrypted       = %[5]t
-  db_subnet_group_name    = aws_db_subnet_group.test.name
+  storage_encrypted    = %[5]t
+  db_subnet_group_name = aws_db_subnet_group.test.name
 
   provider = "awsalternate"
 }
