@@ -1,0 +1,3 @@
+```release-note:bug-fix
+resource/aws_route53_resolver_rule: Remove hardcoded defaults for `port` and `protocol` in `target_ip` to allow the AWS API to apply conditional defaults
+```
