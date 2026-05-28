@@ -14,6 +14,7 @@ func stripGSIUpdatableAttributes(in map[string]any) map[string]any {
 	attrs = stripNonKeyAttributes(attrs)
 	attrs = stripOnDemandThroughputAttributes(attrs)
 	attrs = stripWarmThroughputAttributes(attrs)
+	attrs = stripCreateAsyncAttributes(attrs)
 	// Remove empty hash_keys/range_keys to avoid false positive diffs
 	if hks, ok := attrs["hash_keys"]; ok {
 		if l, ok := hks.([]any); ok && len(l) == 0 {
@@ -58,6 +59,14 @@ func stripWarmThroughputAttributes(in map[string]any) map[string]any {
 	mapCopy := maps.Clone(in)
 
 	delete(mapCopy, "warm_throughput")
+
+	return mapCopy
+}
+
+func stripCreateAsyncAttributes(in map[string]any) map[string]any {
+	mapCopy := maps.Clone(in)
+
+	delete(mapCopy, "create_async")
 
 	return mapCopy
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -74,6 +75,11 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"create_async": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
 			"index_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -313,6 +319,38 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	_, err = conn.UpdateTable(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
+		return
+	}
+
+	if data.CreateAsync.ValueBool() {
+		if _, err = waitGSIExists(ctx, conn, data.TableName.ValueString(), data.IndexName.ValueString(), createTimeout); err != nil {
+			response.Diagnostics.AddError(
+				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be created`, data.IndexName.ValueString(), data.TableName.ValueString()),
+				err.Error(),
+			)
+
+			return
+		}
+
+		table, err = findTableByName(ctx, conn, data.TableName.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
+			return
+		}
+
+		index, err := findGSIFromTable(table, data.IndexName.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
+			return
+		}
+
+		response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, index, table)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+
 		return
 	}
 
@@ -609,6 +647,9 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 	)...)
 
 	data.TableName = fwflex.StringToFramework(ctx, table.TableName)
+	if data.CreateAsync.IsNull() || data.CreateAsync.IsUnknown() {
+		data.CreateAsync = types.BoolValue(false)
+	}
 
 	attributeTypes := make(map[string]awstypes.ScalarAttributeType, len(table.AttributeDefinitions))
 	for _, attribute := range table.AttributeDefinitions {
@@ -647,6 +688,7 @@ type resourceGlobalSecondaryIndexModel struct {
 	framework.WithRegionModel
 
 	ARN                   types.String                                                `tfsdk:"arn"`
+	CreateAsync           types.Bool                                                  `tfsdk:"create_async"`
 	IndexName             types.String                                                `tfsdk:"index_name"`
 	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
 	TableName             types.String                                                `tfsdk:"table_name"`

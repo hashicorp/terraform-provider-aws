@@ -187,6 +187,11 @@ func resourceTable() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"create_async": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 							"hash_key": {
 								Type:         schema.TypeString,
 								Optional:     true,
@@ -983,6 +988,14 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		for _, gsiObject := range gsiSet.List() {
 			gsi := gsiObject.(map[string]any)
 
+			if async, _ := gsi["create_async"].(bool); async {
+				if _, err := waitGSIExists(ctx, conn, d.Id(), gsi[names.AttrName].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", gsi[names.AttrName].(string), err))
+				}
+
+				continue
+			}
+
 			if _, err := waitGSIActive(ctx, conn, d.Id(), gsi[names.AttrName].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", gsi[names.AttrName].(string), err))
 			}
@@ -1072,7 +1085,8 @@ func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.Res
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "local_secondary_index", err)
 	}
 
-	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
+	priorCreateAsync := gsiCreateAsyncByName(d.Get("global_secondary_index").(*schema.Set).List())
+	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes, priorCreateAsync)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
 	}
 
@@ -1198,6 +1212,22 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		gsiUpdates, err = updateDiffGSI(oldGSI.(*schema.Set).List(), newGSI.(*schema.Set).List(), newBillingMode, oldAttrTypes, newAttrTypes)
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("computing GSI difference: %w", err))
+		}
+	}
+
+	// Fail fast if any GSI update or delete targets an index that is still
+	// backfilling (CREATING), e.g. one previously created with create_async.
+	// Create-only updates can never be blocked, so skip the extra DescribeTable.
+	if slices.ContainsFunc(gsiUpdates, func(op awstypes.GlobalSecondaryIndexUpdate) bool {
+		return op.Update != nil || op.Delete != nil
+	}) {
+		table, err := findTableByName(ctx, conn, d.Id())
+		if err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), err)
+		}
+
+		if err := gsiModificationsBlockedByCreating(table.GlobalSecondaryIndexes, gsiUpdates); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
 
@@ -1380,12 +1410,17 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// Phase 3 of Global Secondary Index Operations: Create Only
-	// Only 1 online index can be created simultaneously per table
-	for _, gsiUpdate := range gsiUpdates {
-		if gsiUpdate.Create == nil {
-			continue
-		}
+	// Only 1 online index can be created simultaneously per table, so creates
+	// are processed sequentially. Async-marked creates are reordered last so
+	// the user's intent to skip the ACTIVE wait is honored for at least one
+	// create when mixed with synchronous ones (AWS still requires waiting on
+	// prior creates to reach ACTIVE before submitting the next one).
+	createAsyncByName := gsiCreateAsyncByName(d.Get("global_secondary_index").(*schema.Set).List())
+	createOps := sortGSICreatesAsyncLast(gsiUpdates, createAsyncByName)
+	remainingCreates := len(createOps)
 
+	for _, gsiUpdate := range createOps {
+		remainingCreates--
 		idxName := aws.ToString(gsiUpdate.Create.IndexName)
 		input := &dynamodb.UpdateTableInput{
 			AttributeDefinitions:        expandAttributes(d.Get("attribute").(*schema.Set).List()),
@@ -1395,6 +1430,14 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if _, err := conn.UpdateTable(ctx, input); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("creating GSI (%s): %w", idxName, err))
+		}
+
+		if createAsyncByName[idxName] && remainingCreates == 0 {
+			if _, err := waitGSIExists(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+			}
+
+			continue // create_async: no later GSI create depends on this index becoming ACTIVE.
 		}
 
 		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -2105,6 +2148,83 @@ func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList [
 	return nil
 }
 
+// gsiCreateAsyncByName maps a GSI config list to index name -> create_async.
+func gsiCreateAsyncByName(gsi []any) map[string]bool {
+	m := make(map[string]bool, len(gsi))
+	for _, g := range gsi {
+		gm, ok := g.(map[string]any)
+		if !ok {
+			continue
+		}
+		name, _ := gm[names.AttrName].(string)
+		if name == "" {
+			continue
+		}
+		async, _ := gm["create_async"].(bool)
+		m[name] = async
+	}
+	return m
+}
+
+// sortGSICreatesAsyncLast filters GSI updates to Create ops and stable-sorts
+// them so async-marked creates come after synchronous ones. AWS serializes GSI
+// creates per table; only the last create in the loop can safely skip the
+// ACTIVE wait, so sorting async last maximizes the chance that user intent is
+// honored. Relative order within each group is preserved.
+func sortGSICreatesAsyncLast(gsiUpdates []awstypes.GlobalSecondaryIndexUpdate, createAsyncByName map[string]bool) []awstypes.GlobalSecondaryIndexUpdate {
+	createOps := make([]awstypes.GlobalSecondaryIndexUpdate, 0, len(gsiUpdates))
+	for _, op := range gsiUpdates {
+		if op.Create != nil {
+			createOps = append(createOps, op)
+		}
+	}
+
+	slices.SortStableFunc(createOps, func(a, b awstypes.GlobalSecondaryIndexUpdate) int {
+		aAsync := createAsyncByName[aws.ToString(a.Create.IndexName)]
+		bAsync := createAsyncByName[aws.ToString(b.Create.IndexName)]
+		switch {
+		case aAsync == bAsync:
+			return 0
+		case aAsync:
+			return 1
+		default:
+			return -1
+		}
+	})
+
+	return createOps
+}
+
+// gsiModificationsBlockedByCreating returns an error if any op modifies or
+// deletes an index that is currently in CREATING state. This produces an
+// actionable message instead of AWS's opaque ValidationException.
+func gsiModificationsBlockedByCreating(gsis []awstypes.GlobalSecondaryIndexDescription, ops []awstypes.GlobalSecondaryIndexUpdate) error {
+	creating := make(map[string]bool)
+	for _, g := range gsis {
+		if g.IndexStatus == awstypes.IndexStatusCreating {
+			creating[aws.ToString(g.IndexName)] = true
+		}
+	}
+
+	for _, op := range ops {
+		var name string
+		switch {
+		case op.Update != nil:
+			name = aws.ToString(op.Update.IndexName)
+		case op.Delete != nil:
+			name = aws.ToString(op.Delete.IndexName)
+		default:
+			continue // Create ops are allowed.
+		}
+
+		if creating[name] {
+			return fmt.Errorf("GSI (%s) is still backfilling (CREATING) and cannot be modified or deleted yet; wait for it to become ACTIVE", name)
+		}
+	}
+
+	return nil
+}
+
 func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode, oldAttrTypes, newAttrTypes map[string]string) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]any)
@@ -2765,7 +2885,7 @@ func flattenTableLocalSecondaryIndex(lsi []awstypes.LocalSecondaryIndexDescripti
 	return output
 }
 
-func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescription) []any {
+func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescription, createAsync map[string]bool) []any {
 	if len(gsi) == 0 {
 		return []any{}
 	}
@@ -2776,6 +2896,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 		gsi := make(map[string]any)
 
 		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
+		if createAsync != nil {
+			gsi["create_async"] = createAsync[aws.ToString(g.IndexName)]
+		}
 
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)

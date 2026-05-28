@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
+	"slices"
 	"testing"
 	"time"
 
@@ -71,6 +72,29 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			New: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+		"create_async changed": { // No-op => provider-only metadata
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"create_async":    true,
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"create_async":    false,
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -1842,6 +1866,29 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 			},
 			New: map[string]any{
 				names.AttrName:    "gsi1",
+				"hash_key":        "pk",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk", "key_type": "HASH"},
+				},
+			},
+			Expected: false,
+		},
+		"create_async changed": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"create_async":    true,
+				"hash_key":        "pk",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk", "key_type": "HASH"},
+				},
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"create_async":    false,
 				"hash_key":        "pk",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -9002,6 +9049,27 @@ func testAccCheckTableExists(ctx context.Context, t *testing.T, n string, v *aws
 	return testAccCheckInitialTableExists(ctx, t, n, v)
 }
 
+// testAccCheckGSIStatusReached asserts that a GSI is in one of the allowed
+// IndexStatus values immediately after apply. For create_async coverage,
+// callers should allow both CREATING (the expected state when the wait is
+// correctly skipped) and ACTIVE (in case backfill on a small test table
+// completes before the check runs).
+func testAccCheckGSIStatusReached(ctx context.Context, t *testing.T, tableName, indexName string, allowed ...awstypes.IndexStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
+		gsi, err := tfdynamodb.FindGSIByTwoPartKey(ctx, conn, tableName, indexName)
+		if err != nil {
+			return err
+		}
+
+		if slices.Contains(allowed, gsi.IndexStatus) {
+			return nil
+		}
+
+		return fmt.Errorf("GSI %s: got status %s, want one of %v", indexName, gsi.IndexStatus, allowed)
+	}
+}
+
 func testAccCheckTableNotRecreated(i, j *awstypes.TableDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
@@ -13427,6 +13495,259 @@ variable "global_secondary_index" {
     read_capacity      = 1
     write_capacity     = 1
   }]
+}
+`, rName)
+}
+
+func TestGSICreateAsyncByName(t *testing.T) {
+	t.Parallel()
+
+	input := []any{
+		map[string]any{names.AttrName: "idx1", "create_async": true},
+		map[string]any{names.AttrName: "idx2", "create_async": false},
+		map[string]any{names.AttrName: "idx3"}, // missing key -> false
+	}
+
+	got := tfdynamodb.GSICreateAsyncByName(input)
+	want := map[string]bool{"idx1": true, "idx2": false, "idx3": false}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected diff (-want +got):\n%s", diff)
+	}
+}
+
+func TestFlattenTableGlobalSecondaryIndex_createAsync(t *testing.T) {
+	t.Parallel()
+
+	gsis := []awstypes.GlobalSecondaryIndexDescription{
+		{IndexName: aws.String("idx1")},
+		{IndexName: aws.String("idx2")},
+	}
+
+	// nil map -> no create_async key emitted (data source path)
+	for _, e := range tfdynamodb.FlattenTableGlobalSecondaryIndex(gsis, nil) {
+		m := e.(map[string]any)
+		if _, ok := m["create_async"]; ok {
+			t.Errorf("expected no create_async key when map is nil, got %v", m["create_async"])
+		}
+	}
+
+	// non-nil map -> stamp values, default false when absent
+	got := map[string]bool{}
+	for _, e := range tfdynamodb.FlattenTableGlobalSecondaryIndex(gsis, map[string]bool{"idx1": true}) {
+		m := e.(map[string]any)
+		got[m[names.AttrName].(string)] = m["create_async"].(bool)
+	}
+	want := map[string]bool{"idx1": true, "idx2": false}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected diff (-want +got):\n%s", diff)
+	}
+}
+
+func TestGSIModificationsBlockedByCreating(t *testing.T) {
+	t.Parallel()
+
+	gsis := []awstypes.GlobalSecondaryIndexDescription{
+		{IndexName: aws.String("creating-idx"), IndexStatus: awstypes.IndexStatusCreating},
+		{IndexName: aws.String("active-idx"), IndexStatus: awstypes.IndexStatusActive},
+	}
+
+	testCases := map[string]struct {
+		ops     []awstypes.GlobalSecondaryIndexUpdate
+		wantErr bool
+	}{
+		"update creating index": {
+			ops:     []awstypes.GlobalSecondaryIndexUpdate{{Update: &awstypes.UpdateGlobalSecondaryIndexAction{IndexName: aws.String("creating-idx")}}},
+			wantErr: true,
+		},
+		"delete creating index": {
+			ops:     []awstypes.GlobalSecondaryIndexUpdate{{Delete: &awstypes.DeleteGlobalSecondaryIndexAction{IndexName: aws.String("creating-idx")}}},
+			wantErr: true,
+		},
+		"create new index": {
+			ops:     []awstypes.GlobalSecondaryIndexUpdate{{Create: &awstypes.CreateGlobalSecondaryIndexAction{IndexName: aws.String("new-idx")}}},
+			wantErr: false,
+		},
+		"update active index": {
+			ops:     []awstypes.GlobalSecondaryIndexUpdate{{Update: &awstypes.UpdateGlobalSecondaryIndexAction{IndexName: aws.String("active-idx")}}},
+			wantErr: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			err := tfdynamodb.GSIModificationsBlockedByCreating(gsis, tc.ops)
+			if got := err != nil; got != tc.wantErr {
+				t.Errorf("wantErr %t, got err: %v", tc.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestSortGSICreatesAsyncLast(t *testing.T) {
+	t.Parallel()
+
+	createOp := func(name string) awstypes.GlobalSecondaryIndexUpdate {
+		return awstypes.GlobalSecondaryIndexUpdate{
+			Create: &awstypes.CreateGlobalSecondaryIndexAction{IndexName: aws.String(name)},
+		}
+	}
+	deleteOp := awstypes.GlobalSecondaryIndexUpdate{
+		Delete: &awstypes.DeleteGlobalSecondaryIndexAction{IndexName: aws.String("ignored-delete")},
+	}
+	updateOp := awstypes.GlobalSecondaryIndexUpdate{
+		Update: &awstypes.UpdateGlobalSecondaryIndexAction{IndexName: aws.String("ignored-update")},
+	}
+
+	extractCreateNames := func(ops []awstypes.GlobalSecondaryIndexUpdate) []string {
+		out := make([]string, 0, len(ops))
+		for _, op := range ops {
+			out = append(out, aws.ToString(op.Create.IndexName))
+		}
+		return out
+	}
+
+	testCases := map[string]struct {
+		input    []awstypes.GlobalSecondaryIndexUpdate
+		async    map[string]bool
+		expected []string
+	}{
+		"single sync": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("a")},
+			async:    map[string]bool{"a": false},
+			expected: []string{"a"},
+		},
+		"single async": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("a")},
+			async:    map[string]bool{"a": true},
+			expected: []string{"a"},
+		},
+		"sync then async preserved": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("sync"), createOp("async")},
+			async:    map[string]bool{"sync": false, "async": true},
+			expected: []string{"sync", "async"},
+		},
+		"async first reordered last": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("async"), createOp("sync")},
+			async:    map[string]bool{"async": true, "sync": false},
+			expected: []string{"sync", "async"},
+		},
+		"two sync one async": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("s1"), createOp("async"), createOp("s2")},
+			async:    map[string]bool{"s1": false, "async": true, "s2": false},
+			expected: []string{"s1", "s2", "async"},
+		},
+		"all async preserves relative order": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{createOp("a1"), createOp("a2"), createOp("a3")},
+			async:    map[string]bool{"a1": true, "a2": true, "a3": true},
+			expected: []string{"a1", "a2", "a3"},
+		},
+		"non-create ops filtered out": {
+			input:    []awstypes.GlobalSecondaryIndexUpdate{deleteOp, createOp("async"), updateOp, createOp("sync")},
+			async:    map[string]bool{"async": true, "sync": false},
+			expected: []string{"sync", "async"},
+		},
+		"empty input": {
+			input:    nil,
+			async:    nil,
+			expected: []string{},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			got := tfdynamodb.SortGSICreatesAsyncLast(tc.input, tc.async)
+			gotNames := extractCreateNames(got)
+			if diff := cmp.Diff(tc.expected, gotNames); diff != "" {
+				t.Errorf("unexpected order (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestAccDynamoDBTable_gsiCreateAsync(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiCreateAsyncBase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				Config: testAccTableConfig_gsiCreateAsync(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "AsyncGSI",
+						"create_async": acctest.CtTrue,
+					}),
+					testAccCheckGSIStatusReached(ctx, t, rName, "AsyncGSI",
+						awstypes.IndexStatusCreating, awstypes.IndexStatusActive),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccTableConfig_gsiCreateAsyncBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_gsiCreateAsync(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "AsyncGSIHashKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "AsyncGSI"
+    hash_key        = "AsyncGSIHashKey"
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+    create_async    = true
+  }
 }
 `, rName)
 }
