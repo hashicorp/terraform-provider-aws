@@ -160,7 +160,6 @@ func resourceVPNConnection() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
 				// Not supported on VGW
 				ConflictsWith: []string{"vpn_gateway_id"},
@@ -936,7 +935,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
+	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr", "tunnel_bandwidth") {
 		input := ec2.ModifyVpnConnectionOptionsInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -955,6 +954,10 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChange("remote_ipv6_network_cidr") {
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
+		}
+
+		if d.HasChanges("tunnel_bandwidth") {
+			input.TunnelBandwidth = awstypes.VpnTunnelBandwidth(d.Get("tunnel_bandwidth").(string))
 		}
 
 		_, err := conn.ModifyVpnConnectionOptions(ctx, &input)
