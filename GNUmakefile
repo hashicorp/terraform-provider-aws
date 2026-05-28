@@ -1208,6 +1208,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-make-tests \
 	clean-tidy \
 	copyright \
+	copyright-fix \
 	default \
 	deps-check \
 	docs \
@@ -1229,7 +1230,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	gen-check \
 	gen-raw \
 	generate-changelog \
-	gh-workflows-lint \
+	gh-workflow-lint \
 	go-build \
 	go-misspell \
 	golangci-lint \
@@ -1258,6 +1259,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-heading \
 	sane \
 	sanity \
+	schema-validate \
 	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
@@ -1268,6 +1270,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming \
 	semgrep-naming-cae \
 	semgrep-service-naming \
+	semgrep-test \
 	semgrep-validate \
 	skaff \
 	skaff-check-compile \
@@ -1281,9 +1284,11 @@ yamllint: ## [CI] YAML Linting / yamllint
 	swissshepherd-count \
 	swissshepherd-refresh \
 	t \
+	terraform-fmt \
 	test \
 	test-compile \
 	test-full \
+	test-naming \
 	test-shard \
 	test-single-service \
 	testacc \
@@ -1293,8 +1298,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
+	testacc-tflint-dir-fix \
 	testacc-tflint-embedded \
-	terraform-fmt \
 	tflint-init \
 	tfproviderdocs \
 	tools \
