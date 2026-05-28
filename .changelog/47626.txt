@@ -5,3 +5,7 @@ resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configura
 ```release-note:bug
 resource/aws_bedrockagentcore_gateway: Fix `ValidationException: Gateway with ID: ... has targets associated with it. Delete all targets before deleting the gateway` errors on delete
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Include `FAILED` and `SYNCHRONIZING` as pending states while a target is deleting
+```

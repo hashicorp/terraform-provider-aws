@@ -992,7 +992,8 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady),
+		// FAILED and SYNCHRONIZING can appear until AWS moves the target to DELETING.
+		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
