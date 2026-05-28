@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -449,19 +450,20 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"service": schema.StringAttribute{
-										Optional: true,
-										Description: "The target AWS service name used for SigV4 signing of upstream requests. " +
-											"Required when calling SigV4-protected endpoints such as another Bedrock AgentCore " +
-											"Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication.",
-									},
 									names.AttrRegion: schema.StringAttribute{
 										Optional: true,
 										Description: "AWS Region used for SigV4 signing of upstream requests. " +
 											"Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.",
 										Validators: []validator.String{
 											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("service")),
+											fwvalidators.AWSRegion(),
 										},
+									},
+									"service": schema.StringAttribute{
+										Optional: true,
+										Description: "The target AWS service name used for SigV4 signing of upstream requests. " +
+											"Required when calling SigV4-protected endpoints such as another Bedrock AgentCore " +
+											"Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication.",
 									},
 								},
 							},
@@ -1422,8 +1424,8 @@ type oauthCredentialProviderModel struct {
 }
 
 type gatewayIAMRoleProviderModel struct {
-	Service types.String `tfsdk:"service"`
 	Region  types.String `tfsdk:"region"`
+	Service types.String `tfsdk:"service"`
 }
 
 type mcpApiGatewayConfigurationModel struct {
