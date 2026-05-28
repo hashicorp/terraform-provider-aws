@@ -98,7 +98,7 @@ The `confluence_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Confluence data source. See [`source_configuration` block](#confluence-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Confluence content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Confluence documentation][1].
+For more details, see the [Amazon BedrockAgent Confluence documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html).
 
 ### Confluence `source_configuration` block
 
@@ -124,7 +124,7 @@ The `salesforce_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Salesforce data source. See [`source_configuration` block](#salesforce-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Salesforce documentation][2].
+For more details, see the [Amazon BedrockAgent Salesforce documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html).
 
 ### Salesforce `source_configuration` block
 
@@ -166,7 +166,7 @@ The `share_point_data_source_configuration` configuration block supports the fol
 * `source_configuration` - (Required) The endpoint information to connect to your SharePoint data source. See [`source_configuration` block](#sharepoint-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for SharePoint content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent SharePoint documentation][3].
+For more details, see the [Amazon BedrockAgent SharePoint documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html).
 
 ### SharePoint `source_configuration` block
 
@@ -368,8 +368,3 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 ```console
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
-
-[1]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html
-[2]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html
-[3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
-[4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html

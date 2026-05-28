@@ -47,7 +47,6 @@ resource "aws_msk_replicator" "test" {
     target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
-
     topic_replication {
       topic_name_configuration {
         type = "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS"
