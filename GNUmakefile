@@ -936,7 +936,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-test-naming: ## Check test naming conventions
+test-naming: ## [CI] Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
 testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
@@ -972,7 +972,7 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
 
-terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+terraform-fmt: ## [CI] Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
 	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
 	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
 	@terraform fmt -recursive .

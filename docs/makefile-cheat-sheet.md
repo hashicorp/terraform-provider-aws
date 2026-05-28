@@ -158,7 +158,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-service-naming`<sup>D</sup> | Semgrep Checks / Service Name Scan A-Z | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-validate` | Validate Semgrep configuration files |  |  |  |
-| `semgrep-vcr` | Enable VCR support with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
@@ -176,9 +175,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-short`<sup>D</sup> | Run acceptace tests with the -short flag |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-tflint` | Acceptance Test Linting / tflint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories |  |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories |  |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations |  |  | `K`, `PKG`, `SVC_DIR` |
 | `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
