@@ -81,6 +81,48 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPIdentityProvider_defaultProviderDetails(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProviderType
+	resourceName := "aws_cognito_identity_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_defaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_scopes", names.AttrEmail),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_url", "https://accounts.google.com/o/oauth2/v2/auth"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "test-url.apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", names.AttrClientSecret),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.oidc_issuer", "https://accounts.google.com"),
+				),
+			},
+			{
+				Config: testAccIdentityProviderConfig_defaultsUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_scopes", names.AttrEmail),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "new-client-id-url.apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", "updated_client_secret"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider awstypes.IdentityProviderType
@@ -182,6 +224,32 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rNameUTF8),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPIdentityProvider_samlDefaultProviderDetails(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProviderType
+	resourceName := "aws_cognito_identity_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_samlDefaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
 				),
 			},
 		},
@@ -299,6 +367,48 @@ func testAccCheckIdentityProviderExists(ctx context.Context, t *testing.T, n str
 	}
 }
 
+func testAccIdentityProviderConfig_defaults(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
+  auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    authorize_scopes = "email"
+    client_id        = "test-url.apps.googleusercontent.com"
+    client_secret    = "client_secret"
+  }
+}
+`, rName)
+}
+
+func testAccIdentityProviderConfig_defaultsUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
+  auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    authorize_scopes = "email"
+    client_id        = "new-client-id-url.apps.googleusercontent.com"
+    client_secret    = "updated_client_secret"
+  }
+}
+`, rName)
+}
+
 func testAccIdentityProviderConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -385,6 +495,25 @@ resource "aws_cognito_identity_provider" "test" {
   }
 }
 `, rName, attribute)
+}
+
+func testAccIdentityProviderConfig_samlDefaults(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
+  auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
+  provider_name = %[1]q
+  provider_type = "SAML"
+
+  provider_details = {
+    MetadataFile = file("./test-fixtures/saml-metadata.xml")
+  }
+}
+`, rName)
 }
 
 func testAccIdentityProviderConfig_saml(rName, userPoolName, encryptedResponses string) string {

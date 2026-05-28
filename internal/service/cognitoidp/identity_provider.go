@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -62,9 +63,10 @@ func resourceIdentityProvider() *schema.Resource {
 				},
 			},
 			"provider_details": {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:             schema.TypeMap,
+				Required:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString},
+				DiffSuppressFunc: suppressIdentityProviderProviderDetailsDiff,
 			},
 			names.AttrProviderName: {
 				Type:         schema.TypeString,
@@ -84,6 +86,114 @@ func resourceIdentityProvider() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+	}
+}
+
+var defaultIdentityProviderDetails = map[string]map[string]string{
+	"Google": {
+		"attributes_url":                "https://people.googleapis.com/v1/people/me?personFields=",
+		"attributes_url_add_attributes": "true",
+		"authorize_url":                 "https://accounts.google.com/o/oauth2/v2/auth",
+		"oidc_issuer":                   "https://accounts.google.com",
+		"token_request_method":          "POST",
+		"token_url":                     "https://www.googleapis.com/oauth2/v4/token",
+	},
+}
+
+// suppressIdentityProviderProviderDetailsDiff handles provider detail values that
+// Cognito returns from DescribeIdentityProvider even when they were not present
+// in configuration. The provider keeps those values in state so they remain
+// visible, but suppresses plans that would only remove known AWS-returned
+// defaults or read-only values from state.
+func suppressIdentityProviderProviderDetailsDiff(k, old, new string, d *schema.ResourceData) bool {
+	oldRaw, newRaw := d.GetChange("provider_details")
+	oldDetails := stringMap(oldRaw)
+	newDetails := stringMap(newRaw)
+	providerType := d.Get("provider_type").(string)
+
+	if k == "provider_details.%" {
+		return suppressIdentityProviderProviderDetailsCountDiff(providerType, oldDetails, newDetails)
+	}
+
+	detailKey, ok := strings.CutPrefix(k, "provider_details.")
+	if !ok {
+		return false
+	}
+
+	// Never suppress a diff for a configured key. If the configuration changes a
+	// provider detail value, Terraform must still plan an update for it.
+	if _, configured := newDetails[detailKey]; configured {
+		return false
+	}
+
+	return isReadOnlyOrDefaultIdentityProviderDetail(providerType, detailKey, old, newDetails) && new == ""
+}
+
+// suppressIdentityProviderProviderDetailsCountDiff covers the TypeMap count
+// entry, which changes when Cognito adds extra provider detail keys during read.
+// The count diff is safe to suppress only when every missing key is one of the
+// known AWS-returned values and all still-configured keys are unchanged.
+func suppressIdentityProviderProviderDetailsCountDiff(providerType string, oldDetails, newDetails map[string]string) bool {
+	if len(oldDetails) <= len(newDetails) {
+		return false
+	}
+
+	removed := false
+	for key, oldValue := range oldDetails {
+		newValue, configured := newDetails[key]
+		switch {
+		case !configured:
+			if !isReadOnlyOrDefaultIdentityProviderDetail(providerType, key, oldValue, newDetails) {
+				return false
+			}
+			removed = true
+		case oldValue != newValue:
+			return false
+		}
+	}
+
+	return removed
+}
+
+// isReadOnlyOrDefaultIdentityProviderDetail is intentionally allowlist-based.
+// Cognito provider_details is a free-form map, so suppressing arbitrary removed
+// keys could hide real user changes. Google returns documented endpoint defaults
+// when omitted, while SAML returns derived/read-only metadata fields.
+func isReadOnlyOrDefaultIdentityProviderDetail(providerType, key, oldValue string, configuredDetails map[string]string) bool {
+	if defaults, ok := defaultIdentityProviderDetails[providerType]; ok {
+		if defaultValue, ok := defaults[key]; ok {
+			return oldValue == defaultValue
+		}
+	}
+
+	switch providerType {
+	case "SAML":
+		switch key {
+		case "ActiveEncryptionCertificate":
+			return true
+		case "SSORedirectBindingURI":
+			_, hasMetadataFile := configuredDetails["MetadataFile"]
+			return hasMetadataFile
+		}
+	}
+
+	return false
+}
+
+func stringMap(v any) map[string]string {
+	switch v := v.(type) {
+	case map[string]string:
+		return maps.Clone(v)
+	case map[string]any:
+		m := make(map[string]string, len(v))
+		for k, v := range v {
+			m[k] = fmt.Sprint(v)
+		}
+		return m
+	case nil:
+		return nil
+	default:
+		return nil
 	}
 }
 
