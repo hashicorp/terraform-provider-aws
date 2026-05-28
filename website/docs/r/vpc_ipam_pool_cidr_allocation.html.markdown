@@ -99,6 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resource_id` - The ID of the resource.
 * `resource_owner` - The owner of the resource.
 * `resource_type` - The type of the resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
