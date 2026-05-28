@@ -61,6 +61,11 @@ resource "aws_securityhub_configuration_policy_association" "ou_example" {
   target_id = "ou-abcd-12345678"
   policy_id = aws_securityhub_configuration_policy.example.id
 }
+
+resource "aws_securityhub_configuration_policy_association" "self_managed_example" {
+  target_id = "123456789012"
+  policy_id = "SELF_MANAGED_SECURITY_HUB"
+}
 ```
 
 ## Argument Reference
@@ -68,7 +73,7 @@ resource "aws_securityhub_configuration_policy_association" "ou_example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy.
+* `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy, or `SELF_MANAGED_SECURITY_HUB` for a self-managed configuration.
 * `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 
 ## Attribute Reference

@@ -38,10 +38,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	resourceSchemasValidated bool
-)
-
 type sdkProvider struct {
 	provider        *schema.Provider
 	servicePackages iter.Seq2[int, conns.ServicePackage]
@@ -315,24 +311,6 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 
 	sdkProvider.provider.ConfigureContextFunc = sdkProvider.configure
 
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
-	// Because we try and share resource schemas as much as possible,
-	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := sdkProvider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
-	}
-
 	servicePackageMap, err := sdkProvider.initialize(ctx)
 
 	if err != nil {
@@ -565,12 +543,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			r := v.Factory()
 
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
-				continue
-			}
-
 			var isRegionOverrideEnabled bool
 			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
@@ -664,24 +636,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			r := resource.Factory()
-
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Create != nil || r.CreateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Update != nil || r.UpdateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Delete != nil || r.DeleteContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
-				continue
-			}
 
 			var isRegionOverrideEnabled bool
 			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
@@ -841,85 +795,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 	}
 
 	return servicePackageMap, errors.Join(errs...)
-}
-
-// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
-func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
-	var errs []error
-
-	for _, sp := range p.servicePackages {
-		for _, v := range sp.SDKDataSources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
-			s := r.SchemaMap()
-
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(v.Tags) {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
-					continue
-				}
-			}
-		}
-
-		for _, resource := range sp.SDKResources(ctx) {
-			typeName := resource.TypeName
-			r := resource.Factory()
-			s := r.SchemaMap()
-
-			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(resource.Tags) {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := s[names.AttrTagsAll]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
-					continue
-				}
-			}
-
-			if resource.Identity.IsCustomInherentRegion {
-				if resource.Identity.IsGlobalResource {
-					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
-					continue
-				}
-			}
-		}
-	}
-
-	return errors.Join(errs...)
 }
 
 func assumeRoleSchema() *schema.Schema {

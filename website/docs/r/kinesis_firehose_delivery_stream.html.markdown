@@ -10,7 +10,7 @@ description: |-
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 , Amazon Redshift and Snowflake.
 
-For more details, see the [Amazon Kinesis Firehose Documentation][1].
+For more details, see the [Amazon Kinesis Firehose Documentation](https://aws.amazon.com/documentation/firehose/).
 
 ## Example Usage
 
@@ -90,7 +90,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 ```
 
@@ -1151,8 +1151,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-[1]: https://aws.amazon.com/documentation/firehose/
 
 ## Timeouts
 

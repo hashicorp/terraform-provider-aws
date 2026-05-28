@@ -32,8 +32,14 @@ This data source exports the following attributes in addition to the arguments a
 * `access_policies` - Policy document attached to the domain.
 * `advanced_options` - Key-value string pairs to specify advanced configuration options.
 * `advanced_security_options` - Status of the OpenSearch domain's advanced security options. The block consists of the following attributes:
+    * `anonymous_auth_enabled` - Whether Anonymous auth is enabled.
     * `enabled` - Whether advanced security is enabled.
     * `internal_user_database_enabled` - Whether the internal user database is enabled.
+    * `jwt_options` - Block for JWT authentication.
+        * `enabled` - Whether JWT authentication is enabled.
+        * `public_key` - PEM-encoded public key used to verify JWT signatures.
+        * `role_key` - Element of the JWT assertion to use for roles.
+        * `subject_key` - Element of the JWT assertion to use for the user name.
 * `arn` - ARN of the domain.
 * `auto_tune_options` - Configuration of the Auto-Tune options of the domain.
     * `desired_state` - Auto-Tune desired state for the domain.

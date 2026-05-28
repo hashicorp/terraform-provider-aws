@@ -7,6 +7,8 @@ package securityhub
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,6 +25,18 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newEnabledStandardsDataSource,
+			TypeName: "aws_securityhub_enabled_standards",
+			Name:     "Enabled Standards",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newSecurityControlsDataSource,
+			TypeName: "aws_securityhub_security_controls",
+			Name:     "Security Controls",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newStandardsControlAssociationsDataSource,
 			TypeName: "aws_securityhub_standards_control_associations",
 			Name:     "Standards Control Associations",
@@ -34,6 +48,32 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountV2Resource,
+			TypeName: "aws_securityhub_account_v2",
+			Name:     "Account V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newAggregatorV2Resource,
+			TypeName: "aws_securityhub_aggregator_v2",
+			Name:     "Aggregator V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newAutomationRuleResource,
 			TypeName: "aws_securityhub_automation_rule",
 			Name:     "Automation Rule",
@@ -42,6 +82,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newAutomationRuleV2Resource,
+			TypeName: "aws_securityhub_automation_rule_v2",
+			Name:     "Automation Rule V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newConnectorV2Resource,
+			TypeName: "aws_securityhub_connector_v2",
+			Name:     "Connector V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("connector_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -62,6 +128,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAutomationRuleV2ResourceAsListResource,
+			TypeName: "aws_securityhub_automation_rule_v2",
+			Name:     "Automation Rule V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newConnectorV2ResourceAsListResource,
+			TypeName: "aws_securityhub_connector_v2",
+			Name:     "Connector V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("connector_id", true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -203,6 +294,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newInsightResourceAsListResource,
+			TypeName: "aws_securityhub_insight",
+			Name:     "Insight",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+		{
+			Factory:  newStandardsControlResourceAsListResource,
+			TypeName: "aws_securityhub_standards_control",
+			Name:     "Standards Control",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("standards_control_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

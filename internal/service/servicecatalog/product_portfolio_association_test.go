@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +24,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -53,7 +54,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -68,6 +69,14 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_product_portfolio_association.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_product_portfolio_association.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

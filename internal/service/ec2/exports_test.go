@@ -61,6 +61,7 @@ var (
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
+	ResourceNetworkInsightsAccessScope                    = newNetworkInsightsAccessScopeResource
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
@@ -142,6 +143,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
@@ -197,6 +199,7 @@ var (
 	FindNetworkACLAssociationByID                               = findNetworkACLAssociationByID
 	FindNetworkACLByID                                          = findNetworkACLByID
 	FindNetworkACLEntryByThreePartKey                           = findNetworkACLEntryByThreePartKey
+	FindNetworkInsightsAccessScopeByID                          = findNetworkInsightsAccessScopeByID
 	FindNetworkInsightsAnalysisByID                             = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                 = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                    = findNetworkInterfaceByID
@@ -319,6 +322,9 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 type (

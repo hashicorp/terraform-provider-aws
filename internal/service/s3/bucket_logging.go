@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -241,20 +242,28 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
+	if err := resourceBucketLoggingFlatten(loggingEnabled, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceBucketLoggingFlatten(loggingEnabled *types.LoggingEnabled, d *schema.ResourceData) error {
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
+		return fmt.Errorf("setting target_grant: %w", err)
 	}
 	if loggingEnabled.TargetObjectKeyFormat != nil {
 		if err := d.Set("target_object_key_format", []any{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_object_key_format: %s", err)
+			return fmt.Errorf("setting target_object_key_format: %w", err)
 		}
 	} else {
 		d.Set("target_object_key_format", nil)
 	}
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
-	return diags
+	return nil
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

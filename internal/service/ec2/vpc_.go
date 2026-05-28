@@ -17,12 +17,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -389,13 +391,15 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	tflog.Info(ctx, "Deleting EC2 VPC")
+
 	input := ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteVpc(ctx, &input)
-	}, errCodeDependencyViolation)
+
+	// First attempt at deletion.
+	_, err := conn.DeleteVpc(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
@@ -405,6 +409,52 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
 	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
 		return diags
+	}
+
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so that no new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
+
+		endpointsErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
+		if endpointsErr != nil {
+			if isUnauthorizedError(endpointsErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), endpointsErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), endpointsErr)
+			}
+		}
+
+		sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
+		if sgErr != nil {
+			if isUnauthorizedError(sgErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), sgErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC security groups for EC2 VPC %q: %s", d.Id(), sgErr)
+			}
+		}
+
+		// Retry the deletion now that GuardDuty resources have been cleaned up.
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			return conn.DeleteVpc(ctx, &input)
+		}, errCodeDependencyViolation)
+	}
+
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
@@ -755,4 +805,117 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
+}
+
+func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
+
+	sgs, err := findGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty security groups for VPC %q: %w", vpcID, err)
+	}
+
+	if len(sgs) == 0 {
+		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{
+		"count": len(sgs),
+	})
+
+	for _, sg := range sgs {
+		groupID := aws.ToString(sg.GroupId)
+		ctx := tflog.SetField(ctx, "group_id", groupID)
+
+		tflog.Debug(ctx, "Deleting GuardDuty security group")
+
+		deleteInput := ec2.DeleteSecurityGroupInput{
+			GroupId: aws.String(groupID),
+		}
+		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			return fmt.Errorf("deleting GuardDuty security group %q: %w", groupID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty security group")
+	}
+
+	return nil
+}
+
+func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion")
+
+	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty VPC endpoints for VPC %q: %w", vpcID, err)
+	}
+
+	if len(endpoints) == 0 {
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
+		"count": len(endpoints),
+	})
+
+	for _, endpoint := range endpoints {
+		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
+
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint")
+
+		deleteInput := ec2.DeleteVpcEndpointsInput{
+			VpcEndpointIds: []string{endpointID},
+		}
+		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion")
+				continue
+			}
+			return fmt.Errorf("deleting GuardDuty VPC endpoint %q in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state")
+				continue
+			}
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach deleted state in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint")
+	}
+
+	return nil
+}
+
+func guardDutySecurityGroupNameForVPC(vpcID string) string {
+	return guardDutySecurityGroupPrefix + vpcID
+}
+
+func findGuardDutySecurityGroupsForVPC(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.SecurityGroup, error) {
+	groupName := guardDutySecurityGroupNameForVPC(vpcID)
+	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-id":                        vpcID,
+			"group-name":                    groupName,
+			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
+		}),
+	})
 }
