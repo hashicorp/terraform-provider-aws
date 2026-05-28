@@ -89,6 +89,71 @@ resource "aws_ecs_capacity_provider" "example" {
 }
 ```
 
+### Managed Instances Provider with Capacity Reservations (ODCR)
+
+```terraform
+resource "aws_ec2_capacity_reservation" "example" {
+  instance_type     = "c5.large"
+  instance_platform = "Linux/UNIX"
+  availability_zone = "us-west-2a"
+  instance_count    = 2
+
+  tags = {
+    CapacityReservationGroup = "example"
+  }
+}
+
+resource "aws_resourcegroups_group" "example" {
+  name = "example-reservation-group"
+
+  resource_query {
+    query = jsonencode({
+      ResourceTypeFilters = ["AWS::EC2::CapacityReservation"]
+      TagFilters = [{
+        Key    = "CapacityReservationGroup"
+        Values = ["example"]
+      }]
+    })
+  }
+}
+
+resource "aws_ecs_capacity_provider" "example" {
+  name    = "example"
+  cluster = "my-cluster"
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.ecs_infrastructure.arn
+
+    instance_launch_template {
+      capacity_option_type     = "RESERVED"
+      ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
+
+      capacity_reservations {
+        reservation_group_arn  = aws_resourcegroups_group.example.arn
+        reservation_preference = "RESERVATIONS_ONLY"
+      }
+
+      network_configuration {
+        subnets         = [aws_subnet.example.id]
+        security_groups = [aws_security_group.example.id]
+      }
+
+      instance_requirements {
+        memory_mib {
+          min = 1
+        }
+
+        vcpu_count {
+          min = 1
+        }
+
+        allowed_instance_types = ["c5.large", "c5a.large", "c5ad.large"]
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -126,7 +191,8 @@ This resource supports the following arguments:
 
 ### `instance_launch_template`
 
-* `capacity_option_type` - (Optional) The purchasing option for the EC2 instances used in the capacity provider. Determines whether to use On-Demand or Spot instances. Valid values are `ON_DEMAND` and `SPOT`. Defaults to `ON_DEMAND` when not specified. Changing this value will trigger replacement of the capacity provider. For more information, see [Amazon EC2 billing and purchasing options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-purchasing-options.html) in the Amazon EC2 User Guide.
+* `capacity_option_type` - (Optional) The capacity option type for the instances. Determines the EC2 purchasing model used by the capacity provider. Valid values are `ON_DEMAND`, `SPOT`, and `RESERVED`. When set to `RESERVED`, the `capacity_reservations` block must also be specified. Cannot be changed after creation.
+* `capacity_reservations` - (Optional) Configuration block for capacity reservation settings. Can only be set when `capacity_option_type` is `RESERVED`. Detailed below.
 * `ec2_instance_profile_arn` - (Required) The Amazon Resource Name (ARN) of the instance profile that Amazon ECS applies to Amazon ECS Managed Instances. This instance profile must include the necessary permissions for your tasks to access AWS services and resources. For more information, see [Amazon ECS instance profile for Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html) in the Amazon ECS Developer Guide.
 * `instance_requirements` - (Optional) The instance requirements. You can specify the instance types and instance requirements such as vCPU count, memory, network performance, and accelerator specifications. Amazon ECS automatically selects the instances that match the specified criteria. Detailed below.
 * `monitoring` - (Optional) CloudWatch provides two categories of monitoring: basic monitoring and detailed monitoring. By default, your managed instance is configured for basic monitoring. You can optionally enable detailed monitoring to help you more quickly identify and act on operational issues. You can enable or turn off detailed monitoring at launch or when the managed instance is running or stopped. For more information, see [Detailed monitoring for Amazon ECS Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch-metrics.html) in the Amazon ECS Developer Guide. Valid values are `BASIC` and `DETAILED`.
@@ -141,6 +207,11 @@ This resource supports the following arguments:
 ### `storage_configuration`
 
 * `storage_size_gib` - (Required) The size of the tasks volume in GiB. Must be at least 1.
+
+### `capacity_reservations`
+
+* `reservation_group_arn` - (Optional) The ARN of the Capacity Reservation resource group to target. Can only be specified when `reservation_preference` is `RESERVATIONS_ONLY` or not set.
+* `reservation_preference` - (Optional) The preference for using capacity reservations. Valid values are `RESERVATIONS_ONLY` (only launch into reserved capacity), `RESERVATIONS_FIRST` (prefer reserved capacity, fall back to on-demand), and `RESERVATIONS_EXCLUDED` (never use reserved capacity). When `reservation_preference` is `RESERVATIONS_ONLY` or `RESERVATIONS_FIRST`, `instance_requirements` must also be specified.
 
 ### `instance_requirements`
 
