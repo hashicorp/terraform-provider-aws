@@ -526,19 +526,77 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName),
+				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: importStateVerifyIgnore,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/40060.
+func TestAccELBV2LoadBalancer_NLB_privateIPv4AddressUpdateFromSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	var importStateVerifyIgnore []string
+	// GovCloud doesn't support dns_record_client_routing_policy.
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnets(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnets), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnets), knownvalue.SetSizeExact(2)),
+				},
 			},
 		},
 	})
@@ -2154,7 +2212,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_noSecurityGroups(t *testing.T)
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 		},
@@ -2185,7 +2243,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -2200,7 +2258,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(1)),
 				},
 			},
 			{
@@ -2215,7 +2273,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(2)),
 				},
 			},
 			{
@@ -2240,7 +2298,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforce_security_group_inbound_rules_on_private_link_traffic"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 		},
@@ -2270,7 +2328,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -2287,7 +2345,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroups), knownvalue.SetSizeExact(1)),
 				},
 			},
 		},
@@ -3863,24 +3921,8 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName string) string {
+func testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name                       = %[1]q
-  internal                   = true
-  load_balancer_type         = "network"
-  enable_deletion_protection = false
-
-  subnet_mapping {
-    subnet_id            = aws_subnet.test.id
-    private_ipv4_address = "10.10.0.15"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
@@ -3889,11 +3931,64 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "test1" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.10.0.0/21"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.10.8.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnets(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  internal                   = true
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnets = [aws_subnet.test1.id, aws_subnet.test2.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  internal                   = true
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnet_mapping {
+    subnet_id            = aws_subnet.test2.id
+    private_ipv4_address = "10.10.8.15"
+  }
+
+  subnet_mapping {
+    subnet_id            = aws_subnet.test1.id
+    private_ipv4_address = "10.10.0.15"
+  }
 
   tags = {
     Name = %[1]q
