@@ -16,14 +16,14 @@ func resourceResource() *schema.Resource {
 
 		// ruleid: use-schema-func
 		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-				},
-			}
-		},
+  	return map[string]*schema.Schema{
+  			"name": {
+  				Type:     schema.TypeString,
+  				Required: true,
+  				ForceNew: true,
+  			},
+  		}
+  },
 	}
 }
 
@@ -36,27 +36,27 @@ func resourceNested() *schema.Resource {
 
 		// ruleid: use-schema-func
 		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-				},
-				"list": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						// ok: use-schema-func
-						Schema: map[string]*schema.Schema{
-							"item": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-						},
-					},
-				},
-			}
-		},
+  	return map[string]*schema.Schema{
+  			"name": {
+  				Type:     schema.TypeString,
+  				Required: true,
+  				ForceNew: true,
+  			},
+  			"list": {
+  				Type:     schema.TypeList,
+  				Optional: true,
+  				Elem: &schema.Resource{
+  					// ok: use-schema-func
+  					Schema: map[string]*schema.Schema{
+  						"item": {
+  							Type:     schema.TypeString,
+  							Optional: true,
+  						},
+  					},
+  				},
+  			},
+  		}
+  },
 	}
 }
 
@@ -71,13 +71,13 @@ func resourcePreamble() *schema.Resource {
 
 		// ruleid: use-schema-func
 		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-				},
-			}
-		},
+  	return map[string]*schema.Schema{
+  			"name": {
+  				Type:     schema.TypeString,
+  				Required: true,
+  				ForceNew: true,
+  			},
+  		}
+  },
 	}
 }
