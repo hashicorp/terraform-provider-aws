@@ -1,5 +1,9 @@
 ## 6.48.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Fix `CacheClusterNotFound` when enabling snapshots after the primary cache cluster has been changed away from `-001`, and `InvalidParameterCombination` when enabling snapshots on cluster mode enabled groups ([#46326](https://github.com/hashicorp/terraform-provider-aws/issues/46326))
+
 ## 6.47.0 (May 27, 2026)
 
 FEATURES:
