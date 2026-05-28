@@ -284,6 +284,18 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
+### Makefile and Documentation Alignment
+
+This check validates that the `GNUmakefile`, its `.PHONY` list, the [Makefile Cheat Sheet](makefile-cheat-sheet.md), and this Continuous Integration document stay in sync. It is implemented by the [`makelign`](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/makelign) tool.
+
+It catches issues such as a target rule that was added without being included in `.PHONY`, a `.PHONY` entry that no longer matches any rule (often a typo), and cheat-sheet rows that reference targets that were renamed or removed.
+
+Use the `makefile-lint` target to run the check:
+
+```console
+make makefile-lint
+```
+
 ### Modern Go Check
 
 This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.

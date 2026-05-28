@@ -135,6 +135,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
+| `makefile-lint` | Validate GNUmakefile/docs alignment | ✔️ |  |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
