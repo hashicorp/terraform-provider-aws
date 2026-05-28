@@ -1,3 +1,5 @@
+## 6.48.0 (Unreleased)
+
 ## 6.47.0 (May 27, 2026)
 
 FEATURES:
