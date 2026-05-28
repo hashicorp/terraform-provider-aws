@@ -5380,7 +5380,7 @@ func testAccReplicationGroupConfig_nativeRedisClusterNonClusteredParameter(rName
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.medium"
+  node_type                  = "cache.t3.medium"
   automatic_failover_enabled = false
   engine_version             = "6.x"
   parameter_group_name       = "default.redis6.x"
@@ -5398,7 +5398,7 @@ func testAccReplicationGroupConfig_nativeRedisClusterSingleNode(rName string) st
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.medium"
+  node_type                  = "cache.t3.medium"
   automatic_failover_enabled = true
   engine_version             = "6.x"
   parameter_group_name       = "default.redis6.x.cluster.on"
@@ -5416,7 +5416,7 @@ func testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(r
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.medium"
+  node_type                  = "cache.t3.medium"
   apply_immediately          = true
   automatic_failover_enabled = true
   cluster_mode               = %[2]q
