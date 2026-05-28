@@ -526,7 +526,7 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName),
+				Config: testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 				),
@@ -544,59 +544,6 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: importStateVerifyIgnore,
-			},
-		},
-	})
-}
-
-// https://github.com/hashicorp/terraform-provider-aws/issues/40060.
-func TestAccELBV2LoadBalancer_NLB_privateIPv4AddressUpdateFromSubnets(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.LoadBalancer
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
-
-	var importStateVerifyIgnore []string
-	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
-	}
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnets(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnets), knownvalue.SetSizeExact(2)),
-				},
-			},
-			{
-				Config: testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.SetSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnets), knownvalue.SetSizeExact(2)),
-				},
 			},
 		},
 	})
@@ -3955,24 +3902,7 @@ resource "aws_subnet" "test2" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnets(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name                       = %[1]q
-  internal                   = true
-  load_balancer_type         = "network"
-  enable_deletion_protection = false
-
-  subnets = [aws_subnet.test1.id, aws_subnet.test2.id]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccLoadBalancerConfig_nlbPrivateIPV4AddressSubnetMappings(rName string) string {
+func testAccLoadBalancerConfig_nlbPrivateIPV4Address(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBPrivateIPV4Address(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = %[1]q
