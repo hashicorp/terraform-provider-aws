@@ -36,9 +36,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newConfigurationSetEventDestinationResource,
-			TypeName: "aws_pinpointsmsvoicev2_configuration_set_event_destination",
-			Name:     "Configuration Set Event Destination",
+			Factory:  newEventDestinationResource,
+			TypeName: "aws_pinpointsmsvoicev2_event_destination",
+			Name:     "Event Destination",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("configuration_set_name", true),
@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
-				ImportID:      configurationSetEventDestinationImportID{},
+				ImportID:      eventDestinationImportID{},
 			},
 		},
 		{

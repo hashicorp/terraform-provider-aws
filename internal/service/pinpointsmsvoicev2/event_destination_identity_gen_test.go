@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -33,17 +33,17 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationSetEventDestinationExists(ctx, t, resourceName),
+					testAccCheckEventDestinationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -60,7 +60,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t 
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -74,7 +74,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t 
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -93,7 +93,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t 
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -112,10 +112,10 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_basic(t 
 	})
 }
 
-func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_regionOverride(t *testing.T) {
+func TestAccPinpointSMSVoiceV2EventDestination_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_pinpointsmsvoicev2_configuration_set_event_destination.test"
+	resourceName := "aws_pinpointsmsvoicev2_event_destination.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -129,7 +129,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_regionOv
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -149,7 +149,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_regionOv
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -164,7 +164,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_regionOv
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -184,7 +184,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSetEventDestination_Identity_regionOv
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConfigurationSetEventDestination/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventDestination/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
