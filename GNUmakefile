@@ -1135,7 +1135,7 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
-website-terrafmt-fix: ## [CI] Fix Website / terrafmt
+website-terrafmt-fix: ## Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
 	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
