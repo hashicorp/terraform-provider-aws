@@ -50,7 +50,7 @@ import (
 // @SDKResource("aws_ecs_service", name="Service")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("cluster")
-// @IdentityAttribute("name)
+// @IdentityAttribute("name")
 // @ImportIDHandler("serviceImportID")
 // @CustomImport
 // @Testing(preIdentityVersion="v6.33.0")

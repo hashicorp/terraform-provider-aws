@@ -297,22 +297,22 @@ The `predictive_scaling_policy_configuration` `metric_specification` `customized
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_load_metric_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Metric type.
-* `resource_label` - (Optional) Label that uniquely identifies a target group.
+* `predefined_metric_type` - (Required) Predefined load metric type. See the [`PredictiveScalingPredefinedLoadMetricSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedLoadMetricSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a target group. Required when `predefined_metric_type` is an ALB-based value.
 
 ### predictive_scaling_policy_configuration metric_specification predefined_metric_pair_specification
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_metric_pair_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric.
-* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the total and average request count.
+* `predefined_metric_type` - (Required) Pair of predefined metrics (one load metric and one scaling metric) to use. See the [`PredictiveScalingPredefinedMetricPairSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedMetricPairSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the total and average request count. Required when `predefined_metric_type` is an ALB-based value.
 
 ### predictive_scaling_policy_configuration metric_specification predefined_scaling_metric_specification
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_scaling_metric_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Metric type.
-* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the average request count.
+* `predefined_metric_type` - (Required) Predefined scaling metric type. See the [`PredictiveScalingPredefinedScalingMetricSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedScalingMetricSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the average request count. Required when `predefined_metric_type` is an ALB-based value.
 
 ### step_scaling_policy_configuration
 

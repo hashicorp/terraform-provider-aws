@@ -5,7 +5,6 @@ package timestreaminfluxdb_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -120,7 +118,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -136,7 +134,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				),
 			},
@@ -149,7 +147,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -174,7 +172,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -190,7 +188,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtTrue),
@@ -205,7 +203,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtFalse),
@@ -268,7 +266,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	port1 := "8086"
 	port2 := "8087"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -286,7 +284,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_port(rName, port1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port1),
 				),
 			},
@@ -299,7 +297,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_port(rName, port2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -471,7 +469,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -487,7 +485,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeAutomatic)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
 				),
 			},
@@ -500,7 +498,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeNoFailover)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeNoFailover)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -551,6 +549,30 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName), // var reference
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName), // conditional
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -566,7 +588,7 @@ func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	preferredMaintenanceWindow1 := "Sun:02:00-Sun:06:00"
@@ -586,7 +608,7 @@ func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_maintenanceScheduleV3(rName, preferredMaintenanceWindow1, timezone1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone1),
 				),
@@ -600,7 +622,7 @@ func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_maintenanceScheduleV3(rName, preferredMaintenanceWindow2, timezone2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone2),
 				),
@@ -708,36 +730,29 @@ func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			if err != nil {
-				return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Timestream InfluxDB DB Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, name string, dbCluster *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
+func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, n string, v *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
+
 		resp, err := tftimestreaminfluxdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
+			return err
 		}
 
-		*dbCluster = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -1361,6 +1376,56 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   vpc_security_group_ids        = [aws_security_group.test.id]
   db_instance_type              = "db.influx.medium"
   db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "db_parameter_group_identifier" {
+  type    = string
+  default = "InfluxDBV3Core"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.db_parameter_group_identifier
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "environment" {
+  type    = string
+  default = "test"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.environment == "test" ? "InfluxDBV3Core" : "InfluxDBV3Enterprise"
 
   depends_on = [
     aws_vpc_endpoint_route_table_association.test,

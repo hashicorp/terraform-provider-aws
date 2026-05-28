@@ -88,6 +88,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -356,6 +357,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		deploy.ServicePackage(ctx),
 		detective.ServicePackage(ctx),
 		devicefarm.ServicePackage(ctx),
+		devopsagent.ServicePackage(ctx),
 		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),

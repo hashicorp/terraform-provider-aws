@@ -303,6 +303,75 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("session_storage").AtSliceIndex(0).AtMapKey("mount_path"),
+						knownvalue.StringExact("/mnt/data")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("session_storage").AtSliceIndex(0).AtMapKey("mount_path"),
+						knownvalue.StringExact("/mnt/data2")),
+				},
+			},
+		},
+	})
+}
+
+// NOTE: TestAccBedrockAgentCoreAgentRuntime_filesystemEFSAccessPoint and
+// TestAccBedrockAgentCoreAgentRuntime_filesystemS3FilesAccessPoint were
+// verified locally (apply + import-verify both succeeded with properly
+// configured VPC + mount targets + execution-role permissions), but are
+// omitted from the upstream test suite because the agent runtime's Delete
+// does not wait for VPC ENI reclamation, which AgentCore can take up to
+// 8 hours to complete. Re-introduce these tests when AgentCore's ENI drain
+// SLA improves or when the Delete path awaits it.
+
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -1346,4 +1415,29 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, s3Bucket, s3Key))
+}
+
+func testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, mountPath string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  filesystem_configuration {
+    session_storage {
+      mount_path = %[3]q
+    }
+  }
+}
+`, rName, rImageUri, mountPath))
 }

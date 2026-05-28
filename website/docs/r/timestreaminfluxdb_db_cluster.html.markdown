@@ -301,17 +301,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB cluster using its identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_timestreaminfluxdb_db_cluster.example
-  id = "12345abcde"
+  identity = {
+    id = "hzfuy146ke"
+  }
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Timestream for InfluxDB cluster using its identifier. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the Timestream for InfluxDB cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB clusters using `id`. For example:
+
+```terraform
+import {
+  to = aws_timestreaminfluxdb_db_cluster.example
+  id = "hzfuy146ke"
+}
+```
+
+Using `terraform import`, import Timestream for InfluxDB clusters using `id`. For example:
 
 ```console
-% terraform import aws_timestreaminfluxdb_db_cluster.example 12345abcde
+% terraform import aws_timestreaminfluxdb_db_cluster.example hzfuy146ke
 ```

@@ -120,7 +120,7 @@ func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.Resourc
 
 	_, err := conn.UpdateApnsVoipSandboxChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNS VoIP Sandbox Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging APNS VoIP Sandbox Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -132,18 +132,18 @@ func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint APNS VoIP Sandbox Channel for Application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging APNS VoIP Sandbox Channel for Application %s", d.Id())
 
 	output, err := findAPNSVoIPSandboxChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint APNS VoIP Sandbox Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging APNS VoIP Sandbox Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint APNS VoIP Sandbox Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging APNS VoIP Sandbox Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -158,7 +158,7 @@ func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint APNS VoIP Sandbox Channel: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging APNS VoIP Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsVoipSandboxChannel(ctx, &pinpoint.DeleteApnsVoipSandboxChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -168,7 +168,7 @@ func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNS VoIP Sandbox Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging APNS VoIP Sandbox Channel for Application %s: %s", d.Id(), err)
 	}
 	return diags
 }

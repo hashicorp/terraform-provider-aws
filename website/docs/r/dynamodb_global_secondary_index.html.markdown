@@ -8,12 +8,6 @@ description: |-
 
 # Resource: aws_dynamodb_global_secondary_index
 
-!> The resource type `aws_dynamodb_global_secondary_index` is an experimental feature. The schema or behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider.
-
-~> The resource type `aws_dynamodb_global_secondary_index` can be enabled by setting the environment variable `TF_AWS_EXPERIMENT_dynamodb_global_secondary_index` to any value. If not enabled, use of `aws_dynamodb_global_secondary_index` will result in an error when running Terraform.
-
--> Please provide feedback, positive or negative, at https://github.com/hashicorp/terraform-provider-aws/issues/45640. User feedback will determine if this experiment is a success.
-
 !> **WARNING:** Do not combine `aws_dynamodb_global_secondary_index` resources in conjunction with `global_secondary_index` on [`aws_dynamodb_table`](dynamodb_table.html). Doing so may cause conflicts, perpertual differences, and Global Secondary Indexes being overwritten.
 
 ## Example Usage

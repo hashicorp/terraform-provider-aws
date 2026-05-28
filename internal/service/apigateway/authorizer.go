@@ -55,7 +55,7 @@ func resourceAuthorizer() *schema.Resource {
 				}
 				restAPIId := idParts[0]
 				authorizerId := idParts[1]
-				d.Set("rest_api_id", restAPIId)
+				d.Set(attrRestAPIID, restAPIId)
 				d.SetId(authorizerId)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -102,7 +102,7 @@ func resourceAuthorizer() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := apigateway.CreateAuthorizerInput{
 		IdentitySource:               aws.String(d.Get("identity_source").(string)),
 		Name:                         aws.String(name),
-		RestApiId:                    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:                    aws.String(d.Get(attrRestAPIID).(string)),
 		Type:                         awstypes.AuthorizerType(d.Get(names.AttrType).(string)),
 		AuthorizerResultTtlInSeconds: aws.Int32(int32(d.Get("authorizer_result_ttl_in_seconds").(int))),
 	}
@@ -189,7 +189,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta an
 	c := meta.(*conns.AWSClient)
 	conn := c.APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -300,7 +300,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	input := apigateway.UpdateAuthorizerInput{
 		AuthorizerId:    aws.String(d.Id()),
 		PatchOperations: operations,
-		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 	}
 
 	_, err := conn.UpdateAuthorizer(ctx, &input)
@@ -319,7 +319,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", d.Id())
 	input := apigateway.DeleteAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteAuthorizer(ctx, &input)
 

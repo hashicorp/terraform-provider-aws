@@ -89,6 +89,14 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -138,7 +146,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName), // nosemgrep:disappears-expect-resource-action
 					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, t, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -198,7 +206,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName), // nosemgrep:disappears-expect-resource-action
 					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, t, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

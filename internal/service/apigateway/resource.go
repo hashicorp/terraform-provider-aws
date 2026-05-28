@@ -54,7 +54,7 @@ func resourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"rest_api_id": {
+			attrRestAPIID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,7 +76,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := apigateway.CreateResourceInput{
 		ParentId:  aws.String(d.Get("parent_id").(string)),
 		PathPart:  aws.String(d.Get("path_part").(string)),
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		RestApiId: aws.String(d.Get(attrRestAPIID).(string)),
 	}
 
 	output, err := conn.CreateResource(ctx, &input)
@@ -94,7 +94,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	resource, err := findResourceByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
+	resource, err := findResourceByTwoPartKey(ctx, conn, d.Id(), d.Get(attrRestAPIID).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Resource (%s) not found, removing from state", d.Id())
@@ -143,7 +143,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	input := apigateway.UpdateResourceInput{
 		ResourceId:      aws.String(d.Id()),
-		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		PatchOperations: resourceResourceUpdateOperations(d),
 	}
 
@@ -163,7 +163,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 	input := apigateway.DeleteResourceInput{
 		ResourceId: aws.String(d.Id()),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteResource(ctx, &input)
 
@@ -218,7 +218,7 @@ func (apiResourceImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"rest_api_id": parts[0],
+		attrRestAPIID: parts[0],
 	}
 
 	return parts[1], result, nil
