@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -72,6 +74,13 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 					},
 				},
 			},
+			"access_entry_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"principal_arn", "access_entry_id"},
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^:]+:.+$`), "must be in the format cluster-name:principal-arn"),
+			},
 			"associated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -94,8 +103,9 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 			},
 			"principal_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
+				ExactlyOneOf: []string{"principal_arn", "access_entry_id"},
 				ValidateFunc: verify.ValidARN,
 			},
 		},
@@ -107,8 +117,15 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	principalARN := d.Get("principal_arn").(string)
 	policyARN := d.Get("policy_arn").(string)
+
+	var principalARN string
+	if v, ok := d.GetOk("access_entry_id"); ok {
+		_, principalARN = accessEntryParseResourceID(v.(string))
+	} else {
+		principalARN = d.Get("principal_arn").(string)
+	}
+
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
 	input := eks.AssociateAccessPolicyInput{
 		AccessScope:  expandAccessScope(d.Get("access_scope").([]any)),
@@ -152,6 +169,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set("access_scope", flattenAccessScope(output.AccessScope))
+	d.Set("access_entry_id", accessEntryCreateResourceID(clusterName, principalARN))
 	d.Set("associated_at", aws.ToTime(output.AssociatedAt).String())
 	d.Set(names.AttrClusterName, clusterName)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
