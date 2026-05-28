@@ -186,7 +186,7 @@ func checkCheatSheetAlignment(in *Inputs, cheatByName map[string]CheatSheetRow) 
 
 	for _, name := range in.Make.Order {
 		t := in.Make.Targets[name]
-		if !t.HasDoc {
+		if !t.HasDoc || t.IsInternal {
 			continue
 		}
 		if _, ok := cheatByName[name]; ok {

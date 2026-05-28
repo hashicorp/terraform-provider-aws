@@ -13,11 +13,12 @@ import (
 //
 // A target is "documented" if its definition line carries an inline comment
 // of the form `## description`. Documented targets are surfaced in `make help`
-// and are expected to appear in the cheat sheet.
+// and are expected to appear in the cheat sheet, unless IsInternal is true.
 type Target struct {
 	Name        string
-	Description string // text after ## (without the [CI] prefix)
+	Description string // text after ## (without [CI] or [internal] prefix)
 	IsCI        bool   // description began with "[CI]"
+	IsInternal  bool   // description began with "[internal]" — shown in source, hidden from make help and cheat sheet
 	IsLegacy    bool   // description mentions "Legacy" (case-insensitive)
 	HasDoc      bool   // line carried a `##` description
 	Line        int    // 1-based source line of the definition
@@ -146,11 +147,17 @@ func parseTargetLine(line string, lineNum int) (*Target, bool) {
 		IsLegacy: strings.Contains(strings.ToLower(desc), "legacy"),
 	}
 	if hasDoc {
-		// `## [CI] foo` => IsCI true, Description "foo"
+		// `## [CI] foo`       => IsCI true, Description "foo"
+		// `## [internal] foo` => IsInternal true, Description "foo"
 		const ciPrefix = "[CI]"
-		if strings.HasPrefix(desc, ciPrefix) {
+		const internalPrefix = "[internal]"
+		switch {
+		case strings.HasPrefix(desc, ciPrefix):
 			t.IsCI = true
 			desc = strings.TrimSpace(strings.TrimPrefix(desc, ciPrefix))
+		case strings.HasPrefix(desc, internalPrefix):
+			t.IsInternal = true
+			desc = strings.TrimSpace(strings.TrimPrefix(desc, internalPrefix))
 		}
 		t.Description = desc
 	}

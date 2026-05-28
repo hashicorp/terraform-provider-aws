@@ -433,7 +433,7 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 		$(TEST)
 
 help: ## Display this help
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
 
 import-lint: ## [CI] Provider Checks / import-lint
 	@echo "make: Provider Checks / import-lint..."
@@ -512,13 +512,13 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
-quick-fix-core-heading: ## Just a heading for quick-fix-core
+quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
 quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
-quick-fix-heading: ## Just a heading for quick-fix
+quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
@@ -860,7 +860,7 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 		$(MAKE) test-full; \
 	fi
 
-test-single-service: ## Internal: test single service
+test-single-service: ## [internal] test single service
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
@@ -881,7 +881,7 @@ test-single-service: ## Internal: test single service
 		-count=1; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
-test-full: ## Internal: test full codebase
+test-full: ## [internal] test full codebase
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-aws-build-$$$$"; \

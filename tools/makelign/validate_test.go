@@ -146,6 +146,20 @@ func TestValidate_RulesIsolated(t *testing.T) {
 		}
 	})
 
+	t.Run("internal target exempt from cheatsheet-missing", func(t *testing.T) {
+		t.Parallel()
+		in := minimalInputs()
+		in.Make.Targets["helper"] = &Target{Name: "helper", Line: 50, HasDoc: true, IsInternal: true}
+		in.Make.Order = append(in.Make.Order, "helper")
+		in.Make.Phony = append(in.Make.Phony, "helper")
+		got := Validate(in)
+		for _, f := range got {
+			if f.Code == "cheatsheet-missing" && contains(f.Message, "helper") {
+				t.Errorf("internal target should be exempt from cheatsheet-missing, got %v", f)
+			}
+		}
+	})
+
 	t.Run("meta target exempt from ci-doc-missing", func(t *testing.T) {
 		t.Parallel()
 		in := minimalInputs()

@@ -16,6 +16,7 @@ func TestParseTargetLine(t *testing.T) {
 		wantOK   bool
 		wantDoc  bool
 		wantCI   bool
+		wantInternal bool
 		wantDesc string
 	}{
 		"plain target": {
@@ -42,6 +43,14 @@ func TestParseTargetLine(t *testing.T) {
 			wantDoc:  true,
 			wantCI:   true,
 			wantDesc: "Run all CI checks",
+		},
+		"internal target": {
+			line:         "test-single-service: ## [internal] test single service",
+			wantName:     "test-single-service",
+			wantOK:       true,
+			wantDoc:      true,
+			wantInternal: true,
+			wantDesc:     "test single service",
 		},
 		"variable assignment rejected": {
 			line:   "GO_VER := go1.22",
@@ -98,6 +107,9 @@ func TestParseTargetLine(t *testing.T) {
 			}
 			if got.IsCI != tc.wantCI {
 				t.Errorf("IsCI = %v, want %v", got.IsCI, tc.wantCI)
+			}
+			if got.IsInternal != tc.wantInternal {
+				t.Errorf("IsInternal = %v, want %v", got.IsInternal, tc.wantInternal)
 			}
 			if tc.wantDesc != "" && got.Description != tc.wantDesc {
 				t.Errorf("Description = %q, want %q", got.Description, tc.wantDesc)
