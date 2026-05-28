@@ -32,6 +32,14 @@ resource "aws_backup_plan" "example" {
     }
     resource_type = "EC2"
   }
+
+  advanced_backup_setting {
+    backup_options = {
+      BackupACLs       = "enabled"
+      BackupObjectTags = "enabled"
+    }
+    resource_type = "S3"
+  }
 }
 ```
 
@@ -89,8 +97,8 @@ This resource supports the following arguments:
 
 `advanced_backup_setting` supports the following arguments:
 
-* `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resource_type` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
+* `backup_options` - (Required) Specifies service-specific backup options for the selected resource. For Windows VSS backups, set to `{ WindowsVSS = "enabled" }` (or `"disabled"`). For Amazon S3 backups, configure `{ BackupACLs = "enabled"|"disabled", BackupObjectTags = "enabled"|"disabled" }` to control inclusion of ACLs and object tags.
+* `resource_type` - (Required) The type of AWS resource to be backed up. Valid values: `EC2`, `S3`.
 
 ### Scan Setting Arguments
 
