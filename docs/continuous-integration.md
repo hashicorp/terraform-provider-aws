@@ -329,7 +329,6 @@ make modern-fix
 
 This check ensures that the `pull_request_target` event is only used in approved workflows. Unlike `pull_request`, which runs workflows against the pull request’s changes, `pull_request_target` runs against the base branch. This can cause issues to go undetected if the workflow is intended to validate the pull request itself. Restricting its use helps ensure that CI checks reflect the actual content of proposed changes.
 
-
 Use the `pr-target-check` target to run the check:
 
 ```console
