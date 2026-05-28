@@ -280,7 +280,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.68.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.23
-	github.com/aws/smithy-go v1.25.1
+	github.com/aws/smithy-go v1.26.0
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.6.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -320,8 +320,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.68.0
-	go.opentelemetry.io/otel v1.43.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.69.0
+	go.opentelemetry.io/otel v1.44.0
 	golang.org/x/crypto v0.52.0
 	golang.org/x/text v0.37.0
 	golang.org/x/tools v0.45.0
@@ -383,8 +383,8 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.18.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/metric v1.43.0 // indirect
-	go.opentelemetry.io/otel/trace v1.43.0 // indirect
+	go.opentelemetry.io/otel/metric v1.44.0 // indirect
+	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
 	golang.org/x/mod v0.36.0 // indirect
