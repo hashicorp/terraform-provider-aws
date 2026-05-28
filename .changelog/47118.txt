@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix `cache_policy_id` and `origin_request_policy_id` in `default_cache_behavior` and `ordered_cache_behavior` producing inconsistent final plan
+```
