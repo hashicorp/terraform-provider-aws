@@ -31,7 +31,9 @@ func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_byDomain(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedAt, resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issued_at", resourceName, "issued_at"),
 				),
 			},
 		},

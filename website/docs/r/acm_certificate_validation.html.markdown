@@ -138,6 +138,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Time at which the certificate was issued
+* `issued_at` - Time at which the certificate was issued.
 
 ## Timeouts
 

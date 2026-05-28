@@ -49,6 +49,10 @@ func resourceCertificateValidation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"issued_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"validation_record_fqdns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -134,6 +138,11 @@ func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set(names.AttrCertificateARN, certificate.CertificateArn)
 
+	if certificate.IssuedAt != nil {
+		d.Set("issued_at", aws.ToTime(certificate.IssuedAt).Format(time.RFC3339))
+	} else {
+		d.Set("issued_at", nil)
+	}
 	return diags
 }
 
