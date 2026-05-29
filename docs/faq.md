@@ -17,6 +17,7 @@ The HashiCorp Terraform AWS provider team is :
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
 * Jared Baker, Engineer - GitHub [@jar-b](https://github.com/jar-b)
 * Kit Ewbank, Engineer - GitHub [@ewbankkit](https://github.com/ewbankkit)
+* Bella Rosas, Intern - Github [@brosas07](https://github.com/brosas07)
 
 ## Why isn’t my PR merged yet?
 

@@ -1046,12 +1046,28 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
-			// This is a real hack to set the Snapshotting Cluster ID to be the first Cluster in the RG.
+			// When transitioning from disabled (0) to enabled, SnapshottingClusterId
+			// must identify the primary cluster. The primary is not always "-001"
+			// (e.g., after a manual failover), so detect it dynamically.
 			o, _ := d.GetChange("snapshot_retention_limit")
 			if o.(int) == 0 {
-				input.SnapshottingClusterId = aws.String(fmt.Sprintf("%s-001", d.Id()))
-			}
+				rg, err := findReplicationGroupByID(ctx, conn, d.Id())
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", d.Id(), err)
+				}
 
+				// SnapshottingClusterId is not valid for cluster-mode-enabled
+				// replication groups. ElastiCache snapshots each shard's primary
+				// automatically, so the parameter must be omitted in that case.
+				if !aws.ToBool(rg.ClusterEnabled) && len(rg.NodeGroups) > 0 {
+					for _, m := range rg.NodeGroups[0].NodeGroupMembers {
+						if aws.ToString(m.CurrentRole) == "primary" {
+							input.SnapshottingClusterId = aws.String(aws.ToString(m.CacheClusterId))
+							break
+						}
+					}
+				}
+			}
 			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 			requestUpdate = true
 		}
