@@ -3,7 +3,12 @@
 
 package cognitoidp
 
-import "testing"
+import (
+	"strconv"
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
 
 func TestSuppressIdentityProviderProviderDetailsCountDiff(t *testing.T) {
 	t.Parallel()
@@ -18,54 +23,54 @@ func TestSuppressIdentityProviderProviderDetailsCountDiff(t *testing.T) {
 			providerType: "Google",
 			oldDetails: map[string]string{
 				"attributes_url":                "https://people.googleapis.com/v1/people/me?personFields=",
-				"attributes_url_add_attributes": "true",
+				"attributes_url_add_attributes": strconv.FormatBool(true),
 				"authorize_scopes":              "email profile openid",
 				"authorize_url":                 "https://accounts.google.com/o/oauth2/v2/auth",
-				"client_id":                     "test-url.apps.googleusercontent.com",
-				"client_secret":                 "client_secret",
+				names.AttrClientID:              "test-url.apps.googleusercontent.com",
+				names.AttrClientSecret:          "secret-value",
 				"oidc_issuer":                   "https://accounts.google.com",
 				"token_request_method":          "POST",
 				"token_url":                     "https://www.googleapis.com/oauth2/v4/token",
 			},
 			newDetails: map[string]string{
-				"authorize_scopes": "email profile openid",
-				"client_id":        "test-url.apps.googleusercontent.com",
-				"client_secret":    "client_secret",
+				"authorize_scopes":     "email profile openid",
+				names.AttrClientID:     "test-url.apps.googleusercontent.com",
+				names.AttrClientSecret: "secret-value",
 			},
 			want: true,
 		},
 		"configured value changes": {
 			providerType: "Google",
 			oldDetails: map[string]string{
-				"attributes_url":   "https://people.googleapis.com/v1/people/me?personFields=",
-				"authorize_scopes": "email profile openid",
-				"client_id":        "test-url.apps.googleusercontent.com",
-				"client_secret":    "client_secret",
+				"attributes_url":       "https://people.googleapis.com/v1/people/me?personFields=",
+				"authorize_scopes":     "email profile openid",
+				names.AttrClientID:     "test-url.apps.googleusercontent.com",
+				names.AttrClientSecret: "secret-value",
 			},
 			newDetails: map[string]string{
-				"authorize_scopes": "email profile openid",
-				"client_id":        "new-client-id-url.apps.googleusercontent.com",
-				"client_secret":    "client_secret",
+				"authorize_scopes":     "email profile openid",
+				names.AttrClientID:     "new-client-id-url.apps.googleusercontent.com",
+				names.AttrClientSecret: "secret-value",
 			},
 			want: false,
 		},
 		"custom google detail removed": {
 			providerType: "Google",
 			oldDetails: map[string]string{
-				"attributes_url": "https://example.com/attributes",
-				"client_id":      "test-url.apps.googleusercontent.com",
-				"client_secret":  "client_secret",
+				"attributes_url":       "https://example.com/attributes",
+				names.AttrClientID:     "test-url.apps.googleusercontent.com",
+				names.AttrClientSecret: "secret-value",
 			},
 			newDetails: map[string]string{
-				"client_id":     "test-url.apps.googleusercontent.com",
-				"client_secret": "client_secret",
+				names.AttrClientID:     "test-url.apps.googleusercontent.com",
+				names.AttrClientSecret: "secret-value",
 			},
 			want: false,
 		},
 		"saml returned details removed with metadata file configured": {
 			providerType: "SAML",
 			oldDetails: map[string]string{
-				"ActiveEncryptionCertificate": "certificate",
+				"ActiveEncryptionCertificate": names.AttrCertificate,
 				"MetadataFile":                "<xml>",
 				"SSORedirectBindingURI":       "https://example.com/sso",
 			},
@@ -77,7 +82,7 @@ func TestSuppressIdentityProviderProviderDetailsCountDiff(t *testing.T) {
 		"saml redirect removed without metadata file configured": {
 			providerType: "SAML",
 			oldDetails: map[string]string{
-				"ActiveEncryptionCertificate": "certificate",
+				"ActiveEncryptionCertificate": names.AttrCertificate,
 				"SSORedirectBindingURI":       "https://example.com/sso",
 			},
 			newDetails: map[string]string{},
@@ -86,7 +91,7 @@ func TestSuppressIdentityProviderProviderDetailsCountDiff(t *testing.T) {
 		"saml metadata file removed": {
 			providerType: "SAML",
 			oldDetails: map[string]string{
-				"ActiveEncryptionCertificate": "certificate",
+				"ActiveEncryptionCertificate": names.AttrCertificate,
 				"MetadataFile":                "<xml>",
 				"SSORedirectBindingURI":       "https://example.com/sso",
 			},
@@ -135,7 +140,7 @@ func TestIsReadOnlyOrDefaultIdentityProviderDetail(t *testing.T) {
 		"saml active encryption certificate": {
 			providerType:      "SAML",
 			key:               "ActiveEncryptionCertificate",
-			oldValue:          "certificate",
+			oldValue:          names.AttrCertificate,
 			configuredDetails: map[string]string{},
 			want:              true,
 		},
