@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/location
         - /internal/service/logs
         - /internal/service/macie2
         - /internal/service/mediaconvert
