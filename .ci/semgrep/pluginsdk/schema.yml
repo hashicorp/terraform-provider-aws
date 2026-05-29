@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/servicediscovery
         - /internal/service/servicequotas
         - /internal/service/ses
         - /internal/service/sesv2
