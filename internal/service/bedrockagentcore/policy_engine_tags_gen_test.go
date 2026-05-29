@@ -25,7 +25,7 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -219,7 +219,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_null(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -287,7 +287,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_emptyMap(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -343,7 +343,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_addOnUpdate(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -429,7 +429,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -527,7 +527,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -674,7 +674,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_replace(t *testi
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -770,7 +770,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -963,7 +963,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *test
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1133,7 +1133,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1319,7 +1319,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToProviderOnly(t
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1415,7 +1415,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToResourceOnly(t
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1510,7 +1510,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyResourceTag(t *te
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1582,7 +1582,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyProviderOnlyTag(t
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1646,7 +1646,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullOverlappingResourc
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1721,7 +1721,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullNonOverlappingReso
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1798,7 +1798,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_onCreate(t *testing.T)
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1859,7 +1859,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_add(t *testin
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1962,7 +1962,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_replace(t *te
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2055,7 +2055,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *t
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2221,7 +2221,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_resourceTag(t *
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

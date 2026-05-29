@@ -26,7 +26,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_basic(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -113,7 +113,7 @@ func TestAccBedrockAgentCorePolicyEngine_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
