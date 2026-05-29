@@ -41,8 +41,8 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_policy_engine", name="Policy Engine")
 // @Tags(identifierAttribute="policy_engine_arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetPolicyEngineOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="policy_engine_id")
 // @IdentityAttribute("policy_engine_id")
 func newPolicyEngineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
