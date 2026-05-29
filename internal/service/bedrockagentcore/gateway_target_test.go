@@ -745,7 +745,7 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccGatewayTargetConfig_infra(rName string) string {
+func testAccGatewayTargetConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -832,7 +832,7 @@ resource "aws_bedrockagentcore_gateway" "test" {
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -872,7 +872,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProvider(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -905,7 +905,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProviderNonLambda(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -952,7 +952,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -975,7 +975,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProviderSmithy(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1051,7 +1051,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfiguration(rName, schemaContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1083,7 +1083,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, endpoint string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1280,7 +1280,7 @@ func testAccCredentialProvider_empty() string {
 }
 
 func testAccGatewayTargetConfig_metadataConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1303,7 +1303,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1326,7 +1326,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1343,7 +1343,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1364,7 +1364,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationAPIGateway(rName, toolOverrideSuffix string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
