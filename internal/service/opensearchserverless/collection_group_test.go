@@ -46,6 +46,7 @@ func TestAccOpenSearchServerlessCollectionGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aoss", "collection-group/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttr(resourceName, "generation", string(types.ServerlessGenerationClassic)),
 				),
 			},
 			{
@@ -209,6 +210,38 @@ func TestAccOpenSearchServerlessCollectionGroup_standbyReplicas(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessCollectionGroup_generation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collectionGroup types.CollectionGroupDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollectionGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionGroupConfig_generation(rName, string(types.ServerlessGenerationNextgen)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
+					resource.TestCheckResourceAttr(resourceName, "generation", string(types.ServerlessGenerationNextgen)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCollectionGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
@@ -332,4 +365,15 @@ resource "aws_opensearchserverless_collection_group" "test" {
   }
 }
 `, rName, standbyReplicas)
+}
+
+func testAccCollectionGroupConfig_generation(rName, generation string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_collection_group" "test" {
+  name             = %[1]q
+  standby_replicas = "ENABLED"
+
+  generation       = %[2]q
+}
+`, rName, generation)
 }
