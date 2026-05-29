@@ -49,6 +49,12 @@ Backups must be enabled to use low-downtime updates.
 
 Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
+By default, the update creates a Blue/Green deployment and immediately switches over in a single apply.
+To split this into two applies (e.g. to control switchover timing), set `blue_green_update.auto_switchover` to `false`.
+The first apply creates the Green environment and waits for it to become available.
+A subsequent apply with `auto_switchover` set to `true` performs the switchover.
+This two-apply workflow allows you to add `precondition` blocks that validate switchover timing windows.
+
 ## Example Usage
 
 ### Basic Usage
@@ -474,6 +480,9 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
+* `auto_switchover` - (Optional) Whether to automatically switch over to the Green environment after it is created.
+  When `false`, the Green environment is created and made available, but traffic remains on the Blue environment until a subsequent apply with `auto_switchover` set to `true`.
+  Default is `true`.
 
 [instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
@@ -492,6 +501,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `availability_zone` - The availability zone of the instance.
 * `backup_retention_period` - The backup retention period.
 * `backup_window` - The backup window.
+* `blue_green_deployment_identifier` - The identifier of the Blue/Green deployment when `auto_switchover` is `false` and a Green environment has been created. Empty otherwise.
 * `ca_cert_identifier` - Identifier of the CA certificate for the
 DB instance.
 * `db_name` - The database name.
