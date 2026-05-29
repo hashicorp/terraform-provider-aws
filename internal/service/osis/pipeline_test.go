@@ -379,7 +379,7 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 						VersionConstraint: "5.89.0",
 					},
 				},
-				Config: testAccPipelineConfig_basic(rName),
+				Config: testAccPipelineConfig_basic_V5_90_0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 				),
@@ -913,4 +913,51 @@ EOS
   pipeline_role_arn           = aws_iam_role.%[2]s.arn
 }
 `, rName, roleIdentifier)
+}
+
+func testAccPipelineConfig_basic_V5_90_0(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "osis-pipelines.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_osis_pipeline" "test" {
+  pipeline_name               = %[1]q
+  pipeline_configuration_body = <<EOS
+            version: "2"
+            test-pipeline:
+              source:
+                http:
+                  path: "/test"
+              sink:
+                - s3:
+                    aws:
+                      sts_role_arn: "${aws_iam_role.test.arn}"
+                      region: "${data.aws_region.current.name}" # Versions older than v6.0 used name instead of region
+                    bucket: "test"
+                    threshold:
+                      event_collect_timeout: "60s"
+                    codec:
+                      ndjson:
+EOS
+  max_units                   = 1
+  min_units                   = 1
+}
+`, rName)
 }
