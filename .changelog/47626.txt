@@ -9,3 +9,7 @@ resource/aws_bedrockagentcore_gateway: Fix `ValidationException: Gateway with ID
 ```release-note:bug
 resource/aws_bedrockagentcore_gateway_target: Include `FAILED` and `SYNCHRONIZING` as pending states while a target is deleting
 ```
+
+```release-note:note
+resource/aws_bedrockagentcore_gateway_target: Because we cannot easily test the ``credential_provider_configuration.gateway_iam_role` SigV4 functionality, it is best effort and we ask for community help in testing
+```
