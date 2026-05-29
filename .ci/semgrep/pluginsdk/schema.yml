@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/rbin
         - /internal/service/rds
         - /internal/service/redshift
         - /internal/service/redshiftdata
