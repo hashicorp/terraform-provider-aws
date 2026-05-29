@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -391,7 +390,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameRuntime := strings.ReplaceAll(rName, "-", "_")
+	rNameRuntime := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -413,7 +412,6 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.arn", "aws_bedrockagentcore_agent_runtime.test", "agent_runtime_arn"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.qualifier", "DEFAULT"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1634,9 +1632,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(
-		testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
 data "aws_iam_policy_document" "gateway_assume" {
   statement {
     effect  = "Allow"
@@ -1677,8 +1673,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     http {
       agentcore_runtime {
-        arn       = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
-        qualifier = "DEFAULT"
+        arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
       }
     }
   }

@@ -261,12 +261,7 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 
 	gatewayID := aws.ToString(out.GatewayId)
 
-	if _, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
-		return
-	}
-
-	gateway, err := findGatewayByID(ctx, conn, gatewayID)
+	gateway, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return

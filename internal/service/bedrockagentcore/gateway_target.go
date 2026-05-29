@@ -586,7 +586,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												},
 												"qualifier": schema.StringAttribute{
 													Optional: true,
-													Computed: true,
 												},
 											},
 										},
