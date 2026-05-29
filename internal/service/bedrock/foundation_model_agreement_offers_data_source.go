@@ -98,6 +98,8 @@ type foundationModelAgreementOffersDataSourceModel struct {
 
 type foundationModelOfferModel struct {
 	TermDetails fwtypes.ListNestedObjectValueOf[foundationModelTermDetailsModel] `tfsdk:"term_details"`
+	OfferID     types.String                                                     `tfsdk:"offer_id"`
+	OfferToken  types.String                                                     `tfsdk:"offer_token"`
 }
 
 type foundationModelTermDetailsModel struct {

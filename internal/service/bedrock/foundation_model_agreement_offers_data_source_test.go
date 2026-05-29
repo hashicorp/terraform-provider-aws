@@ -31,6 +31,7 @@ func TestAccBedrockFoundationModelAgreementOffersDataSource_basic(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "offers.#", 0),
+					resource.TestCheckResourceAttrSet(dataSourceName, "offers.0.offer_token"),
 				),
 			},
 		},
