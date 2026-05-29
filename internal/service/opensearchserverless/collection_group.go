@@ -57,6 +57,7 @@ type collectionGroupResourceModel struct {
 	CapacityLimits  fwtypes.ListNestedObjectValueOf[capacityLimitsModel] `tfsdk:"capacity_limits"`
 	CreatedDate     timetypes.RFC3339                                    `tfsdk:"created_date"`
 	Description     types.String                                         `tfsdk:"description"`
+	Generation      fwtypes.StringEnum[awstypes.ServerlessGeneration]    `tfsdk:"generation"`
 	ID              types.String                                         `tfsdk:"id"`
 	Name            types.String                                         `tfsdk:"name"`
 	StandbyReplicas fwtypes.StringEnum[awstypes.StandbyReplicas]         `tfsdk:"standby_replicas"`
@@ -89,6 +90,16 @@ func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaR
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
+				},
+			},
+			"generation": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.ServerlessGeneration](),
+				Description: "Generation of the collection group.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
