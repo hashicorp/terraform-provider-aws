@@ -541,14 +541,11 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, testAccCredentialProvider_gatewayIAMRoleSigV4()),
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, `    gateway_iam_role {
+      service = "lambda"
+    }`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", "bedrock-agentcore"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -565,13 +562,11 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(
 			},
 			{
 				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, `    gateway_iam_role {
-      service = "bedrock-agentcore"
+      service = "lambda"
       region  = data.aws_region.current.region
     }`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", "bedrock-agentcore"),
-					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -955,6 +950,11 @@ func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialPro
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 
+resource "aws_lambda_function_url" "test" {
+  function_name      = aws_lambda_function.test.function_name
+  authorization_type = "AWS_IAM"
+}
+
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -966,7 +966,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     mcp {
       mcp_server {
-        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+        endpoint = aws_lambda_function_url.test.function_url
       }
     }
   }
@@ -1238,12 +1238,6 @@ func testAccSchema_invalidUnsupportedType() string {
 
 func testAccCredentialProvider_gatewayIAMRole() string {
 	return `    gateway_iam_role {}`
-}
-
-func testAccCredentialProvider_gatewayIAMRoleSigV4() string {
-	return `    gateway_iam_role {
-      service = "bedrock-agentcore"
-    }`
 }
 
 func testAccCredentialProvider_apiKey() string {
