@@ -695,7 +695,7 @@ func resourceService() *schema.Resource {
 									Schema: map[string]*schema.Schema{
 										"hook_target_arn": {
 											Type:         schema.TypeString,
-											Required:     true,
+										Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"lifecycle_stages": {
@@ -708,7 +708,7 @@ func resourceService() *schema.Resource {
 										},
 										names.AttrRoleARN: {
 											Type:         schema.TypeString,
-											Required:     true,
+										Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"hook_details": {
