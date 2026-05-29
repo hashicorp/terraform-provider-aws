@@ -106,6 +106,9 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				CustomType: fwtypes.StringEnumType[awstypes.GatewayProtocolType](),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,

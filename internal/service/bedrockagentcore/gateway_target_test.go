@@ -424,7 +424,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -627,6 +627,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
+	acctest.Skip(t, "ValidationException: Lambda target only supports GATEWAY_IAM_ROLE credential provider type")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -669,6 +670,7 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
+	acctest.Skip(t, "ValidationException: MCP server target does not support JWT_PASSTHROUGH credential provider type")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
