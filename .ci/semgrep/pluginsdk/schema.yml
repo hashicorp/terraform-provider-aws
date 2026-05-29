@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/sns
         - /internal/service/sqs
         - /internal/service/ssm
         - /internal/service/ssmcontacts
