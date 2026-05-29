@@ -747,7 +747,10 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk(names.AttrPolicy); ok {
+	// Only re-apply policy after OpenAPI import when policy was configured
+	// explicitly. For Optional+Computed policy, GetOk can be true for a
+	// value that was read from the prior API state.
+	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIPolicyConfigured(d) {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 
@@ -760,6 +763,15 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	return operations
+}
+
+func resourceRestAPIPolicyConfigured(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() || !rawConfig.Type().HasAttribute(names.AttrPolicy) {
+		return false
+	}
+
+	return !rawConfig.GetAttr(names.AttrPolicy).IsNull()
 }
 
 // escapeJSONPointer escapes string per RFC 6901
