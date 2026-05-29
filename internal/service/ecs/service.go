@@ -715,6 +715,30 @@ func resourceService() *schema.Resource {
 										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 										ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 									},
+									"target_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
+									},
+									"timeout_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrAction: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
+												},
+												"timeout_in_minutes": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
