@@ -1,3 +1,7 @@
 ```release-note:new-data-source
 aws_bedrock_foundation_model_agreement_offers
 ```
+
+```release-note:new-resource
+aws_bedrock_foundation_model_agreement
+```

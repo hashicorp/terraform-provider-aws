@@ -32,6 +32,11 @@ func TestAccBedrock_serial(t *testing.T) {
 			"upgradeV6.0.0":      testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
 			"Identity":           testAccBedrockModelInvocationLoggingConfiguration_identitySerial,
 		},
+		"FoundationModelAgreement": {
+			acctest.CtBasic:      testAccBedrockFoundationModelAgreement_basic,
+			acctest.CtDisappears: testAccBedrockFoundationModelAgreement_disappears,
+			"Identity":           testAccBedrockFoundationModelAgreement_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

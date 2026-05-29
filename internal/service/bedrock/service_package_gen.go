@@ -83,6 +83,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newFoundationModelAgreementResource,
+			TypeName: "aws_bedrock_foundation_model_agreement",
+			Name:     "Foundation Model Agreement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("model_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newGuardrailResource,
 			TypeName: "aws_bedrock_guardrail",
 			Name:     "Guardrail",
