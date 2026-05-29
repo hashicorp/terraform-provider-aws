@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/pinpoint
         - /internal/service/pricing
         - /internal/service/qldb
         - /internal/service/quicksight
