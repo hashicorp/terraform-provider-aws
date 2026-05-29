@@ -177,6 +177,12 @@ func resourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.SecurityPolicy](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -228,6 +234,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		input.Policy = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("security_policy"); ok {
+		input.SecurityPolicy = types.SecurityPolicy(v.(string))
 	}
 
 	output, err := conn.CreateRestApi(ctx, &input)
@@ -329,6 +339,7 @@ func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.R
 		d.Set("minimum_compression_size", flex.Int32ToStringValue(api.MinimumCompressionSize))
 	}
 	d.Set(names.AttrName, api.Name)
+	d.Set("security_policy", api.SecurityPolicy)
 
 	policy, err := flattenAPIPolicy(api.Policy)
 	if err != nil {
@@ -519,6 +530,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				Op:    types.OpReplace,
 				Path:  aws.String("/policy"),
 				Value: aws.String(policy),
+			})
+		}
+
+		if d.HasChange("security_policy") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/securityPolicy"),
+				Value: aws.String(d.Get("security_policy").(string)),
 			})
 		}
 
@@ -757,6 +776,14 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 				Value: aws.String(policy),
 			})
 		}
+	}
+
+	if v, ok := d.GetOk("security_policy"); ok && types.SecurityPolicy(v.(string)) != output.SecurityPolicy {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/securityPolicy"),
+			Value: aws.String(v.(string)),
+		})
 	}
 
 	return operations
