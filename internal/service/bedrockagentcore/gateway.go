@@ -358,6 +358,14 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	// API requires removing targets before the gateway (failed applies, drift, or orphans can leave targets behind).
+	if err := deleteAllGatewayTargets(ctx, conn, gatewayID, timeout); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+		return
+	}
+
 	input := bedrockagentcorecontrol.DeleteGatewayInput{
 		GatewayIdentifier: aws.String(gatewayID),
 	}
@@ -370,7 +378,7 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, timeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
@@ -378,6 +386,29 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *gatewayResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("gateway_id"), request, response)
+}
+
+func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayID string, timeout time.Duration) error {
+	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
+		GatewayIdentifier: aws.String(gatewayID),
+	}
+
+	for v, err := range listGatewayTargets(ctx, conn, &input) {
+		if err != nil {
+			return err
+		}
+
+		targetID := aws.ToString(v.TargetId)
+		if err := deleteGatewayTarget(ctx, conn, gatewayID, targetID); err != nil {
+			return err
+		}
+
+		if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayID, targetID, timeout); err != nil {
+			return smarterr.NewError(fmt.Errorf("waiting for Bedrock AgentCore Gateway (%s) Target (%s) delete: %w", gatewayID, targetID, err))
+		}
+	}
+
+	return nil
 }
 
 func waitGatewayCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayOutput, error) {
