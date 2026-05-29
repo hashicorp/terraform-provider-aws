@@ -25,41 +25,43 @@ func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_changed_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_changed_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/secretsmanager
         - /internal/service/securityhub
         - /internal/service/serverlessrepo
         - /internal/service/servicecatalog
