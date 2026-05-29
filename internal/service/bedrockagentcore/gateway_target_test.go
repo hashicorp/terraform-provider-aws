@@ -950,8 +950,16 @@ func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialPro
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_lambda_function_url" "test" {
-  function_name      = aws_lambda_function.test.function_name
+resource "aws_lambda_function" "mcp" {
+  filename      = "test-fixtures/mcp_lambda.zip"
+  function_name = "%[1]s-mcp"
+  role          = aws_iam_role.lambda.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.14"
+}
+
+resource "aws_lambda_function_url" "mcp" {
+  function_name      = aws_lambda_function.mcp.function_name
   authorization_type = "AWS_IAM"
 }
 
@@ -966,7 +974,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     mcp {
       mcp_server {
-        endpoint = aws_lambda_function_url.test.function_url
+        endpoint = aws_lambda_function_url.mcp.function_url
       }
     }
   }
