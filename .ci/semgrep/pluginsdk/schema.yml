@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/scheduler
         - /internal/service/schemas
         - /internal/service/secretsmanager
         - /internal/service/securityhub
