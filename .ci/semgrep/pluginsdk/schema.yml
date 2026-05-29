@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/kms
         - /internal/service/lakeformation
         - /internal/service/lambda
         - /internal/service/lexmodels
