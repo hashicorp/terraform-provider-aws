@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/ssmcontacts
         - /internal/service/ssmincidents
         - /internal/service/ssoadmin
         - /internal/service/storagegateway
