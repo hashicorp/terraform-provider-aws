@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/qldb
         - /internal/service/quicksight
         - /internal/service/ram
         - /internal/service/rbin
