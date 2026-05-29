@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_identity_provider: Suppress persistent `provider_details` diffs for AWS-returned default and read-only provider detail values
+```
