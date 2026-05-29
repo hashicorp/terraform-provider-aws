@@ -53,29 +53,31 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"provisioned_concurrent_executions": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"qualifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"provisioned_concurrent_executions": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"qualifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }
