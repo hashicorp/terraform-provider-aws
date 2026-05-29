@@ -190,11 +190,7 @@ func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string)
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		_, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.Attributes["policy_engine_id"])
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
