@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.gateway_iam_role.service` and `credential_provider_configuration.gateway_iam_role.region` arguments to the `credential_provider_configuration.gateway_iam_role` to enable SigV4 signing of upstream requests for `mcp_server` targets pointing at AWS-hosted endpoints
+resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.gateway_iam_role.service` and `credential_provider_configuration.gateway_iam_role.region` arguments to enable SigV4 signing of upstream requests for `mcp_server` targets pointing at AWS-hosted endpoints
 ```
 
 ```release-note:bug
