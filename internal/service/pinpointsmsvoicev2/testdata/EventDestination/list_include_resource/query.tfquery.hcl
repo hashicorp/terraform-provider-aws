@@ -5,4 +5,8 @@ list "aws_pinpointsmsvoicev2_event_destination" "test" {
   provider = aws
 
   include_resource = true
+
+  config {
+    configuration_set_names = [aws_pinpointsmsvoicev2_configuration_set.test.name]
+  }
 }

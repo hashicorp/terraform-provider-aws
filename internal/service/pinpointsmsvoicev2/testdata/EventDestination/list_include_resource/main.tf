@@ -4,9 +4,24 @@
 resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
+  configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
+  event_destination_name = "${var.rName}-${count.index}"
 
-  tags = var.resource_tags
+  matching_event_types = ["TEXT_DELIVERED"]
+
+  sns_destination {
+    topic_arn = aws_sns_topic.test[count.index].arn
+  }
+}
+
+resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
+  name = var.rName
+}
+
+resource "aws_sns_topic" "test" {
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
 }
 
 variable "rName" {
@@ -18,11 +33,5 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
-  nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
   nullable    = false
 }

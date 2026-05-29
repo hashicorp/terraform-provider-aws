@@ -37,7 +37,7 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccEventDestinationPreCheck(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
@@ -52,10 +52,7 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-0")),
-
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-1")),
 				},
 			},
 
@@ -95,7 +92,7 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_includeResource(t *testing.T
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccEventDestinationPreCheck(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
@@ -107,13 +104,9 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_includeResource(t *testing.T
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-0")),
 				},
 			},
 
@@ -124,24 +117,18 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_includeResource(t *testing.T
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_pinpointsmsvoicev2_event_destination.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_pinpointsmsvoicev2_event_destination.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_pinpointsmsvoicev2_event_destination.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("configuration_set_name"), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("configuration_set_arn"), tfknownvalue.RegionalARNExact("sms-voice", "configuration-set/"+rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("event_destination_name"), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("matching_event_types"), knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("TEXT_DELIVERED")})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("sns_destination").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrTopicARN: tfknownvalue.RegionalARNExact("sns", rName+"-0"),
 						})),
 					}),
 				},
@@ -167,7 +154,7 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_regionOverride(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccEventDestinationPreCheck(ctx, t)
+			testAccPreCheckEventDestination(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx, t),
@@ -183,10 +170,7 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_regionOverride(t *testing.T)
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-0")),
-
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("pinpointsmsvoicev2", "eventdestination:"+rName+"-1")),
 				},
 			},
 
@@ -201,7 +185,6 @@ func TestAccPinpointSMSVoiceV2EventDestination_List_regionOverride(t *testing.T)
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_pinpointsmsvoicev2_event_destination.test", identity1.Checks()),
-
 					tfquerycheck.ExpectIdentityFunc("aws_pinpointsmsvoicev2_event_destination.test", identity2.Checks()),
 				},
 			},

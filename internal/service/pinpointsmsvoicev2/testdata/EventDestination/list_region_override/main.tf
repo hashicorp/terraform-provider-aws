@@ -5,6 +5,26 @@ resource "aws_pinpointsmsvoicev2_event_destination" "test" {
   count  = var.resource_count
   region = var.region
 
+  configuration_set_name = aws_pinpointsmsvoicev2_configuration_set.test.name
+  event_destination_name = "${var.rName}-${count.index}"
+
+  matching_event_types = ["TEXT_DELIVERED"]
+
+  sns_destination {
+    topic_arn = aws_sns_topic.test[count.index].arn
+  }
+}
+
+resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
+  region = var.region
+
+  name = var.rName
+}
+
+resource "aws_sns_topic" "test" {
+  count  = var.resource_count
+  region = var.region
+
   name = "${var.rName}-${count.index}"
 }
 
