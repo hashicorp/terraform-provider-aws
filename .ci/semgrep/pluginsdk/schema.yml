@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/licensemanager
         - /internal/service/lightsail
         - /internal/service/location
         - /internal/service/logs
