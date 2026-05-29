@@ -143,6 +143,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation

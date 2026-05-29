@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eip", name="EIP)
+// @SDKDataSource("aws_eip", name="EIP")
 // @Tags
 // @Testing(tagsTest=false)
 func dataSourceEIP() *schema.Resource {

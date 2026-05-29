@@ -19,6 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccGatewayTargetImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id")
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -59,7 +63,7 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -339,7 +343,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testi
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -487,7 +491,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -516,6 +520,61 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 			{
 				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_empty()),
 				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(t *testing.T) {
+	// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html#gateway-target-MCPservers-considerations.
+	acctest.Skip(t, "Requires a running MCP server hosted behind an AWS service that natively supports IAM authentication")
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, `    gateway_iam_role {
+      service = "lambda"
+    }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServer(rName, `    gateway_iam_role {
+      service = "lambda"
+      region  = data.aws_region.current.region
+    }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -555,7 +614,7 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -595,7 +654,7 @@ func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -637,7 +696,7 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -765,7 +824,7 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccGatewayTargetConfig_infra(rName string) string {
+func testAccGatewayTargetConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -853,7 +912,7 @@ resource "aws_bedrockagentcore_gateway" "test" {
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -893,7 +952,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProvider(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -926,7 +985,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_credentialProviderNonLambda(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -972,8 +1031,42 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
+func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "mcp" {
+  filename      = "test-fixtures/mcp_lambda.zip"
+  function_name = "%[1]s-mcp"
+  role          = aws_iam_role.lambda.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.14"
+}
+
+resource "aws_lambda_function_url" "mcp" {
+  function_name      = aws_lambda_function.mcp.function_name
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = aws_lambda_function_url.mcp.function_url
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
+
 func testAccGatewayTargetConfig_credentialProviderSmithy(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1049,7 +1142,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfiguration(rName, schemaContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1081,7 +1174,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, endpoint string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1234,6 +1327,15 @@ func testAccSchema_invalidUnsupportedType() string {
 		 `
 }
 
+func testAccCredentialProvider_apiKey() string {
+	return `    api_key {
+      provider_arn              = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/example.com"
+      credential_location       = "HEADER"
+      credential_parameter_name = "X-API-Key"
+      credential_prefix         = "Bearer"
+    }`
+}
+
 func testAccCredentialProvider_callerIAMCredentials() string {
 	return `    caller_iam_credentials {
       region  = data.aws_region.current.name
@@ -1247,15 +1349,6 @@ func testAccCredentialProvider_gatewayIAMRole() string {
 
 func testAccCredentialProvider_jwtPassthrough() string {
 	return `    jwt_passthrough {}`
-}
-
-func testAccCredentialProvider_apiKey() string {
-	return `    api_key {
-      provider_arn              = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/example.com"
-      credential_location       = "HEADER"
-      credential_parameter_name = "X-API-Key"
-      credential_prefix         = "Bearer"
-    }`
 }
 
 func testAccCredentialProvider_oauth() string {
@@ -1283,7 +1376,7 @@ func testAccCredentialProvider_empty() string {
 }
 
 func testAccGatewayTargetConfig_metadataConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1306,7 +1399,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1329,7 +1422,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1346,7 +1439,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -1367,7 +1460,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationAPIGateway(rName, toolOverrideSuffix string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }

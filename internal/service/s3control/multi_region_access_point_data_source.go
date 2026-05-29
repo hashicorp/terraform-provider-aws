@@ -120,7 +120,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading S3 Multi Region Access Point (%s): %s", name, err)
 	}
 
-	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
+	d.SetId(multiRegionAccessPointCreateResourceID(accountID, name))
 
 	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
