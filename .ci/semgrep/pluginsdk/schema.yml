@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/kafkaconnect
         - /internal/service/kendra
         - /internal/service/keyspaces
         - /internal/service/kinesis
