@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/resourcegroups
         - /internal/service/resourcegroupstaggingapi
         - /internal/service/rolesanywhere
         - /internal/service/route53
