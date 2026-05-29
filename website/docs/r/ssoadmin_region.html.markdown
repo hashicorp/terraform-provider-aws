@@ -48,10 +48,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-This resource uses the following hardcoded timeouts:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* Create: 30 minutes (waiting for replication to complete)
-* Delete: 30 minutes (waiting for removal to complete)
+* `create` - (Default `30m`) Time to wait for the Region to finish replicating (reach `ACTIVE` status).
+* `delete` - (Default `30m`) Time to wait for the Region to finish being removed.
 
 ## Import
 

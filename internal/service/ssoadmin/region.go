@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ssoadmin_region", name="Region")
@@ -38,24 +40,28 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="instance_arn;region_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newRegionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &regionResource{}, nil
+	r := &regionResource{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
 }
 
 const (
 	ResNameRegion = "Region"
 
-	regionCreateTimeout = 30 * time.Minute
-	regionDeleteTimeout = 30 * time.Minute
-	regionIDPartCount   = 2
+	regionIDPartCount = 2
 )
 
 type regionResource struct {
 	framework.ResourceWithModel[regionResourceModel]
 	framework.WithNoUpdate
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
-func (r *regionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *regionResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"instance_arn": schema.StringAttribute{
@@ -75,6 +81,12 @@ func (r *regionResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				CustomType: fwtypes.StringEnumType[awstypes.RegionStatus](),
 				Computed:   true,
 			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -103,7 +115,7 @@ func (r *regionResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	output, err := waitRegionActive(ctx, conn, instanceARN, regionName, regionCreateTimeout)
+	output, err := waitRegionActive(ctx, conn, instanceARN, regionName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("waiting for SSO Region (%s/%s) to become active", instanceARN, regionName),
@@ -174,7 +186,7 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	if err := waitRegionDeleted(ctx, conn, instanceARN, regionName, regionDeleteTimeout); err != nil {
+	if err := waitRegionDeleted(ctx, conn, instanceARN, regionName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("waiting for SSO Region (%s/%s) to be removed", instanceARN, regionName),
 			err.Error(),
@@ -282,7 +294,9 @@ func (regionImportID) Parse(id string) (string, map[string]any, error) {
 // Resource model.
 
 type regionResourceModel struct {
+	framework.WithRegionModel
 	InstanceARN fwtypes.ARN                               `tfsdk:"instance_arn"`
 	RegionName  types.String                              `tfsdk:"region_name"`
 	Status      fwtypes.StringEnum[awstypes.RegionStatus] `tfsdk:"status"`
+	Timeouts    timeouts.Value                            `tfsdk:"timeouts"`
 }
