@@ -71,7 +71,7 @@ func resourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"EC2",
+								"EC2", "S3",
 							}, false),
 						},
 					},
