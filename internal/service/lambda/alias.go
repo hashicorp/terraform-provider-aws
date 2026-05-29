@@ -157,7 +157,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if len(input.RoutingConfig.AdditionalVersionWeights) == 0 {
-		if _, err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), 15*time.Minute); err != nil {
+		if err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), aliasRoutingWeightsTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Alias (%s) routing weights to clear: %s", d.Id(), err)
 		}
 	}
@@ -269,9 +269,9 @@ func statusAliasRoutingWeights(conn *lambda.Client, functionName, aliasName stri
 	}
 }
 
-func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, functionName, aliasName string, timeout time.Duration) (*lambda.GetAliasOutput, error) {
+func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, functionName, aliasName string, timeout time.Duration) error {
 	if isNumericOnlyQualifier(aliasName) {
-		return nil, nil
+		return nil
 	}
 
 	stateConf := &retry.StateChangeConf{
@@ -281,13 +281,9 @@ func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, fu
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*lambda.GetAliasOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandAliasRoutingConfiguration(tfList []any) *awstypes.AliasRoutingConfiguration {
