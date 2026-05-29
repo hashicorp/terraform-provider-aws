@@ -23,7 +23,7 @@ import (
 func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -66,7 +66,7 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -102,7 +102,7 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -145,7 +145,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -215,7 +215,7 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -299,7 +299,7 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -360,7 +360,7 @@ func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -464,6 +464,11 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func randomPipelineName(t *testing.T) string {
+	t.Helper()
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 }
 
 func testAccPipelineConfig_basic(rName string) string {
