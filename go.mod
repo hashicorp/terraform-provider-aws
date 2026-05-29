@@ -166,7 +166,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/location v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.2
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.91.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.96.0
