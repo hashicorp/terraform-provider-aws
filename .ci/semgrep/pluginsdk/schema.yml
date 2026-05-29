@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/medialive
         - /internal/service/mediapackage
         - /internal/service/mediastore
         - /internal/service/memorydb
