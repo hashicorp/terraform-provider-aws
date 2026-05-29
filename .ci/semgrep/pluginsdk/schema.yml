@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/oam
         - /internal/service/opensearch
         - /internal/service/opensearchserverless
         - /internal/service/organizations
