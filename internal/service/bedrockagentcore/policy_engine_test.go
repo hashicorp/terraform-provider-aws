@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -27,7 +26,7 @@ import (
 func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
-	rName := randomPolicyEngineName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -71,7 +70,7 @@ func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
-	rName := randomPolicyEngineName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -107,7 +106,7 @@ func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
-	rName := randomPolicyEngineName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -216,10 +215,6 @@ func testAccPreCheckPolicyEngines(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func randomPolicyEngineName(t *testing.T) string {
-	return strings.ReplaceAll(fmt.Sprintf("tfacctest%s", acctest.RandString(t, 10)), "-", "_")
 }
 
 func testAccPolicyEngineConfig_basic(rName string) string {
