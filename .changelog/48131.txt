@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Fix `cluster` attribute incorrectly defaulting to `default` on import for services in non-default clusters
+```
