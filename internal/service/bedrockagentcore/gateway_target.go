@@ -1063,7 +1063,7 @@ func deleteGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Bedrock AgentCore Gateway (%s) Target (%s): %w", gatewayIdentifier, targetID, err)
+		return smarterr.NewError(fmt.Errorf("deleting Bedrock AgentCore Gateway (%s) Target (%s): %w", gatewayIdentifier, targetID, err))
 	}
 
 	return nil

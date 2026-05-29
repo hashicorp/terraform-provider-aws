@@ -404,7 +404,7 @@ func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.
 		}
 
 		if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayID, targetID, timeout); err != nil {
-			return fmt.Errorf("waiting for Bedrock AgentCore Gateway (%s) Target (%s) delete: %w", gatewayID, targetID, err)
+			return smarterr.NewError(fmt.Errorf("waiting for Bedrock AgentCore Gateway (%s) Target (%s) delete: %w", gatewayID, targetID, err))
 		}
 	}
 
