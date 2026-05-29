@@ -104,7 +104,8 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"protocol_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.GatewayProtocolType](),
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,

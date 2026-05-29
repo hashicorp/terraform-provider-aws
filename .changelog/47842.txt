@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Mark `protocol_type` as optional. Omit it to create a gateway that routes traffic directly to HTTP targets (e.g. AgentCore Runtime).
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.http.agentcore_runtime` configuration block
+```
