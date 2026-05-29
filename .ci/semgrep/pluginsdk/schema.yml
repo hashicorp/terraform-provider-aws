@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/rolesanywhere
         - /internal/service/route53
         - /internal/service/route53recoverycontrolconfig
         - /internal/service/route53recoveryreadiness
