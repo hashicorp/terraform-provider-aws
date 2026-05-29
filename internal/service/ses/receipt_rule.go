@@ -44,241 +44,243 @@ func resourceReceiptRule() *schema.Resource {
 			StateContext: resourceReceiptRuleImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"add_header_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"header_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and dash characters"),
-							),
-						},
-						"header_value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 2048),
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
-			"after": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bounce_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"sender": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"smtp_reply_code": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"add_header_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"header_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 50),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and dash characters"),
+								),
+							},
+							"header_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 2048),
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"lambda_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFunctionARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"invocation_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.InvocationTypeEvent,
-							ValidateDiagFunc: enum.Validate[awstypes.InvocationType](),
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"after": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bounce_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"sender": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"smtp_reply_code": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with a alphanumeric character"),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]$`), "must end with a alphanumeric character"),
-				),
-			},
-			"recipients": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"rule_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"s3_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrIAMRoleARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"object_key_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"position": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"lambda_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFunctionARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"invocation_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.InvocationTypeEvent,
+								ValidateDiagFunc: enum.Validate[awstypes.InvocationType](),
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"scan_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"sns_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encoding": {
-							Type:             schema.TypeString,
-							Default:          awstypes.SNSActionEncodingUtf8,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SNSActionEncoding](),
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with a alphanumeric character"),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]$`), "must end with a alphanumeric character"),
+					),
+				},
+				"recipients": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"rule_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"s3_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrIAMRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"object_key_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"position": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"stop_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrScope: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.StopScope](),
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"scan_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"sns_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encoding": {
+								Type:             schema.TypeString,
+								Default:          awstypes.SNSActionEncodingUtf8,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SNSActionEncoding](),
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"tls_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
-			},
-			"workmail_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"organization_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"stop_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrScope: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.StopScope](),
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+				"tls_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
+				},
+				"workmail_action": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"organization_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"position": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
