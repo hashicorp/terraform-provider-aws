@@ -4,7 +4,8 @@
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_region" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]region_name = "us-west-2"
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  region_name  = "us-west-2"
 }
 
 variable "rName" {
