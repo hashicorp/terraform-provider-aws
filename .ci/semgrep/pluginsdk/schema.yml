@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/neptune
         - /internal/service/networkfirewall
         - /internal/service/networkmanager
         - /internal/service/oam
