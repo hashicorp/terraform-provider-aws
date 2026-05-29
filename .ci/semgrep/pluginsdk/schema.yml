@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/rum
         - /internal/service/s3
         - /internal/service/s3control
         - /internal/service/s3outposts
