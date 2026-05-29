@@ -373,7 +373,7 @@ resource "aws_opensearchserverless_collection_group" "test" {
   name             = %[1]q
   standby_replicas = "ENABLED"
 
-  generation       = %[2]q
+  generation = %[2]q
 }
 `, rName, generation)
 }
