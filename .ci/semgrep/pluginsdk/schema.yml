@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/keyspaces
         - /internal/service/kinesis
         - /internal/service/kinesisanalytics
         - /internal/service/kinesisanalyticsv2
