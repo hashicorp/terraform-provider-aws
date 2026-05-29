@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,6 +34,7 @@ func TestAccSSOAdminRegion_serial(t *testing.T) {
 
 func testAccSSOAdminRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v ssoadmin.DescribeRegionOutput
 	resourceName := "aws_ssoadmin_region.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -48,7 +50,7 @@ func testAccSSOAdminRegion_basic(t *testing.T) {
 			{
 				Config: testAccRegionConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionExists(ctx, t, resourceName),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.RegionStatusActive)),
@@ -67,6 +69,7 @@ func testAccSSOAdminRegion_basic(t *testing.T) {
 
 func testAccSSOAdminRegion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v ssoadmin.DescribeRegionOutput
 	resourceName := "aws_ssoadmin_region.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -82,7 +85,7 @@ func testAccSSOAdminRegion_disappears(t *testing.T) {
 			{
 				Config: testAccRegionConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionExists(ctx, t, resourceName),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceRegion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,7 +118,7 @@ func testAccCheckRegionDestroy(ctx context.Context, t *testing.T) resource.TestC
 	}
 }
 
-func testAccCheckRegionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckRegionExists(ctx context.Context, t *testing.T, n string, v *ssoadmin.DescribeRegionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -124,10 +127,12 @@ func testAccCheckRegionExists(ctx context.Context, t *testing.T, n string) resou
 
 		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
-		_, err := tfssoadmin.FindRegionByTwoPartKey(ctx, conn, rs.Primary.Attributes["instance_arn"], rs.Primary.Attributes["region_name"])
+		output, err := tfssoadmin.FindRegionByTwoPartKey(ctx, conn, rs.Primary.Attributes["instance_arn"], rs.Primary.Attributes["region_name"])
 		if err != nil {
 			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameRegion, rs.Primary.Attributes["instance_arn"], err)
 		}
+
+		*v = *output
 
 		return nil
 	}
