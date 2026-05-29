@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/shield
         - /internal/service/signer
         - /internal/service/sns
         - /internal/service/sqs
