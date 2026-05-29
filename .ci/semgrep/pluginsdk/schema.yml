@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/redshiftdata
         - /internal/service/redshiftserverless
         - /internal/service/resourcegroups
         - /internal/service/resourcegroupstaggingapi
