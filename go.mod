@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.8
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.8.0
-	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.25
+	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.26
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.6
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.14
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.66.2
