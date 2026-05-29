@@ -126,7 +126,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evs v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.17
-	github.com/aws/aws-sdk-go-v2/service/fis v1.37.22
+	github.com/aws/aws-sdk-go-v2/service/fis v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/fms v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.54.0
