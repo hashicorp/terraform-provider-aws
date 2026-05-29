@@ -1950,7 +1950,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceIPAMPoolCIDRAllocation,
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
 			Name:     "IPAM Pool CIDR Allocation",
-			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "ipam_pool_allocation_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceIPAMPreviewNextCIDR,
