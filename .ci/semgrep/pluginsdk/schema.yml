@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/s3control
         - /internal/service/s3outposts
         - /internal/service/sagemaker
         - /internal/service/scheduler
