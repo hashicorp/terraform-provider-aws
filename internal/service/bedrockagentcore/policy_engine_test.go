@@ -25,7 +25,6 @@ import (
 
 func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
@@ -42,7 +41,7 @@ func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 			{
 				Config: testAccPolicyEngineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -69,7 +68,6 @@ func TestAccBedrockAgentCorePolicyEngine_basic(t *testing.T) {
 
 func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
@@ -86,7 +84,7 @@ func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 			{
 				Config: testAccPolicyEngineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicyEngine, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,7 +103,6 @@ func TestAccBedrockAgentCorePolicyEngine_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policyEngine bedrockagentcorecontrol.GetPolicyEngineOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
 
@@ -122,7 +119,7 @@ func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
 			{
 				Config: testAccPolicyEngineConfig_description(rName, "initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -143,7 +140,7 @@ func TestAccBedrockAgentCorePolicyEngine_description(t *testing.T) {
 			{
 				Config: testAccPolicyEngineConfig_description(rName, "updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &policyEngine),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -183,7 +180,7 @@ func testAccCheckPolicyEngineDestroy(ctx context.Context, t *testing.T) resource
 	}
 }
 
-func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetPolicyEngineOutput) resource.TestCheckFunc {
+func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -192,12 +189,10 @@ func testAccCheckPolicyEngineExists(ctx context.Context, t *testing.T, n string,
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.Attributes["policy_engine_id"])
+		_, err := tfbedrockagentcore.FindPolicyEngineByID(ctx, conn, rs.Primary.Attributes["policy_engine_id"])
 		if err != nil {
 			return err
 		}
-
-		*v = *resp
 
 		return nil
 	}
