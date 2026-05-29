@@ -395,8 +395,8 @@ github.com/aws/aws-sdk-go-v2/service/notifications v1.8.1 h1:p3fifBWnYwYZDl4dWnY
 github.com/aws/aws-sdk-go-v2/service/notifications v1.8.1/go.mod h1:BFR5AGKy6wApHVrQzMGzAIIhu9XHLsC9Vr4Dhrr8MhU=
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.6.1 h1:/+83sWWF9wzvNZrS2JuVTk2rz9x1eH2jM7JcFcfiCYA=
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.6.1/go.mod h1:CgMKkMvi8mRoRFbjbhGj/tuYvhIp5wmiHkC4aYwCQAo=
-github.com/aws/aws-sdk-go-v2/service/oam v1.24.0 h1:O0sFLaMTd2qQHtU8HFH9hgnTcJCzEoGNmxdE7P1yuSo=
-github.com/aws/aws-sdk-go-v2/service/oam v1.24.0/go.mod h1:RxA073SQ1NzTBNrAs1N2iQ1WACFWdUxIL+pmvw9Ih9U=
+github.com/aws/aws-sdk-go-v2/service/oam v1.24.1 h1:QrXBn2Al2hSKd7iuncZwBh3Sm/M4w/AJqJwbUB/bcKo=
+github.com/aws/aws-sdk-go-v2/service/oam v1.24.1/go.mod h1:eQpqFnDbhCA78FU2Z5ZHyQ/x8mxPJMfWms/BnyB3POc=
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.16.0 h1:Ys/ZOm9bowwjJRkkv8iVjz6tRTnx1yAWknsdydNKnJU=
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.16.0/go.mod h1:BXfyXkrz+WDrJkHfWlj/+/WtVS2mKDUsWc2UcgcvVLY=
 github.com/aws/aws-sdk-go-v2/service/odb v1.11.0 h1:ugOElkAyu12xSVwgBZc4kK/bydeJpo7HVeWOqHFLSJ8=

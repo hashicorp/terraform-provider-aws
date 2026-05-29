@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.6.1
-	github.com/aws/aws-sdk-go-v2/service/oam v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/oam v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.69.0
