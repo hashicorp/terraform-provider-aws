@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -155,6 +156,12 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Alias (%s): %s", d.Id(), err)
 	}
 
+	if len(input.RoutingConfig.AdditionalVersionWeights) == 0 {
+		if _, err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), 15*time.Minute); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Alias (%s) routing weights to clear: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
@@ -220,6 +227,67 @@ func findAlias(ctx context.Context, conn *lambda.Client, input *lambda.GetAliasI
 	}
 
 	return output, nil
+}
+
+// isNumericOnlyQualifier returns true if the qualifier is a published version number
+// (all digits). Alias names cannot be numeric-only per AWS validation rules.
+func isNumericOnlyQualifier(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+
+	return true
+}
+
+func statusAliasRoutingWeights(conn *lambda.Client, functionName, aliasName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		if isNumericOnlyQualifier(aliasName) {
+			return nil, "stable", nil
+		}
+
+		output, err := findAliasByTwoPartKey(ctx, conn, functionName, aliasName)
+
+		if retry.NotFound(err) {
+			return nil, "stable", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.RoutingConfig != nil && len(output.RoutingConfig.AdditionalVersionWeights) > 0 {
+			return output, "pending", nil
+		}
+
+		return output, "stable", nil
+	}
+}
+
+func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, functionName, aliasName string, timeout time.Duration) (*lambda.GetAliasOutput, error) {
+	if isNumericOnlyQualifier(aliasName) {
+		return nil, nil
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"pending"},
+		Target:  []string{"stable"},
+		Refresh: statusAliasRoutingWeights(conn, functionName, aliasName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lambda.GetAliasOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandAliasRoutingConfiguration(tfList []any) *awstypes.AliasRoutingConfiguration {

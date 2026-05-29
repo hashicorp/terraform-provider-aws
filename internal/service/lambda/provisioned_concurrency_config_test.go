@@ -228,7 +228,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 	})
 }
 
-func TestAccLabdaProvisionedConcurrencyConfig_Qualifier_NNaliasNameNN_versionUpdate(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_aliasChangeWithProvisionedConcurrency(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -255,11 +255,6 @@ func TestAccLabdaProvisionedConcurrencyConfig_Qualifier_NNaliasNameNN_versionUpd
 				),
 			},
 			{
-				// Simultaneously updating the alias function_version and
-				// provisioned_concurrent_executions in the same apply should succeed.
-				// Before the fix this step fails with:
-				// InvalidParameterValueException: Alias with weights can not be used with Provisioned Concurrency
-				// See https://github.com/hashicorp/terraform-provider-aws/issues/13329
 				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
@@ -457,7 +452,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   publish       = true
-  runtime       = "nodejs24.x"
+  runtime       = "nodejs22.x"
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
