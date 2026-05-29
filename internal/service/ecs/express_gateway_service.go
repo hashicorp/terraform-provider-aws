@@ -343,8 +343,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 		// Preserve cluster format from state (name vs ARN)
 		cluster := state.Cluster.ValueString()
 		if cluster == "" {
-			// If state cluster is empty, use default cluster name
-			state.Cluster = types.StringValue("default")
+			state.Cluster = fwflex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(out.Cluster))))
 		} else if arn.IsARN(cluster) {
 			state.Cluster = fwflex.StringToFramework(ctx, out.Cluster)
 		} else {

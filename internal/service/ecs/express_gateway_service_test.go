@@ -516,6 +516,57 @@ func TestAccECSExpressGatewayService_recreateAfterDeleting(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_clusterName(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_clusterName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cluster"), knownvalue.StringExact(rName)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+					"ingress_paths.0.endpoint",
+					"network_configuration.0.security_groups.#",
+					"network_configuration.0.security_groups.0",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -936,6 +987,29 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
   ]
 }
 `)
+}
+
+func testAccExpressGatewayServiceConfig_clusterName(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_express_gateway_service" "test" {
+  cluster                 = aws_ecs_cluster.test.name
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName))
 }
 
 // testAccExpressGatewayServiceConfig_environmentVariableOrdering creates a service
