@@ -85,6 +85,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_datazone_environment_blueprint_configuration",
 			Name:     "Environment Blueprint Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_id", true),
+				inttypes.StringIdentityAttribute("environment_blueprint_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      environmentBlueprintConfigurationImportID{},
+			},
 		},
 		{
 			Factory:  newEnvironmentProfileResource,
@@ -162,6 +170,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_datazone_user_profile",
 			Name:     "User Profile",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute("user_identifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      userProfileImportID{},
+			},
 		},
 	}
 }
