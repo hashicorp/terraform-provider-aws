@@ -308,6 +308,41 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 	})
 }
 
+func TestAccDataZoneEnvironmentBlueprintConfiguration_global_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+			},
+		},
+	})
+}
+
 func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
@@ -453,42 +488,4 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 }
 `, key, value),
 	)
-}
-func TestAccDataZoneEnvironmentBlueprintConfiguration_global_parameters(t *testing.T) {
-	ctx := acctest.Context(t)
-	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_datazone_environment_blueprint_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(
-					domainName,
-					"quickSightVPCConnectionRoleArn",
-					"arn:aws:iam::123456789012:role/example",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
-					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
-			},
-		},
-	})
 }
