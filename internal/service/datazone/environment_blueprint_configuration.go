@@ -58,6 +58,10 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"global_parameters": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
+			},
 			"manage_access_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -68,10 +72,6 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 			},
 			"regional_parameters": schema.MapAttribute{
 				CustomType: fwtypes.MapOfMapOfStringType,
-				Optional:   true,
-			},
-			"global_parameters": schema.MapAttribute{
-				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
 		},
