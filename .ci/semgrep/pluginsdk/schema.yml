@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/transfer
         - /internal/service/vpclattice
         - /internal/service/waf
         - /internal/service/wafregional
