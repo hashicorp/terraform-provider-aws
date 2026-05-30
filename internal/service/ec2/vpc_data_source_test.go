@@ -41,6 +41,8 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "ipv6_cidr_block_associations.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(ds1ResourceName, "ipv6_cidr_block_associations.*.association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "main_route_table_id", vpcResourceName, "main_route_table_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, vpcResourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(ds1ResourceName, "tags.Name", rName),
@@ -101,6 +103,8 @@ func TestAccVPCDataSource_IPv6CIDRBlockAssociations_multiple(t *testing.T) {
 				Config: testAccVPCDataSourceConfig_IPv6CIDRBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_block_associations.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc.test", "ipv6_association_id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc_ipv6_cidr_block_association.test", names.AttrID),
 				),
 			},
 		},
