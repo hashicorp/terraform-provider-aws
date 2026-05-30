@@ -314,8 +314,8 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testin
 	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	quickSightRole := fmt.Sprintf("arn:aws:iam::%s:role/example", acctest.AccountID(ctx))
-	quickSightRoleUpdated := fmt.Sprintf("arn:aws:iam::%s:role/example-updated", acctest.AccountID(ctx))
+	quickSightRole := fmt.Sprintf("arn:%s:iam::%s:role/example", acctest.Partition(), acctest.AccountID(ctx))
+	quickSightRoleUpdated := fmt.Sprintf("arn:%s:iam::%s:role/example-updated", acctest.Partition(), acctest.AccountID(ctx))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
