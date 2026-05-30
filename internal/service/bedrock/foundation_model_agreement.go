@@ -40,6 +40,8 @@ import (
 // @Testing(serialize=true)
 // @Testing(plannableImportAction="NoOp")
 // @Testing(generator=false)
+// @Testing(preCheck="testAccPreCheckFoundationModelAgreement")
+// @Testing(preCheck="testAccPreCheckFoundationModelUseCase")
 // @FrameworkResource("aws_bedrock_foundation_model_agreement", name="Foundation Model Agreement")
 func newFoundationModelAgreementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &foundationModelAgreementResource{}

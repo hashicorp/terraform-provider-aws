@@ -43,7 +43,11 @@ func testAccBedrockFoundationModelAgreement_Identity_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckFoundationModelAgreement(ctx, t)
+			testAccPreCheckFoundationModelUseCase(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckFoundationModelAgreementDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -133,7 +137,11 @@ func testAccBedrockFoundationModelAgreement_Identity_regionOverride(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckFoundationModelAgreement(ctx, t)
+			testAccPreCheckFoundationModelUseCase(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

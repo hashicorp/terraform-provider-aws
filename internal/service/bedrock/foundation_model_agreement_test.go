@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,7 +33,8 @@ func testAccBedrockFoundationModelAgreement_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckFoundationModelAgreement(ctx, t, modelID)
+			testAccPreCheckFoundationModelAgreement(ctx, t)
+			testAccPreCheckFoundationModelUseCase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +71,8 @@ func testAccBedrockFoundationModelAgreement_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckFoundationModelAgreement(ctx, t, modelID)
+			testAccPreCheckFoundationModelAgreement(ctx, t)
+			testAccPreCheckFoundationModelUseCase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -148,9 +151,28 @@ func testAccCheckFoundationModelAgreementExists(ctx context.Context, t *testing.
 	}
 }
 
-func testAccPreCheckFoundationModelAgreement(ctx context.Context, t *testing.T, modelUsedForAgreement string) {
+func testAccPreCheckFoundationModelUseCase(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
+	input := bedrock.GetUseCaseForModelAccessInput{}
+	_, err := conn.GetUseCaseForModelAccess(ctx, &input)
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		t.Skipf("skipping acceptance testing due to missing use case for model access: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckFoundationModelAgreement(ctx context.Context, t *testing.T) {
+	modelUsedForAgreement := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_FOUNDATION_MODEL_ID")
+
+	conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 	resp, err := tfbedrock.FindFoundationModelAgreementByID(ctx, conn, modelUsedForAgreement)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
