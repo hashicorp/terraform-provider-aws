@@ -516,3 +516,181 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 }
 `, rName))
 }
+
+func testAccMemoryStrategyConfig_episodicReflection(rName, namespace, reflectionNamespace string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "EPISODIC"
+  description               = "Episodic strategy with reflection"
+  namespaces                = [%[2]q]
+
+  reflection_configuration {
+    namespace_templates = [%[3]q]
+  }
+}
+`, rName, namespace, reflectionNamespace))
+}
+
+func testAccMemoryStrategyConfig_customEpisodicReflection(rName, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel, reflectionPrompt, reflectionModel string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Custom episodic strategy with reflection"
+  namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+
+  configuration {
+    type = "EPISODIC_OVERRIDE"
+    consolidation {
+      append_to_prompt = %[2]q
+      model_id         = %[3]q
+    }
+    extraction {
+      append_to_prompt = %[4]q
+      model_id         = %[5]q
+    }
+    reflection {
+      append_to_prompt = %[6]q
+      model_id         = %[7]q
+      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+    }
+  }
+}
+`, rName, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel, reflectionPrompt, reflectionModel))
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_episodicReflection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	episodicNS := "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
+	reflectionNS := "/strategies/{memoryStrategyId}/actors/{actorId}/reflections"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: Create memory with execution role
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+			},
+			// Step 1: Create EPISODIC strategy with reflection_configuration
+			{
+				Config: testAccMemoryStrategyConfig_episodicReflection(rName, episodicNS, reflectionNS),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
+					resource.TestCheckResourceAttr(resourceName, "reflection_configuration.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "reflection_configuration.0.namespace_templates.*", reflectionNS),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: Import verification
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_customEpisodicReflection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	model := "anthropic.claude-3-haiku-20240307-v1:0"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: Create memory with execution role
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+			},
+			// Step 1: CUSTOM EPISODIC_OVERRIDE with reflection block
+			{
+				Config: testAccMemoryStrategyConfig_customEpisodicReflection(
+					rName,
+					"Consolidate episodic memories", model,
+					"Extract key episodes", model,
+					"Identify patterns across episodes", model,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "EPISODIC_OVERRIDE"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.reflection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.reflection.0.append_to_prompt", "Identify patterns across episodes"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.reflection.0.model_id", model),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: Update reflection prompt (in-place)
+			{
+				Config: testAccMemoryStrategyConfig_customEpisodicReflection(
+					rName,
+					"Consolidate episodic memories", model,
+					"Extract key episodes", model,
+					"Updated: find failure modes and recovery patterns", model,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.reflection.0.append_to_prompt", "Updated: find failure modes and recovery patterns"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 3: Import verification
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
