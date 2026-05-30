@@ -60,6 +60,34 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_environment_blueprint_configuration.example
+  identity = {
+    domain_id                = "domain-id-12345"
+    environment_blueprint_id = "environment-blueprint-id-54321"
+  }
+}
+
+resource "aws_datazone_environment_blueprint_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_id` - (String) ID of the DataZone domain.
+* `environment_blueprint_id` - (String) ID of the environment blueprint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Blueprint Configuration using the `domain_id` and `environment_blueprint_id`, separated by a `/`. For example:
 
 ```terraform
