@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/storagegateway
         - /internal/service/swf
         - /internal/service/synthetics
         - /internal/service/timestreamwrite
