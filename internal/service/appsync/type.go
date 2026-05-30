@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -40,33 +39,35 @@ func resourceType() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TypeDefinitionFormat](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"definition": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TypeDefinitionFormat](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -205,7 +206,9 @@ func findTypeByThreePartKey(ctx context.Context, conn *appsync.Client, apiID str
 	output, err := conn.GetType(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {

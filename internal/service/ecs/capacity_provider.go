@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,7 +36,6 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("capacity-provider/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
@@ -742,17 +740,16 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	}
 
 	if status := output.Status; status == awstypes.CapacityProviderStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -767,8 +764,8 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) s
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityProviderUpdate(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -784,10 +781,10 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn str
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
-		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
+		Refresh: statusCapacityProviderUpdate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -803,10 +800,10 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 }
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive, awstypes.CapacityProviderStatusDeprovisioning),
 		Target:  []string{},
-		Refresh: statusCapacityProvider(ctx, conn, arn),
+		Refresh: statusCapacityProvider(conn, arn),
 		Timeout: timeout,
 	}
 

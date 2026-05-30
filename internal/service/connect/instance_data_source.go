@@ -13,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,72 +30,74 @@ func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_resolve_best_voices_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"contact_flow_logs_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"contact_lens_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"early_media_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"identity_management_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"inbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"instance_alias": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
-			},
-			"multi_party_conference_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			// "use_custom_tts_voices_enabled": {
-			// 	Type:     schema.TypeBool,
-			// 	Computed: true,
-			// },
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_resolve_best_voices_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"contact_flow_logs_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"contact_lens_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"early_media_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"identity_management_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"inbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"instance_alias": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
+				},
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
+				},
+				"multi_party_conference_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"outbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				// "use_custom_tts_voices_enabled": {
+				// 	Type:     schema.TypeBool,
+				// 	Computed: true,
+				// },
+			}
 		},
 	}
 }
@@ -186,9 +188,8 @@ func findInstanceSummaries(ctx context.Context, conn *connect.Client, input *con
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

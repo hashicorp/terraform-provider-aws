@@ -96,8 +96,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
 | `cache-info` | Display Go cache and GitHub Actions cache information |  |  |  |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
-| `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
-| `ci-quick`<sup>M</sup> | Run quicker CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
+| `ci`<sup>M</sup> | Run all CI checks (requires docker) | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
+| `ci-quick`<sup>M</sup> | Run quicker CI checks (no docker) | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
 | `clean`<sup>M</sup> | Clean up Go cache, tidy and re-install tools |  |  | `GO_VER` |
 | `clean-go`<sup>D</sup> | Clean up Go cache |  |  | `GO_VER` |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
@@ -139,12 +139,14 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
-| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
 | `sane`<sup>D</sup> | Run sane check |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `sanity`<sup>D</sup> | Run sanity check (failures allowed) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
+| `schema-validate` | Validate schemas | | | `GO_VER` |
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
@@ -166,6 +168,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `t`<sup>D</sup> | Run acceptance tests  (similar to `testacc`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `test`<sup>D</sup> | Run unit tests (auto-detects single service or full codebase, optimizes for macOS/CrowdStrike) |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS`, `TEST_P`, `TEST_PARALLEL` |
 | `test-compile`<sup>D</sup> | Test package compilation |  |  | `GO_VER`, `K`, `PKG`, `PKG_NAME`, `TEST`, `TESTARGS` |
+| `test-naming` | Check test function naming conventions | ✔️ |  |  |
 | `test-shard`<sup>D</sup> | Run unit tests for a specific shard (CI only) |  |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS`, `TEST_P`, `TEST_PARALLEL` |
 | `testacc`<sup>D</sup> | Run acceptance tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-lint` | Acceptance Test Linting / terrafmt | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
@@ -175,11 +178,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
-| `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
-| `vcr-enable` | Enable Go-VCR support |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |

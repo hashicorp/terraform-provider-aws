@@ -9,7 +9,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -223,7 +222,7 @@ func checkNotAllLowercase(i int, service, name, value string) {
 }
 
 func checkDocDir(dir string, prefixes []DocPrefix) error {
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}

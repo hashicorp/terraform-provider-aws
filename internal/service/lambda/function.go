@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +50,6 @@ const (
 // @Testing(idAttrDuplicates="function_name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @CustomImport
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -793,165 +791,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", d.Id(), err)
 	}
 
-	// If Qualifier is specified, GetFunction will return nil for Concurrency.
-	// Need to fetch it separately using GetFunctionConcurrency.
-	if output.Concurrency == nil && input.Qualifier != nil {
-		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
-		}
-
-		output.Concurrency = &awstypes.Concurrency{
-			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
-		}
-	}
-
-	function := output.Configuration
-	functionCode := output.Code
-	d.Set("architectures", function.Architectures)
-	functionARN := aws.ToString(function.FunctionArn)
-	d.Set(names.AttrARN, functionARN)
-	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
-	}
-	d.Set("code_sha256", function.CodeSha256)
-	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		if err := d.Set("dead_letter_config", []any{
-			map[string]any{
-				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
-			},
-		}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
-		}
-	} else {
-		d.Set("dead_letter_config", []any{})
-	}
-	if function.DurableConfig != nil {
-		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
-		}
-	} else {
-		d.Set("durable_config", []any{})
-	}
-	d.Set(names.AttrDescription, function.Description)
-	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
-	}
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
-	}
-	d.Set("handler", function.Handler)
-	if err := d.Set("image_config", flattenImageConfig(function.ImageConfigResponse)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
-	}
-	if output.Code != nil {
-		d.Set("image_uri", output.Code.ImageUri)
-	}
-	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
-	d.Set("last_modified", function.LastModified)
-	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
-	}
-	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
-	}
-	d.Set("memory_size", function.MemorySize)
-	d.Set("package_type", function.PackageType)
-	if output.Concurrency != nil {
-		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
-	} else {
-		d.Set("reserved_concurrent_executions", -1)
-	}
-	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-	d.Set(names.AttrRole, function.Role)
-	d.Set("runtime", function.Runtime)
-	d.Set("signing_job_arn", function.SigningJobArn)
-	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
-	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
-	}
-	d.Set("source_code_hash", d.Get("source_code_hash"))
-	d.Set("source_code_size", function.CodeSize)
-	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
-	d.Set(names.AttrTimeout, function.Timeout)
-	tracingConfigMode := awstypes.TracingModePassThrough
-	if function.TracingConfig != nil {
-		tracingConfigMode = function.TracingConfig.Mode
-	}
-	if err := d.Set("tracing_config", []any{
-		map[string]any{
-			names.AttrMode: string(tracingConfigMode),
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
-	}
-	if function.TenancyConfig != nil {
-		if err := d.Set("tenancy_config", []any{
-			map[string]any{
-				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
-			},
-		}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
-		}
-	}
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
-	}
-
-	if hasQualifier {
-		d.Set("qualified_arn", functionARN)
-		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-		d.Set(names.AttrVersion, function.Version)
-	} else {
-		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", d.Id(), err)
-		}
-
-		qualifiedARN := aws.ToString(latest.FunctionArn)
-		d.Set("qualified_arn", qualifiedARN)
-		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
-		d.Set(names.AttrVersion, latest.Version)
-
-		setTagsOut(ctx, output.Tags)
-	}
-
-	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
-	// partitions and other partitions return ambiguous error codes.
-	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
-	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
-		var codeSigningConfigARN string
-
-		// Code Signing is only supported on zip packaged lambda functions.
-		if function.PackageType == awstypes.PackageTypeZip {
-			input := lambda.GetFunctionCodeSigningConfigInput{
-				FunctionName: aws.String(d.Id()),
-			}
-
-			output, err := conn.GetFunctionCodeSigningConfig(ctx, &input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
-			}
-
-			if output != nil {
-				codeSigningConfigARN = aws.ToString(output.CodeSigningConfigArn)
-			}
-		}
-
-		d.Set("code_signing_config_arn", codeSigningConfigARN)
-	}
-
-	return diags
+	return append(diags, resourceFunctionFlatten(ctx, meta.(*conns.AWSClient), d, output, input, hasQualifier)...)
 }
 
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1333,9 +1173,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	output, err := conn.GetDurableExecution(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1350,8 +1189,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	return output, nil
 }
 
-func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDurableExecution(conn *lambda.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDurableExecution(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1367,10 +1206,10 @@ func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string
 }
 
 func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
 		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
-		Refresh: statusDurableExecution(ctx, conn, arn),
+		Refresh: statusDurableExecution(conn, arn),
 		Timeout: timeout,
 		Delay:   2 * time.Second,
 	}
@@ -1396,9 +1235,8 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1428,9 +1266,8 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	output, err := conn.GetFunctionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1485,9 +1322,8 @@ func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *la
 	output, err := conn.GetFunctionConcurrency(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1563,8 +1399,8 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionLastUpdateStatus(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1579,8 +1415,8 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionState(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1595,8 +1431,8 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 	}
 }
 
-func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lambda.Client, name, qualifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionConfigurationLastUpdateStatus(conn *lambda.Client, name, qualifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionConfigurationByTwoPartKey(ctx, conn, name, qualifier)
 
 		if retry.NotFound(err) {
@@ -1619,10 +1455,10 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
 		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1639,10 +1475,10 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionLastUpdateStatus(ctx, conn, name),
+		Refresh: statusFunctionLastUpdateStatus(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1659,10 +1495,10 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, name, qualifier string, timeout time.Duration) (*lambda.GetFunctionConfigurationOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionConfigurationLastUpdateStatus(ctx, conn, name, qualifier),
+		Refresh: statusFunctionConfigurationLastUpdateStatus(conn, name, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1679,10 +1515,10 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 }
 
 func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
 		Target:  []string{},
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -2148,4 +1984,168 @@ func resetNonRefreshableAttributes(d *schema.ResourceData) {
 			d.Set(key, old)
 		}
 	}
+}
+
+func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *lambda.GetFunctionOutput, input lambda.GetFunctionInput, hasQualifier bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := awsClient.LambdaClient(ctx)
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
+	function := output.Configuration
+	functionCode := output.Code
+	d.Set("architectures", function.Architectures)
+	functionARN := aws.ToString(function.FunctionArn)
+	d.Set(names.AttrARN, functionARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
+	d.Set("code_sha256", function.CodeSha256)
+	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
+		if err := d.Set("dead_letter_config", []any{
+			map[string]any{
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+		}
+	} else {
+		d.Set("dead_letter_config", []any{})
+	}
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	} else {
+		d.Set("durable_config", []any{})
+	}
+	d.Set(names.AttrDescription, function.Description)
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
+	}
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
+	}
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
+	}
+	d.Set("handler", function.Handler)
+	if err := d.Set("image_config", flattenImageConfig(function.ImageConfigResponse)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
+	}
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
+	d.Set("invoke_arn", invokeARN(ctx, awsClient, functionARN))
+	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
+	d.Set("last_modified", function.LastModified)
+	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
+	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	}
+	d.Set("memory_size", function.MemorySize)
+	d.Set("package_type", function.PackageType)
+	if output.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", -1)
+	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, awsClient, functionARN))
+	d.Set(names.AttrRole, function.Role)
+	d.Set("runtime", function.Runtime)
+	d.Set("signing_job_arn", function.SigningJobArn)
+	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
+	}
+	d.Set("source_code_hash", d.Get("source_code_hash"))
+	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
+	d.Set(names.AttrTimeout, function.Timeout)
+	tracingConfigMode := awstypes.TracingModePassThrough
+	if function.TracingConfig != nil {
+		tracingConfigMode = function.TracingConfig.Mode
+	}
+	if err := d.Set("tracing_config", []any{
+		map[string]any{
+			names.AttrMode: string(tracingConfigMode),
+		},
+	}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
+	}
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
+	}
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+
+	if hasQualifier {
+		d.Set("qualified_arn", functionARN)
+		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, functionARN))
+		d.Set(names.AttrVersion, function.Version)
+	} else {
+		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", d.Id(), err)
+		}
+
+		qualifiedARN := aws.ToString(latest.FunctionArn)
+		d.Set("qualified_arn", qualifiedARN)
+		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, qualifiedARN))
+		d.Set(names.AttrVersion, latest.Version)
+
+		setTagsOut(ctx, output.Tags)
+	}
+
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
+	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
+	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
+	if partition, region := awsClient.Partition(ctx), awsClient.Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
+		var codeSigningConfigARN string
+
+		// Code Signing is only supported on zip packaged lambda functions.
+		if function.PackageType == awstypes.PackageTypeZip {
+			input := lambda.GetFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			}
+
+			output, err := conn.GetFunctionCodeSigningConfig(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
+			}
+
+			if output != nil {
+				codeSigningConfigARN = aws.ToString(output.CodeSigningConfigArn)
+			}
+		}
+
+		d.Set("code_signing_config_arn", codeSigningConfigARN)
+	}
+
+	return diags
 }

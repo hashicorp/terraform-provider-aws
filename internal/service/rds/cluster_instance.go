@@ -118,7 +118,7 @@ func resourceClusterInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
 					validation.StringInSlice(clusterInstanceEngine_Values(), false),
 				),
 			},
@@ -254,7 +254,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &rds.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -536,7 +536,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Automatically set skip_final_snapshot = true for RDS Custom instances
-	if strings.HasPrefix(d.Get(names.AttrEngine).(string), InstanceEngineCustomPrefix) {
+	if strings.HasPrefix(d.Get(names.AttrEngine).(string), instanceEngineCustomPrefix) {
 		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get(names.AttrEngine).(string), "true")
 		input.SkipFinalSnapshot = aws.Bool(true)
 	}

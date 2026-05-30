@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,22 +33,24 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"enable_media_metric_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_sip_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enable_media_metric_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_sip_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -158,9 +159,8 @@ func findVoiceConnectorLoggingByID(ctx context.Context, conn *chimesdkvoice.Clie
 	resp, err := conn.GetVoiceConnectorLoggingConfiguration(ctx, in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

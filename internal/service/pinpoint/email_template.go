@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -55,17 +54,20 @@ type emailTemplateResource struct {
 
 func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_template or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
-				Required: true,
+				Required:           true,
+				DeprecationMessage: "template_name is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"email_template": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				CustomType:         fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				DeprecationMessage: "email_template is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},
@@ -258,9 +260,8 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	out, err := conn.GetEmailTemplate(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err

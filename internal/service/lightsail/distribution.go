@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -589,9 +588,8 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string
 	}
 	out, err := conn.GetDistributions(ctx, in)
 	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

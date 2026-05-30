@@ -72,7 +72,6 @@ resource "aws_datazone_project" "test" {
   skip_deletion_check = true
 }
 
-
 resource "aws_datazone_glossary" "test" {
   description               = "description"
   name                      = "example_name"

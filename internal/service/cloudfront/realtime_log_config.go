@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,7 +31,6 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("realtime-log-config/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
@@ -40,61 +38,63 @@ func resourceRealtimeLogConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
 		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_stream_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrStreamARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_stream_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrStreamARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"stream_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[streamType](),
+							"stream_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[streamType](),
+							},
 						},
 					},
 				},
-			},
-			"fields": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sampling_rate": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-			},
+				"fields": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sampling_rate": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+			}
 		},
 	}
 }
@@ -224,9 +224,8 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 	output, err := conn.GetRealtimeLogConfig(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

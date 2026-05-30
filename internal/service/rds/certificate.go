@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -29,7 +28,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Certificate")
 // @Testing(generator=false)
 // @Testing(name="Certificate")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificatePut,
@@ -123,9 +121,8 @@ func findCertificates(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.CertificateNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -194,9 +193,8 @@ func findRouteCalculatorByName(ctx context.Context, conn *location.Client, name 
 
 	out, err := conn.DescribeRouteCalculator(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

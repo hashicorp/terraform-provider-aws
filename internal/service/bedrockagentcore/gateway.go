@@ -29,8 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -116,37 +115,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"workload_identity_details": framework.ResourceComputedListOfObjectsAttribute[workloadIdentityDetailsModel](ctx, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"custom_jwt_authorizer": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"allowed_audience": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"allowed_clients": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"discovery_url": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"authorizer_configuration": authorizerConfigurationSchema(ctx),
 			"interceptor_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -277,7 +246,7 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateGateway(ctx, &input)
@@ -389,6 +358,14 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	// API requires removing targets before the gateway (failed applies, drift, or orphans can leave targets behind).
+	if err := deleteAllGatewayTargets(ctx, conn, gatewayID, timeout); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+		return
+	}
+
 	input := bedrockagentcorecontrol.DeleteGatewayInput{
 		GatewayIdentifier: aws.String(gatewayID),
 	}
@@ -401,7 +378,7 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, timeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
@@ -409,6 +386,29 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *gatewayResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("gateway_id"), request, response)
+}
+
+func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayID string, timeout time.Duration) error {
+	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
+		GatewayIdentifier: aws.String(gatewayID),
+	}
+
+	for v, err := range listGatewayTargets(ctx, conn, &input) {
+		if err != nil {
+			return err
+		}
+
+		targetID := aws.ToString(v.TargetId)
+		if err := deleteGatewayTarget(ctx, conn, gatewayID, targetID); err != nil {
+			return err
+		}
+
+		if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayID, targetID, timeout); err != nil {
+			return smarterr.NewError(fmt.Errorf("waiting for Bedrock AgentCore Gateway (%s) Target (%s) delete: %w", gatewayID, targetID, err))
+		}
+	}
+
+	return nil
 }
 
 func waitGatewayCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayOutput, error) {
@@ -491,9 +491,8 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 	out, err := conn.GetGateway(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 

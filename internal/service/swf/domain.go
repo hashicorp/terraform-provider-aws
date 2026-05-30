@@ -86,7 +86,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
 		Tags:                                   getTagsIn(ctx),

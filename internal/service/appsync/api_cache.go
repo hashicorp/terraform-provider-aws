@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -39,37 +38,39 @@ func resourceAPICache() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_caching_behavior": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
-			},
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"ttl": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_caching_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
+				},
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"at_rest_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"ttl": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
+				},
+			}
 		},
 	}
 }
@@ -192,7 +193,9 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	output, err := conn.GetApiCache(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -206,8 +209,8 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	return output.ApiCache, nil
 }
 
-func statusAPICache(ctx context.Context, conn *appsync.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAPICache(conn *appsync.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAPICacheByID(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -226,10 +229,10 @@ func waitAPICacheAvailable(ctx context.Context, conn *appsync.Client, id string)
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApiCacheStatusCreating, awstypes.ApiCacheStatusModifying),
 		Target:  enum.Slice(awstypes.ApiCacheStatusAvailable),
-		Refresh: statusAPICache(ctx, conn, id),
+		Refresh: statusAPICache(conn, id),
 		Timeout: timeout,
 	}
 
@@ -246,10 +249,10 @@ func waitAPICacheDeleted(ctx context.Context, conn *appsync.Client, id string) (
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApiCacheStatusDeleting),
 		Target:  []string{},
-		Refresh: statusAPICache(ctx, conn, id),
+		Refresh: statusAPICache(conn, id),
 		Timeout: timeout,
 	}
 

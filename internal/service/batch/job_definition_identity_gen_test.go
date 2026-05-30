@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
+func TestAccBatchJobDefinition_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobDefinition
@@ -35,7 +35,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-definition/{name}:{revision}"),
@@ -109,7 +109,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
+func TestAccBatchJobDefinition_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_batch_job_definition.test"
@@ -231,7 +231,7 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccBatchJobDefinition_Identity_ExistingResource(t *testing.T) {
+func TestAccBatchJobDefinition_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobDefinition
@@ -244,7 +244,7 @@ func TestAccBatchJobDefinition_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy: testAccCheckJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -253,7 +253,7 @@ func TestAccBatchJobDefinition_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -287,7 +287,7 @@ func TestAccBatchJobDefinition_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccBatchJobDefinition_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccBatchJobDefinition_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobDefinition
@@ -300,7 +300,7 @@ func TestAccBatchJobDefinition_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy: testAccCheckJobDefinitionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -314,7 +314,7 @@ func TestAccBatchJobDefinition_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

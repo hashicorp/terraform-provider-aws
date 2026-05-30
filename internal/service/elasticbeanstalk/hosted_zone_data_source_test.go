@@ -19,7 +19,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,7 +38,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

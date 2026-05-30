@@ -33,8 +33,6 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.RuleGroupsNamespaceDescription")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
@@ -42,27 +40,29 @@ func resourceRuleGroupNamespace() *schema.Resource {
 		UpdateWithoutTimeout: resourceRuleGroupNamespaceUpdate,
 		DeleteWithoutTimeout: resourceRuleGroupNamespaceDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -18,8 +17,8 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPlaybackKeyPair(conn *ivs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindPlaybackKeyPairByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -33,8 +32,8 @@ func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) sdk
 	}
 }
 
-func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRecordingConfiguration(conn *ivs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindRecordingConfigurationByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -48,8 +47,8 @@ func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id stri
 	}
 }
 
-func statusChannel(ctx context.Context, conn *ivs.Client, arn string, updateDetails *ivs.UpdateChannelInput) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusChannel(conn *ivs.Client, arn string, updateDetails *ivs.UpdateChannelInput) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindChannelByID(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil

@@ -33,7 +33,6 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(importIgnore="state")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,
@@ -240,7 +239,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s) routing policy label: %s", d.Id(), err)
 	} else {
 		d.Set("routing_policy_label", routingPolicyLabel)

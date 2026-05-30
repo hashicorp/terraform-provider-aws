@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -37,7 +36,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
 // @Testing(serialize=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceSetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSetResource{}
 
@@ -288,10 +286,10 @@ func (r *resourceSetResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ResourceSetStatusActive),
-		Refresh:                   statusResourceSet(ctx, conn, id),
+		Refresh:                   statusResourceSet(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -306,10 +304,10 @@ func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, ti
 }
 
 func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceSetStatusOutOfAdminScope),
 		Target:                    enum.Slice(awstypes.ResourceSetStatusActive),
-		Refresh:                   statusResourceSet(ctx, conn, id),
+		Refresh:                   statusResourceSet(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -324,10 +322,10 @@ func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, ti
 }
 
 func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceSetStatusOutOfAdminScope),
 		Target:  []string{},
-		Refresh: statusResourceSet(ctx, conn, id),
+		Refresh: statusResourceSet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -339,8 +337,8 @@ func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, ti
 	return nil, err
 }
 
-func statusResourceSet(ctx context.Context, conn *fms.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceSet(conn *fms.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findResourceSetByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -362,9 +360,8 @@ func findResourceSetByID(ctx context.Context, conn *fms.Client, id string) (*fms
 	out, err := conn.GetResourceSet(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

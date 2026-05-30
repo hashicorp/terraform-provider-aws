@@ -12,12 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -28,22 +26,22 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var capacityprovider awstypes.CapacityProvider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -66,22 +64,22 @@ func TestAccLambdaCapacityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var capacityprovider awstypes.CapacityProvider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambda.ResourceCapacityProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -99,22 +97,22 @@ func TestAccLambdaCapacityProvider_instanceRequirements(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var capacityprovider awstypes.CapacityProvider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -126,7 +124,7 @@ func TestAccLambdaCapacityProvider_instanceRequirements(t *testing.T) {
 			{
 				Config: testAccCapacityProviderConfig_instanceRequirements(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -157,22 +155,22 @@ func TestAccLambdaCapacityProvider_scalingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var capacityprovider awstypes.CapacityProvider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -183,7 +181,7 @@ func TestAccLambdaCapacityProvider_scalingConfig(t *testing.T) {
 			{
 				Config: testAccCapacityProviderConfig_scalingConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -216,9 +214,9 @@ func testAccCheckCapacityProviderImportStateID(n string) resource.ImportStateIdF
 	}
 }
 
-func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCapacityProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_capacity_provider" {
@@ -240,7 +238,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckCapacityProviderExists(ctx context.Context, name string, capacityprovider *awstypes.CapacityProvider) resource.TestCheckFunc {
+func testAccCheckCapacityProviderExists(ctx context.Context, t *testing.T, name string, capacityprovider *awstypes.CapacityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -251,7 +249,7 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameCapacityProvider, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 		resp, err := tflambda.FindCapacityProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameCapacityProvider, rs.Primary.ID, err)
@@ -264,7 +262,7 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 }
 
 func testAccCapacityProviderPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 	input := lambda.ListCapacityProvidersInput{}
 

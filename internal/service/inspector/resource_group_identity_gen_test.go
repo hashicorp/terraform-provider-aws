@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspectorResourceGroup_Identity_Basic(t *testing.T) {
+func TestAccInspectorResourceGroup_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ResourceGroup
@@ -48,7 +48,7 @@ func TestAccInspectorResourceGroup_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					testAccCheckResourceGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -111,7 +111,7 @@ func TestAccInspectorResourceGroup_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccInspectorResourceGroup_Identity_RegionOverride(t *testing.T) {
+func TestAccInspectorResourceGroup_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_inspector_resource_group.test"
@@ -235,7 +235,7 @@ func TestAccInspectorResourceGroup_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccInspectorResourceGroup_Identity_ExistingResource(t *testing.T) {
+func TestAccInspectorResourceGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ResourceGroup
@@ -260,7 +260,7 @@ func TestAccInspectorResourceGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					testAccCheckResourceGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -294,7 +294,7 @@ func TestAccInspectorResourceGroup_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccInspectorResourceGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccInspectorResourceGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ResourceGroup
@@ -324,7 +324,7 @@ func TestAccInspectorResourceGroup_Identity_ExistingResource_NoRefresh_NoChange(
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					testAccCheckResourceGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

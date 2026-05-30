@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,7 +29,6 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain", name="Domain")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
@@ -43,45 +41,47 @@ func resourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 		UpdateWithoutTimeout: resourceDomainUpdate,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_size_bytes": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"encryption_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"s3_bucket_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"asset_size_bytes": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"encryption_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"s3_bucket_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -201,9 +201,8 @@ func findDomainByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owne
 	output, err := conn.DescribeDomain(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -30,7 +30,6 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
 // @Testing(preIdentityVersion="v6.5.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,

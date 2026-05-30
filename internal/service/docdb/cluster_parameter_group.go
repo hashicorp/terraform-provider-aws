@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -107,7 +106,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
@@ -255,9 +254,7 @@ func findDBClusterParameterGroupByName(ctx context.Context, conn *docdb.Client, 
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterParameterGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -281,9 +278,8 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -309,9 +305,8 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

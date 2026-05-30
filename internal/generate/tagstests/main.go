@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"iter"
 	"os"
 	"path"
@@ -85,7 +83,19 @@ func main() {
 		g: g,
 	}
 
-	v.processDir(".")
+	for file, err := range common.ScanDirectory(".") {
+		if err != nil {
+			g.Fatalf("%s", err.Error())
+		}
+
+		v.packageName = file.PackageName()
+		v.fileName = file.Name()
+
+		v.processFile(file.File())
+
+		v.fileName = ""
+		v.packageName = ""
+	}
 
 	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
@@ -206,6 +216,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
@@ -276,6 +287,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
@@ -429,6 +441,7 @@ type commonConfig struct {
 	AdditionalTfVars        []string
 	WithRName               bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 }
 
 type ConfigDatum struct {
@@ -470,35 +483,6 @@ type visitor struct {
 	taggedResources []ResourceDatum
 }
 
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
-}
-
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	ast.Walk(v, file)
@@ -524,7 +508,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
 				d.IsDataSource = true
 				fallthrough
@@ -666,7 +655,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = "acctest.RandomDomain().String()"
+			tlsKeyCN = "acctest.RandomDomain(t).String()"
 			d.GoImports = append(d.GoImports,
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",

@@ -20,17 +20,17 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName.String(), recordName.String()),
@@ -71,17 +71,17 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_regionOverride(t *testi
 					ctx := acctest.Context(t)
 					rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-					zoneName := acctest.RandomDomain()
-					recordName := zoneName.RandomSubdomain()
+					zoneName := acctest.RandomDomain(t)
+					recordName := zoneName.RandomSubdomain(t)
 
-					resource.ParallelTest(t, resource.TestCase{
+					acctest.ParallelTest(ctx, t, resource.TestCase{
 						PreCheck: func() {
 							acctest.PreCheck(ctx, t)
 							testAccPreCheck(ctx, t)
 						},
 						ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlanDestroy(ctx),
+						CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 						Steps: []resource.TestStep{
 							{
 								// Cross-region test cases will succeed because `aws_arcregionswitch_route53_health_checks` is global

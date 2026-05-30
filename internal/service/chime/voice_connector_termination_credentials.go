@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,33 +35,35 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"credentials": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrUsername: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						names.AttrPassword: {
-							Type:         schema.TypeString,
-							Required:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"credentials": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrUsername: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							names.AttrPassword: {
+								Type:         schema.TypeString,
+								Required:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
 						},
 					},
 				},
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -189,9 +190,8 @@ func findVoiceConnectorTerminationCredentialsByID(ctx context.Context, conn *chi
 	resp, err := conn.ListVoiceConnectorTerminationCredentials(ctx, in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

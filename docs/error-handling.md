@@ -227,7 +227,7 @@ To prevent this type of Terraform CLI error, the resource implementation should 
 In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:
 
 ```go
-func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
  	var diags diag.Diagnostics
 
    /* ... */
@@ -235,7 +235,7 @@ func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, met
     return append(diags, resourceServiceThingRead(ctx, d, meta)...)
 }
 
-func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
   	var diags diag.Diagnostics
 
    /* ... */

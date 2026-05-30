@@ -25,8 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -43,8 +42,7 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes.Memory")
-// @Testing(generator="randomMemoryName()")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(generator="randomMemoryName(t)")
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
 
@@ -125,7 +123,7 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -223,7 +221,7 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
 		_, err := conn.UpdateMemory(ctx, &input)
@@ -326,9 +324,8 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	out, err := conn.GetMemory(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 

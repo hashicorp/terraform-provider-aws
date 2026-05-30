@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 
 // @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -481,9 +479,8 @@ func findConfigurationSet(ctx context.Context, conn *sesv2.Client, input *sesv2.
 	output, err := conn.GetConfigurationSet(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

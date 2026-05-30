@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -40,16 +39,18 @@ func resourceDomainNameAPIAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -156,7 +157,9 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 	output, err := conn.GetApiAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -170,8 +173,8 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 	return output.ApiAssociation, nil
 }
 
-func statusDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainNameAPIAssociation(conn *appsync.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainNameAPIAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -190,10 +193,10 @@ func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id 
 	const (
 		domainNameAPIAssociationTimeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusProcessing),
 		Target:  enum.Slice(awstypes.AssociationStatusSuccess),
-		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),
+		Refresh: statusDomainNameAPIAssociation(conn, id),
 		Timeout: domainNameAPIAssociationTimeout,
 	}
 
@@ -211,10 +214,10 @@ func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.Client, 
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusProcessing),
 		Target:  []string{},
-		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),
+		Refresh: statusDomainNameAPIAssociation(conn, id),
 		Timeout: timeout,
 	}
 

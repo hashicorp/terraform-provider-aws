@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -156,7 +155,7 @@ func findEventBusPolicyByName(ctx context.Context, conn *eventbridge.Client, nam
 	}
 
 	if aws.ToString(output.Policy) == "" {
-		return nil, &sdkretry.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output.Policy, nil

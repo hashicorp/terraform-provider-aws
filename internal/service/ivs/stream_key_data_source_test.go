@@ -19,7 +19,7 @@ func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ivs_stream_key.test"
 	channelResourceName := "aws_ivs_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -52,7 +52,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example-function"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_bedrockagentcore_gateway" "example" {
@@ -186,11 +186,13 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
 
   credential_provider_configuration {
     oauth {
-      provider_arn = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
-      scopes       = ["read", "write"]
+      provider_arn       = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
+      scopes             = ["read", "write"]
+      grant_type         = "authorization_code"
+      default_return_url = "https://myapp.example.com/callback"
+
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
       }
     }
   }
@@ -225,6 +227,31 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
             }
           }
         }
+      }
+    }
+  }
+}
+```
+
+### Target with IAM SigV4 Authentication (MCP Server)
+
+Use this for `mcp_server` targets pointing at AWS-hosted SigV4-protected endpoints (e.g. another Bedrock AgentCore Runtime). The gateway signs upstream requests using its own IAM role.
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "sigv4_example" {
+  name               = "sigv4-target"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "bedrock-agentcore"
+    }
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example-runtime.bedrock-agentcore.us-east-1.amazonaws.com/runtimes/example/invocations?qualifier=DEFAULT"
       }
     }
   }
@@ -288,6 +315,30 @@ resource "aws_bedrockagentcore_gateway_target" "complex_schema" {
 }
 ```
 
+### MCP Server Target with Header Propagation
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
+  name               = "mcp-target-with-headers"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  description        = "MCP server target with header propagation"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id"]
+    allowed_response_headers = ["x-rate-limit-remaining"]
+    allowed_query_parameters = ["version"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -300,13 +351,14 @@ The following arguments are optional:
 
 * `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
+* `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
 ### `credential_provider_configuration`
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. This is an empty configuration block.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role`](#gateway_iam_role) below.
 * `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
 * `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
 
@@ -323,9 +375,28 @@ The `api_key` block supports the following:
 
 The `oauth` block supports the following:
 
-* `provider_arn` - (Required) ARN of the OIDC provider for OAuth authentication.
+* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
+* `grant_type` - (Optional) The OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
+* `default_return_url` - (Optional) The URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
 * `scopes` - (Optional) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
+
+### `gateway_iam_role`
+
+The `gateway_iam_role` block supports the following:
+
+* `region` - (Optional) AWS Region used for SigV4 signing of upstream requests. Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.
+* `service` - (Optional) The target AWS service name used for SigV4 signing of upstream requests. Required when calling SigV4-protected endpoints such as another Bedrock AgentCore Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication, in which case the block can be empty (`gateway_iam_role {}`).
+
+### `metadata_configuration`
+
+The `metadata_configuration` block supports the following:
+
+* `allowed_query_parameters` - (Optional) A set of URL query parameters that are allowed to be propagated from incoming gateway URL to the target. Maximum of 10 parameters.
+* `allowed_request_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from incoming client requests to the target. Maximum of 10 headers.
+* `allowed_response_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from the target response back to the client. Maximum of 10 headers.
+
+~> **Note:** Header names must contain only alphanumeric characters, hyphens, and underscores. A large number of standard HTTP headers are restricted and cannot be configured for propagation, including authentication, content negotiation, caching, security, CORS, and connection management headers. Headers starting with `X-Amzn-` are prohibited except for `X-Amzn-Bedrock-AgentCore-Runtime-Custom-*` headers. These restrictions are enforced by schema validation. For the full list of restricted headers, see the [AWS documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-headers.html).
 
 ### `target_configuration`
 
@@ -337,10 +408,42 @@ The `target_configuration` block supports the following:
 
 The `mcp` block supports exactly one of the following:
 
+* `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway`](#api_gateway) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
 * `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
 * `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
+
+### `api_gateway`
+
+The `api_gateway` block supports the following:
+
+* `api_gateway_tool_configuration` - (Required) Configuration for API Gateway tools. See [`api_gateway_tool_configuration`](#api_gateway_tool_configuration) below.
+* `rest_api_id` - (Required) ID of the API Gateway REST API to invoke.
+* `stage` - (Required) Stage name of the REST API to add as a target.
+
+### `api_gateway_tool_configuration`
+
+The `api_gateway_tool_configuration` block supports the following:
+
+* `tool_filter` - (Required) Repeatable block of path and method patterns to expose as tools. See [`tool_filter`](#tool_filter) below.
+* `tool_override` - (Required) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override`](#tool_override) below.
+
+### `tool_filter`
+
+The `tool_filter` block supports the following:
+
+* `filter_path` - (Required) Resource path to match in the REST API. Supports exact paths (for example, `/pets`) or wildcard paths (for example, `/pets/*` to match all paths under `/pets`). Must match existing paths in the REST API.
+* `methods` - (Required) List of HTTP methods to filter for. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
+
+### `tool_override`
+
+The `tool_override` block supports the following:
+
+* `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
+* `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
+* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
 ### `lambda`
 

@@ -19,11 +19,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -52,168 +51,178 @@ func resourceStackSet() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"administration_role_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"auto_deployment"},
-				ValidateFunc:  verify.ValidARN,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_deployment": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				ConflictsWith: []string{
-					"administration_role_arn",
-					"execution_role_name",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"administration_role_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"auto_deployment"},
+					ValidateFunc:  verify.ValidARN,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"retain_stacks_on_account_removal": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_deployment": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					ConflictsWith: []string{
+						"administration_role_arn",
+						"execution_role_name",
 					},
-				},
-			},
-			"call_as": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CallAsSelf,
-				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
-			},
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
-				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"execution_role_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"auto_deployment"},
-			},
-			"managed_execution": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"operation_preferences": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_tolerance_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(0),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
-						},
-						"failure_tolerance_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(0, 100),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
-						},
-						"max_concurrent_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(1),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
-						},
-						"max_concurrent_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(1, 100),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
-						},
-						"region_concurrency_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
-						},
-						"region_order": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"depends_on_stack_sets": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"retain_stacks_on_account_removal": {
+								Type:     schema.TypeBool,
+								Optional: true,
 							},
 						},
 					},
 				},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"permission_model": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PermissionModelsSelfManaged,
-				ValidateDiagFunc: enum.Validate[awstypes.PermissionModels](),
-			},
-			"stack_set_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_body": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ConflictsWith:         []string{"template_url"},
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          verify.ValidStringIsJSONOrYAML,
-			},
-			"template_url": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"template_body"},
-			},
+				"call_as": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CallAsSelf,
+					ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
+				},
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					},
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"execution_role_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"auto_deployment"},
+				},
+				"managed_execution": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"operation_preferences": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_tolerance_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(0),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+							},
+							"failure_tolerance_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(0, 100),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+							},
+							"max_concurrent_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+							},
+							"max_concurrent_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(1, 100),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+							},
+							"region_concurrency_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
+							},
+							"region_order": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+								},
+							},
+						},
+					},
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"permission_model": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PermissionModelsSelfManaged,
+					ValidateDiagFunc: enum.Validate[awstypes.PermissionModels](),
+				},
+				"stack_set_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_body": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					ConflictsWith:         []string{"template_url"},
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          verify.ValidStringIsJSONOrYAML,
+				},
+				"template_url": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"template_body"},
+				},
+			}
 		},
 	}
 }
@@ -224,7 +233,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackSetInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		StackSetName:       aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -357,7 +366,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.UpdateStackSetInput{
-		OperationId:  aws.String(id.UniqueId()),
+		OperationId:  aws.String(create.UniqueId(ctx)),
 		StackSetName: aws.String(d.Id()),
 		Tags:         []awstypes.Tag{},
 		TemplateBody: aws.String(d.Get("template_body").(string)),
@@ -486,16 +495,14 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	output, err := conn.DescribeStackSet(ctx, input)
 
 	if errs.IsA[*awstypes.StackSetNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if callAs == string(awstypes.CallAsDelegatedAdmin) && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -510,8 +517,8 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	return output.StackSet, nil
 }
 
-func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, callAs string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSet(conn *cloudformation.Client, name, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetByName(ctx, conn, name, callAs)
 
 		if retry.NotFound(err) {
@@ -527,11 +534,11 @@ func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, call
 }
 
 func waitStackSetCreated(ctx context.Context, conn *cloudformation.Client, name, callAs string, timeout time.Duration) (*awstypes.StackSet, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.StackSetStatusActive),
 		Timeout: timeout,
-		Refresh: statusStackSet(ctx, conn, name, callAs),
+		Refresh: statusStackSet(conn, name, callAs),
 		Delay:   15 * time.Second,
 	}
 
@@ -556,9 +563,8 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	output, err := conn.DescribeStackSetOperation(ctx, input)
 
 	if errs.IsA[*awstypes.OperationNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -602,8 +608,8 @@ func findStackSetOperationResultsByThreePartKey(ctx context.Context, conn *cloud
 	return findStackSetOperationResults(ctx, conn, input)
 }
 
-func statusStackSetOperation(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSetOperation(conn *cloudformation.Client, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetOperationByThreePartKey(ctx, conn, stackSetName, operationID, callAs)
 
 		if retry.NotFound(err) {
@@ -622,10 +628,10 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	const (
 		stackSetOperationDelay = 10 * time.Second
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StackSetOperationStatusRunning, awstypes.StackSetOperationStatusQueued),
 		Target:  enum.Slice(awstypes.StackSetOperationStatusSucceeded),
-		Refresh: statusStackSetOperation(ctx, conn, stackSetName, operationID, callAs),
+		Refresh: statusStackSetOperation(conn, stackSetName, operationID, callAs),
 		Timeout: timeout,
 		Delay:   stackSetOperationDelay,
 	}
@@ -673,6 +679,9 @@ func expandAutoDeployment(l []any) *awstypes.AutoDeployment {
 	}
 
 	if enabled {
+		if v, ok := m["depends_on_stack_sets"].([]any); ok && len(v) > 0 {
+			autoDeployment.DependsOn = flex.ExpandStringValueList(v)
+		}
 		autoDeployment.RetainStacksOnAccountRemoval = aws.Bool(m["retain_stacks_on_account_removal"].(bool))
 	}
 
@@ -699,6 +708,7 @@ func flattenStackSetAutoDeploymentResponse(autoDeployment *awstypes.AutoDeployme
 	}
 
 	m := map[string]any{
+		"depends_on_stack_sets":            autoDeployment.DependsOn,
 		names.AttrEnabled:                  aws.ToBool(autoDeployment.Enabled),
 		"retain_stacks_on_account_removal": aws.ToBool(autoDeployment.RetainStacksOnAccountRemoval),
 	}

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,13 +37,17 @@ const iamPropagationTimeout = 2 * time.Minute
 
 // @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(importIgnore="roles")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.Assessment")
 func newAssessmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &assessmentResource{}, nil
 }
 
 type assessmentResource struct {
 	framework.ResourceWithModel[assessmentResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *assessmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -327,9 +330,8 @@ func findAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 	output, err := conn.GetAssessment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

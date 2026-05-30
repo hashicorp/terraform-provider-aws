@@ -53,6 +53,10 @@ func dataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrIPAddressType: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"logging_role": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,6 +115,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("protocols", output.Protocols)
 	d.Set("security_policy_name", output.SecurityPolicyName)

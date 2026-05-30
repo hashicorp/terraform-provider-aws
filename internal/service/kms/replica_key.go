@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,7 +36,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 // @Testing(altRegionProvider=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicaKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaKeyCreate,
@@ -298,10 +296,10 @@ func waitReplicaKeyCreated(ctx context.Context, conn *kms.Client, id string) (*a
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStateEnabled),
-		Refresh: statusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(conn, id),
 		Timeout: timeout,
 	}
 

@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,24 +22,24 @@ import (
 
 func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	userName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	userName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// simplest test
 			{
 				Config: testAccUserGroupMembershipConfig_init(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1}, []string{groupName2, groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1}, []string{groupName2, groupName3}),
 				),
 			},
 			{
@@ -64,7 +62,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 				Config: testAccUserGroupMembershipConfig_addOne(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2}, []string{groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1, groupName2}, []string{groupName3}),
 				),
 			},
 			// test adding multiple resources for the same user, and resources with the same groups for another user
@@ -75,8 +73,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
 				),
 			},
 			// test that nothing happens when we apply the same config again
@@ -87,8 +85,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
 				),
 			},
 			// test removing a group
@@ -99,8 +97,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName3}, []string{groupName2}),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2}, []string{groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1, groupName3}, []string{groupName2}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName2, []string{groupName1, groupName2}, []string{groupName3}),
 				),
 			},
 			// test removing a resource
@@ -110,17 +108,17 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName3}, []string{groupName2}),
-					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1}, []string{groupName2, groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName1, []string{groupName1, groupName3}, []string{groupName2}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, t, userName2, []string{groupName1}, []string{groupName2, groupName3}),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserGroupMembershipDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "aws_iam_user_group_membership" {
@@ -150,9 +148,9 @@ func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
+func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, t *testing.T, userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		// get list of groups for user
 		userGroupList, err := conn.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{

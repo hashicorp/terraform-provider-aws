@@ -19,7 +19,7 @@ func TestAccWAFV2ManagedRuleGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_wafv2_managed_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

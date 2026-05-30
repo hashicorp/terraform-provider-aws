@@ -16,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -85,7 +85,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	destinationCIDR := d.Get("destination_cidr_block").(string)
 	id := clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
 	input := &ec2.CreateClientVpnRouteInput{
-		ClientToken:          aws.String(sdkid.UniqueId()),
+		ClientToken:          aws.String(create.UniqueId(ctx)),
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),

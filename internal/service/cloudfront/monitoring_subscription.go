@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -35,37 +34,39 @@ func resourceMonitoringSubscription() *schema.Resource {
 			StateContext: resourceMonitoringSubscriptionImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"distribution_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"monitoring_subscription": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"realtime_metrics_subscription_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"realtime_metrics_subscription_status": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RealtimeMetricsSubscriptionStatus](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"distribution_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"monitoring_subscription": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"realtime_metrics_subscription_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"realtime_metrics_subscription_status": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RealtimeMetricsSubscriptionStatus](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -157,9 +158,8 @@ func findMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 	output, err := conn.GetMonitoringSubscription(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -373,9 +372,8 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -393,8 +391,8 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceFleet(conn *emr.Client, clusterID, fleetID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 
 		if retry.NotFound(err) {
@@ -410,10 +408,10 @@ func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleet
 }
 
 func waitInstanceFleetRunning(ctx context.Context, conn *emr.Client, clusterID, fleetID string, timeout time.Duration) (*awstypes.InstanceFleet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceFleetStateProvisioning, awstypes.InstanceFleetStateBootstrapping, awstypes.InstanceFleetStateResizing),
 		Target:     enum.Slice(awstypes.InstanceFleetStateRunning),
-		Refresh:    statusInstanceFleet(ctx, conn, clusterID, fleetID),
+		Refresh:    statusInstanceFleet(conn, clusterID, fleetID),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 30 * time.Second,

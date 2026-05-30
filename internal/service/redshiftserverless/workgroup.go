@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -649,9 +648,8 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 	output, err := conn.GetWorkgroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -666,8 +664,8 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 	return output.Workgroup, nil
 }
 
-func statusWorkgroup(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkgroup(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkgroupByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -683,10 +681,10 @@ func statusWorkgroup(ctx context.Context, conn *redshiftserverless.Client, name 
 }
 
 func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.Client, name string, wait time.Duration) (*awstypes.Workgroup, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkgroupStatusCreating, awstypes.WorkgroupStatusModifying),
 		Target:  enum.Slice(awstypes.WorkgroupStatusAvailable),
-		Refresh: statusWorkgroup(ctx, conn, name),
+		Refresh: statusWorkgroup(conn, name),
 		Timeout: wait,
 	}
 
@@ -700,10 +698,10 @@ func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.Client
 }
 
 func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, name string, wait time.Duration) (*awstypes.Workgroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkgroupStatusAvailable, awstypes.WorkgroupStatusModifying, awstypes.WorkgroupStatusDeleting),
 		Target:  []string{},
-		Refresh: statusWorkgroup(ctx, conn, name),
+		Refresh: statusWorkgroup(conn, name),
 		Timeout: wait,
 	}
 

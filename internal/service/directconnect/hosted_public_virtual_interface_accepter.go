@@ -27,7 +27,6 @@ import (
 
 // @SDKResource("aws_dx_hosted_public_virtual_interface_accepter", name="Hosted Public Virtual Interface Accepter")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPublicVirtualInterfaceAccepterCreate,

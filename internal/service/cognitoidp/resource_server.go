@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,47 +38,49 @@ func resourceResourceServer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrScope: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"scope_description": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-						"scope_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validResourceServerScopeName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrScope: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"scope_description": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"scope_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validResourceServerScopeName,
+							},
 						},
 					},
 				},
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scope_identifiers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
+				"scope_identifiers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }
@@ -228,9 +229,8 @@ func findResourceServerByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 	output, err := conn.DescribeResourceServer(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

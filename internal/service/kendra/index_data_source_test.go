@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,11 +16,11 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_kendra_index.test"
 	resourceName := "aws_kendra_index.test"
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

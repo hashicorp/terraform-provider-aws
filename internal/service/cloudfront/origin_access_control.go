@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,41 +36,43 @@ func resourceOriginAccessControl() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"origin_access_control_origin_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlOriginTypes](),
-			},
-			"signing_behavior": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningBehaviors](),
-			},
-			"signing_protocol": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningProtocols](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "Managed by Terraform",
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"origin_access_control_origin_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlOriginTypes](),
+				},
+				"signing_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningBehaviors](),
+				},
+				"signing_protocol": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningProtocols](),
+				},
+			}
 		},
 	}
 }
@@ -185,9 +186,8 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, i
 	output, err := conn.GetOriginAccessControl(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchOriginAccessControl](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

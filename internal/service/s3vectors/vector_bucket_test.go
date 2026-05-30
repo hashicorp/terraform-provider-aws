@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,22 +28,22 @@ import (
 func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -84,26 +82,29 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 func TestAccS3VectorsVectorBucket_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceVectorBucket, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
@@ -116,22 +117,22 @@ func TestAccS3VectorsVectorBucket_disappears(t *testing.T) {
 func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketConfig_encryptionConfigurationAES256(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -158,7 +159,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 			{
 				Config: testAccVectorBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -173,22 +174,22 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketConfig_encryptionConfigurationKMS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -219,22 +220,22 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
 func TestAccS3VectorsVectorBucket_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketConfig_forceDestroy(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -248,8 +249,8 @@ func TestAccS3VectorsVectorBucket_forceDestroy(t *testing.T) {
 			{
 				Config: testAccVectorBucketConfig_forceDestroy(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketExists(ctx, resourceName, &v),
-					testAccCheckVectorBucketAddIndex(ctx, resourceName, rName+"-index"),
+					testAccCheckVectorBucketExists(ctx, t, resourceName, &v),
+					testAccCheckVectorBucketAddIndex(ctx, t, resourceName, rName+"-index"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -264,9 +265,9 @@ func TestAccS3VectorsVectorBucket_forceDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckVectorBucketDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVectorBucketDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3vectors_vector_bucket" {
@@ -290,14 +291,14 @@ func testAccCheckVectorBucketDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckVectorBucketExists(ctx context.Context, n string, v *awstypes.VectorBucket) resource.TestCheckFunc {
+func testAccCheckVectorBucketExists(ctx context.Context, t *testing.T, n string, v *awstypes.VectorBucket) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		output, err := tfs3vectors.FindVectorBucketByARN(ctx, conn, rs.Primary.Attributes["vector_bucket_arn"])
 
@@ -311,10 +312,10 @@ func testAccCheckVectorBucketExists(ctx context.Context, n string, v *awstypes.V
 	}
 }
 
-func testAccCheckVectorBucketAddIndex(ctx context.Context, n string, name string) resource.TestCheckFunc {
+func testAccCheckVectorBucketAddIndex(ctx context.Context, t *testing.T, n string, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		input := s3vectors.CreateIndexInput{
 			DataType:        awstypes.DataTypeFloat32,

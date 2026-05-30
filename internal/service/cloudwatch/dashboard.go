@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,28 +41,30 @@ func resourceDashboard() *schema.Resource {
 		// the `dashboard_name` as being required, even though
 		// according to the REST API documentation both are
 		// optional: http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html#API_PutDashboard_RequestParameters
-		Schema: map[string]*schema.Schema{
-			"dashboard_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dashboard_body": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"dashboard_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dashboard_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validDashboardName,
-			},
+				"dashboard_body": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"dashboard_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validDashboardName,
+				},
+			}
 		},
 	}
 }
@@ -139,9 +140,8 @@ func findDashboardByName(ctx context.Context, conn *cloudwatch.Client, name stri
 	output, err := conn.GetDashboard(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFound) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 

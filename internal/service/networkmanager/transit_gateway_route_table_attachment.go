@@ -32,7 +32,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayRouteTableAttachment")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAttachmentCreate,
@@ -171,7 +170,7 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set("peering_id", transitGatewayRouteTableAttachment.PeeringId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s) routing policy label: %s", d.Id(), err)
 	} else {
 		d.Set("routing_policy_label", routingPolicyLabel)

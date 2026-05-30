@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,21 +15,21 @@ import (
 
 func TestAccDMSReplicationTaskDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 	dataSourceName := "data.aws_dms_replication_task.test"
 	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_task_id", resourceName, "replication_task_id"),
 				),
 			},

@@ -7,6 +7,7 @@ package opensearchserverless
 var (
 	ResourceAccessPolicy    = newAccessPolicyResource
 	ResourceCollection      = newCollectionResource
+	ResourceCollectionGroup = newCollectionGroupResource
 	ResourceLifecyclePolicy = newLifecyclePolicyResource
 	ResourceSecurityConfig  = newSecurityConfigResource
 	ResourceSecurityPolicy  = newSecurityPolicyResource
@@ -14,6 +15,7 @@ var (
 
 	FindAccessPolicyByNameAndType    = findAccessPolicyByNameAndType
 	FindCollectionByID               = findCollectionByID
+	FindCollectionGroup              = findCollectionGroup
 	FindLifecyclePolicyByNameAndType = findLifecyclePolicyByNameAndType
 	FindSecurityConfigByID           = findSecurityConfigByID
 	FindSecurityPolicyByNameAndType  = findSecurityPolicyByNameAndType

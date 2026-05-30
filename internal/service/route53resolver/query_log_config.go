@@ -14,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -78,7 +77,7 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
 		DestinationArn:   aws.String(d.Get(names.AttrDestinationARN).(string)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -161,9 +160,8 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	output, err := conn.GetResolverQueryLogConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -178,8 +176,8 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	return output.ResolverQueryLogConfig, nil
 }
 
-func statusQueryLogConfig(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueryLogConfig(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverQueryLogConfigByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -200,10 +198,10 @@ const (
 )
 
 func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigStatusCreated),
-		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Refresh: statusQueryLogConfig(conn, id),
 		Timeout: queryLogConfigCreatedTimeout,
 	}
 
@@ -217,10 +215,10 @@ func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client
 }
 
 func waitQueryLogConfigDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusDeleting),
 		Target:  []string{},
-		Refresh: statusQueryLogConfig(ctx, conn, id),
+		Refresh: statusQueryLogConfig(conn, id),
 		Timeout: queryLogConfigDeletedTimeout,
 	}
 

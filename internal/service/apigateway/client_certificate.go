@@ -27,8 +27,6 @@ import (
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
@@ -40,29 +38,31 @@ func resourceClientCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pem_encoded_certificate": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pem_encoded_certificate": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

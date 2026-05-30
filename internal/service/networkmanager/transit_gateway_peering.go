@@ -31,7 +31,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayPeering")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,

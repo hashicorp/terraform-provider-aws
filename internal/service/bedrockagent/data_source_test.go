@@ -9,33 +9,34 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDataSource_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 				),
 			},
 			{
@@ -48,22 +49,24 @@ func testAccDataSource_basic(t *testing.T) {
 }
 
 func testAccDataSource_full(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_full(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -94,22 +97,24 @@ func testAccDataSource_full(t *testing.T) {
 }
 
 func testAccDataSource_fullSemantic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_fullSemantic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -141,22 +146,24 @@ func testAccDataSource_fullSemantic(t *testing.T) {
 }
 
 func testAccDataSource_fullHierarchical(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_fullHierarchical(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -189,22 +196,24 @@ func testAccDataSource_fullHierarchical(t *testing.T) {
 }
 
 func testAccDataSource_fullCustomTranformation(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_fullCustomTransformation(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -235,23 +244,25 @@ func testAccDataSource_fullCustomTranformation(t *testing.T) {
 }
 
 func testAccDataSource_parsing(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 	parsingModel := "anthropic.claude-3-sonnet-20240229-v1:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_parsing(rName, foundationModel, parsingModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -284,23 +295,25 @@ func testAccDataSource_parsing(t *testing.T) {
 }
 
 func testAccDataSource_parsingModality(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 	parsingModel := "anthropic.claude-3-sonnet-20240229-v1:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_parsingModality(rName, foundationModel, parsingModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -336,47 +349,59 @@ func testAccDataSource_parsingModality(t *testing.T) {
 }
 
 func testAccDataSource_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceDataSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func testAccDataSource_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttrSet(resourceName, "data_deletion_policy"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -394,7 +419,7 @@ func testAccDataSource_update(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_updated(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
@@ -420,28 +445,30 @@ func testAccDataSource_update(t *testing.T) {
 }
 
 func testAccDataSource_webConfiguration(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_webConfiguration(rName, collectionName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.web_configuration.0.source_configuration.#", "1"),
@@ -462,13 +489,15 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
 
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v1"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -478,12 +507,12 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckDataSourceDestroy(ctx),
+		CheckDestroy: testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_bedrockDataAutomation(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.parsing_strategy", "BEDROCK_DATA_AUTOMATION"),
@@ -500,9 +529,9 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_data_source" {
@@ -526,14 +555,14 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDataSourceExists(ctx context.Context, n string, v *types.DataSource) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, t *testing.T, n string, v *types.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["data_source_id"], rs.Primary.Attributes["knowledge_base_id"])
 

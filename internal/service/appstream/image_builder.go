@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,143 +42,145 @@ func resourceImageBuilder() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_endpoint": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 4,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEndpointType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AccessEndpointType](),
-						},
-						"vpce_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"appstream_agent_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrDisplayName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"domain_join_info": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"directory_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"organizational_unit_distinguished_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_endpoint": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 4,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEndpointType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AccessEndpointType](),
+							},
+							"vpce_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"enable_default_internet_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrIAMRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"image_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"image_arn", "image_name"},
-				ValidateFunc: verify.ValidARN,
-			},
-			"image_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"image_name", "image_arn"},
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"appstream_agent_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrDisplayName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+				"domain_join_info": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"directory_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"organizational_unit_distinguished_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+				"enable_default_internet_access": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrIAMRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"image_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"image_arn", "image_name"},
+					ValidateFunc: verify.ValidARN,
+				},
+				"image_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"image_name", "image_arn"},
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -363,9 +364,8 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -376,8 +376,8 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	return output, nil
 }
 
-func statusImageBuilder(ctx context.Context, conn *appstream.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusImageBuilder(conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findImageBuilderByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -396,10 +396,10 @@ func waitImageBuilderRunning(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending),
 		Target:  enum.Slice(awstypes.ImageBuilderStateRunning),
-		Refresh: statusImageBuilder(ctx, conn, id),
+		Refresh: statusImageBuilder(conn, id),
 		Timeout: timeout,
 	}
 
@@ -418,10 +418,10 @@ func waitImageBuilderDeleted(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending, awstypes.ImageBuilderStateDeleting),
 		Target:  []string{},
-		Refresh: statusImageBuilder(ctx, conn, id),
+		Refresh: statusImageBuilder(conn, id),
 		Timeout: timeout,
 	}
 

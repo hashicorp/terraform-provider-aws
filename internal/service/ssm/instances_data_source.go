@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssm_instances, name="Instances")
+// @SDKDataSource("aws_ssm_instances", name="Instances")
 func dataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,

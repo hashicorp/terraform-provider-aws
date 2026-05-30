@@ -39,7 +39,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -101,7 +101,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -153,7 +153,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -198,7 +198,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -228,7 +228,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -246,7 +246,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -260,7 +260,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -310,7 +310,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -328,7 +328,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -340,7 +340,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -388,7 +388,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -406,7 +406,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -418,7 +418,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -444,7 +444,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -484,7 +484,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource SiteToSiteVPNAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -504,7 +504,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -518,7 +518,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -562,7 +562,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -592,7 +592,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource SiteToSiteVPNAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -612,7 +612,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -626,7 +626,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -660,7 +660,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -710,7 +710,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -750,7 +750,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource SiteToSiteVPNAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -770,7 +770,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -784,7 +784,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -817,7 +817,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -856,7 +856,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -874,7 +874,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -889,7 +889,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -937,7 +937,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -987,7 +987,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1031,7 +1031,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1062,7 +1062,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1080,7 +1080,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1097,7 +1097,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1155,7 +1155,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1212,7 +1212,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1243,7 +1243,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1261,7 +1261,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1278,7 +1278,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1335,7 +1335,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1396,7 +1396,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1440,7 +1440,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1458,7 +1458,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1472,7 +1472,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1507,7 +1507,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1545,7 +1545,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1563,7 +1563,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1578,7 +1578,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1608,7 +1608,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1649,7 +1649,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource SiteToSiteVPNAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1669,7 +1669,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1686,7 +1686,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1729,7 +1729,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource SiteToSiteVPNAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1749,7 +1749,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1764,7 +1764,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1801,7 +1801,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1819,7 +1819,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1836,7 +1836,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1876,7 +1876,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1894,7 +1894,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1911,7 +1911,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1951,7 +1951,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -1969,7 +1969,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1981,7 +1981,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2019,7 +2019,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -2037,7 +2037,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2051,7 +2051,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2085,7 +2085,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2131,7 +2131,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -2149,7 +2149,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2163,7 +2163,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2195,7 +2195,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2233,7 +2233,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -2251,7 +2251,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2272,7 +2272,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2323,7 +2323,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2374,7 +2374,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2410,7 +2410,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SiteToSiteVpnAttachment
@@ -2428,7 +2428,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2447,7 +2447,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2512,7 +2512,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2577,7 +2577,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

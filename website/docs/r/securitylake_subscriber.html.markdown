@@ -89,8 +89,8 @@ This resource supports the following arguments:
 
 The `subscriber_identity` block supports the following arguments:
 
-* `external_id` - (Required) The AWS Regions where Security Lake is automatically enabled.
-* `principal` - (Required) Provides encryption details of Amazon Security Lake object.
+* `external_id` - (Required) The external ID used to establish trust relationship with the AWS identity.
+* `principal` - (Required) The AWS identity principal.
 
 ### `aws_log_source_resource` Block
 
@@ -110,7 +110,7 @@ The `custom_log_source_resource` block supports the following arguments. See [`c
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Data Lake.
+* `arn` - The ARN of the subscriber.
 * `id` - The Subscriber ID of the subscriber.
 * `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `resource_share_arn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.

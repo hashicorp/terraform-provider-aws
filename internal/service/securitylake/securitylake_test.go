@@ -50,7 +50,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"lifecycle":          testAccDataLake_lifeCycle,
 			"metaStoreUpdate":    testAccDataLake_metaStoreUpdate,
 			"replication":        testAccDataLake_replication,
-			"Identity":           testAccDataLake_IdentitySerial,
+			"Identity":           testAccDataLake_identitySerial,
 		},
 		"Subscriber": {
 			"accessType":         testAccSubscriber_accessType,

@@ -44,76 +44,78 @@ func ResourceDevEnvironment() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ides": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"runtime": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ides": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"runtime": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"inactivity_timeout_minutes": {
-				Type:     schema.TypeInt,
-				Default:  15,
-				Optional: true,
-			},
-			names.AttrInstanceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.InstanceType](),
-			},
-			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"persistent_storage": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Required: true,
+				"inactivity_timeout_minutes": {
+					Type:     schema.TypeInt,
+					Default:  15,
+					Optional: true,
+				},
+				names.AttrInstanceType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.InstanceType](),
+				},
+				"project_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"persistent_storage": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSize: {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"repositories": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"branch_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRepositoryName: {
-							Type:     schema.TypeString,
-							Required: true,
+				"repositories": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"branch_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRepositoryName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"space_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"space_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

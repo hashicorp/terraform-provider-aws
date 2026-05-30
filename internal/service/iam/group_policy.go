@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -84,7 +83,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	groupName, policyName := d.Get("group").(string), create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	groupName, policyName := d.Get("group").(string), create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.PutGroupPolicyInput{
 		GroupName:      aws.String(groupName),
 		PolicyDocument: aws.String(policyDoc),
@@ -191,9 +190,8 @@ func findGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.GetGroupP
 	output, err := conn.GetGroupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

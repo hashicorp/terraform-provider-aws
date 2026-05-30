@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -354,9 +353,8 @@ func findNonDisassociatedGatewayAssociation(ctx context.Context, conn *directcon
 	}
 
 	if state := output.AssociationState; state == awstypes.DirectConnectGatewayAssociationStateDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -397,8 +395,8 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 	return output, nil
 }
 
-func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayAssociation(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGatewayAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -414,10 +412,10 @@ func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, i
 }
 
 func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -433,10 +431,10 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateUpdating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -452,10 +450,10 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateDisassociating),
 		Target:  []string{},
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 

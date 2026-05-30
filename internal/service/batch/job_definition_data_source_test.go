@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,11 +15,11 @@ import (
 
 func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 	resourceName := "aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
@@ -49,10 +48,10 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
@@ -82,10 +81,10 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
@@ -108,10 +107,10 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
@@ -119,7 +118,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNEKS(rName),
@@ -138,10 +137,10 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_advancedARN_EKSProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
@@ -149,7 +148,7 @@ func TestAccBatchJobDefinitionDataSource_advancedARN_EKSProperties(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobDefinitionDataSourceConfig_advancedARNEKS(rName),

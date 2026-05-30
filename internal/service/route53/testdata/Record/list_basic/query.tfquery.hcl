@@ -3,7 +3,7 @@
 
 list "aws_route53_record" "test" {
   provider = aws
-  
+
   config {
     zone_id = aws_route53_zone.test.zone_id
   }

@@ -11,7 +11,7 @@ description: |-
 Creates an Amazon CloudFront VPC origin.
 
 For information about CloudFront VPC origins, see
-[Amazon CloudFront Developer Guide - Restrict access with VPC origins][1].
+[Amazon CloudFront Developer Guide - Restrict access with VPC origins](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-vpc-origins.html).
 
 ## Example Usage
 
@@ -63,8 +63,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - The current version of the origin.
 * `id` - The VPC origin ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-[1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-vpc-origins.html
 
 ## Import
 

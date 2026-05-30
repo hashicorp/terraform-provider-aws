@@ -6,13 +6,12 @@
 package glue
 
 import (
+	"cmp"
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -339,16 +338,12 @@ func dataSourceCatalogTable() *schema.Resource {
 
 func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.GlueClient(ctx)
 
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
-	dbName := d.Get(names.AttrDatabaseName).(string)
-	name := d.Get(names.AttrName).(string)
-
-	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
-
-	input := &glue.GetTableInput{
+	catalogID, dbName, name := cmp.Or(d.Get(names.AttrCatalogID).(string), c.AccountID(ctx)), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string)
+	id := catalogTableCreateResourceID(catalogID, dbName, name)
+	inputGT := glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		Name:         aws.String(name),
@@ -356,75 +351,59 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("query_as_of_time"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
-		input.QueryAsOfTime = aws.Time(t)
+		inputGT.QueryAsOfTime = aws.Time(t)
 	}
 	if v, ok := d.GetOk("transaction_id"); ok {
-		input.TransactionId = aws.String(v.(string))
+		inputGT.TransactionId = aws.String(v.(string))
 	}
 
-	out, err := conn.GetTable(ctx, input)
+	table, err := findTable(ctx, conn, &inputGT)
 	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			return sdkdiag.AppendErrorf(diags, "No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
-				dbName)
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", id, err)
 	}
 
-	table := out.Table
-	tableArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
-	}.String()
-	d.Set(names.AttrARN, tableArn)
-
-	d.Set(names.AttrName, table.Name)
+	d.SetId(id)
+	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
+	d.Set(names.AttrName, table.Name)
 	d.Set(names.AttrOwner, table.Owner)
-	d.Set("retention", table.Retention)
-
-	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
-	}
-
-	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
-	}
-
-	d.Set("view_original_text", table.ViewOriginalText)
-	d.Set("view_expanded_text", table.ViewExpandedText)
-	d.Set("table_type", table.TableType)
-
 	if err := d.Set(names.AttrParameters, table.Parameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
-
+	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
+	}
+	d.Set("retention", table.Retention)
+	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
+	}
+	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []any{flattenTableIdentifier(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
 		d.Set("target_table", nil)
 	}
+	d.Set("view_expanded_text", table.ViewExpandedText)
+	d.Set("view_original_text", table.ViewOriginalText)
 
-	partIndexInput := &glue.GetPartitionIndexesInput{
-		CatalogId:    out.Table.CatalogId,
-		TableName:    out.Table.Name,
-		DatabaseName: out.Table.DatabaseName,
+	inputGPI := glue.GetPartitionIndexesInput{
+		CatalogId:    table.CatalogId,
+		DatabaseName: aws.String(dbName),
+		TableName:    aws.String(name),
 	}
-	partOut, err := conn.GetPartitionIndexes(ctx, partIndexInput)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
-	}
-
-	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+	partitionIndexes, err := findPartitionIndexes(ctx, conn, &inputGPI)
+	switch {
+	// e.g. "InvalidInputException: Operation not supported on Multi Dialect Views".
+	case errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Operation not supported"):
+		d.Set("partition_index", nil)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
+	default:
+		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}

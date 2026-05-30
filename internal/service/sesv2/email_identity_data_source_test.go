@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,20 +14,20 @@ import (
 
 func TestAccSESV2EmailIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_email_identity.test"
 	dataSourceName := "data.aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, dataSourceName),
+					testAccCheckEmailIdentityExists(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "email_identity", dataSourceName, "email_identity"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.#", dataSourceName, "dkim_signing_attributes.#"),

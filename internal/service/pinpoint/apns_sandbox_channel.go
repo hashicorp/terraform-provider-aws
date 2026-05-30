@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -121,7 +120,7 @@ func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceDat
 
 	_, err := conn.UpdateApnsSandboxChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNs Sandbox Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging APNs Sandbox Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -133,18 +132,18 @@ func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging APNs Channel for Application %s", d.Id())
 
 	output, err := findAPNSSandboxChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint APNS Sandbox Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging APNS Sandbox Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint APNS Sandbox Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging APNS Sandbox Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -159,7 +158,7 @@ func resourceAPNSSandboxChannelDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint APNs Sandbox Channel: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging APNs Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsSandboxChannel(ctx, &pinpoint.DeleteApnsSandboxChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -169,7 +168,7 @@ func resourceAPNSSandboxChannelDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNs Sandbox Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging APNs Sandbox Channel for Application %s: %s", d.Id(), err)
 	}
 	return diags
 }
@@ -181,9 +180,8 @@ func findAPNSSandboxChannelByApplicationId(ctx context.Context, conn *pinpoint.C
 
 	output, err := conn.GetApnsSandboxChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {

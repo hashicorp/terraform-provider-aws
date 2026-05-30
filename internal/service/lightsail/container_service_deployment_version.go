@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service_deployment_version", name=Container Service Deployment Version")
+// @SDKResource("aws_lightsail_container_service_deployment_version", name="Container Service Deployment Version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
@@ -446,9 +445,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	output, err := conn.GetContainerServiceDeployments(ctx, input)
 
 	if IsANotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -474,9 +472,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
-		return nil, &sdkretry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: "Empty result",
 		}
 	}
 

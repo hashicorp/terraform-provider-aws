@@ -7,7 +7,6 @@ package polly
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/polly"
@@ -26,7 +25,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newVoicesDataSource,
 			TypeName: "aws_polly_voices",
 			Name:     "Voices",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

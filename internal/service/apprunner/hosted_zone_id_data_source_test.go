@@ -17,7 +17,7 @@ func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_apprunner_hosted_zone_id.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppRunner)
