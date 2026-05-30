@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -100,7 +101,13 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 				Config: testAccPipelineResourcePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineResourcePolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Sid", "AllowIngestUpdated"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -182,8 +189,7 @@ EOF
 }
 
 func testAccPipelineResourcePolicyConfig_updated(rName string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(testAccPipelineConfig_basic(rName), `
-
+	return acctest.ConfigCompose(testAccPipelineConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_osis_pipeline_resource_policy" "test" {
@@ -194,18 +200,19 @@ resource "aws_osis_pipeline_resource_policy" "test" {
   "Version": "2012-10-17",
   "Id": "ingestPolicy",
   "Statement": [{
-    "Sid": "AllowIngest",
+    "Sid": "AllowIngestUpdated",
     "Effect": "Allow",
     "Principal": {
-      "AWS": "${data.aws_caller_identity.target.account_id}"
+      "AWS": "${data.aws_caller_identity.current.account_id}"
     },
     "Action": [
-      "osis:CreatePipelineEndpoint"
+      "osis:CreatePipelineEndpoint",
+      "osis:DeletePipelineEndpoint"
     ],
     "Resource": "${aws_osis_pipeline.test.pipeline_arn}"
   }]
 }
 EOF
 }
-`))
+`)
 }

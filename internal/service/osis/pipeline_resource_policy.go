@@ -26,11 +26,15 @@ import (
 
 // @FrameworkResource("aws_osis_pipeline_resource_policy", name="Pipeline Resource Policy")
 // @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
-// @Testing(importIgnore="policy")
 func newPipelineResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResourcePolicyResource{}
 
 	return r, nil
+}
+
+type pipelineResourcePolicyResource struct {
+	framework.ResourceWithModel[pipelineResourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *pipelineResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -166,11 +170,6 @@ func (r *pipelineResourcePolicyResource) Delete(ctx context.Context, request res
 		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Pipeline Resource Policy (%s)", data.ID.ValueString()), err.Error())
 		return
 	}
-}
-
-type pipelineResourcePolicyResource struct {
-	framework.ResourceWithModel[pipelineResourcePolicyResourceModel]
-	framework.WithImportByIdentity
 }
 
 type pipelineResourcePolicyResourceModel struct {

@@ -58,6 +58,34 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchIngestionPipelineEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipelineEndpoint awstypes.PipelineEndpoint
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	resourceName := "aws_osis_pipeline_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipelineEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipelineEndpointExists(ctx, resourceName, &pipelineEndpoint),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineEndpoint, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipelineEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
@@ -110,38 +138,38 @@ func testAccCheckPipelineEndpointExists(ctx context.Context, n string, v *awstyp
 }
 
 func testAccPipelineEndpointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPipelineEndpointConfig_vpc(rName), fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_vpc" "endpoint_test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "endpoint_test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.endpoint_test.id
-}
-
-resource "aws_security_group" "endpoint_test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.endpoint_test.id
-}
-
+	return acctest.ConfigCompose(testAccPipelineEndpointConfig_pipeline(rName), fmt.Sprintf(`
 resource "aws_osis_pipeline_endpoint" "test" {
   pipeline_arn = aws_osis_pipeline.test.pipeline_arn
 
   vpc_options {
-    subnet_ids         = [aws_subnet.endpoint_test.id]
-    security_group_ids = [aws_security_group.endpoint_test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids = [aws_security_group.test.id]
   }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "%[1]s-endpoint"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s-endpoint"
+  vpc_id = aws_vpc.test.id
 }
 `, rName))
 }
@@ -168,7 +196,7 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_vpc" "test" {
+resource "aws_vpc" "pipeline" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -177,15 +205,15 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "pipeline" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
+  vpc_id            = aws_vpc.pipeline.id
 }
 
-resource "aws_security_group" "test" {
+resource "aws_security_group" "pipeline" {
   name   = %[1]q
-  vpc_id = aws_vpc.test.id
+  vpc_id = aws_vpc.pipeline.id
 }
 
 resource "aws_osis_pipeline" "test" {
@@ -211,8 +239,8 @@ resource "aws_osis_pipeline" "test" {
   min_units                   = 1
 
   vpc_options {
-    security_group_ids      = [aws_security_group.test.id]
-    subnet_ids              = [aws_subnet.test.id]
+    security_group_ids      = [aws_security_group.pipeline.id]
+    subnet_ids              = [aws_subnet.pipeline.id]
     vpc_endpoint_management = "SERVICE"
   }
 }
