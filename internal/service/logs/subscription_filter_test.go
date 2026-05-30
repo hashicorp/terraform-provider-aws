@@ -735,6 +735,159 @@ resource "aws_lambda_permission" "test" {
 `, rName, n)
 }
 
+func testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase(rName string) string {
+	return fmt.Sprintf(`
+//
+// Step 1
+// Creation of firehose delivery stream
+//
+resource "aws_s3_bucket" "log_collector" {
+  provider = awsalternate
+
+  bucket = %[1]q
+  region = var.region
+}
+
+data "aws_caller_identity" "destination" {
+  provider = awsalternate
+}
+
+resource "aws_iam_role" "firehose_put_data_into_bucket" {
+  provider = awsalternate
+
+  name = "%[1]s-AllowFirehoseToPutDataIntoBucket"
+  assume_role_policy = jsonencode({
+    "Statement" = {
+      "Effect" = "Allow",
+      "Principal" = {
+        "Service" = "firehose.amazonaws.com"
+      },
+      "Action" = "sts:AssumeRole",
+      "Condition" = {
+        "StringEquals" = {
+          "sts:ExternalId" = "${data.aws_caller_identity.destination.account_id}"
+        }
+      }
+    }
+  })
+}
+
+resource "aws_iam_role_policy" "name" {
+  provider = awsalternate
+
+  role = aws_iam_role.firehose_put_data_into_bucket.id
+  policy = jsonencode({
+    "Statement" = [{
+      "Effect" = "Allow",
+      "Action" = [
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:ListBucket"
+      ],
+      "Resource" = [
+        "arn:aws:s3:::${local.bucket_name}",
+        "arn:aws:s3:::${local.bucket_name}/*"
+      ]
+    }]
+  })
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  provider = awsalternate
+
+  name        = "%[1]s-terraform-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose_put_data_into_bucket.arn
+    bucket_arn = aws_s3_bucket.log_collector.arn
+  }
+}
+
+//
+// Step 2
+// Creation of a destination with org ID in destination access policy
+//
+
+resource "aws_iam_role" "cloudwatch_to_firehose" {
+  provider = awsalternate
+
+  name = "%[1]s-CWLtoKinesisFirehoseRole"
+
+  assume_role_policy = jsonencode({
+    "Statement" = {
+      "Effect" = "Allow",
+      "Principal" = {
+        "Service" = "logs.${var.region}.amazonaws.com"
+      },
+      "Action" = "sts:AssumeRole",
+      "Condition" = {
+        "StringLike" = {
+          "aws:SourceArn" = [
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.source.account_id}:*",
+            "arn:aws:logs:${var.region}:${data.aws_caller_identity.destination.account_id}:*"
+          ]
+        }
+      }
+    }
+  })
+}
+
+resource "aws_iam_role_policy" "cloudwatch_allow_firehose" {
+  provider = awsalternate
+
+  role = aws_iam_role.cloudwatch_to_firehose.id
+  policy = jsonencode({
+    "Statement" = [
+      {
+        "Effect" = "Allow",
+        "Action" = ["firehose:*"],
+        "Resource" = ["arn:aws:firehose:${var.region}:${data.aws_caller_identity.destination.account_id}:*"]
+      }
+    ]
+  })
+}
+
+resource "aws_cloudwatch_log_destination" "firehose" {
+  provider = awsalternate
+
+  name       = "%[1]s-testFirehoseDestination"
+  role_arn   = aws_iam_role.cloudwatch_to_firehose.arn
+  target_arn = aws_kinesis_firehose_delivery_stream.extended_s3_stream.arn
+}
+
+data "aws_organizations_organization" "current" {
+	provider = awsalternate
+}
+
+resource "aws_cloudwatch_log_destination_policy" "firehose_destionation_policy" {
+  provider = awsalternate
+  
+  destination_name = aws_cloudwatch_log_destination.firehose.name
+
+  access_policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Sid" = "",
+        "Effect" = "Allow",
+        "Principal" = "*",
+        "Action" = "logs:PutSubscriptionFilter",
+        "Resource" = "${aws_cloudwatch_log_destination.firehose.arn}",
+        "Condition" = {
+          "StringEquals" = {
+            "aws:PrincipalOrgID" = [
+              "${data.aws_organizations_organization.current.id}"
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+`, rName)
+}
+
 func testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisDataFirehoseBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
