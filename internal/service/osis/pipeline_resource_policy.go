@@ -79,8 +79,7 @@ func (r *pipelineResourcePolicyResource) Create(ctx context.Context, request res
 		return
 	}
 
-	// Set values for unknowns.
-	data.ID = data.ResourceARN.StringValue
+	data.ID = types.StringValue(data.ResourceARN.ValueString())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -167,7 +166,7 @@ func (r *pipelineResourcePolicyResource) Delete(ctx context.Context, request res
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Pipeline Resource Policy (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Pipeline Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
 		return
 	}
 }

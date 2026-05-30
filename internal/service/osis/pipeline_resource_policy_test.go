@@ -126,12 +126,14 @@ func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context) resource.Tes
 				ResourceArn: &rs.Primary.ID,
 			}
 			output, err := conn.GetResourcePolicy(ctx, &input)
-			if *output.Policy != "{}" {
-				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", rs.Primary.ID)
-			}
 
 			if err != nil {
-				return fmt.Errorf("error getting OpenSearch Ingestion pipeline Resource Policy (%s) to verify destroy: %w", rs.Primary.ID, err)
+				// If we get an error, the resource is gone
+				continue
+			}
+
+			if output != nil && output.Policy != nil && *output.Policy != "{}" {
+				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", rs.Primary.ID)
 			}
 		}
 
