@@ -625,11 +625,12 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
-	acctest.Skip(t, "ValidationException: Lambda target only supports GATEWAY_IAM_ROLE credential provider type")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -641,7 +642,7 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_callerIAMCredentials()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_callerIAMCredentials()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1634,6 +1635,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "gateway_assume" {
   statement {
     effect  = "Allow"
@@ -1661,6 +1664,52 @@ resource "aws_bedrockagentcore_gateway" "test" {
       allowed_audience = ["test"]
     }
   }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "gateway_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "gateway" {
+  name               = "%[1]s-gateway"
+  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
 }
 
 resource "aws_bedrockagentcore_gateway_target" "test" {
