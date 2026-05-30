@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,9 +23,16 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkResource("aws_datazone_environment_blueprint_configuration", name="Environment Blueprint Configuration")
+// @IdentityAttribute("domain_id")
+// @IdentityAttribute("environment_blueprint_id")
+// @ImportIDHandler("environmentBlueprintConfigurationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentBlueprintConfigurationOutput")
+// @Testing(importStateIdFunc="testAccEnvironmentBlueprintConfigurationImportStateIdFunc", importStateIdAttribute="domain_id")
+// @Testing(preIdentityVersion="v6.47.0")
 func newEnvironmentBlueprintConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentBlueprintConfigurationResource{}
 
@@ -35,6 +41,7 @@ func newEnvironmentBlueprintConfigurationResource(_ context.Context) (resource.R
 
 type environmentBlueprintConfigurationResource struct {
 	framework.ResourceWithModel[environmentBlueprintConfigurationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -192,23 +199,6 @@ func (r *environmentBlueprintConfigurationResource) Delete(ctx context.Context, 
 	}
 }
 
-func (r *environmentBlueprintConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const (
-		environmentBlueprintConfigurationIDParts     = 2
-		environmentBlueprintConfigurationIDSeparator = "/"
-	)
-	parts := strings.Split(request.ID, environmentBlueprintConfigurationIDSeparator)
-	if len(parts) != environmentBlueprintConfigurationIDParts {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected DOMAIN-ID%[2]sENVIRONMENT-BLUEPRINT-ID", request.ID, environmentBlueprintConfigurationIDSeparator)
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("domain_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("environment_blueprint_id"), parts[1])...)
-}
-
 func findEnvironmentBlueprintConfigurationByTwoPartKey(ctx context.Context, conn *datazone.Client, domainID, environmentBlueprintID string) (*datazone.GetEnvironmentBlueprintConfigurationOutput, error) {
 	input := datazone.GetEnvironmentBlueprintConfigurationInput{
 		DomainIdentifier:               aws.String(domainID),
@@ -231,6 +221,26 @@ func findEnvironmentBlueprintConfigurationByTwoPartKey(ctx context.Context, conn
 	}
 
 	return output, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = environmentBlueprintConfigurationImportID{}
+)
+
+type environmentBlueprintConfigurationImportID struct{}
+
+func (environmentBlueprintConfigurationImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, blueprintID, found := strings.Cut(id, "/")
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-id>/<environment-blueprint-id>", id)
+	}
+
+	result := map[string]any{
+		"domain_id":                domainID,
+		"environment_blueprint_id": blueprintID,
+	}
+
+	return id, result, nil
 }
 
 type environmentBlueprintConfigurationResourceModel struct {
