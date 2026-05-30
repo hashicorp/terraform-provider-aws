@@ -120,6 +120,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_datazone_glossary",
 			Name:     "Glossary",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      glossaryImportID{},
+			},
 		},
 		{
 			Factory:  newGlossaryTermResource,
