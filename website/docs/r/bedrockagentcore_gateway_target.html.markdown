@@ -474,7 +474,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the gateway target.
 * `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
 * `private_endpoint` - (Optional) Configuration for private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through Amazon VPC Lattice and never traverses the public internet. See [`private_endpoint`](#private_endpoint) below.
-* `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `credential_provider_configuration`
 
