@@ -55,12 +55,6 @@ func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
 							// vpcIdentifier is the ID of the VPC that contains the private resource.
 							names.AttrVPCID: schema.StringAttribute{
 								Required: true,
-								Validators: []validator.String{
-									stringvalidator.RegexMatches(
-										vpcIDRegex,
-										"must be a valid VPC ID (vpc-xxxxxxxx or vpc-xxxxxxxxxxxxxxxxx)",
-									),
-								},
 							},
 							// subnetIds: subnets inside the VPC where Lattice ENIs are placed.
 							names.AttrSubnetIDs: schema.SetAttribute{

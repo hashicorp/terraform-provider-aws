@@ -1,0 +1,27 @@
+```release-note:enhancement
+data-source/aws_arn: Deprecates `id` in favor of `arn`
+```
+
+```release-note:enhancement
+data-source/aws_default_tags: Deprecates `id`
+```
+
+```release-note:enhancement
+data-source/aws_ip_ranges: Deprecates `id`
+```
+
+```release-note:enhancement
+data-source/aws_partition: Deprecates `id` in favor of `partition`
+```
+
+```release-note:enhancement
+data-source/aws_region: Deprecates `id` in favor of `region`
+```
+
+```release-note:enhancement
+data-source/aws_regions: Deprecates `id`
+```
+
+```release-note:enhancement
+data-source/aws_service: Deprecates `id` in favor of `reverse_dns_name`
+```

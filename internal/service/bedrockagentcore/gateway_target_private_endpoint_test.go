@@ -119,7 +119,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *te
 
 func testAccGatewayTargetConfig_privateEndpointManagedVPC(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayTargetConfig_infra(rName),
+		testAccGatewayTargetConfig_base(rName),
 		testAccVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -149,7 +149,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
 func testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayTargetConfig_infra(rName),
+		testAccGatewayTargetConfig_base(rName),
 		testAccVPCLatticeResourceConfigConfig(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -176,7 +176,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
 func testAccGatewayTargetConfig_privateEndpointWithRoutingDomain(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayTargetConfig_infra(rName),
+		testAccGatewayTargetConfig_base(rName),
 		testAccVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {

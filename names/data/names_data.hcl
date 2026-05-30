@@ -6620,7 +6620,7 @@ service "pinpoint" {
 
   names {
     provider_name_upper = "Pinpoint"
-    human_friendly      = "Pinpoint"
+    human_friendly      = "End User Messaging"
   }
 
   endpoint_info {
@@ -7200,7 +7200,6 @@ service "resourceexplorer2" {
     provider_name_upper = "ResourceExplorer2"
     human_friendly      = "Resource Explorer"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListIndexes"
@@ -8917,7 +8916,6 @@ service "transfer" {
     provider_name_upper = "Transfer"
     human_friendly      = "Transfer Family"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListConnectors"

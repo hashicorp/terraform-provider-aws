@@ -93,6 +93,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
@@ -102,6 +115,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newTelemetryRuleResourceAsListResource,
 			TypeName: "aws_observabilityadmin_telemetry_rule",
 			Name:     "Telemetry Rule",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResourceAsListResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "rule_arn",
 			}),

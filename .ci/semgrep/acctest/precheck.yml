@@ -19,4 +19,4 @@ rules:
           }
     paths:
       include:
-        - "internal/service/**/*_test.go"
+        - "/internal/service/**/*_test.go"

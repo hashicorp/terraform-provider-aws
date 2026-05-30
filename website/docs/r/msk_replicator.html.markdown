@@ -47,7 +47,6 @@ resource "aws_msk_replicator" "test" {
     target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
-
     topic_replication {
       topic_name_configuration {
         type = "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS"
@@ -75,6 +74,7 @@ This resource supports the following arguments:
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `log_delivery` - (Optional) Configuration block for delivering replicator logs to customer destinations. Detailed below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
@@ -123,6 +123,32 @@ This resource supports the following arguments:
 ### starting_position
 
 * `type` - (Optional) The type of replication starting position. Supports `LATEST` and `EARLIEST`.
+
+### log_delivery
+
+* `replicator_log_delivery` - (Optional) Configuration block for replicator log delivery. Detailed below.
+
+### replicator_log_delivery
+
+* `cloudwatch_logs` - (Optional) Configuration block for replicator log delivery to Amazon CloudWatch Logs. Detailed below.
+* `firehose` - (Optional) Configuration block for replicator log delivery to Amazon Data Firehose. Detailed below.
+* `s3` - (Optional) Configuration block for replicator log delivery to Amazon S3. Detailed below.
+
+### cloudwatch_logs
+
+* `enabled` - (Required) Boolean whether to enable log delivery to CloudWatch Logs.
+* `log_group` - (Optional) Name of CloudWatch Logs log group. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+
+### firehose
+
+* `enabled` - (Required) Boolean whether to enable log delivery to Firehose.
+* `delivery_stream` - (Optional) Name of the Firehose delivery stream. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+
+### s3
+
+* `enabled` - (Required) Boolean whether to enable log delivery to S3.
+* `bucket` - (Optional) Name of the S3 bucket. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+* `prefix` - (Optional) Prefix to use when storing replicator logs in S3. If `enabled` is `false`, this value must not be set.
 
 ## Attribute Reference
 

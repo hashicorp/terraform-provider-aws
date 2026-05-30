@@ -8,6 +8,7 @@ package bedrockagentcore
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -221,80 +222,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
-			"filesystem_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[filesystemConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(5),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"efs_access_point": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[efsAccessPointConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"access_point_arn": schema.StringAttribute{
-										Required:   true,
-										CustomType: fwtypes.ARNType,
-									},
-									"mount_path": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(6, 200),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
-										},
-									},
-								},
-							},
-						},
-						"s3_files_access_point": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3FilesAccessPointConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"access_point_arn": schema.StringAttribute{
-										Required:   true,
-										CustomType: fwtypes.ARNType,
-									},
-									"mount_path": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(6, 200),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
-										},
-									},
-								},
-							},
-						},
-						"session_storage": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStorageConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("efs_access_point"),
-									path.MatchRelative().AtParent().AtName("s3_files_access_point"),
-									path.MatchRelative().AtParent().AtName("session_storage"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"mount_path": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(6, 200),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"filesystem_configuration": filesystemConfigurationSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -367,7 +295,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
-// Note that this function and the models used within it are also used in gateway.go.
 func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
@@ -469,6 +396,83 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 											},
 										},
 									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[filesystemConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(5),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"efs_access_point": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[efsAccessPointConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"access_point_arn": schema.StringAttribute{
+								Required:   true,
+								CustomType: fwtypes.ARNType,
+							},
+							"mount_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(6, 200),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+								},
+							},
+						},
+					},
+				},
+				"s3_files_access_point": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[s3FilesAccessPointConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"access_point_arn": schema.StringAttribute{
+								Required:   true,
+								CustomType: fwtypes.ARNType,
+							},
+							"mount_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(6, 200),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+								},
+							},
+						},
+					},
+				},
+				"session_storage": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStorageConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.ExactlyOneOf(
+							path.MatchRelative().AtParent().AtName("efs_access_point"),
+							path.MatchRelative().AtParent().AtName("s3_files_access_point"),
+							path.MatchRelative().AtParent().AtName("session_storage"),
+						),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"mount_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(6, 200),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
 								},
 							},
 						},
@@ -1011,8 +1015,8 @@ type authorizerConfigurationModel struct {
 }
 
 var (
-	_ fwflex.Expander  = authorizerConfigurationModel{}
-	_ fwflex.Flattener = &authorizerConfigurationModel{}
+	_ fwflex.TypedExpander = authorizerConfigurationModel{}
+	_ fwflex.Flattener     = &authorizerConfigurationModel{}
 )
 
 func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -1035,7 +1039,19 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.
 	return diags
 }
 
-func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m authorizerConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.AuthorizerConfiguration]():
+		return m.expandToAuthorizerConfiguration(ctx)
+
+	case reflect.TypeFor[awstypes.UpdatedAuthorizerConfiguration]():
+		return m.expandToUpdatedAuthorizerConfiguration(ctx)
+	}
+	return nil, diags
+}
+
+func (m authorizerConfigurationModel) expandToAuthorizerConfiguration(ctx context.Context) (awstypes.AuthorizerConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
 	case !m.CustomJWTAuthorizer.IsNull():
@@ -1052,6 +1068,19 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 		return &r, diags
 	}
 	return nil, diags
+}
+
+func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx context.Context) (*awstypes.UpdatedAuthorizerConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.CustomJWTAuthorizer.IsNull() {
+		r, d := m.expandToAuthorizerConfiguration(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedAuthorizerConfiguration{OptionalValue: r}, diags
+	}
+	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
 type customJWTAuthorizerConfigurationModel struct {
