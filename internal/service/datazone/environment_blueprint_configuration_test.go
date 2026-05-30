@@ -308,7 +308,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 	})
 }
 
-func TestAccDataZoneEnvironmentBlueprintConfiguration_global_parameters(t *testing.T) {
+func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -338,6 +338,23 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_global_parameters(t *testi
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+			},
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example-updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example-updated"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
