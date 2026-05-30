@@ -197,6 +197,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 			"primary_replication_group_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				Computed:     true,
 				ValidateFunc: validateReplicationGroupID,
 			},
 			"transit_encryption_enabled": {
