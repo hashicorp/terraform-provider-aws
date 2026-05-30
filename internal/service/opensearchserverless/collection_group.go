@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -126,6 +127,26 @@ func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaR
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+	}
+}
+
+func (r *collectionGroupResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data collectionGroupResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Generation.IsNull() || data.Generation.IsUnknown() || data.StandbyReplicas.IsNull() || data.StandbyReplicas.IsUnknown() {
+		return
+	}
+
+	if data.Generation.ValueEnum() == awstypes.ServerlessGenerationNextgen && data.StandbyReplicas.ValueEnum() != awstypes.StandbyReplicasEnabled {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("standby_replicas"),
+			"Invalid Attribute Combination",
+			"`standby_replicas` must be `ENABLED` when `generation` is `NEXTGEN`.",
+		)
 	}
 }
 
