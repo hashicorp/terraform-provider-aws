@@ -396,9 +396,11 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	// For non-CUSTOM types, clear Configuration from the API response before
 	// flattening. The API returns a StrategyConfiguration with Type values
 	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-	// For EPISODIC, extract ReflectionConfiguration before clearing.
+	// For EPISODIC, extract ReflectionConfiguration before clearing, but only
+	// when the user has defined the reflection_configuration block (non-null state).
 	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-		if state.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic && out.Configuration != nil {
+		if state.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic &&
+			!state.ReflectionConfiguration.IsNull() && out.Configuration != nil {
 			if rc := out.Configuration.Reflection; rc != nil {
 				if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
 					var rcModel episodicReflectionConfigModel
@@ -482,7 +484,8 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				return
 			}
 			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-				if plan.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic && found.Configuration != nil {
+				if plan.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic &&
+					!plan.ReflectionConfiguration.IsNull() && found.Configuration != nil {
 					if rc := found.Configuration.Reflection; rc != nil {
 						if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
 							var rcModel episodicReflectionConfigModel
@@ -685,16 +688,16 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]        `tfsdk:"configuration"`
-	Description             types.String                                                     `tfsdk:"description"`
-	MemoryExecutionRoleARN  fwtypes.ARN                                                      `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID        types.String                                                     `tfsdk:"memory_strategy_id"`
-	MemoryID                types.String                                                     `tfsdk:"memory_id"`
-	Name                    types.String                                                     `tfsdk:"name"`
-	Namespaces              fwtypes.SetOfString                                              `tfsdk:"namespaces"`
-	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigModel]  `tfsdk:"reflection_configuration"`
-	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                  `tfsdk:"type"`
-	Timeouts                timeouts.Value                                                   `tfsdk:"timeouts"`
+	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]      `tfsdk:"configuration"`
+	Description             types.String                                                   `tfsdk:"description"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                    `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID        types.String                                                   `tfsdk:"memory_strategy_id"`
+	MemoryID                types.String                                                   `tfsdk:"memory_id"`
+	Name                    types.String                                                   `tfsdk:"name"`
+	Namespaces              fwtypes.SetOfString                                            `tfsdk:"namespaces"`
+	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigModel] `tfsdk:"reflection_configuration"`
+	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                `tfsdk:"type"`
+	Timeouts                timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 
 func (m *memoryStrategyResourceModel) GetIdentifier() string {
@@ -958,7 +961,8 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeEpisodicOverride:
 		var r awstypes.CustomConfigurationInputMemberEpisodicOverride
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		// Exclude Reflection from auto-flex; it is expanded manually below.
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value, fwflex.WithIgnoredFieldNamesAppend("Reflection")))
 		if diags.HasError() {
 			return nil, diags
 		}
