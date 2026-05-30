@@ -314,6 +314,9 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testin
 	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
+	quickSightRole := fmt.Sprintf("arn:aws:iam::%s:role/example", acctest.AccountID(ctx))
+	quickSightRoleUpdated := fmt.Sprintf("arn:aws:iam::%s:role/example-updated", acctest.AccountID(ctx))
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -324,12 +327,12 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testin
 		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", quickSightRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", quickSightRole),
 				),
 			},
 			{
@@ -338,14 +341,15 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testin
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+				ImportStateVerifyIgnore:              []string{"global_parameters"},
 			},
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example-updated"),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", quickSightRoleUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example-updated"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", quickSightRoleUpdated),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
