@@ -733,8 +733,9 @@ func resourceService() *schema.Resource {
 													ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
 												},
 												"timeout_in_minutes": {
-													Type:     schema.TypeInt,
-													Required: true,
+													Type:         nullable.TypeNullableInt,
+													Required:     true,
+													ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
 												},
 											},
 										},
