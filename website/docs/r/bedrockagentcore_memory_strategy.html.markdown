@@ -78,7 +78,7 @@ resource "aws_bedrockagentcore_memory_strategy" "episodic_reflection" {
   namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
 
   reflection_configuration {
-    namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+    namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}"]
   }
 }
 ```
@@ -184,7 +184,7 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
     reflection {
       append_to_prompt    = "Identify successful patterns and recurring failure modes across episodes"
       model_id            = "anthropic.claude-3-sonnet-20240229-v1:0"
-      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}"]
     }
   }
 }

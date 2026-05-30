@@ -393,25 +393,32 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
+	// Use the type from the API response — state.Type may be empty during import.
+	apiType := out.Type
 	// For non-CUSTOM types, clear Configuration from the API response before
 	// flattening. The API returns a StrategyConfiguration with Type values
 	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-	// For EPISODIC, extract ReflectionConfiguration before clearing, but only
-	// when the user has defined the reflection_configuration block (non-null state).
-	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-		if state.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic &&
-			!state.ReflectionConfiguration.IsNull() && out.Configuration != nil {
+	// For EPISODIC, extract ReflectionConfiguration before clearing. The API
+	// always returns reflection namespaces; only populate the block when they
+	// differ from the episodic namespaces (i.e. the user explicitly configured them).
+	if apiType != awstypes.MemoryStrategyTypeCustom {
+		if apiType == awstypes.MemoryStrategyTypeEpisodic && out.Configuration != nil {
 			if rc := out.Configuration.Reflection; rc != nil {
 				if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
-					var rcModel episodicReflectionConfigModel
-					if len(episodicRC.Value.NamespaceTemplates) > 0 {
-						rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, episodicRC.Value.NamespaceTemplates)
-					}
-					var d diag.Diagnostics
-					state.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
-					smerr.AddEnrich(ctx, &response.Diagnostics, d)
-					if response.Diagnostics.HasError() {
-						return
+					reflNS := episodicRC.Value.NamespaceTemplates
+					// Only surface reflection_configuration when the reflection namespaces
+					// differ from the episodic namespaces (user explicitly configured them).
+					if !stringSlicesEqual(reflNS, out.NamespaceTemplates) {
+						var rcModel episodicReflectionConfigModel
+						if len(reflNS) > 0 {
+							rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, reflNS)
+						}
+						var d diag.Diagnostics
+						state.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
+						smerr.AddEnrich(ctx, &response.Diagnostics, d)
+						if response.Diagnostics.HasError() {
+							return
+						}
 					}
 				}
 			}
@@ -483,20 +490,22 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", memoryStrategyID))
 				return
 			}
-			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-				if plan.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic &&
-					!plan.ReflectionConfiguration.IsNull() && found.Configuration != nil {
+			if found.Type != awstypes.MemoryStrategyTypeCustom {
+				if found.Type == awstypes.MemoryStrategyTypeEpisodic && found.Configuration != nil {
 					if rc := found.Configuration.Reflection; rc != nil {
 						if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
-							var rcModel episodicReflectionConfigModel
-							if len(episodicRC.Value.NamespaceTemplates) > 0 {
-								rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, episodicRC.Value.NamespaceTemplates)
-							}
-							var d diag.Diagnostics
-							plan.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
-							smerr.AddEnrich(ctx, &response.Diagnostics, d)
-							if response.Diagnostics.HasError() {
-								return
+							reflNS := episodicRC.Value.NamespaceTemplates
+							if !stringSlicesEqual(reflNS, found.NamespaceTemplates) {
+								var rcModel episodicReflectionConfigModel
+								if len(reflNS) > 0 {
+									rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, reflNS)
+								}
+								var d diag.Diagnostics
+								plan.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
+								smerr.AddEnrich(ctx, &response.Diagnostics, d)
+								if response.Diagnostics.HasError() {
+									return
+								}
 							}
 						}
 					}
@@ -1254,4 +1263,23 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		)
 		return diags
 	}
+}
+
+// stringSlicesEqual returns true when two string slices contain the same elements
+// regardless of order.
+func stringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := make(map[string]int, len(a))
+	for _, v := range a {
+		counts[v]++
+	}
+	for _, v := range b {
+		counts[v]--
+		if counts[v] < 0 {
+			return false
+		}
+	}
+	return true
 }

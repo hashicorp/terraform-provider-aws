@@ -557,7 +557,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
     reflection {
       append_to_prompt = %[6]q
       model_id         = %[7]q
-      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}"]
     }
   }
 }
@@ -571,7 +571,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicReflection(t *testing.T) {
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	episodicNS := "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"
-	reflectionNS := "/strategies/{memoryStrategyId}/actors/{actorId}/reflections"
+	// Reflection namespace must be the same as or a prefix of the episodic namespace.
+	reflectionNS := "/strategies/{memoryStrategyId}/actors/{actorId}"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
