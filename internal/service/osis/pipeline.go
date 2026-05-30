@@ -42,6 +42,8 @@ import (
 
 // @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/osis/types;awstypes;awstypes.Pipeline")
+// @Testing(generator="randomPipelineName(t)")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
 
