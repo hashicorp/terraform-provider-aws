@@ -1113,27 +1113,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
-func testAccGatewayTargetConfig_credentialProviderMCPServer(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-%[2]s
-  }
-
-  target_configuration {
-    mcp {
-      mcp_server {
-        endpoint = "https://mcp.cloudflare.com/mcp"
-      }
-    }
-  }
-}
-`, rName, credentialProviderContent))
-}
-
 func testAccGatewayTargetConfig_credentialProviderSmithyModel(rName, credentialProviderContent string) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
