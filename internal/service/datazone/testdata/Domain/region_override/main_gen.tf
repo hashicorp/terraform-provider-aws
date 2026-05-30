@@ -1,6 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_datazone_domain" "test" {
+  region = var.region
+
+  name                  = var.rName
+  domain_execution_role = aws_iam_role.domain_execution_role.arn
+}
+
 resource "aws_iam_role" "domain_execution_role" {
   name = var.rName
   assume_role_policy = jsonencode({
@@ -41,13 +48,6 @@ resource "aws_iam_role" "domain_execution_role" {
       ]
     })
   }
-}
-
-resource "aws_datazone_domain" "test" {
-  region = var.region
-
-  name                  = var.rName
-  domain_execution_role = aws_iam_role.domain_execution_role.arn
 }
 
 variable "rName" {

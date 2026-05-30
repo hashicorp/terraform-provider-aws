@@ -1,3 +1,9 @@
+resource "aws_datazone_domain" "test" {
+{{- template "region" }}
+  name                  = var.rName
+  domain_execution_role = aws_iam_role.domain_execution_role.arn
+}
+
 resource "aws_iam_role" "domain_execution_role" {
   name = var.rName
   assume_role_policy = jsonencode({
@@ -38,10 +44,4 @@ resource "aws_iam_role" "domain_execution_role" {
       ]
     })
   }
-}
-
-resource "aws_datazone_domain" "test" {
-{{- template "region" }}
-  name                  = var.rName
-  domain_execution_role = aws_iam_role.domain_execution_role.arn
 }
