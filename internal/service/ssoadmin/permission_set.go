@@ -45,6 +45,7 @@ func resourcePermissionSet() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -106,6 +107,16 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 	instanceARN := d.Get("instance_arn").(string)
 	name := d.Get(names.AttrName).(string)
+
+	// Check if permission set with this name already exists
+	existingArn, err := findPermissionSetByName(ctx, conn, instanceARN, name)
+	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return sdkdiag.AppendErrorf(diags, "checking for existing SSO Permission Set (%s): %s", name, err)
+	}
+	if existingArn != "" {
+		return sdkdiag.AppendErrorf(diags, "SSO Permission Set (%s) already exists", name)
+	}
+
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
@@ -127,6 +138,10 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreatePermissionSet(ctx, input)
 
 	if err != nil {
+		// Check for ConflictException which indicates the permission set name already exists
+		if errs.IsA[*awstypes.ConflictException](err) {
+			return sdkdiag.AppendErrorf(diags, "SSO Permission Set (%s) already exists", name)
+		}
 		return sdkdiag.AppendErrorf(diags, "creating SSO Permission Set (%s): %s", name, err)
 	}
 
@@ -286,6 +301,38 @@ func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, p
 	}
 
 	return output.PermissionSet, nil
+}
+
+func findPermissionSetByName(ctx context.Context, conn *ssoadmin.Client, instanceARN, name string) (string, error) {
+	input := &ssoadmin.ListPermissionSetsInput{
+		InstanceArn: aws.String(instanceARN),
+	}
+
+	var permissionSetARNs []string
+	paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return "", err
+		}
+		permissionSetARNs = append(permissionSetARNs, page.PermissionSets...)
+	}
+
+	// Check each permission set to find one with matching name
+	for _, arn := range permissionSetARNs {
+		ps, err := findPermissionSetByTwoPartKey(ctx, conn, arn, instanceARN)
+		if err != nil {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+			return "", err
+		}
+		if ps != nil && aws.ToString(ps.Name) == name {
+			return arn, nil
+		}
+	}
+
+	return "", nil
 }
 
 func provisionPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string, timeout time.Duration) error {
