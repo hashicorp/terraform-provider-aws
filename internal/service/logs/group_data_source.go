@@ -32,6 +32,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"bearer_token_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"deletion_protection_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -71,6 +75,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.SetId(name)
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set(names.AttrCreationTime, logGroup.CreationTime)
+	d.Set("bearer_token_authentication_enabled", logGroup.BearerTokenAuthenticationEnabled)
 	d.Set("deletion_protection_enabled", logGroup.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
