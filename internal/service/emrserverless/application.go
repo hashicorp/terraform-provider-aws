@@ -172,6 +172,11 @@ func resourceApplication() *schema.Resource {
 								Optional: true,
 								Computed: true,
 							},
+							"session_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"studio_enabled": {
 								Type:     schema.TypeBool,
 								Optional: true,
@@ -845,6 +850,10 @@ func expandInteractiveConfiguration(tfMap map[string]any) *types.InteractiveConf
 		apiObject.LivyEndpointEnabled = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["session_enabled"].(bool); ok {
+		apiObject.SessionEnabled = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["studio_enabled"].(bool); ok {
 		apiObject.StudioEnabled = aws.Bool(v)
 	}
@@ -861,6 +870,10 @@ func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) 
 
 	if v := apiObject.LivyEndpointEnabled; v != nil {
 		tfMap["livy_endpoint_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.SessionEnabled; v != nil {
+		tfMap["session_enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.StudioEnabled; v != nil {

@@ -217,6 +217,7 @@ This resource supports the following arguments:
 ### interactive_configuration Arguments
 
 * `livy_endpoint_enabled` - (Optional) Enables an Apache Livy endpoint that you can connect to and run interactive jobs.
+* `session_enabled` - (Optional) Enables interactive sessions on the application. When set to `true`, you can start interactive sessions using the `StartSession` API operation — required for Apache Spark Connect with `emr-7.13.0` and later. See the [EMR Serverless Spark Connect documentation](https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/spark-connect.html) for details.
 * `studio_enabled` - (Optional) Enables you to connect an application to Amazon EMR Studio to run interactive workloads in a notebook.
 
 ##### worker_configuration Arguments
