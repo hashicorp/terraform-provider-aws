@@ -990,7 +990,7 @@ func waitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.Client, poolCIDRID, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.IpamPoolCidr); ok {
-		if state, failureReason := output.State, output.FailureReason; state == awstypes.IpamPoolCidrStateFailedProvision && failureReason != nil {
+		if failureReason := output.FailureReason; failureReason != nil && failureReason.Code != "" {
 			retry.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
 		}
 
