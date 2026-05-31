@@ -79,6 +79,8 @@ func resourceConfiguredTable() *schema.Resource {
 				"selected_analysis_methods": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					MinItems: 2,
+					MaxItems: 2,
 					Elem: &schema.Schema{
 						Type:             schema.TypeString,
 						ValidateDiagFunc: enum.Validate[awstypes.SelectedAnalysisMethod](),
@@ -105,6 +107,13 @@ func resourceConfiguredTable() *schema.Resource {
 								ForceNew:      true,
 								RequiredWith:  []string{"table_reference.0.database_name"},
 								ConflictsWith: []string{"table_reference.0.athena", "table_reference.0.snowflake"},
+							},
+							names.AttrRegion: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ConflictsWith:    []string{"table_reference.0.athena", "table_reference.0.snowflake"},
+								ValidateDiagFunc: enum.Validate[awstypes.CommercialRegion](),
 							},
 							"athena": {
 								Type:     schema.TypeList,
@@ -392,12 +401,14 @@ func expandTableReference(data []any) awstypes.TableReference {
 		return expandSnowflakeTableReference(v[0].(map[string]any))
 	}
 
-	return &awstypes.TableReferenceMemberGlue{
-		Value: awstypes.GlueTableReference{
-			DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
-			TableName:    aws.String(tableReference[names.AttrTableName].(string)),
-		},
+	ref := awstypes.GlueTableReference{
+		DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
+		TableName:    aws.String(tableReference[names.AttrTableName].(string)),
 	}
+	if v, ok := tableReference[names.AttrRegion].(string); ok && v != "" {
+		ref.Region = awstypes.CommercialRegion(v)
+	}
+	return &awstypes.TableReferenceMemberGlue{Value: ref}
 }
 
 func expandAthenaTableReference(m map[string]any) awstypes.TableReference {
@@ -450,6 +461,7 @@ func flattenTableReference(tableReference awstypes.TableReference) []any {
 		return []any{map[string]any{
 			names.AttrDatabaseName: aws.ToString(v.Value.DatabaseName),
 			names.AttrTableName:    aws.ToString(v.Value.TableName),
+			names.AttrRegion:       string(v.Value.Region),
 		}}
 	case *awstypes.TableReferenceMemberAthena:
 		inner := map[string]any{
