@@ -827,6 +827,97 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_privateEndpointManagedVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "private_endpoint.0.managed_vpc_resource.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.0.endpoint_ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.self_managed_lattice_resource.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_privateEndpointSelfManagedLattice(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.self_managed_lattice_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_privateEndpointWithRoutingDomain(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.0.routing_domain", "my-alb.internal.example.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1708,4 +1799,141 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, credentialProviderContent))
+}
+
+func testAccGatewayTargetConfig_privateEndpointManagedVPC(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  name               = %[1]q
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_id                   = aws_vpc.test.id
+      subnet_ids               = [aws_subnet.test.id]
+      endpoint_ip_address_type = "IPV4"
+      security_group_ids       = [aws_security_group.test.id]
+    }
+  }
+}
+`, rName),
+	)
+}
+
+func testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccVPCLatticeResourceConfigConfig(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  name               = %[1]q
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    self_managed_lattice_resource {
+      resource_configuration_identifier = aws_vpclattice_resource_configuration.test.arn
+    }
+  }
+}
+`, rName),
+	)
+}
+
+func testAccGatewayTargetConfig_privateEndpointWithRoutingDomain(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  name               = %[1]q
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_id                   = aws_vpc.test.id
+      subnet_ids               = [aws_subnet.test.id]
+      endpoint_ip_address_type = "IPV4"
+      routing_domain           = "my-alb.internal.example.com"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_baseVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+`, rName)
+}
+
+func testAccVPCLatticeResourceConfigConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+  type = "SINGLE"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    ip_resource {
+      ip_address = "10.0.1.100"
+    }
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
+}
+`, rName),
+	)
 }
