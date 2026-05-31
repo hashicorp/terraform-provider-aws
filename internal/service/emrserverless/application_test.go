@@ -321,6 +321,18 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
 				),
 			},
+			{
+				// All three flags off — restores the boundary case the original test had
+				// (verifies the flatten path when every interactive feature is disabled).
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
+				),
+			},
 		},
 	})
 }
