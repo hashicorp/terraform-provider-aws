@@ -79,7 +79,6 @@ func resourceConfiguredTable() *schema.Resource {
 				"selected_analysis_methods": {
 					Type:     schema.TypeSet,
 					Optional: true,
-					Computed: true,
 					Elem: &schema.Schema{
 						Type:             schema.TypeString,
 						ValidateDiagFunc: enum.Validate[awstypes.SelectedAnalysisMethod](),
@@ -96,12 +95,15 @@ func resourceConfiguredTable() *schema.Resource {
 								Type:          schema.TypeString,
 								Optional:      true,
 								ForceNew:      true,
+								RequiredWith:  []string{"table_reference.0.table_name"},
+								AtLeastOneOf:  []string{"table_reference.0.database_name", "table_reference.0.athena", "table_reference.0.snowflake"},
 								ConflictsWith: []string{"table_reference.0.athena", "table_reference.0.snowflake"},
 							},
 							names.AttrTableName: {
 								Type:          schema.TypeString,
 								Optional:      true,
 								ForceNew:      true,
+								RequiredWith:  []string{"table_reference.0.database_name"},
 								ConflictsWith: []string{"table_reference.0.athena", "table_reference.0.snowflake"},
 							},
 							"athena": {
@@ -308,8 +310,10 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChanges("analysis_method", "selected_analysis_methods") {
 			input.AnalysisMethod = awstypes.AnalysisMethod(d.Get("analysis_method").(string))
-			if v, ok := d.GetOk("selected_analysis_methods"); ok {
-				input.SelectedAnalysisMethods = flex.ExpandStringyValueSet[awstypes.SelectedAnalysisMethod](v.(*schema.Set))
+			if input.AnalysisMethod == awstypes.AnalysisMethodMultiple {
+				if v, ok := d.GetOk("selected_analysis_methods"); ok {
+					input.SelectedAnalysisMethods = flex.ExpandStringyValueSet[awstypes.SelectedAnalysisMethod](v.(*schema.Set))
+				}
 			}
 		}
 
@@ -444,8 +448,8 @@ func flattenTableReference(tableReference awstypes.TableReference) []any {
 	switch v := tableReference.(type) {
 	case *awstypes.TableReferenceMemberGlue:
 		return []any{map[string]any{
-			names.AttrDatabaseName: v.Value.DatabaseName,
-			names.AttrTableName:    v.Value.TableName,
+			names.AttrDatabaseName: aws.ToString(v.Value.DatabaseName),
+			names.AttrTableName:    aws.ToString(v.Value.TableName),
 		}}
 	case *awstypes.TableReferenceMemberAthena:
 		inner := map[string]any{
