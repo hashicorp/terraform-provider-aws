@@ -1818,7 +1818,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   private_endpoint {
     managed_vpc_resource {
       vpc_id                   = aws_vpc.test.id
-      subnet_ids               = [aws_subnet.test.id]
+      subnet_ids               = aws_subnet.test[*].id
       endpoint_ip_address_type = "IPV4"
       security_group_ids       = [aws_security_group.test.id]
     }
@@ -1829,7 +1829,29 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccVPCLatticeResourceConfigConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+  type = "SINGLE"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    ip_resource {
+      ip_address = "10.0.1.100"
+    }
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = aws_subnet.test[*].id
+}
+
 resource "aws_bedrockagentcore_gateway_target" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = %[1]q
@@ -1869,7 +1891,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   private_endpoint {
     managed_vpc_resource {
       vpc_id                   = aws_vpc.test.id
-      subnet_ids               = [aws_subnet.test.id]
+      subnet_ids               = aws_subnet.test[*].id
       endpoint_ip_address_type = "IPV4"
       routing_domain           = "my-alb.internal.example.com"
     }
@@ -1879,61 +1901,14 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_baseVPC(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-}
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-`, rName)
-}
-
-func testAccVPCLatticeResourceConfigConfig(rName string) string {
-	return acctest.ConfigCompose(
-		testAccGatewayTargetConfig_baseVPC(rName),
-		fmt.Sprintf(`
-resource "aws_vpclattice_resource_configuration" "test" {
-  name = %[1]q
-  type = "SINGLE"
-
-  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
-
-  port_ranges = ["443"]
-  protocol    = "TCP"
-
-  resource_configuration_definition {
-    ip_resource {
-      ip_address = "10.0.1.100"
-    }
+  tags = {
+    Name = %[1]q
   }
 }
-
-resource "aws_vpclattice_resource_gateway" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
-  subnet_ids = [aws_subnet.test.id]
-}
-`, rName),
-	)
+`, rName))
 }
