@@ -66,18 +66,7 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 			names.AttrProviderName: schema.StringAttribute{
 				Computed: true,
 			},
-			"model_lifecycle": schema.ListNestedAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[foundationModelLifecycleModel](ctx),
-				Computed:   true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"status": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.FoundationModelLifecycleStatus](),
-							Computed:   true,
-						},
-					},
-				},
-			},
+			"model_lifecycle": framework.DataSourceComputedListOfObjectAttribute[foundationModelLifecycleModel](ctx),
 			"response_streaming_supported": schema.BoolAttribute{
 				Computed: true,
 			},
