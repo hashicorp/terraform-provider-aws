@@ -42,11 +42,12 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "pipeline_name"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
 					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "pipeline_arn", "osis", "pipeline/{pipeline_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_role_arn"),
@@ -349,7 +350,7 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 				Config:                   testAccPipelineConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
