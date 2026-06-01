@@ -325,8 +325,8 @@ github.com/aws/aws-sdk-go-v2/service/keyspaces v1.26.1 h1:lqwI3i9ga+BHOzfjTDZinX
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.26.1/go.mod h1:chiQexe9nFE4EwwLxoTP8M6zX2Gh2zh7sfLwoGTiT9A=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.9 h1:xlrMnBmf+AaBEn/648PJFGpWmygriCi8CqdpVJQUUdY=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.9/go.mod h1:Zj7plQWIzhiDFNJXCmuEySzgBaAYYITUo4kFYg+EGlA=
-github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.26 h1:bWGA6teid64RQubUlLy++x3mqcDu2A0EParvmFZ4uyk=
-github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.26/go.mod h1:F1D1LL8hXSfe0VKDA89e0TvAFFp3slFHMv3C5FaRU50=
+github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.27 h1:qbAbpkgA+ZIEfUNKBjLRepiE+VDOwVBeRGJKLN9t0fk=
+github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.27/go.mod h1:5AIRSCRNiyTvezC3dkQiIWyMEi6LIwRTJU++bSGLztI=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.38.0 h1:lTH3x76PDEV1aMnPjfCnSFh9FJmrRUFE1ipPBhjq9Lg=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.38.0/go.mod h1:8OH7Tvb6KDFKpID8pkeCo668eGLAe7VsipQtcF7ktLI=
 github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.11 h1:sYHiMglkBZbIVCZEoCjse08cMqLu/9lytB3keV0muGY=
