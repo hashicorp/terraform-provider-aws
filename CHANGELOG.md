@@ -4,6 +4,11 @@ NOTES:
 
 * resource/aws_bedrockagentcore_gateway_target: Because we cannot easily test the ``credential_provider_configuration.gateway_iam_role` SigV4 functionality, it is best effort and we ask for community help in testing ([#47626](https://github.com/hashicorp/terraform-provider-aws/issues/47626))
 
+FEATURES:
+
+* **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
+* **New Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
+
 ENHANCEMENTS:
 
 * data-source/aws_lb: Add `enable_prefix_for_ipv6_source_nat` attribute ([#40431](https://github.com/hashicorp/terraform-provider-aws/issues/40431))
