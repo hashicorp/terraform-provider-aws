@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,6 +37,10 @@ func resourceAlias() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAliasImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -157,7 +162,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if len(input.RoutingConfig.AdditionalVersionWeights) == 0 {
-		if err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), aliasRoutingWeightsTimeout); err != nil {
+		if err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Alias (%s) routing weights to clear: %s", d.Id(), err)
 		}
 	}
@@ -229,28 +234,8 @@ func findAlias(ctx context.Context, conn *lambda.Client, input *lambda.GetAliasI
 	return output, nil
 }
 
-// isNumericOnlyQualifier returns true if the qualifier is a published version number
-// (all digits). Alias names cannot be numeric-only per AWS validation rules.
-func isNumericOnlyQualifier(s string) bool {
-	if s == "" {
-		return false
-	}
-
-	for _, r := range s {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-
-	return true
-}
-
 func statusAliasRoutingWeights(conn *lambda.Client, functionName, aliasName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		if isNumericOnlyQualifier(aliasName) {
-			return nil, "stable", nil
-		}
-
 		output, err := findAliasByTwoPartKey(ctx, conn, functionName, aliasName)
 
 		if retry.NotFound(err) {
@@ -270,7 +255,7 @@ func statusAliasRoutingWeights(conn *lambda.Client, functionName, aliasName stri
 }
 
 func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, functionName, aliasName string, timeout time.Duration) error {
-	if isNumericOnlyQualifier(aliasName) {
+	if _, err := strconv.Atoi(aliasName); err == nil {
 		return nil
 	}
 
