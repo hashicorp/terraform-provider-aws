@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
+// @Testing(tagsTest=false)
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,

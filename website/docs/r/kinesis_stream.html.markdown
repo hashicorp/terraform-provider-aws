@@ -77,17 +77,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_kinesis_stream.test_stream
-  id = "terraform-kinesis-test"
+  to = aws_kinesis_stream.example
+  identity = {
+    name = "example-stream"
+  }
+}
+
+resource "aws_kinesis_stream" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Kinesis Streams using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the stream.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using `name`. For example:
+
+```terraform
+import {
+  to = aws_kinesis_stream.example
+  id = "example-stream"
+}
+```
+
+Using `terraform import`, import Kinesis Streams using `name`. For example:
 
 ```console
-% terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
+% terraform import aws_kinesis_stream.example example-stream
 ```

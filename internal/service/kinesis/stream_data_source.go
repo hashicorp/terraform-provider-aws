@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_kinesis_stream", name="Stream")
 // @Tags(identifierAttribute="name", resourceType="Stream")
+// @Testing(tagsTest=false)
 func dataSourceStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamRead,

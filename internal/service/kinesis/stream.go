@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -33,7 +34,13 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream", name="Stream")
+// @IdentityAttribute("name")
+// @CustomImport
 // @Tags(identifierAttribute="name", resourceType="Stream")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kinesis/types;awstypes;awstypes.StreamDescriptionSummary")
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(tagsTest=false)
+// @Testing(importIgnore="enforce_consumer_deletion")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -42,7 +49,23 @@ func resourceStream() *schema.Resource {
 		DeleteWithoutTimeout: resourceStreamDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceStreamImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
+
+				name := d.Get(names.AttrName).(string)
+				output, err := findStreamByName(ctx, conn, name)
+
+				if err != nil {
+					return nil, err
+				}
+
+				d.SetId(aws.ToString(output.StreamARN))
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -368,13 +391,12 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChange(names.AttrRetentionPeriod) {
-		oraw, nraw := d.GetChange(names.AttrRetentionPeriod)
-		o := oraw.(int)
-		n := nraw.(int)
+		o, n := d.GetChange(names.AttrRetentionPeriod)
+		oi, ni := int32(o.(int)), int32(n.(int))
 
-		if n > o {
+		if ni > oi {
 			input := kinesis.IncreaseStreamRetentionPeriodInput{
-				RetentionPeriodHours: aws.Int32(int32(n)),
+				RetentionPeriodHours: aws.Int32(ni),
 				StreamName:           aws.String(name),
 			}
 
@@ -387,9 +409,9 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (IncreaseStreamRetentionPeriod): %s", name, err)
 			}
-		} else if n != 0 {
+		} else if ni != 0 {
 			input := kinesis.DecreaseStreamRetentionPeriodInput{
-				RetentionPeriodHours: aws.Int32(int32(n)),
+				RetentionPeriodHours: aws.Int32(ni),
 				StreamName:           aws.String(name),
 			}
 
@@ -407,8 +429,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChange("shard_level_metrics") {
 		o, n := d.GetChange("shard_level_metrics")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if del := os.Difference(ns); del.Len() > 0 {
 			input := kinesis.DisableEnhancedMonitoringInput{
@@ -449,7 +470,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		oldEncryptionType, newEncryptionType := d.GetChange("encryption_type")
 		oldKeyID, newKeyID := d.GetChange(names.AttrKMSKeyID)
 
-		switch oldEncryptionType, newEncryptionType, newKeyID := types.EncryptionType(oldEncryptionType.(string)), types.EncryptionType(newEncryptionType.(string)), newKeyID.(string); newEncryptionType {
+		switch oldEncryptionType, newEncryptionType, oldKeyID, newKeyID := types.EncryptionType(oldEncryptionType.(string)), types.EncryptionType(newEncryptionType.(string)), oldKeyID.(string), newKeyID.(string); newEncryptionType {
 		case types.EncryptionTypeKms:
 			if newKeyID == "" {
 				return sdkdiag.AppendErrorf(diags, "KMS Key ID required when setting encryption_type is not set as NONE")
@@ -474,7 +495,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		case types.EncryptionTypeNone:
 			input := kinesis.StopStreamEncryptionInput{
 				EncryptionType: oldEncryptionType,
-				KeyId:          aws.String(oldKeyID.(string)),
+				KeyId:          aws.String(oldKeyID),
 				StreamName:     aws.String(name),
 			}
 
@@ -542,23 +563,9 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-
-	output, err := findStreamByName(ctx, conn, d.Id())
-
-	if err != nil {
-		return nil, err
-	}
-
-	d.SetId(aws.ToString(output.StreamARN))
-	d.Set(names.AttrName, output.StreamName)
-	return []*schema.ResourceData{d}, nil
-}
-
 func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLimitsOutput, error) {
-	input := &kinesis.DescribeLimitsInput{}
-	output, err := conn.DescribeLimits(ctx, input)
+	var input kinesis.DescribeLimitsInput
+	output, err := conn.DescribeLimits(ctx, &input)
 
 	if err != nil {
 		return nil, err
@@ -576,7 +583,11 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 		StreamName: aws.String(name),
 	}
 
-	output, err := conn.DescribeStreamSummary(ctx, &input)
+	return findStream(ctx, conn, &input)
+}
+
+func findStream(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamSummaryInput) (*types.StreamDescriptionSummary, error) {
+	output, err := conn.DescribeStreamSummary(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
