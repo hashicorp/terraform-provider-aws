@@ -47,7 +47,7 @@ func (d *policyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[availabilitySloModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
-						"target": fwschema.Float64Attribute{
+						names.AttrTarget: fwschema.Float64Attribute{
 							Computed: true,
 						},
 					},

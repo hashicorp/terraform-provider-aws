@@ -193,10 +193,11 @@ func (r *resourceInputSource) Delete(ctx context.Context, req resource.DeleteReq
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteInputSource(ctx, &resiliencehubv2.DeleteInputSourceInput{
+	input := resiliencehubv2.DeleteInputSourceInput{
 		ServiceArn:    state.ServiceArn.ValueStringPointer(),
 		InputSourceId: state.InputSourceId.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteInputSource(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -213,15 +214,16 @@ func (r *resourceInputSource) ImportState(ctx context.Context, req resource.Impo
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_arn"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("input_source_id"), parts[1])...)
 }
 
 func findInputSourceByID(ctx context.Context, conn *resiliencehubv2.Client, serviceArn, inputSourceId string) (*awstypes.InputSourceSummary, error) {
-	output, err := conn.ListInputSources(ctx, &resiliencehubv2.ListInputSourcesInput{
+	input := resiliencehubv2.ListInputSourcesInput{
 		ServiceArn: aws.String(serviceArn),
-	})
+	}
+	output, err := conn.ListInputSources(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

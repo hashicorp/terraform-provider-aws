@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -42,7 +43,7 @@ func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_az.0.disaster_recovery_approach", "ACTIVE_ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rpo_in_minutes", "5"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rto_in_minutes", "10"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`policy/.+$`)),
 				),
 			},
 			{
@@ -173,7 +174,8 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *aw
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
 
-	_, err := conn.ListPolicies(ctx, &resiliencehubv2.ListPoliciesInput{})
+	input := resiliencehubv2.ListPoliciesInput{}
+	_, err := conn.ListPolicies(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

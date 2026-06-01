@@ -170,10 +170,11 @@ func (r *resourceAssertion) Delete(ctx context.Context, req resource.DeleteReque
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteAssertion(ctx, &resiliencehubv2.DeleteAssertionInput{
+	input := resiliencehubv2.DeleteAssertionInput{
 		ServiceArn:  state.ServiceArn.ValueStringPointer(),
 		AssertionId: state.AssertionId.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteAssertion(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -190,15 +191,16 @@ func (r *resourceAssertion) ImportState(ctx context.Context, req resource.Import
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_arn"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("assertion_id"), parts[1])...)
 }
 
 func findAssertionByID(ctx context.Context, conn *resiliencehubv2.Client, serviceArn, assertionId string) (*awstypes.Assertion, error) {
-	output, err := conn.ListAssertions(ctx, &resiliencehubv2.ListAssertionsInput{
+	input := resiliencehubv2.ListAssertionsInput{
 		ServiceArn: aws.String(serviceArn),
-	})
+	}
+	output, err := conn.ListAssertions(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

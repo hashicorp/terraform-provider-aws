@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +37,7 @@ func TestAccResilienceHubV2Service_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &svc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`service/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model.0.invoker_role_name", "AWSResilienceHubAssessmentRole"),
 				),
 			},

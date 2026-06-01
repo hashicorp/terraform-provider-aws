@@ -197,9 +197,10 @@ func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteService(ctx, &resiliencehubv2.DeleteServiceInput{
+	input := resiliencehubv2.DeleteServiceInput{
 		ServiceArn: state.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteService(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -210,9 +211,10 @@ func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func findServiceByARN(ctx context.Context, conn *resiliencehubv2.Client, arn string) (*awstypes.Service, error) {
-	output, err := conn.GetService(ctx, &resiliencehubv2.GetServiceInput{
+	input := resiliencehubv2.GetServiceInput{
 		ServiceArn: aws.String(arn),
-	})
+	}
+	output, err := conn.GetService(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

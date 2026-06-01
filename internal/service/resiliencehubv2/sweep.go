@@ -113,9 +113,10 @@ func sweepInputSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, svc := range page.ServiceSummaries {
-			output, err := conn.ListInputSources(ctx, &resiliencehubv2.ListInputSourcesInput{
+			listInputSourcesInput := resiliencehubv2.ListInputSourcesInput{
 				ServiceArn: svc.ServiceArn,
-			})
+			}
+			output, err := conn.ListInputSources(ctx, &listInputSourcesInput)
 			if err != nil {
 				continue
 			}
@@ -145,9 +146,10 @@ func sweepServiceFunctions(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, svc := range page.ServiceSummaries {
-			output, err := conn.ListServiceFunctions(ctx, &resiliencehubv2.ListServiceFunctionsInput{
+			listServiceFunctionsInput := resiliencehubv2.ListServiceFunctionsInput{
 				ServiceArn: svc.ServiceArn,
-			})
+			}
+			output, err := conn.ListServiceFunctions(ctx, &listServiceFunctionsInput)
 			if err != nil {
 				continue
 			}
@@ -177,9 +179,10 @@ func sweepAssertions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		}
 
 		for _, svc := range page.ServiceSummaries {
-			output, err := conn.ListAssertions(ctx, &resiliencehubv2.ListAssertionsInput{
+			listAssertionsInput := resiliencehubv2.ListAssertionsInput{
 				ServiceArn: svc.ServiceArn,
-			})
+			}
+			output, err := conn.ListAssertions(ctx, &listAssertionsInput)
 			if err != nil {
 				continue
 			}
@@ -209,9 +212,10 @@ func sweepUserJourneys(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, sys := range page.SystemSummaries {
-			output, err := conn.ListUserJourneys(ctx, &resiliencehubv2.ListUserJourneysInput{
+			listUserJourneysInput := resiliencehubv2.ListUserJourneysInput{
 				SystemArn: sys.SystemArn,
-			})
+			}
+			output, err := conn.ListUserJourneys(ctx, &listUserJourneysInput)
 			if err != nil {
 				continue
 			}

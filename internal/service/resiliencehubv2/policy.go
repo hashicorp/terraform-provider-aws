@@ -61,7 +61,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 				CustomType: fwtypes.NewListNestedObjectTypeOf[availabilitySloModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
-						"target": fwschema.Float64Attribute{
+						names.AttrTarget: fwschema.Float64Attribute{
 							Required: true,
 						},
 					},
@@ -232,9 +232,10 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeletePolicy(ctx, &resiliencehubv2.DeletePolicyInput{
+	input := resiliencehubv2.DeletePolicyInput{
 		PolicyArn: state.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeletePolicy(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -245,9 +246,10 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func findPolicyByARN(ctx context.Context, conn *resiliencehubv2.Client, arn string) (*awstypes.Policy, error) {
-	output, err := conn.GetPolicy(ctx, &resiliencehubv2.GetPolicyInput{
+	input := resiliencehubv2.GetPolicyInput{
 		PolicyArn: aws.String(arn),
-	})
+	}
+	output, err := conn.GetPolicy(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

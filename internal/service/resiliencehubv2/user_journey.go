@@ -180,10 +180,11 @@ func (r *resourceUserJourney) Delete(ctx context.Context, req resource.DeleteReq
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteUserJourney(ctx, &resiliencehubv2.DeleteUserJourneyInput{
+	input := resiliencehubv2.DeleteUserJourneyInput{
 		SystemArn:     state.SystemArn.ValueStringPointer(),
 		UserJourneyId: state.UserJourneyId.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteUserJourney(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -200,16 +201,17 @@ func (r *resourceUserJourney) ImportState(ctx context.Context, req resource.Impo
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("system_arn"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_journey_id"), parts[1])...)
 }
 
 func findUserJourneyByID(ctx context.Context, conn *resiliencehubv2.Client, systemArn, userJourneyId string) (*awstypes.UserJourney, error) {
-	output, err := conn.GetUserJourney(ctx, &resiliencehubv2.GetUserJourneyInput{
+	input := resiliencehubv2.GetUserJourneyInput{
 		SystemArn:     aws.String(systemArn),
 		UserJourneyId: aws.String(userJourneyId),
-	})
+	}
+	output, err := conn.GetUserJourney(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

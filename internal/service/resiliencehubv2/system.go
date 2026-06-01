@@ -185,9 +185,10 @@ func (r *resourceSystem) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteSystem(ctx, &resiliencehubv2.DeleteSystemInput{
+	input := resiliencehubv2.DeleteSystemInput{
 		SystemArn: state.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteSystem(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -198,9 +199,10 @@ func (r *resourceSystem) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func findSystemByARN(ctx context.Context, conn *resiliencehubv2.Client, arn string) (*awstypes.System, error) {
-	output, err := conn.GetSystem(ctx, &resiliencehubv2.GetSystemInput{
+	input := resiliencehubv2.GetSystemInput{
 		SystemArn: aws.String(arn),
-	})
+	}
+	output, err := conn.GetSystem(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {

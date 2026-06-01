@@ -52,16 +52,13 @@ The following arguments are required:
 
 * `service_arn` - (Required) ARN of the service this input source belongs to. Changing this value requires creating a new resource.
 
-Exactly one of the following arguments is required:
-
-* `cfn_stack_arn` - (Optional) ARN of a CloudFormation stack to use as an input source. Changing this value requires creating a new resource.
-* `eks_cluster_arn` - (Optional) ARN of an EKS cluster to use as an input source. Changing this value requires creating a new resource.
-* `tf_state_file_url` - (Optional) S3 URL of a Terraform state file to use as an input source. Changing this value requires creating a new resource.
-
 The following arguments are optional:
 
+* `cfn_stack_arn` - (Optional) ARN of a CloudFormation stack to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
+* `eks_cluster_arn` - (Optional) ARN of an EKS cluster to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
 * `eks_namespaces` - (Optional) List of Kubernetes namespaces to include when using an EKS cluster input source. Changing this value requires creating a new resource.
-* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tf_state_file_url` - (Optional) S3 URL of a Terraform state file to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
 
 ## Attribute Reference
 

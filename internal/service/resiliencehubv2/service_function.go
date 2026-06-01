@@ -179,10 +179,11 @@ func (r *resourceServiceFunction) Delete(ctx context.Context, req resource.Delet
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	_, err := conn.DeleteServiceFunction(ctx, &resiliencehubv2.DeleteServiceFunctionInput{
+	input := resiliencehubv2.DeleteServiceFunctionInput{
 		ServiceArn:        state.ServiceArn.ValueStringPointer(),
 		ServiceFunctionId: state.ServiceFunctionId.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteServiceFunction(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -199,17 +200,17 @@ func (r *resourceServiceFunction) ImportState(ctx context.Context, req resource.
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_arn"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_function_id"), parts[1])...)
 }
 
 func findServiceFunctionByID(ctx context.Context, conn *resiliencehubv2.Client, serviceArn, serviceFunctionId string) (*awstypes.ServiceFunction, error) {
-	input := &resiliencehubv2.ListServiceFunctionsInput{
+	input := resiliencehubv2.ListServiceFunctionsInput{
 		ServiceArn: aws.String(serviceArn),
 	}
 
-	output, err := conn.ListServiceFunctions(ctx, input)
+	output, err := conn.ListServiceFunctions(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
