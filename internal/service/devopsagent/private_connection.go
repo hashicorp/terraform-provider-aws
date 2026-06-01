@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsagent/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,6 +39,7 @@ import (
 // @FrameworkResource("aws_devopsagent_private_connection", name="Private Connection")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
+// @ArnFormat("private-connection/{name}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsagent;devopsagent.DescribePrivateConnectionOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -78,6 +81,18 @@ func (r *privateConnectionResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"mode": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						string(awstypes.PrivateConnectionTypeSelfManaged),
+						string(awstypes.PrivateConnectionTypeServiceManaged),
+					),
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -103,18 +118,6 @@ func (r *privateConnectionResource) Schema(ctx context.Context, req resource.Sch
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"mode": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.PrivateConnectionTypeSelfManaged),
-						string(awstypes.PrivateConnectionTypeServiceManaged),
-					),
-				},
-			},
 			names.AttrVPCID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -136,7 +139,7 @@ func (r *privateConnectionResource) Create(ctx context.Context, req resource.Cre
 	conn := r.Meta().DevOpsAgentClient(ctx)
 
 	var plan privateConnectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -178,23 +181,21 @@ func (r *privateConnectionResource) Create(ctx context.Context, req resource.Cre
 		input.Mode = serviceManaged
 	}
 
-	_, err := conn.CreatePrivateConnection(ctx, input)
+	// Retry on transient "Failed to create resource association" errors
+	// that occur when the resource gateway dependency isn't fully ready.
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, createTimeout, func(ctx context.Context) (*devopsagent.CreatePrivateConnectionOutput, error) {
+		return conn.CreatePrivateConnection(ctx, input)
+	}, "ValidationException", "Failed to create resource association")
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"creating DevOps Agent Private Connection ("+name+")",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
 	// Wait for creation to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	out, err := waitPrivateConnectionCreated(ctx, conn, name, createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"waiting for DevOps Agent Private Connection ("+name+") create",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -204,14 +205,14 @@ func (r *privateConnectionResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *privateConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DevOpsAgentClient(ctx)
 
 	var state privateConnectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -223,10 +224,7 @@ func (r *privateConnectionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"reading DevOps Agent Private Connection ("+state.Name.ValueString()+")",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
@@ -235,15 +233,15 @@ func (r *privateConnectionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *privateConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DevOpsAgentClient(ctx)
 
 	var plan, state privateConnectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -257,10 +255,7 @@ func (r *privateConnectionResource) Update(ctx context.Context, req resource.Upd
 
 		_, err := conn.UpdatePrivateConnectionCertificate(ctx, input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"updating DevOps Agent Private Connection ("+plan.Name.ValueString()+") certificate",
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 
@@ -268,10 +263,7 @@ func (r *privateConnectionResource) Update(ctx context.Context, req resource.Upd
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		_, err = waitPrivateConnectionUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"waiting for DevOps Agent Private Connection ("+plan.Name.ValueString()+") update",
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 	}
@@ -279,10 +271,7 @@ func (r *privateConnectionResource) Update(ctx context.Context, req resource.Upd
 	// Always read back to populate computed attributes (e.g., status).
 	out, err := findPrivateConnectionByName(ctx, conn, plan.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"reading DevOps Agent Private Connection ("+plan.Name.ValueString()+") after update",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -291,14 +280,14 @@ func (r *privateConnectionResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *privateConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DevOpsAgentClient(ctx)
 
 	var state privateConnectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -313,20 +302,14 @@ func (r *privateConnectionResource) Delete(ctx context.Context, req resource.Del
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			"deleting DevOps Agent Private Connection ("+state.Name.ValueString()+")",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitPrivateConnectionDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"waiting for DevOps Agent Private Connection ("+state.Name.ValueString()+") delete",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 }
@@ -450,11 +433,11 @@ func findPrivateConnectionByName(ctx context.Context, conn *devopsagent.Client, 
 			}
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
