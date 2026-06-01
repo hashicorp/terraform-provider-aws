@@ -107,8 +107,8 @@ github.com/aws/aws-sdk-go-v2/service/billing v1.11.2 h1:oOyOPXa+Wy8NLiw1UzgC2RCe
 github.com/aws/aws-sdk-go-v2/service/billing v1.11.2/go.mod h1:9AjE8R/kNERxrGR0XDtvYXK5EIFxDoDRCh6366z+otg=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.44.0 h1:IQlNhbjX5QHCr12p4lNuxx3biWb/qX/r9A4OUe4Uy00=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.44.0/go.mod h1:rgVcZMKxDbPt/6m1RATiBiQrwe+fWzK+ICfK71bQY9I=
-github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.0 h1:e3QPlLAzchSC98C/Fk89qi9TBirQohTII7WWjvfOX4M=
-github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.0/go.mod h1:2+T3ZzaxQ6rV/CImS72BNVHIyazppxtblF1xJTXjgIg=
+github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.1 h1:MwgzpBPxaGKESoRrzYWNNl5yS0Xb9TCxsyNxvsj2YTk=
+github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.1/go.mod h1:9sBki+45beQRcXCWf/KhZQEQJgUl40HgCk2tA4smu8U=
 github.com/aws/aws-sdk-go-v2/service/chime v1.41.15 h1:NjDzXghqrmE5KFPedLuioRk08v+lr6ijiUasvhuiSFc=
 github.com/aws/aws-sdk-go-v2/service/chime v1.41.15/go.mod h1:T11rZ8NkCnMjuSu72hcd6sIS5drVGfAv8xJx8n2Hg3I=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.27.1 h1:JP5Jz9OCnqownQNBKTPxH89eAx5wZcMzWiKWw1gRiCg=
