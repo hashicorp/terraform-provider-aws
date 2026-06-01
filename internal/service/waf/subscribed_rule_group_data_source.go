@@ -25,18 +25,20 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrMetricName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
-			},
-		},
+		SchemaFunc: func() map[string]*schema.Schema {
+  	return map[string]*schema.Schema{
+  			names.AttrMetricName: {
+  				Type:         schema.TypeString,
+  				Optional:     true,
+  				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
+  			},
+  			names.AttrName: {
+  				Type:         schema.TypeString,
+  				Optional:     true,
+  				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
+  			},
+  		}
+  },
 	}
 }
 
