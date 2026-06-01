@@ -159,6 +159,13 @@ func resourceDomain() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"jwks_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 2048),
+										),
+									},
 									names.AttrPublicKey: {
 										Type:             schema.TypeString,
 										Optional:         true,
