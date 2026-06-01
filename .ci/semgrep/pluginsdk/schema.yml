@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/workspaces
         - /internal/service/xray
 
   - id: use-schema-map
