@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -56,14 +55,16 @@ func resourceStream() *schema.Resource {
 					return nil, err
 				}
 
-				// Region may be overridden in the import block.
-				// Ensure the appropriate value is in context before initializing the client.
-				if v, ok := d.GetOk(names.AttrRegion); ok {
-					ctx = conns.NewResourceContext(ctx, names.Kinesis, "aws_kinesis_stream", "Stream", v.(string))
-				}
 				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-				output, err := findStreamByName(ctx, conn, d.Id())
+				// Region may be overridden in the import block.
+				var optFns []func(*kinesis.Options)
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					optFns = append(optFns, func(o *kinesis.Options) {
+						o.Region = v.(string)
+					})
+				}
+				output, err := findStreamByName(ctx, conn, d.Id(), optFns...)
 
 				if err != nil {
 					return nil, err
@@ -142,9 +143,7 @@ func resourceStream() *schema.Resource {
 				Optional:         true,
 				Default:          types.EncryptionTypeNone,
 				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			"enforce_consumer_deletion": {
 				Type:     schema.TypeBool,
@@ -173,13 +172,17 @@ func resourceStream() *schema.Resource {
 				ValidateFunc: validation.IntBetween(24, 8760),
 			},
 			"shard_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"warm_throughput_mib_ps"},
 			},
 			"shard_level_metrics": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.MetricsName](),
+				},
 			},
 			"stream_mode_details": {
 				Type:     schema.TypeList,
@@ -199,6 +202,11 @@ func resourceStream() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"warm_throughput_mib_ps": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"shard_count"},
+			},
 		},
 	}
 }
@@ -226,6 +234,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
 		input.Tags = tags
+	}
+
+	if v, ok := d.GetOk("warm_throughput_mib_ps"); ok {
+		input.WarmThroughputMiBps = aws.Int32(int32(v.(int)))
 	}
 
 	_, err := conn.CreateStream(ctx, &input)
@@ -343,12 +355,17 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		shardLevelMetrics = append(shardLevelMetrics, v.ShardLevelMetrics...)
 	}
 	d.Set("shard_level_metrics", shardLevelMetrics)
-	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
+	if v := stream.StreamModeDetails; v != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
 		d.Set("stream_mode_details", nil)
+	}
+	if v := stream.WarmThroughput; v != nil {
+		d.Set("warm_throughput_mib_ps", v.CurrentMiBps)
+	} else {
+		d.Set("warm_throughput_mib_ps", nil)
 	}
 
 	return diags
@@ -539,6 +556,25 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
+	if d.HasChange("warm_throughput_mib_ps") {
+		_, n := d.GetChange("warm_throughput_mib_ps")
+
+		input := kinesis.UpdateStreamWarmThroughputInput{
+			StreamARN:           aws.String(d.Id()),
+			WarmThroughputMiBps: aws.Int32(int32(n.(int))),
+		}
+
+		_, err := conn.UpdateStreamWarmThroughput(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "update Kinesis Stream (%s) warm throughput: %s", name, err)
+		}
+
+		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateStreamWarmThroughput): %s", name, err)
+		}
+	}
+
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
@@ -584,16 +620,16 @@ func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLim
 	return output, nil
 }
 
-func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*types.StreamDescriptionSummary, error) {
+func findStreamByName(ctx context.Context, conn *kinesis.Client, name string, optFns ...func(*kinesis.Options)) (*types.StreamDescriptionSummary, error) {
 	input := kinesis.DescribeStreamSummaryInput{
 		StreamName: aws.String(name),
 	}
 
-	return findStreamSummary(ctx, conn, &input)
+	return findStreamSummary(ctx, conn, &input, optFns...)
 }
 
-func findStreamSummary(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamSummaryInput) (*types.StreamDescriptionSummary, error) {
-	output, err := conn.DescribeStreamSummary(ctx, input)
+func findStreamSummary(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamSummaryInput, optFns ...func(*kinesis.Options)) (*types.StreamDescriptionSummary, error) {
+	output, err := conn.DescribeStreamSummary(ctx, input, optFns...)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

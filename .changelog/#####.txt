@@ -9,3 +9,11 @@ resource/aws_kinesis_stream_consumer: Add Resource Identity support
 ```release-note:enhancement
 data-source/aws_kinesis_stream: Add `warm_throughput` attribute
 ```
+
+```release-note:enhancement
+resource/aws_kinesis_stream: Add `warm_throughput_mib_ps` argument. This functionality requires the `kinesis:UpdateStreamWarmThroughput` IAM permission
+```
+
+```release-note:enhancement
+resource/aws_kinesis_stream: Add plan-time validation of `shard_level_metrics`
+```

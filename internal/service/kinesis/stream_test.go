@@ -24,6 +24,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.KinesisServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"is not enabled for minimum throughput billing commitment",
+	)
+}
+
 func TestAccKinesisStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
@@ -734,6 +744,60 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 	})
 }
 
+func TestAccKinesisStream_warmThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	resourceName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_warmThroughput(rName, 32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput_mib_ps"), knownvalue.Int64Exact(32)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
+			},
+			{
+				Config: testAccStreamConfig_warmThroughput(rName, 48),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput_mib_ps"), knownvalue.Int64Exact(48)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckStreamExists(ctx context.Context, t *testing.T, n string, v *types.StreamDescriptionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
@@ -1061,4 +1125,18 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 `, rName)
+}
+
+func testAccStreamConfig_warmThroughput(rName string, mibPS int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name = %[1]q
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+
+  warm_throughput_mib_ps = %[2]d
+}
+`, rName, mibPS)
 }
