@@ -28,19 +28,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/dataexchange
-        - /internal/service/datapipeline
-        - /internal/service/datasync
-        - /internal/service/dax
-        - /internal/service/deploy
-        - /internal/service/detective
-        - /internal/service/devicefarm
-        - /internal/service/directconnect
-        - /internal/service/dlm
-        - /internal/service/dms
-        - /internal/service/docdb
-        - /internal/service/ds
-        - /internal/service/dynamodb
         - /internal/service/ec2
         - /internal/service/ecr
         - /internal/service/ecrpublic
