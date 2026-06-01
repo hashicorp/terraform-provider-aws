@@ -269,7 +269,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyDefault)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyCapacityOptimized)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
