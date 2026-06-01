@@ -356,8 +356,8 @@ The following arguments are optional:
 #### jwt_options
 
 * `enabled` - (Optional) Whether JWT authentication is enabled.
-* `jwks_url` - (Optional) URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures. This argument can be specified only with OpenSearch versions 3.3 and later.
-* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `jwks_url` - (Optional) URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures. This argument can be specified only with OpenSearch versions 3.3 and later. Exactly one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures. Exactly one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`.
 * `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
 * `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
