@@ -331,7 +331,7 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 						{{ end -}}
 					{{ else if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
@@ -482,7 +482,7 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 					{{ end -}}
 					{{ if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
