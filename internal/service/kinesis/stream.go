@@ -56,6 +56,11 @@ func resourceStream() *schema.Resource {
 					return nil, err
 				}
 
+				// Region may be overridden in the import block.
+				// Ensure the appropriate value is in context before initializing the client.
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					ctx = conns.NewResourceContext(ctx, names.Kinesis, "aws_kinesis_stream", "Stream", v.(string))
+				}
 				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 				output, err := findStreamByName(ctx, conn, d.Id())
@@ -584,10 +589,10 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 		StreamName: aws.String(name),
 	}
 
-	return findStream(ctx, conn, &input)
+	return findStreamSummary(ctx, conn, &input)
 }
 
-func findStream(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamSummaryInput) (*types.StreamDescriptionSummary, error) {
+func findStreamSummary(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamSummaryInput) (*types.StreamDescriptionSummary, error) {
 	output, err := conn.DescribeStreamSummary(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
