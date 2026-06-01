@@ -121,7 +121,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
-
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
