@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `CacheClusterNotFound` when enabling snapshots after the primary cache cluster has been changed away from `-001`, and `InvalidParameterCombination` when enabling snapshots on cluster mode enabled groups
+```

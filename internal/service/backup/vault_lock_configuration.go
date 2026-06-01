@@ -33,33 +33,35 @@ func resourceVaultLockConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"backup_vault_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
-			},
-			"backup_vault_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"changeable_for_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(3),
-			},
-			"max_retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"min_retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"backup_vault_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				},
+				"backup_vault_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"changeable_for_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(3),
+				},
+				"max_retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"min_retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -8,7 +8,6 @@ package bedrockagentcore_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,9 +22,8 @@ import (
 func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -45,7 +43,7 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -91,7 +89,7 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -141,7 +139,7 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -184,7 +182,7 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -217,9 +215,8 @@ func TestAccBedrockAgentCorePolicyEngine_tags(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -239,7 +236,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -285,9 +282,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_null(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -305,7 +301,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -341,9 +337,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_emptyMap(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -361,7 +356,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -384,7 +379,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -427,9 +422,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_addOnUpdate(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -449,7 +443,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -492,7 +486,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -525,9 +519,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_onCreate(t *testing.T) {
 func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -547,7 +540,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +572,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -629,7 +622,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -672,9 +665,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_add(t *testing.T
 func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -694,7 +686,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_replace(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -725,7 +717,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_replace(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -768,9 +760,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_EmptyTag_OnUpdate_replace(t *testi
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -791,7 +782,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -837,7 +828,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -885,7 +876,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -927,7 +918,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -961,9 +952,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_providerOnly(t *testin
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -986,7 +976,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1042,7 +1032,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1097,7 +1087,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1131,9 +1121,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nonOverlapping(t *test
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1156,7 +1145,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1211,7 +1200,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1259,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1317,9 +1306,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_overlapping(t *testing
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1339,7 +1327,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToProviderOnly(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1372,7 +1360,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToProviderOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1413,9 +1401,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToProviderOnly(t
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1436,7 +1423,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToResourceOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1464,7 +1451,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToResourceOnly(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1508,9 +1495,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_updateToResourceOnly(t
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1533,7 +1519,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1580,9 +1566,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyResourceTag(t *te
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1603,7 +1588,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyProviderOnlyTag(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1644,9 +1629,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_emptyProviderOnlyTag(t
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1669,7 +1653,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullOverlappingResourc
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1719,9 +1703,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullOverlappingResourc
 func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1744,7 +1727,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullNonOverlappingReso
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1796,9 +1779,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_DefaultTags_nullNonOverlappingReso
 func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1816,7 +1798,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_onCreate(t *testing.T)
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1857,9 +1839,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_onCreate(t *testing.T)
 func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1879,7 +1860,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_add(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1911,7 +1892,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_add(t *testin
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1960,9 +1941,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_add(t *testin
 func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1982,7 +1962,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_replace(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2012,7 +1992,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_replace(t *te
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2053,9 +2033,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_ComputedTag_OnUpdate_replace(t *te
 func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2082,7 +2061,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2131,7 +2110,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2180,7 +2159,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2219,9 +2198,8 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_defaultTag(t *t
 func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyEngineOutput
 	resourceName := "aws_bedrockagentcore_policy_engine.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2246,7 +2224,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_resourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2304,7 +2282,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_resourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2361,7 +2339,7 @@ func TestAccBedrockAgentCorePolicyEngine_Tags_IgnoreTags_Overlap_resourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyEngineExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyEngineExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
