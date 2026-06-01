@@ -231,7 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.71.1
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.16
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.250.1
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.33.1
