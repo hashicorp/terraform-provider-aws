@@ -36,7 +36,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the Size Constraint Set.
 * `size_constraints` - (Optional) Specifies the parts of web requests that you want to inspect the size of.
 
-## Nested Blocks
+### Nested Blocks
 
 ### `size_constraints`
 
