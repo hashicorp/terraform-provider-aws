@@ -55,11 +55,14 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})
@@ -175,11 +178,14 @@ func TestAccKinesisStream_encryption(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -226,11 +232,14 @@ func TestAccKinesisStream_maxRecordSizeInKiB(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_maxRecordSizeInKiB(rName, 1024),
@@ -295,11 +304,14 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_shardCount(rName, 96),
@@ -333,11 +345,14 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_updateRetentionPeriod(rName),
@@ -379,11 +394,14 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_allShardLevelMetrics(rName),
@@ -431,11 +449,14 @@ func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})
@@ -462,11 +483,14 @@ func TestAccKinesisStream_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -540,11 +564,14 @@ func TestAccKinesisStream_basicOnDemand(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})

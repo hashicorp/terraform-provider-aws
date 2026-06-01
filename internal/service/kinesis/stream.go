@@ -41,6 +41,8 @@ import (
 // @Testing(preIdentityVersion="v6.47.0")
 // @Testing(tagsTest=false)
 // @Testing(importIgnore="enforce_consumer_deletion")
+// @Testing(importStateIdAttribute="name")
+// @Testing(plannableImportAction="NoOp")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -56,8 +58,7 @@ func resourceStream() *schema.Resource {
 
 				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-				name := d.Get(names.AttrName).(string)
-				output, err := findStreamByName(ctx, conn, name)
+				output, err := findStreamByName(ctx, conn, d.Id())
 
 				if err != nil {
 					return nil, err
