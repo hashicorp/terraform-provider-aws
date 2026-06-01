@@ -17,3 +17,7 @@ resource/aws_kinesis_stream: Add `warm_throughput_mib_ps` argument. This functio
 ```release-note:enhancement
 resource/aws_kinesis_stream: Add plan-time validation of `shard_level_metrics`
 ```
+
+```release-note:new-resources
+aws_kinesis_account_settings
+```
