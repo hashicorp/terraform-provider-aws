@@ -47,7 +47,6 @@ func newFoundationModelAgreementResource(_ context.Context) (resource.ResourceWi
 	r := &foundationModelAgreementResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -82,7 +81,6 @@ func (r *foundationModelAgreementResource) Schema(ctx context.Context, req resou
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
@@ -140,7 +138,7 @@ func (r *foundationModelAgreementResource) Read(ctx context.Context, req resourc
 
 	out, err := findFoundationModelAgreementByID(ctx, conn, state.ModelID.ValueString())
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -150,7 +148,7 @@ func (r *foundationModelAgreementResource) Read(ctx context.Context, req resourc
 	}
 	// If agreement is found but not available, treat as not found to allow for proper recreation and avoid confusion.
 	if out != nil && out.AgreementAvailability != nil && out.AgreementAvailability.Status == awstypes.AgreementStatusNotAvailable {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(errors.New("agreement not available")))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(errors.New("agreement not available")))
 		resp.State.RemoveResource(ctx)
 		return
 	}

@@ -65,20 +65,18 @@ func (d *foundationModelAgreementOffersDataSource) Read(ctx context.Context, req
 	}
 
 	input := &bedrock.ListFoundationModelAgreementOffersInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	output, err := conn.ListFoundationModelAgreementOffers(ctx, input)
-
 	if err != nil {
-		resp.Diagnostics.AddError("listing Bedrock Foundation Model Agreement Offers", err.Error())
-
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ModelID.String())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}

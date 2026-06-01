@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -49,7 +48,6 @@ const (
 type useCaseForModelAccessResource struct {
 	framework.ResourceWithModel[useCaseForModelAccessResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByIdentity
 	framework.WithNoOpDelete
 }
 
@@ -108,7 +106,7 @@ func (r *useCaseForModelAccessResource) Read(ctx context.Context, req resource.R
 	input := bedrock.GetUseCaseForModelAccessInput{}
 	out, err := conn.GetUseCaseForModelAccess(ctx, &input)
 	if retry.NotFound(err) || out == nil {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -167,6 +165,8 @@ func (r *useCaseForModelAccessResource) Update(ctx context.Context, req resource
 			return
 		}
 
+		input.FormData = []byte(plan.FormData.ValueString())
+
 		_, err := conn.PutUseCaseForModelAccess(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Region.String())
@@ -175,30 +175,6 @@ func (r *useCaseForModelAccessResource) Update(ctx context.Context, req resource
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-}
-
-func (r *useCaseForModelAccessResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
-	input := bedrock.GetUseCaseForModelAccessInput{}
-	output, err := conn.GetUseCaseForModelAccess(ctx, &input)
-	if retry.NotFound(err) || output == nil {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-
-	v, diags := flattenFormData(ctx, aws.String(string(output.FormData)))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("form_data"), jsontypes.NewNormalizedValue(v.ValueString()))...)
 }
 
 type useCaseForModelAccessResourceModel struct {

@@ -112,7 +112,7 @@ func testAccCheckFoundationModelAgreementDestroy(ctx context.Context, t *testing
 				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameFoundationModelAgreement, rs.Primary.Attributes["model_id"], err)
 			}
 
-			if resp != nil && resp.AgreementAvailability != nil && resp.AgreementAvailability.Status != awstypes.AgreementStatusAvailable {
+			if resp != nil && resp.AgreementAvailability != nil && resp.AgreementAvailability.Status == awstypes.AgreementStatusNotAvailable {
 				return nil
 			}
 
