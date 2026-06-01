@@ -31,11 +31,11 @@ resource "aws_bedrock_use_case_for_model_access" "example" {
 
 The following arguments are required:
 
-* `form_data` - (Required) Brief description of the required argument.
+* `form_data` - (Required) Form data from the Anthropic first time user request. See also the example [payload](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_PutUseCaseForModelAccess.html#API_PutUseCaseForModelAccess_Examples).
 
 The following arguments are optional:
 
-* `region` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
