@@ -40,8 +40,10 @@ const (
 
 // @FrameworkResource("aws_cleanrooms_membership",name="Membership")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
+// @Testing(preIdentityVersion="v6.47.0")
 func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &membershipResource{}
 
@@ -50,7 +52,7 @@ func newMembershipResource(context.Context) (resource.ResourceWithConfigure, err
 
 type membershipResource struct {
 	framework.ResourceWithModel[membershipResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *membershipResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
