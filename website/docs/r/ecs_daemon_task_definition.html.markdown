@@ -15,7 +15,7 @@ Manages a revision of an ECS daemon task definition for use with daemon scheduli
 ### Basic Example
 
 ```terraform
-resource "aws_ecs_daemon_task_definition" "service" {
+resource "aws_ecs_daemon_task_definition" "example" {
   family = "my-daemon-service"
   cpu    = "512"
   memory = "1024"
@@ -63,7 +63,7 @@ resource "aws_iam_role" "task" {
   })
 }
 
-resource "aws_ecs_daemon_task_definition" "service" {
+resource "aws_ecs_daemon_task_definition" "example" {
   family             = "my-daemon-service"
   execution_role_arn = aws_iam_role.task_execution.arn
   task_role_arn      = aws_iam_role.task.arn
@@ -83,7 +83,7 @@ resource "aws_ecs_daemon_task_definition" "service" {
 ### With Volumes
 
 ```terraform
-resource "aws_ecs_daemon_task_definition" "service" {
+resource "aws_ecs_daemon_task_definition" "example" {
   family = "my-daemon-service"
   cpu    = "512"
   memory = "1024"
@@ -111,7 +111,7 @@ resource "aws_ecs_daemon_task_definition" "service" {
 ### With Multiple Containers
 
 ```terraform
-resource "aws_ecs_daemon_task_definition" "service" {
+resource "aws_ecs_daemon_task_definition" "example" {
   family = "my-daemon-service"
   cpu    = "512"
   memory = "1024"
@@ -143,7 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cpu` - (Optional) Number of cpu units used by the task.
+* `cpu` - (Optional) Number of CPU units used by the task.
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -154,7 +154,7 @@ The following arguments are optional:
 ### `container_definition` Block
 
 * `command` - (Optional) Command that is passed to the container.
-* `cpu` - (Optional) Number of cpu units reserved for the container.
+* `cpu` - (Optional) Number of CPU units reserved for the container.
 * `depends_on` - (Optional) Dependencies defined for container startup and shutdown. Detailed below.
 * `entry_point` - (Optional) Entry point that is passed to the container.
 * `environment` - (Optional) Environment variables to pass to a container. Detailed below.
@@ -185,7 +185,7 @@ The following arguments are optional:
 
 ### `volume` Block
 
-* `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a non-persistent data volume that starts empty and is deleted after the task has finished.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
 
 ### `depends_on` Block
