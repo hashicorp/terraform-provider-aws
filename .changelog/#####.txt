@@ -5,3 +5,7 @@ resource/aws_kinesis_stream: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_kinesis_stream_consumer: Add Resource Identity support
 ```
+
+```release-note:enhancement
+data-source/aws_kinesis_stream: Add `warm_throughput` attribute
+```

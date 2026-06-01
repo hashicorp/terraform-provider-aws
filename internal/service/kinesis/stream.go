@@ -719,3 +719,16 @@ func flattenStreamModeDetails(apiObject *types.StreamModeDetails) map[string]any
 
 	return tfMap
 }
+
+func flattenWarmThroughputObject(apiObject *types.WarmThroughputObject) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"current_mib_ps": aws.ToInt32(apiObject.CurrentMiBps),
+		"target_mib_ps":  aws.ToInt32(apiObject.TargetMiBps),
+	}
+
+	return tfMap
+}
