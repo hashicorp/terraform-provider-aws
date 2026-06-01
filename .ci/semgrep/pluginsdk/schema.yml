@@ -31,7 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/wafregional
         - /internal/service/workspaces
         - /internal/service/xray
 
