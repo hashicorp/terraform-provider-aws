@@ -63,7 +63,7 @@ type pipelineResource struct {
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("pipeline_name")),
 			"ingest_endpoint_urls": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
