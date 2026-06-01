@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.16.25
-	github.com/aws/aws-sdk-go-v2/service/appflow v1.51.15
+	github.com/aws/aws-sdk-go-v2/service/appflow v1.51.16
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.37.10
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.17
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.34.23
