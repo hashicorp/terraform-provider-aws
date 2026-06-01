@@ -61,6 +61,10 @@ func dataSourceDomain() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
+									"jwks_url": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									names.AttrPublicKey: {
 										Type:     schema.TypeString,
 										Computed: true,
