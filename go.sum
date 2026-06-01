@@ -255,8 +255,8 @@ github.com/aws/aws-sdk-go-v2/service/eventbridge v1.46.2 h1:9NBWpM39D38VKfpl2zWv
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.46.2/go.mod h1:LvwDsJKT+QyWFRfcLlGtwPcZMuH/pywcJL/6rLnPeW0=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0 h1:XzLucuWDJKFGR2+krY+ZOfs5fjC9BpeDaHYEf+VIBiA=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0/go.mod h1:C2rE4PiwysyiqCWqQbc0kmO1Jnr4UlpXWEZG18yruSA=
-github.com/aws/aws-sdk-go-v2/service/evs v1.10.1 h1:Yhpuxq270m6fkSTcv4+XqshcPrcC5oDHIW+luaYIDZY=
-github.com/aws/aws-sdk-go-v2/service/evs v1.10.1/go.mod h1:QAoOVq2InsEnSsl3MR+RstiyukTltYJqHVbT/ImJv2w=
+github.com/aws/aws-sdk-go-v2/service/evs v1.10.2 h1:RcXg6rcfCHEYCvyDnHdxDx2VCIsLeKzyt/lX6rbquCw=
+github.com/aws/aws-sdk-go-v2/service/evs v1.10.2/go.mod h1:bGhHSLQRz/l2dopG1lUt+3e9TCp/96GE8cAJcFELEbI=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.34.1 h1:sQa8VyMLc2BhEy8kLuve3ufn3bh6W8BQv+xmpa52/Fw=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.34.1/go.mod h1:kpT6GkbkbP3ZJUvz+9iaeXvcv79VmfN5X9xzQJidB3E=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.42.17 h1:OyU46F3vfHyX8XIf6jAyXtGu7wA1zE/XzmIbLVt+orQ=
