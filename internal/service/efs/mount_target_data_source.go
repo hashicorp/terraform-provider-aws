@@ -26,70 +26,72 @@ func dataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMountTargetRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_point_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mount_target_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"mount_target_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_point_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mount_target_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"mount_target_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

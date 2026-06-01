@@ -21,6 +21,9 @@ rules:
           Elem: &schema.Resource{
             ...,
           }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^.*(?<!V\d)$
     fix: |
       SchemaFunc: func() map[string]*schema.Schema {
       	return $SCHEMA
@@ -28,22 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/ecr
-        - /internal/service/ecrpublic
-        - /internal/service/ecs
-        - /internal/service/efs
-        - /internal/service/eks
-        - /internal/service/elasticache
-        - /internal/service/elasticbeanstalk
-        - /internal/service/elasticsearch
-        - /internal/service/elastictranscoder
-        - /internal/service/elb
-        - /internal/service/elbv2
-        - /internal/service/emr
-        - /internal/service/emrcontainers
-        - /internal/service/emrserverless
-        - /internal/service/events
-        - /internal/service/evidently
         - /internal/service/finspace
         - /internal/service/firehose
         - /internal/service/fis
