@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,8 +20,8 @@ import (
 func TestAccIAMSAMLProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
-	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -62,7 +63,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 func TestAccIAMSAMLProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -108,7 +109,7 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_iam_saml_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -123,6 +124,14 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSAMLProvider(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

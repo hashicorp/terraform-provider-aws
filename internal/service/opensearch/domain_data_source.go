@@ -52,6 +52,30 @@ func dataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"jwt_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									names.AttrPublicKey: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"roles_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"subject_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},

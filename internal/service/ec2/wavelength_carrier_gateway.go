@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_carrier_gateway, name="Carrier Gateway")
+// @SDKResource("aws_ec2_carrier_gateway", name="Carrier Gateway")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceCarrierGateway() *schema.Resource {

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3files"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3files/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfs3files "github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
@@ -73,6 +74,14 @@ func TestAccS3FilesFileSystem_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3files.ResourceFileSystem, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3files_file_system.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3files_file_system.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -25,10 +25,15 @@ func dataSourceSecretVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "arn is deprecated. Use secret_arn instead.",
+			},
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedDate: {
+			"secret_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,6 +100,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(id)
 	d.Set(names.AttrARN, output.ARN)
 	d.Set(names.AttrCreatedDate, aws.String(output.CreatedDate.Format(time.RFC3339)))
+	d.Set("secret_arn", output.ARN)
 	d.Set("secret_id", secretID)
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)

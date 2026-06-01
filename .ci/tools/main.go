@@ -8,6 +8,7 @@ package main
 
 import (
 	_ "github.com/YakDriver/copyplop"
+	_ "github.com/YakDriver/swissshepherd"
 	_ "github.com/YakDriver/tfproviderdocs"
 	_ "github.com/client9/misspell/cmd/misspell"
 	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
