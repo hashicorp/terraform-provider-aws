@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -442,7 +443,17 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting global_node_groups: %s", err)
 	}
 	d.Set("num_node_groups", len(globalReplicationGroup.GlobalNodeGroups))
-	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
+
+	if rawConfig := d.GetRawConfig(); !rawConfig.IsNull() {
+		rawAF := rawConfig.GetAttr("automatic_failover_enabled")
+		if rawAF.IsKnown() && !rawAF.IsNull() && rawAF.Type() == cty.Bool {
+			d.Set("automatic_failover_enabled", rawAF.True())
+		} else {
+			d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
+		}
+	} else {
+		d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
+	}
 
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
@@ -856,8 +867,14 @@ func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []awstypes.Gl
 		return false
 	}
 
-	member := members[0]
-	return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled
+	for _, member := range members {
+		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
+			return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled ||
+				member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabling
+		}
+	}
+
+	return false
 }
 
 func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {

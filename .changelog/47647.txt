@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix persistent `automatic_failover_enabled` drift on member replication groups belonging to an `aws_elasticache_global_replication_group`. The attribute is now suppressed during plan for members since it is controlled by the global replication group.
+```
+```release-note:bug
+resource/aws_elasticache_global_replication_group: Fix persistent `automatic_failover_enabled` drift caused by reading from member status which may not reliably reflect the global's configured value. The read path now preserves the configured value when available.
+```
