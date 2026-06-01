@@ -507,8 +507,8 @@ github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.36.2 h1:0E9xTH
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.36.2/go.mod h1:a2IQv3UCTdV9FuLWpQeU+xS0o5TSJx3qPXuUt6MQKeE=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.40.2 h1:I4qdOEO18oDvoSVO7E9/Co2OmQ1j1ISbR7Rkd4Ce3BE=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.40.2/go.mod h1:EKWtQ+705MNN0aSbbveqCs7RQz6u1I19anRKhp1qgTw=
-github.com/aws/aws-sdk-go-v2/service/servicequotas v1.35.1 h1:ixj7b/LEZAuNWwORvR2xGawnasYHAbzGNVly/fEfq6o=
-github.com/aws/aws-sdk-go-v2/service/servicequotas v1.35.1/go.mod h1:OLExSerzvmddN8vnbNcW1AgvpMHE3LtU/hh4CYLsZXY=
+github.com/aws/aws-sdk-go-v2/service/servicequotas v1.35.2 h1:YNt4dy9bnSIitgsgRx/RD2ffIvCe5rVptQljUBkWuIY=
+github.com/aws/aws-sdk-go-v2/service/servicequotas v1.35.2/go.mod h1:BGF6NBtiIiv4l//4hWeXFshINAlkZCXT0WDL5Vyx4wg=
 github.com/aws/aws-sdk-go-v2/service/ses v1.34.25 h1:DTpjLExwQKSSWO0Q0zmFRWJTL2zG4QW/7jtxcKribwc=
 github.com/aws/aws-sdk-go-v2/service/ses v1.34.25/go.mod h1:AGkPDUK1aHopltzewQ2M125cJ5LfNGq3UNAvSRqyFUE=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.61.1 h1:hwZmof1yhUHQkNDx8RrhX0CMNMFP6HNYCIMgc+R5O3I=
