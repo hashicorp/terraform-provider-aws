@@ -590,10 +590,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
 									},
-									names.AttrVPCID: schema.StringAttribute{
+									names.AttrTags: tftags.TagsAttribute(),
+									"vpc_identifier": schema.StringAttribute{
 										Required: true,
 									},
-									names.AttrTags: tftags.TagsAttribute(),
 								},
 							},
 						},
@@ -1322,8 +1322,7 @@ type managedVPCResourceModel struct {
 	SecurityGroupIDs      fwtypes.SetOfString                                `tfsdk:"security_group_ids"`
 	SubnetIDs             fwtypes.SetOfString                                `tfsdk:"subnet_ids"`
 	Tags                  tftags.Map                                         `tfsdk:"tags"`
-	// TODO Rename
-	VPCIdentifier types.String `tfsdk:"vpc_id"`
+	VPCIdentifier         types.String                                       `tfsdk:"vpc_identifier"`
 }
 type selfManagedLatticeResourceModel struct {
 	ResourceConfigurationIdentifier types.String `tfsdk:"resource_configuration_identifier"`

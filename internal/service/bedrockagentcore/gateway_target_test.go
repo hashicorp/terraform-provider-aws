@@ -848,7 +848,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "private_endpoint.0.managed_vpc_resource.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_endpoint.0.managed_vpc_resource.0.vpc_identifier", "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.managed_vpc_resource.0.endpoint_ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "private_endpoint.0.self_managed_lattice_resource.#", "0"),
 				),
@@ -1817,7 +1817,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
   private_endpoint {
     managed_vpc_resource {
-      vpc_id                   = aws_vpc.test.id
+      vpc_identifier           = aws_vpc.test.id
       subnet_ids               = aws_subnet.test[*].id
       endpoint_ip_address_type = "IPV4"
       security_group_ids       = [aws_security_group.test.id]
@@ -1890,7 +1890,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
   private_endpoint {
     managed_vpc_resource {
-      vpc_id                   = aws_vpc.test.id
+      vpc_identifier           = aws_vpc.test.id
       subnet_ids               = aws_subnet.test[*].id
       endpoint_ip_address_type = "IPV4"
       routing_domain           = "my-alb.internal.example.com"

@@ -398,7 +398,7 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
   # and route traffic to the MCP server without exposing it to the internet.
   private_endpoint {
     managed_vpc_resource {
-      vpc_id                   = aws_vpc.example.id
+      vpc_identifier           = aws_vpc.example.id
       subnet_ids               = aws_subnet.example[*].id
       endpoint_ip_address_type = "IPV4"
       security_group_ids       = [aws_security_group.mcp_lattice.id]
@@ -427,7 +427,7 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
 
   private_endpoint {
     managed_vpc_resource {
-      vpc_id                   = aws_vpc.example.id
+      vpc_identifier           = aws_vpc.example.id
       subnet_ids               = aws_subnet.example[*].id
       endpoint_ip_address_type = "IPV4"
       # Route through the internal ALB instead of the actual MCP server domain.
@@ -544,7 +544,7 @@ Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be
 
 The `managed_vpc_resource` block supports the following:
 
-* `vpc_id` - (Required) ID of the VPC that contains the private resource.
+* `vpc_identifier` - (Required) ID of the VPC that contains the private resource.
 * `subnet_ids` - (Required) Set of subnet IDs inside the VPC where Lattice ENIs are placed.
 * `endpoint_ip_address_type` - (Required) IP address type for the resource configuration endpoint. Valid values: `IPV4`, `IPV6`.
 * `security_group_ids` - (Optional) Set of security group IDs (up to 5) to associate with the Lattice resource gateway. Defaults to the VPC default security group.
