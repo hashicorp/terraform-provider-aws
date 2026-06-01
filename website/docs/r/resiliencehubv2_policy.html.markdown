@@ -84,6 +84,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the policy.
 * `multi_az` - (Optional) Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - (Optional) Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
+* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `availability_slo` Block
@@ -122,6 +123,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_resiliencehubv2_policy.example
+  identity = {
+    "arn" = "arn:aws:resiliencehub:us-west-2:123456789012:policy/example-policy:abc123"
+  }
+}
+
+resource "aws_resiliencehubv2_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Resilience Hub V2 Policy.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resilience Hub V2 Policy using the `arn`. For example:
 

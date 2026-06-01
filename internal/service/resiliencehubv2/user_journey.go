@@ -26,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const userJourneyImportIDPartCount = 2
+
 // @FrameworkResource("aws_resiliencehubv2_user_journey", name="User Journey")
 func newResourceUserJourney(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceUserJourney{}, nil
@@ -192,7 +194,7 @@ func (r *resourceUserJourney) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceUserJourney) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, 2, false)
+	parts, err := intflex.ExpandResourceId(req.ID, userJourneyImportIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid import ID", err.Error())
 		return

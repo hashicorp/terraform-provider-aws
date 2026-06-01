@@ -7,6 +7,7 @@ resource "aws_resiliencehubv2_policy" "test" {
 }
 
 resource "aws_resiliencehubv2_service" "test" {
+{{- template "region" }}
   name    = var.rName
   regions = ["us-west-2"]
 

@@ -84,6 +84,8 @@ func testAccCheckInputSourceExists(ctx context.Context, t *testing.T, n string, 
 
 func testAccInputSourceConfig_cfnStack(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
 
@@ -108,7 +110,7 @@ resource "aws_resiliencehubv2_policy" "test" {
 
 resource "aws_resiliencehubv2_service" "test" {
   name    = "%[1]s-service"
-  regions = ["us-west-2"]
+  regions = [data.aws_region.current.name]
 
   policy_arn = aws_resiliencehubv2_policy.test.arn
 

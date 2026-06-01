@@ -26,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const assertionImportIDPartCount = 2
+
 // @FrameworkResource("aws_resiliencehubv2_assertion", name="Assertion")
 func newResourceAssertion(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssertion{}, nil
@@ -182,7 +184,7 @@ func (r *resourceAssertion) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceAssertion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, 2, false)
+	parts, err := intflex.ExpandResourceId(req.ID, assertionImportIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid import ID", err.Error())
 		return

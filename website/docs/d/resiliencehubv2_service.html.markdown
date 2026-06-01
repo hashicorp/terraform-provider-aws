@@ -25,6 +25,7 @@ data "aws_resiliencehubv2_service" "example" {
 This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the service.
+* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -32,11 +33,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `description` - Description of the service.
 * `name` - Name of the service.
-* `permission_model` - Permission model configuration. See [`permission_model`](#permission_model) below.
+* `permission_model` - Permission model configuration. See [`permission_model` Block](#permission_model-block) below.
 * `policy_arn` - ARN of the associated resilience policy.
 * `regions` - List of AWS regions where the service operates.
 * `tags` - Map of tags assigned to the resource.
 
-### `permission_model`
+### `permission_model` Block
 
 * `invoker_role_name` - Name of the IAM role used for resource discovery.

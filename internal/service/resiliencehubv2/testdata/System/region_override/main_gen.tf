@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_resiliencehubv2_system" "test" {
+  region = var.region
+
   name = var.rName
 }
 

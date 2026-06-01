@@ -29,6 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const inputSourceImportIDPartCount = 2
+
 // @FrameworkResource("aws_resiliencehubv2_input_source", name="Input Source")
 func newResourceInputSource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceInputSource{}, nil
@@ -205,7 +207,7 @@ func (r *resourceInputSource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceInputSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(req.ID, 2, false)
+	parts, err := flex.ExpandResourceId(req.ID, inputSourceImportIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid import ID", err.Error())
 		return

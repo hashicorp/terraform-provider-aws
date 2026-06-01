@@ -26,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const serviceFunctionImportIDPartCount = 2
+
 // @FrameworkResource("aws_resiliencehubv2_service_function", name="Service Function")
 func newResourceServiceFunction(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceServiceFunction{}, nil
@@ -191,7 +193,7 @@ func (r *resourceServiceFunction) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceServiceFunction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, 2, false)
+	parts, err := intflex.ExpandResourceId(req.ID, serviceFunctionImportIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid import ID", err.Error())
 		return

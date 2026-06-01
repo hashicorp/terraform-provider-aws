@@ -31,7 +31,7 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn      = aws_resiliencehubv2_service.example.arn
+  service_arn       = aws_resiliencehubv2_service.example.arn
   tf_state_file_url = "s3://my-bucket/terraform.tfstate"
 }
 ```
@@ -61,6 +61,7 @@ Exactly one of the following arguments is required:
 The following arguments are optional:
 
 * `eks_namespaces` - (Optional) List of Kubernetes namespaces to include when using an EKS cluster input source. Changing this value requires creating a new resource.
+* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

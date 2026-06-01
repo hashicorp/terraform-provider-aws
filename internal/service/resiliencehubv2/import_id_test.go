@@ -21,13 +21,13 @@ func TestExpandUserJourneyImportID(t *testing.T) {
 	}{
 		{
 			name:    "valid",
-			id:      "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123,uj-12345",
-			wantArn: "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123",
+			id:      "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123,uj-12345", //lintignore:AWSAT003,AWSAT005
+			wantArn: "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123",          //lintignore:AWSAT003,AWSAT005
 			wantId:  "uj-12345",
 		},
 		{
 			name:      "missing part",
-			id:        "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123",
+			id:        "arn:aws:resiliencehub:us-west-2:123456789012:system/my-system:abc123", //lintignore:AWSAT003,AWSAT005
 			wantError: true,
 		},
 		{
@@ -78,13 +78,13 @@ func TestExpandServiceFunctionImportID(t *testing.T) {
 	}{
 		{
 			name:    "valid with slash in ARN",
-			id:      "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789,sf-99999",
-			wantArn: "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789",
+			id:      "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789,sf-99999", //lintignore:AWSAT003,AWSAT005
+			wantArn: "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789",          //lintignore:AWSAT003,AWSAT005
 			wantId:  "sf-99999",
 		},
 		{
 			name:      "using slash delimiter fails",
-			id:        "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789/sf-99999",
+			id:        "arn:aws:resiliencehub:us-west-2:123456789012:service/my-service:xyz789/sf-99999", //lintignore:AWSAT003,AWSAT005
 			wantError: true,
 		},
 	}
