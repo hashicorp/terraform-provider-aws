@@ -29,9 +29,6 @@ rules:
       	return $SCHEMA
       }
     severity: WARNING
-    paths:
-      exclude:
-        - /internal/service/xray
 
   - id: use-schema-map
     languages: [go]
