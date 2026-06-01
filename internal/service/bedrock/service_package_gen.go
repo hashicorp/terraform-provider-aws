@@ -139,6 +139,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newUseCaseForModelAccessResource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+		},
 	}
 }
 
