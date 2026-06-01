@@ -162,6 +162,10 @@ func resourceDomain() *schema.Resource {
 									"jwks_url": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ExactlyOneOf: []string{
+											"advanced_security_options.0.jwt_options.0.jwks_url",
+											"advanced_security_options.0.jwt_options.0.public_key",
+										},
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 2048),
 										),
@@ -171,6 +175,10 @@ func resourceDomain() *schema.Resource {
 										Optional:         true,
 										Computed:         true,
 										DiffSuppressFunc: suppressPublicKeyDiff,
+										ExactlyOneOf: []string{
+											"advanced_security_options.0.jwt_options.0.jwks_url",
+											"advanced_security_options.0.jwt_options.0.public_key",
+										},
 									},
 									"roles_key": {
 										Type:         schema.TypeString,
