@@ -6,7 +6,6 @@ package bedrock_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -69,7 +68,7 @@ func testAccCheckUseCaseForModelAccessExists(ctx context.Context, t *testing.T, 
 }
 
 func testAccUseCaseForModelAccessConfig_basic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_bedrock_use_case_for_model_access" "test" {
   form_data = jsonencode({
     "companyName"         = "AWS Provider",
@@ -80,5 +79,5 @@ resource "aws_bedrock_use_case_for_model_access" "test" {
     "useCases"            = ". - Generating developer documentation\n- Code generation/refactoring\n- Summarization of issues / documents"
   })
 }
-`)
+`
 }

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -139,7 +138,7 @@ func flattenFormData(ctx context.Context, configs *string) (types.String, diag.D
 			return types.StringNull(), diags
 		}
 
-		return fwflex.StringValueToFramework(ctx, v), diags
+		return flex.StringValueToFramework(ctx, v), diags
 	}
 
 	return types.StringNull(), diags
