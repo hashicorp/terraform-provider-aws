@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix no-diff bug where changes to the `type` of a `hash_key` or `range_key` attribute used in a Global Secondary Index (GSI) were not detected during plan/apply
+```
