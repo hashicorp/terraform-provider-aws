@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -53,9 +54,25 @@ func (r *accountSettingsResource) Schema(ctx context.Context, req resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"earliest_allowed_end_at": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						"ended_at": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						"started_at": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
 						names.AttrStatus: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.MinimumThroughputBillingCommitmentInputStatus](),
 							Required:   true,
+						},
+						"status_actual": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.MinimumThroughputBillingCommitmentOutputStatus](),
+							Computed:   true,
 						},
 					},
 				},
@@ -170,5 +187,9 @@ type accountSettingsResourceModel struct {
 }
 
 type minimumThroughputBillingCommitmentModel struct {
-	Status fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentInputStatus] `tfsdk:"status"`
+	EarliestAllowedEndAt timetypes.RFC3339                                                           `tfsdk:"earliest_allowed_end_at"`
+	EndedAt              timetypes.RFC3339                                                           `tfsdk:"ended_at"`
+	StartedAt            timetypes.RFC3339                                                           `tfsdk:"started_at"`
+	Status               fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentInputStatus]  `tfsdk:"status"`
+	StatusActual         fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentOutputStatus] `tfsdk:"status_actual" autoflex:"-"`
 }
