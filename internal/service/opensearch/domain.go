@@ -162,7 +162,7 @@ func resourceDomain() *schema.Resource {
 									"jwks_url": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ExactlyOneOf: []string{
+										AtLeastOneOf: []string{
 											"advanced_security_options.0.jwt_options.0.jwks_url",
 											"advanced_security_options.0.jwt_options.0.public_key",
 										},
@@ -175,7 +175,7 @@ func resourceDomain() *schema.Resource {
 										Optional:         true,
 										Computed:         true,
 										DiffSuppressFunc: suppressPublicKeyDiff,
-										ExactlyOneOf: []string{
+										AtLeastOneOf: []string{
 											"advanced_security_options.0.jwt_options.0.jwks_url",
 											"advanced_security_options.0.jwt_options.0.public_key",
 										},
