@@ -471,6 +471,7 @@ resource "aws_cleanrooms_collaboration" "test" {
   creator_display_name     = %[2]q
   creator_member_abilities = %[3]s
   query_log_status         = "ENABLED"
+  analytics_engine         = "SPARK"
 
   member {
     account_id       = data.aws_caller_identity.test.account_id
