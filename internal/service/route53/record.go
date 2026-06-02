@@ -293,7 +293,6 @@ func resourceRecord() *schema.Resource {
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.RRType](),
 			},
 			"weighted_routing_policy": {
