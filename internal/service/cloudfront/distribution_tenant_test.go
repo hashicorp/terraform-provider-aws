@@ -157,6 +157,22 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrCertificate: knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrARN: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("customizations").AtSliceIndex(0).AtMapKey(names.AttrCertificate).AtSliceIndex(0).AtMapKey(names.AttrARN),
+						"data.aws_acm_certificate.test", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -198,6 +214,23 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"web_acl": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrAction: tfknownvalue.StringExact(awstypes.CustomizationActionTypeOverride),
+									names.AttrARN:    knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("customizations").AtSliceIndex(0).AtMapKey("web_acl").AtSliceIndex(0).AtMapKey(names.AttrARN),
+						"aws_wafv2_web_acl.test", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
 				},
 			},
 			{
