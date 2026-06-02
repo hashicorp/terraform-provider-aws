@@ -2069,24 +2069,24 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 		RoleARN:                           aws.String(roleARN),
 	}
 
-	if _, ok := tfMap["processing_configuration"]; ok {
-		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeExtendedS3, roleARN)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
 	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
 		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(tfMap)
 	}
 
-	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
-		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
-	}
-
 	if v, ok := tfMap["error_output_prefix"].(string); ok && v != "" {
 		apiObject.ErrorOutputPrefix = aws.String(v)
 	}
 
-	if s3BackupMode, ok := tfMap["s3_backup_mode"]; ok {
-		apiObject.S3BackupMode = types.S3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeExtendedS3, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.S3BackupMode(v.(string))
 		apiObject.S3BackupConfiguration = expandS3DestinationConfigurationBackup(tfMap)
 	}
 
@@ -2094,95 +2094,73 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 }
 
 func expandS3DestinationUpdate(tfList []any) *types.S3DestinationUpdate {
-	s3 := tfList[0].(map[string]any)
-	configuration := &types.S3DestinationUpdate{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3[names.AttrRoleARN].(string)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.S3DestinationUpdate{
+		BucketARN: aws.String(tfMap["bucket_arn"].(string)),
 		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
-		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
-		Prefix:                   expandPrefix(s3),
-		CompressionFormat:        types.CompressionFormat(s3["compression_format"].(string)),
-		EncryptionConfiguration:  expandEncryptionConfiguration(s3),
-		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(s3),
+		CompressionFormat:       types.CompressionFormat(tfMap["compression_format"].(string)),
+		EncryptionConfiguration: expandEncryptionConfiguration(tfMap),
+		ErrorOutputPrefix:       aws.String(tfMap["error_output_prefix"].(string)),
+		Prefix:                  expandPrefix(tfMap),
+		RoleARN:                 aws.String(tfMap[names.AttrRoleARN].(string)),
 	}
 
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	return configuration
+	return apiObject
 }
 
-func expandS3DestinationUpdateBackup(d map[string]any) *types.S3DestinationUpdate {
-	config := d["s3_backup_configuration"].([]any)
-	if len(config) == 0 {
+func expandS3DestinationUpdateBackup(tfMap map[string]any) *types.S3DestinationUpdate {
+	tfList := tfMap["s3_backup_configuration"].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	s3 := config[0].(map[string]any)
-
-	configuration := &types.S3DestinationUpdate{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3[names.AttrRoleARN].(string)),
-		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
-		},
-		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
-		Prefix:                   expandPrefix(s3),
-		CompressionFormat:        types.CompressionFormat(s3["compression_format"].(string)),
-		EncryptionConfiguration:  expandEncryptionConfiguration(s3),
-		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(s3),
-	}
-
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
-	}
-
-	return configuration
+	return expandS3DestinationUpdate(tfList)
 }
 
 func expandExtendedS3DestinationUpdate(s3 map[string]any) *types.ExtendedS3DestinationUpdate {
 	roleARN := s3[names.AttrRoleARN].(string)
-	configuration := &types.ExtendedS3DestinationUpdate{
+	apiObject := &types.ExtendedS3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(roleARN),
 		BufferingHints: &types.BufferingHints{
 			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
 		},
+		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
 		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
+		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
 		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
 		FileExtension:                     aws.String(s3["file_extension"].(string)),
 		Prefix:                            expandPrefix(s3),
-		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
-		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
-		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
-		CloudWatchLoggingOptions:          expandCloudWatchLoggingOptions(s3),
 		ProcessingConfiguration:           expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN),
+		RoleARN:                           aws.String(roleARN),
 	}
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
 	}
 
 	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
-		configuration.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(s3)
+		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(s3)
 	}
 
-	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.S3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(s3)
+	if v, ok := s3["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.S3BackupMode(v.(string))
+		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(s3)
 	}
 
-	return configuration
+	return apiObject
 }
 
-func expandDataFormatConversionConfiguration(l []any) *types.DataFormatConversionConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandDataFormatConversionConfiguration(tfList []any) *types.DataFormatConversionConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
 		return &types.DataFormatConversionConfiguration{
@@ -2190,198 +2168,198 @@ func expandDataFormatConversionConfiguration(l []any) *types.DataFormatConversio
 		}
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.DataFormatConversionConfiguration{
-		Enabled:                   aws.Bool(m[names.AttrEnabled].(bool)),
-		InputFormatConfiguration:  expandInputFormatConfiguration(m["input_format_configuration"].([]any)),
-		OutputFormatConfiguration: expandOutputFormatConfiguration(m["output_format_configuration"].([]any)),
-		SchemaConfiguration:       expandSchemaConfiguration(m["schema_configuration"].([]any)),
+		Enabled:                   aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		InputFormatConfiguration:  expandInputFormatConfiguration(tfMap["input_format_configuration"].([]any)),
+		OutputFormatConfiguration: expandOutputFormatConfiguration(tfMap["output_format_configuration"].([]any)),
+		SchemaConfiguration:       expandSchemaConfiguration(tfMap["schema_configuration"].([]any)),
 	}
 }
 
-func expandInputFormatConfiguration(l []any) *types.InputFormatConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandInputFormatConfiguration(tfList []any) *types.InputFormatConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.InputFormatConfiguration{
-		Deserializer: expandDeserializer(m["deserializer"].([]any)),
+		Deserializer: expandDeserializer(tfMap["deserializer"].([]any)),
 	}
 }
 
-func expandDeserializer(l []any) *types.Deserializer {
-	if len(l) == 0 || l[0] == nil {
+func expandDeserializer(tfList []any) *types.Deserializer {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.Deserializer{
-		HiveJsonSerDe:  expandHiveJSONSerDe(m["hive_json_ser_de"].([]any)),
-		OpenXJsonSerDe: expandOpenXJSONSerDe(m["open_x_json_ser_de"].([]any)),
+		HiveJsonSerDe:  expandHiveJSONSerDe(tfMap["hive_json_ser_de"].([]any)),
+		OpenXJsonSerDe: expandOpenXJSONSerDe(tfMap["open_x_json_ser_de"].([]any)),
 	}
 }
 
-func expandHiveJSONSerDe(l []any) *types.HiveJsonSerDe {
-	if len(l) == 0 {
+func expandHiveJSONSerDe(tfList []any) *types.HiveJsonSerDe {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	if l[0] == nil {
+	if tfList[0] == nil {
 		return &types.HiveJsonSerDe{}
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.HiveJsonSerDe{
-		TimestampFormats: flex.ExpandStringValueList(m["timestamp_formats"].([]any)),
+		TimestampFormats: flex.ExpandStringValueList(tfMap["timestamp_formats"].([]any)),
 	}
 }
 
-func expandOpenXJSONSerDe(l []any) *types.OpenXJsonSerDe {
-	if len(l) == 0 {
+func expandOpenXJSONSerDe(tfList []any) *types.OpenXJsonSerDe {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	if l[0] == nil {
+	if tfList[0] == nil {
 		return &types.OpenXJsonSerDe{}
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.OpenXJsonSerDe{
-		CaseInsensitive:                    aws.Bool(m["case_insensitive"].(bool)),
-		ColumnToJsonKeyMappings:            flex.ExpandStringValueMap(m["column_to_json_key_mappings"].(map[string]any)),
-		ConvertDotsInJsonKeysToUnderscores: aws.Bool(m["convert_dots_in_json_keys_to_underscores"].(bool)),
+		CaseInsensitive:                    aws.Bool(tfMap["case_insensitive"].(bool)),
+		ColumnToJsonKeyMappings:            flex.ExpandStringValueMap(tfMap["column_to_json_key_mappings"].(map[string]any)),
+		ConvertDotsInJsonKeysToUnderscores: aws.Bool(tfMap["convert_dots_in_json_keys_to_underscores"].(bool)),
 	}
 }
 
-func expandOutputFormatConfiguration(l []any) *types.OutputFormatConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandOutputFormatConfiguration(tfList []any) *types.OutputFormatConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.OutputFormatConfiguration{
-		Serializer: expandSerializer(m["serializer"].([]any)),
+		Serializer: expandSerializer(tfMap["serializer"].([]any)),
 	}
 }
 
-func expandSerializer(l []any) *types.Serializer {
-	if len(l) == 0 || l[0] == nil {
+func expandSerializer(tfList []any) *types.Serializer {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.Serializer{
-		OrcSerDe:     expandOrcSerDe(m["orc_ser_de"].([]any)),
-		ParquetSerDe: expandParquetSerDe(m["parquet_ser_de"].([]any)),
+		OrcSerDe:     expandOrcSerDe(tfMap["orc_ser_de"].([]any)),
+		ParquetSerDe: expandParquetSerDe(tfMap["parquet_ser_de"].([]any)),
 	}
 }
 
-func expandOrcSerDe(l []any) *types.OrcSerDe {
-	if len(l) == 0 {
+func expandOrcSerDe(tfList []any) *types.OrcSerDe {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	if l[0] == nil {
+	if tfList[0] == nil {
 		return &types.OrcSerDe{}
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
-	orcSerDe := &types.OrcSerDe{
-		BlockSizeBytes:                      aws.Int32(int32(m["block_size_bytes"].(int))),
-		BloomFilterFalsePositiveProbability: aws.Float64(m["bloom_filter_false_positive_probability"].(float64)),
-		Compression:                         types.OrcCompression(m["compression"].(string)),
-		DictionaryKeyThreshold:              aws.Float64(m["dictionary_key_threshold"].(float64)),
-		EnablePadding:                       aws.Bool(m["enable_padding"].(bool)),
-		FormatVersion:                       types.OrcFormatVersion(m["format_version"].(string)),
-		PaddingTolerance:                    aws.Float64(m["padding_tolerance"].(float64)),
-		RowIndexStride:                      aws.Int32(int32(m["row_index_stride"].(int))),
-		StripeSizeBytes:                     aws.Int32(int32(m["stripe_size_bytes"].(int))),
+	apiObject := &types.OrcSerDe{
+		BlockSizeBytes:                      aws.Int32(int32(tfMap["block_size_bytes"].(int))),
+		BloomFilterFalsePositiveProbability: aws.Float64(tfMap["bloom_filter_false_positive_probability"].(float64)),
+		Compression:                         types.OrcCompression(tfMap["compression"].(string)),
+		DictionaryKeyThreshold:              aws.Float64(tfMap["dictionary_key_threshold"].(float64)),
+		EnablePadding:                       aws.Bool(tfMap["enable_padding"].(bool)),
+		FormatVersion:                       types.OrcFormatVersion(tfMap["format_version"].(string)),
+		PaddingTolerance:                    aws.Float64(tfMap["padding_tolerance"].(float64)),
+		RowIndexStride:                      aws.Int32(int32(tfMap["row_index_stride"].(int))),
+		StripeSizeBytes:                     aws.Int32(int32(tfMap["stripe_size_bytes"].(int))),
 	}
 
-	if v, ok := m["bloom_filter_columns"].([]any); ok && len(v) > 0 {
-		orcSerDe.BloomFilterColumns = flex.ExpandStringValueList(v)
+	if v, ok := tfMap["bloom_filter_columns"].([]any); ok && len(v) > 0 {
+		apiObject.BloomFilterColumns = flex.ExpandStringValueList(v)
 	}
 
-	return orcSerDe
+	return apiObject
 }
 
-func expandParquetSerDe(l []any) *types.ParquetSerDe {
-	if len(l) == 0 {
+func expandParquetSerDe(tfList []any) *types.ParquetSerDe {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	if l[0] == nil {
+	if tfList[0] == nil {
 		return &types.ParquetSerDe{}
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.ParquetSerDe{
-		BlockSizeBytes:              aws.Int32(int32(m["block_size_bytes"].(int))),
-		Compression:                 types.ParquetCompression(m["compression"].(string)),
-		EnableDictionaryCompression: aws.Bool(m["enable_dictionary_compression"].(bool)),
-		MaxPaddingBytes:             aws.Int32(int32(m["max_padding_bytes"].(int))),
-		PageSizeBytes:               aws.Int32(int32(m["page_size_bytes"].(int))),
-		WriterVersion:               types.ParquetWriterVersion(m["writer_version"].(string)),
+		BlockSizeBytes:              aws.Int32(int32(tfMap["block_size_bytes"].(int))),
+		Compression:                 types.ParquetCompression(tfMap["compression"].(string)),
+		EnableDictionaryCompression: aws.Bool(tfMap["enable_dictionary_compression"].(bool)),
+		MaxPaddingBytes:             aws.Int32(int32(tfMap["max_padding_bytes"].(int))),
+		PageSizeBytes:               aws.Int32(int32(tfMap["page_size_bytes"].(int))),
+		WriterVersion:               types.ParquetWriterVersion(tfMap["writer_version"].(string)),
 	}
 }
 
-func expandSchemaConfiguration(l []any) *types.SchemaConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandSchemaConfiguration(tfList []any) *types.SchemaConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
-	config := &types.SchemaConfiguration{
-		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
-		RoleARN:      aws.String(m[names.AttrRoleARN].(string)),
-		TableName:    aws.String(m[names.AttrTableName].(string)),
-		VersionId:    aws.String(m["version_id"].(string)),
+	apiObject := &types.SchemaConfiguration{
+		DatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
+		RoleARN:      aws.String(tfMap[names.AttrRoleARN].(string)),
+		TableName:    aws.String(tfMap[names.AttrTableName].(string)),
+		VersionId:    aws.String(tfMap["version_id"].(string)),
 	}
 
-	if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
-		config.CatalogId = aws.String(v)
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
 	}
-	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
-		config.Region = aws.String(v)
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandDynamicPartitioningConfiguration(s3 map[string]any) *types.DynamicPartitioningConfiguration {
-	config := s3["dynamic_partitioning_configuration"].([]any)
-	if len(config) == 0 {
+func expandDynamicPartitioningConfiguration(tfMap map[string]any) *types.DynamicPartitioningConfiguration {
+	tfList := tfMap["dynamic_partitioning_configuration"].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	dynamicPartitioningConfig := config[0].(map[string]any)
-	DynamicPartitioningConfiguration := &types.DynamicPartitioningConfiguration{
-		Enabled: aws.Bool(dynamicPartitioningConfig[names.AttrEnabled].(bool)),
+	tfMap = tfList[0].(map[string]any)
+	apiObject := &types.DynamicPartitioningConfiguration{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if retryDuration, ok := dynamicPartitioningConfig["retry_duration"]; ok {
-		DynamicPartitioningConfiguration.RetryOptions = &types.RetryOptions{
-			DurationInSeconds: aws.Int32(int32(retryDuration.(int))),
+	if v, ok := tfMap["retry_duration"]; ok {
+		apiObject.RetryOptions = &types.RetryOptions{
+			DurationInSeconds: aws.Int32(int32(v.(int))),
 		}
 	}
 
-	return DynamicPartitioningConfiguration
+	return apiObject
 }
 
 func expandProcessingConfiguration(tfMap map[string]any, destinationType destinationType, roleARN string) *types.ProcessingConfiguration {
-	config := tfMap["processing_configuration"].([]any)
-	if len(config) == 0 || config[0] == nil {
+	tfList := tfMap["processing_configuration"].([]any)
+	if len(tfList) == 0 || tfList[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
 		return &types.ProcessingConfiguration{
@@ -2390,95 +2368,93 @@ func expandProcessingConfiguration(tfMap map[string]any, destinationType destina
 		}
 	}
 
-	processingConfiguration := config[0].(map[string]any)
+	tfMap = tfList[0].(map[string]any)
 
 	return &types.ProcessingConfiguration{
-		Enabled:    aws.Bool(processingConfiguration[names.AttrEnabled].(bool)),
-		Processors: expandProcessors(processingConfiguration["processors"].([]any), destinationType, roleARN),
+		Enabled:    aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		Processors: expandProcessors(tfMap["processors"].([]any), destinationType, roleARN),
 	}
 }
 
-func expandProcessors(processingConfigurationProcessors []any, destinationType destinationType, roleARN string) []types.Processor {
-	processors := []types.Processor{}
+func expandProcessors(tfList []any, destinationType destinationType, roleARN string) []types.Processor {
+	apiObjects := []types.Processor{}
 
-	for _, processor := range processingConfigurationProcessors {
-		extractedProcessor := expandProcessor(processor.(map[string]any))
-		if extractedProcessor != nil {
+	for _, tfMapRaw := range tfList {
+		apiObject := expandProcessor(tfMapRaw.(map[string]any))
+		if apiObject != nil {
 			// Merge in defaults.
-			for name, value := range defaultProcessorParameters(destinationType, extractedProcessor.Type, roleARN) {
-				if !slices.ContainsFunc(extractedProcessor.Parameters, func(param types.ProcessorParameter) bool { return name == param.ParameterName }) {
-					extractedProcessor.Parameters = append(extractedProcessor.Parameters, types.ProcessorParameter{
+			for name, value := range defaultProcessorParameters(destinationType, apiObject.Type, roleARN) {
+				if !slices.ContainsFunc(apiObject.Parameters, func(v types.ProcessorParameter) bool { return name == v.ParameterName }) {
+					apiObject.Parameters = append(apiObject.Parameters, types.ProcessorParameter{
 						ParameterName:  name,
 						ParameterValue: aws.String(value),
 					})
 				}
 			}
-			processors = append(processors, *extractedProcessor)
+			apiObjects = append(apiObjects, *apiObject)
 		}
 	}
 
-	return processors
+	return apiObjects
 }
 
-func expandProcessor(processingConfigurationProcessor map[string]any) *types.Processor {
-	var processor *types.Processor
-	processorType := processingConfigurationProcessor[names.AttrType].(string)
-	if processorType != "" {
-		processor = &types.Processor{
-			Type:       types.ProcessorType(processorType),
-			Parameters: expandProcessorParameters(processingConfigurationProcessor[names.AttrParameters].(*schema.Set).List()),
+func expandProcessor(tfMap map[string]any) *types.Processor {
+	var apiObject *types.Processor
+	if v := tfMap[names.AttrType].(string); v != "" {
+		apiObject = &types.Processor{
+			Type:       types.ProcessorType(v),
+			Parameters: expandProcessorParameters(tfMap[names.AttrParameters].(*schema.Set).List()),
 		}
 	}
-	return processor
+	return apiObject
 }
 
-func expandProcessorParameters(processorParameters []any) []types.ProcessorParameter {
-	parameters := []types.ProcessorParameter{}
+func expandProcessorParameters(tfList []any) []types.ProcessorParameter {
+	apiObjects := []types.ProcessorParameter{}
 
-	for _, attr := range processorParameters {
-		parameters = append(parameters, expandProcessorParameter(attr.(map[string]any)))
+	for _, tfMapRaw := range tfList {
+		apiObjects = append(apiObjects, expandProcessorParameter(tfMapRaw.(map[string]any)))
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandProcessorParameter(processorParameter map[string]any) types.ProcessorParameter {
-	parameter := types.ProcessorParameter{
-		ParameterName:  types.ProcessorParameterName(processorParameter["parameter_name"].(string)),
-		ParameterValue: aws.String(processorParameter["parameter_value"].(string)),
+func expandProcessorParameter(tfMap map[string]any) types.ProcessorParameter {
+	apiObject := types.ProcessorParameter{
+		ParameterName:  types.ProcessorParameterName(tfMap["parameter_name"].(string)),
+		ParameterValue: aws.String(tfMap["parameter_value"].(string)),
 	}
 
-	return parameter
+	return apiObject
 }
 
 func expandSecretsManagerConfiguration(tfMap map[string]any) *types.SecretsManagerConfiguration {
-	config := tfMap["secrets_manager_configuration"].([]any)
-
-	if len(config) == 0 || config[0] == nil {
+	tfList := tfMap["secrets_manager_configuration"].([]any)
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	secretsManagerConfiguration := config[0].(map[string]any)
-	configuration := &types.SecretsManagerConfiguration{
-		Enabled: aws.Bool(secretsManagerConfiguration[names.AttrEnabled].(bool)),
+	tfMap = tfList[0].(map[string]any)
+	apiObject := &types.SecretsManagerConfiguration{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := secretsManagerConfiguration["secret_arn"]; ok && len(v.(string)) > 0 {
-		configuration.SecretARN = aws.String(v.(string))
+	if v, ok := tfMap[names.AttrRoleARN]; ok && len(v.(string)) > 0 {
+		apiObject.RoleARN = aws.String(v.(string))
 	}
 
-	if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok && len(v.(string)) > 0 {
-		configuration.RoleARN = aws.String(v.(string))
+	if v, ok := tfMap["secret_arn"]; ok && len(v.(string)) > 0 {
+		apiObject.SecretARN = aws.String(v.(string))
 	}
 
-	return configuration
+	return apiObject
 }
 
-func expandEncryptionConfiguration(s3 map[string]any) *types.EncryptionConfiguration {
-	if key, ok := s3[names.AttrKMSKeyARN]; ok && len(key.(string)) > 0 {
+func expandEncryptionConfiguration(tfMap map[string]any) *types.EncryptionConfiguration {
+	if v, ok := tfMap[names.AttrKMSKeyARN]; ok && len(v.(string)) > 0 {
 		return &types.EncryptionConfiguration{
 			KMSEncryptionConfig: &types.KMSEncryptionConfig{
-				AWSKMSKeyARN: aws.String(key.(string)),
+				AWSKMSKeyARN: aws.String(v.(string)),
 			},
 		}
 	}
@@ -2488,45 +2464,45 @@ func expandEncryptionConfiguration(s3 map[string]any) *types.EncryptionConfigura
 	}
 }
 
-func expandCloudWatchLoggingOptions(s3 map[string]any) *types.CloudWatchLoggingOptions {
-	config := s3["cloudwatch_logging_options"].([]any)
-	if len(config) == 0 {
+func expandCloudWatchLoggingOptions(tfMap map[string]any) *types.CloudWatchLoggingOptions {
+	tfList := tfMap["cloudwatch_logging_options"].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	loggingConfig := config[0].(map[string]any)
-	loggingOptions := &types.CloudWatchLoggingOptions{
-		Enabled: aws.Bool(loggingConfig[names.AttrEnabled].(bool)),
+	tfMap = tfList[0].(map[string]any)
+	apiObject := &types.CloudWatchLoggingOptions{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
-		loggingOptions.LogGroupName = aws.String(v.(string))
+	if v, ok := tfMap[names.AttrLogGroupName]; ok {
+		apiObject.LogGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := loggingConfig["log_stream_name"]; ok {
-		loggingOptions.LogStreamName = aws.String(v.(string))
+	if v, ok := tfMap["log_stream_name"]; ok {
+		apiObject.LogStreamName = aws.String(v.(string))
 	}
 
-	return loggingOptions
+	return apiObject
 }
 
-func expandVPCConfiguration(es map[string]any) *types.VpcConfiguration {
-	config := es[names.AttrVPCConfig].([]any)
-	if len(config) == 0 {
+func expandVPCConfiguration(tfMap map[string]any) *types.VpcConfiguration {
+	tfList := tfMap[names.AttrVPCConfig].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	vpcConfig := config[0].(map[string]any)
+	tfMap = tfList[0].(map[string]any)
 
 	return &types.VpcConfiguration{
-		RoleARN:          aws.String(vpcConfig[names.AttrRoleARN].(string)),
-		SubnetIds:        flex.ExpandStringValueSet(vpcConfig[names.AttrSubnetIDs].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringValueSet(vpcConfig[names.AttrSecurityGroupIDs].(*schema.Set)),
+		RoleARN:          aws.String(tfMap[names.AttrRoleARN].(string)),
+		SubnetIds:        flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
-func expandPrefix(s3 map[string]any) *string {
-	if v, ok := s3[names.AttrPrefix]; ok {
+func expandPrefix(tfMap map[string]any) *string {
+	if v, ok := tfMap[names.AttrPrefix]; ok {
 		return aws.String(v.(string))
 	}
 
@@ -2709,219 +2685,222 @@ func expandRedshiftDestinationUpdate(tfMap map[string]any) *types.RedshiftDestin
 	return apiObject
 }
 
-func expandElasticsearchDestinationConfiguration(es map[string]any) *types.ElasticsearchDestinationConfiguration {
-	roleARN := es[names.AttrRoleARN].(string)
-	config := &types.ElasticsearchDestinationConfiguration{
-		BufferingHints:  expandElasticsearchBufferingHints(es),
-		IndexName:       aws.String(es["index_name"].(string)),
-		RetryOptions:    expandElasticsearchRetryOptions(es),
+func expandElasticsearchDestinationConfiguration(tfMap map[string]any) *types.ElasticsearchDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.ElasticsearchDestinationConfiguration{
+		BufferingHints:  expandElasticsearchBufferingHints(tfMap),
+		IndexName:       aws.String(tfMap["index_name"].(string)),
+		RetryOptions:    expandElasticsearchRetryOptions(tfMap),
 		RoleARN:         aws.String(roleARN),
-		TypeName:        aws.String(es["type_name"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]any)),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
+		TypeName:        aws.String(tfMap["type_name"].(string)),
 	}
 
-	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
-		config.DomainARN = aws.String(v.(string))
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
-		config.ClusterEndpoint = aws.String(v.(string))
+	if v, ok := tfMap["cluster_endpoint"]; ok && v.(string) != "" {
+		apiObject.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if v, ok := tfMap["domain_arn"]; ok && v.(string) != "" {
+		apiObject.DomainARN = aws.String(v.(string))
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(es, destinationTypeElasticsearch, roleARN)
+	if v, ok := tfMap["index_rotation_period"]; ok {
+		apiObject.IndexRotationPeriod = types.ElasticsearchIndexRotationPeriod(v.(string))
 	}
 
-	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
-		config.IndexRotationPeriod = types.ElasticsearchIndexRotationPeriod(indexRotationPeriod.(string))
-	}
-	if s3BackupMode, ok := es["s3_backup_mode"]; ok {
-		config.S3BackupMode = types.ElasticsearchS3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeElasticsearch, roleARN)
 	}
 
-	if _, ok := es[names.AttrVPCConfig]; ok {
-		config.VpcConfiguration = expandVPCConfiguration(es)
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.ElasticsearchS3BackupMode(v.(string))
 	}
 
-	return config
+	if _, ok := tfMap[names.AttrVPCConfig]; ok {
+		apiObject.VpcConfiguration = expandVPCConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandElasticsearchDestinationUpdate(es map[string]any) *types.ElasticsearchDestinationUpdate {
-	roleARN := es[names.AttrRoleARN].(string)
-	update := &types.ElasticsearchDestinationUpdate{
-		BufferingHints: expandElasticsearchBufferingHints(es),
-		IndexName:      aws.String(es["index_name"].(string)),
-		RetryOptions:   expandElasticsearchRetryOptions(es),
+func expandElasticsearchDestinationUpdate(tfMap map[string]any) *types.ElasticsearchDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.ElasticsearchDestinationUpdate{
+		BufferingHints: expandElasticsearchBufferingHints(tfMap),
+		IndexName:      aws.String(tfMap["index_name"].(string)),
+		RetryOptions:   expandElasticsearchRetryOptions(tfMap),
 		RoleARN:        aws.String(roleARN),
-		TypeName:       aws.String(es["type_name"].(string)),
-		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]any)),
+		S3Update:       expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
+		TypeName:       aws.String(tfMap["type_name"].(string)),
 	}
 
-	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
-		update.DomainARN = aws.String(v.(string))
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
-		update.ClusterEndpoint = aws.String(v.(string))
+	if v, ok := tfMap["cluster_endpoint"]; ok && v.(string) != "" {
+		apiObject.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if v, ok := tfMap["domain_arn"]; ok && v.(string) != "" {
+		apiObject.DomainARN = aws.String(v.(string))
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(es, destinationTypeElasticsearch, roleARN)
+	if v, ok := tfMap["index_rotation_period"]; ok {
+		apiObject.IndexRotationPeriod = types.ElasticsearchIndexRotationPeriod(v.(string))
 	}
 
-	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
-		update.IndexRotationPeriod = types.ElasticsearchIndexRotationPeriod(indexRotationPeriod.(string))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeElasticsearch, roleARN)
 	}
 
-	return update
+	return apiObject
 }
 
-func expandAmazonopensearchserviceDestinationConfiguration(os map[string]any) *types.AmazonopensearchserviceDestinationConfiguration {
-	roleARN := os[names.AttrRoleARN].(string)
-	config := &types.AmazonopensearchserviceDestinationConfiguration{
-		BufferingHints:  expandAmazonopensearchserviceBufferingHints(os),
-		IndexName:       aws.String(os["index_name"].(string)),
-		RetryOptions:    expandAmazonopensearchserviceRetryOptions(os),
+func expandAmazonopensearchserviceDestinationConfiguration(tfMap map[string]any) *types.AmazonopensearchserviceDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.AmazonopensearchserviceDestinationConfiguration{
+		BufferingHints:  expandAmazonopensearchserviceBufferingHints(tfMap),
+		IndexName:       aws.String(tfMap["index_name"].(string)),
+		RetryOptions:    expandAmazonopensearchserviceRetryOptions(tfMap),
 		RoleARN:         aws.String(roleARN),
-		TypeName:        aws.String(os["type_name"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(os["s3_configuration"].([]any)),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
+		TypeName:        aws.String(tfMap["type_name"].(string)),
 	}
 
-	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
-		config.DomainARN = aws.String(v.(string))
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := os["cluster_endpoint"]; ok && v.(string) != "" {
-		config.ClusterEndpoint = aws.String(v.(string))
+	if v, ok := tfMap["cluster_endpoint"]; ok && v.(string) != "" {
+		apiObject.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := os["cloudwatch_logging_options"]; ok {
-		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
+	if v, ok := tfMap["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
 	}
 
-	if _, ok := os["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(os, destinationTypeOpenSearch, roleARN)
+	if v, ok := tfMap["domain_arn"]; ok && v.(string) != "" {
+		apiObject.DomainARN = aws.String(v.(string))
 	}
 
-	if indexRotationPeriod, ok := os["index_rotation_period"]; ok {
-		config.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(indexRotationPeriod.(string))
-	}
-	if s3BackupMode, ok := os["s3_backup_mode"]; ok {
-		config.S3BackupMode = types.AmazonopensearchserviceS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["index_rotation_period"]; ok {
+		apiObject.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(v.(string))
 	}
 
-	if _, ok := os[names.AttrVPCConfig]; ok {
-		config.VpcConfiguration = expandVPCConfiguration(os)
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeOpenSearch, roleARN)
 	}
 
-	if v, ok := os["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
-		config.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
+	if s3BackupMode, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.AmazonopensearchserviceS3BackupMode(s3BackupMode.(string))
 	}
 
-	return config
+	if _, ok := tfMap[names.AttrVPCConfig]; ok {
+		apiObject.VpcConfiguration = expandVPCConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandAmazonopensearchserviceDestinationUpdate(os map[string]any) *types.AmazonopensearchserviceDestinationUpdate {
-	roleARN := os[names.AttrRoleARN].(string)
-	update := &types.AmazonopensearchserviceDestinationUpdate{
-		BufferingHints: expandAmazonopensearchserviceBufferingHints(os),
-		IndexName:      aws.String(os["index_name"].(string)),
-		RetryOptions:   expandAmazonopensearchserviceRetryOptions(os),
+func expandAmazonopensearchserviceDestinationUpdate(tfMap map[string]any) *types.AmazonopensearchserviceDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.AmazonopensearchserviceDestinationUpdate{
+		BufferingHints: expandAmazonopensearchserviceBufferingHints(tfMap),
+		IndexName:      aws.String(tfMap["index_name"].(string)),
+		RetryOptions:   expandAmazonopensearchserviceRetryOptions(tfMap),
 		RoleARN:        aws.String(roleARN),
-		TypeName:       aws.String(os["type_name"].(string)),
-		S3Update:       expandS3DestinationUpdate(os["s3_configuration"].([]any)),
+		S3Update:       expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
+		TypeName:       aws.String(tfMap["type_name"].(string)),
 	}
 
-	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
-		update.DomainARN = aws.String(v.(string))
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := os["cluster_endpoint"]; ok && v.(string) != "" {
-		update.ClusterEndpoint = aws.String(v.(string))
+	if v, ok := tfMap["cluster_endpoint"]; ok && v.(string) != "" {
+		apiObject.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := os["cloudwatch_logging_options"]; ok {
-		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
+	if v, ok := tfMap["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
 	}
 
-	if _, ok := os["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(os, destinationTypeOpenSearch, roleARN)
+	if v, ok := tfMap["domain_arn"]; ok && v.(string) != "" {
+		apiObject.DomainARN = aws.String(v.(string))
 	}
 
-	if indexRotationPeriod, ok := os["index_rotation_period"]; ok {
-		update.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(indexRotationPeriod.(string))
+	if v, ok := tfMap["index_rotation_period"]; ok {
+		apiObject.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(v.(string))
 	}
 
-	if v, ok := os["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
-		update.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeOpenSearch, roleARN)
 	}
 
-	return update
+	return apiObject
 }
 
-func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]any) *types.AmazonOpenSearchServerlessDestinationConfiguration {
-	roleARN := oss[names.AttrRoleARN].(string)
-	config := &types.AmazonOpenSearchServerlessDestinationConfiguration{
-		BufferingHints:  expandAmazonOpenSearchServerlessBufferingHints(oss),
-		IndexName:       aws.String(oss["index_name"].(string)),
-		RetryOptions:    expandAmazonOpenSearchServerlessRetryOptions(oss),
+func expandAmazonOpenSearchServerlessDestinationConfiguration(tfMap map[string]any) *types.AmazonOpenSearchServerlessDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.AmazonOpenSearchServerlessDestinationConfiguration{
+		BufferingHints:  expandAmazonOpenSearchServerlessBufferingHints(tfMap),
+		IndexName:       aws.String(tfMap["index_name"].(string)),
+		RetryOptions:    expandAmazonOpenSearchServerlessRetryOptions(tfMap),
 		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(oss["s3_configuration"].([]any)),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
-	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
-		config.CollectionEndpoint = aws.String(v.(string))
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := oss["cloudwatch_logging_options"]; ok {
-		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
+	if v, ok := tfMap["collection_endpoint"]; ok && v.(string) != "" {
+		apiObject.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := oss["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(oss, destinationTypeOpenSearchServerless, roleARN)
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeOpenSearchServerless, roleARN)
 	}
 
-	if s3BackupMode, ok := oss["s3_backup_mode"]; ok {
-		config.S3BackupMode = types.AmazonOpenSearchServerlessS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.AmazonOpenSearchServerlessS3BackupMode(v.(string))
 	}
 
-	if _, ok := oss[names.AttrVPCConfig]; ok {
-		config.VpcConfiguration = expandVPCConfiguration(oss)
+	if _, ok := tfMap[names.AttrVPCConfig]; ok {
+		apiObject.VpcConfiguration = expandVPCConfiguration(tfMap)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]any) *types.AmazonOpenSearchServerlessDestinationUpdate {
-	roleARN := oss[names.AttrRoleARN].(string)
-	update := &types.AmazonOpenSearchServerlessDestinationUpdate{
-		BufferingHints: expandAmazonOpenSearchServerlessBufferingHints(oss),
-		IndexName:      aws.String(oss["index_name"].(string)),
-		RetryOptions:   expandAmazonOpenSearchServerlessRetryOptions(oss),
+func expandAmazonOpenSearchServerlessDestinationUpdate(tfMap map[string]any) *types.AmazonOpenSearchServerlessDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.AmazonOpenSearchServerlessDestinationUpdate{
+		BufferingHints: expandAmazonOpenSearchServerlessBufferingHints(tfMap),
+		IndexName:      aws.String(tfMap["index_name"].(string)),
+		RetryOptions:   expandAmazonOpenSearchServerlessRetryOptions(tfMap),
 		RoleARN:        aws.String(roleARN),
-		S3Update:       expandS3DestinationUpdate(oss["s3_configuration"].([]any)),
-	}
-	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
-		update.CollectionEndpoint = aws.String(v.(string))
+		S3Update:       expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
 	}
 
-	if _, ok := oss["cloudwatch_logging_options"]; ok {
-		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := oss["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(oss, destinationTypeOpenSearchServerless, roleARN)
+	if v, ok := tfMap["collection_endpoint"]; ok && v.(string) != "" {
+		apiObject.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	return update
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeOpenSearchServerless, roleARN)
+	}
+
+	return apiObject
 }
 
 func expandSnowflakeDestinationConfiguration(tfMap map[string]any) *types.SnowflakeDestinationConfiguration {
@@ -2953,16 +2932,16 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]any) *types.Snowfl
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
 	}
 
-	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
-		apiObject.PrivateKey = aws.String(v.(string))
-	}
-
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
 		apiObject.KeyPassphrase = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["metadata_column_name"]; ok && v.(string) != "" {
 		apiObject.MetaDataColumnName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if _, ok := tfMap["processing_configuration"]; ok {
@@ -3020,16 +2999,16 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]any) *types.SnowflakeDest
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
 	}
 
-	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
-		apiObject.PrivateKey = aws.String(v.(string))
-	}
-
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
 		apiObject.KeyPassphrase = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["metadata_column_name"]; ok && v.(string) != "" {
 		apiObject.MetaDataColumnName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if _, ok := tfMap["processing_configuration"]; ok {
@@ -3065,11 +3044,11 @@ func expandSplunkDestinationConfiguration(tfMap map[string]any) *types.SplunkDes
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
 	apiObject.BufferingHints = bufferingHints
 
@@ -3106,11 +3085,11 @@ func expandSplunkDestinationUpdate(tfMap map[string]any) *types.SplunkDestinatio
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
 	apiObject.BufferingHints = bufferingHints
 
@@ -3219,95 +3198,95 @@ func expandHTTPEndpointDestinationUpdate(tfMap map[string]any) *types.HttpEndpoi
 	return apiObject
 }
 
-func expandHTTPEndpointCommonAttributes(ca []any) []types.HttpEndpointCommonAttribute {
-	commonAttributes := make([]types.HttpEndpointCommonAttribute, 0, len(ca))
+func expandHTTPEndpointCommonAttributes(tfList []any) []types.HttpEndpointCommonAttribute {
+	apiObjects := make([]types.HttpEndpointCommonAttribute, 0, len(tfList))
 
-	for _, raw := range ca {
-		data := raw.(map[string]any)
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
-		a := types.HttpEndpointCommonAttribute{
-			AttributeName:  aws.String(data[names.AttrName].(string)),
-			AttributeValue: aws.String(data[names.AttrValue].(string)),
+		apiObject := types.HttpEndpointCommonAttribute{
+			AttributeName:  aws.String(tfMap[names.AttrName].(string)),
+			AttributeValue: aws.String(tfMap[names.AttrValue].(string)),
 		}
-		commonAttributes = append(commonAttributes, a)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return commonAttributes
+	return apiObjects
 }
 
-func expandHTTPEndpointRequestConfiguration(rc map[string]any) *types.HttpEndpointRequestConfiguration {
-	config := rc["request_configuration"].([]any)
-	if len(config) == 0 {
+func expandHTTPEndpointRequestConfiguration(tfMap map[string]any) *types.HttpEndpointRequestConfiguration {
+	tfList := tfMap["request_configuration"].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	requestConfig := config[0].(map[string]any)
-	RequestConfiguration := &types.HttpEndpointRequestConfiguration{}
+	tfMap = tfList[0].(map[string]any)
+	apiObject := &types.HttpEndpointRequestConfiguration{}
 
-	if contentEncoding, ok := requestConfig["content_encoding"]; ok {
-		RequestConfiguration.ContentEncoding = types.ContentEncoding(contentEncoding.(string))
+	if commonAttributes, ok := tfMap["common_attributes"]; ok {
+		apiObject.CommonAttributes = expandHTTPEndpointCommonAttributes(commonAttributes.([]any))
 	}
 
-	if commonAttributes, ok := requestConfig["common_attributes"]; ok {
-		RequestConfiguration.CommonAttributes = expandHTTPEndpointCommonAttributes(commonAttributes.([]any))
+	if contentEncoding, ok := tfMap["content_encoding"]; ok {
+		apiObject.ContentEncoding = types.ContentEncoding(contentEncoding.(string))
 	}
 
-	return RequestConfiguration
+	return apiObject
 }
 
-func expandHTTPEndpointConfiguration(ep map[string]any) *types.HttpEndpointConfiguration {
-	endpointConfiguration := &types.HttpEndpointConfiguration{
-		Url: aws.String(ep[names.AttrURL].(string)),
+func expandHTTPEndpointConfiguration(tfMap map[string]any) *types.HttpEndpointConfiguration {
+	apiObject := &types.HttpEndpointConfiguration{
+		Url: aws.String(tfMap[names.AttrURL].(string)),
 	}
 
-	if Name, ok := ep[names.AttrName]; ok {
-		endpointConfiguration.Name = aws.String(Name.(string))
+	if v, ok := tfMap[names.AttrAccessKey]; ok {
+		apiObject.AccessKey = aws.String(v.(string))
 	}
 
-	if AccessKey, ok := ep[names.AttrAccessKey]; ok {
-		endpointConfiguration.AccessKey = aws.String(AccessKey.(string))
+	if v, ok := tfMap[names.AttrName]; ok {
+		apiObject.Name = aws.String(v.(string))
 	}
 
-	return endpointConfiguration
+	return apiObject
 }
 
-func expandElasticsearchBufferingHints(es map[string]any) *types.ElasticsearchBufferingHints {
-	bufferingHints := &types.ElasticsearchBufferingHints{}
+func expandElasticsearchBufferingHints(tfMap map[string]any) *types.ElasticsearchBufferingHints {
+	apiObject := &types.ElasticsearchBufferingHints{}
 
-	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		apiObject.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := es["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		apiObject.SizeInMBs = aws.Int32(int32(v))
 	}
 
-	return bufferingHints
+	return apiObject
 }
 
-func expandAmazonopensearchserviceBufferingHints(es map[string]any) *types.AmazonopensearchserviceBufferingHints {
-	bufferingHints := &types.AmazonopensearchserviceBufferingHints{}
+func expandAmazonopensearchserviceBufferingHints(tfMap map[string]any) *types.AmazonopensearchserviceBufferingHints {
+	apiObject := &types.AmazonopensearchserviceBufferingHints{}
 
-	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		apiObject.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := es["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		apiObject.SizeInMBs = aws.Int32(int32(v))
 	}
 
-	return bufferingHints
+	return apiObject
 }
 
-func expandAmazonOpenSearchServerlessBufferingHints(es map[string]any) *types.AmazonOpenSearchServerlessBufferingHints {
-	bufferingHints := &types.AmazonOpenSearchServerlessBufferingHints{}
+func expandAmazonOpenSearchServerlessBufferingHints(tfMap map[string]any) *types.AmazonOpenSearchServerlessBufferingHints {
+	apiObject := &types.AmazonOpenSearchServerlessBufferingHints{}
 
-	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		apiObject.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := es["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		apiObject.SizeInMBs = aws.Int32(int32(v))
 	}
 
-	return bufferingHints
+	return apiObject
 }
 
 func expandIcebergRetryOptions(tfMap map[string]any) *types.RetryOptions {
@@ -3320,54 +3299,54 @@ func expandIcebergRetryOptions(tfMap map[string]any) *types.RetryOptions {
 	return apiObject
 }
 
-func expandElasticsearchRetryOptions(es map[string]any) *types.ElasticsearchRetryOptions {
-	retryOptions := &types.ElasticsearchRetryOptions{}
+func expandElasticsearchRetryOptions(tfMap map[string]any) *types.ElasticsearchRetryOptions {
+	apiObject := &types.ElasticsearchRetryOptions{}
 
-	if retryDuration, ok := es["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
-func expandAmazonopensearchserviceRetryOptions(es map[string]any) *types.AmazonopensearchserviceRetryOptions {
-	retryOptions := &types.AmazonopensearchserviceRetryOptions{}
+func expandAmazonopensearchserviceRetryOptions(tfMap map[string]any) *types.AmazonopensearchserviceRetryOptions {
+	apiObject := &types.AmazonopensearchserviceRetryOptions{}
 
-	if retryDuration, ok := es["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(retryDuration))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
-func expandAmazonOpenSearchServerlessRetryOptions(es map[string]any) *types.AmazonOpenSearchServerlessRetryOptions {
-	retryOptions := &types.AmazonOpenSearchServerlessRetryOptions{}
+func expandAmazonOpenSearchServerlessRetryOptions(tfMap map[string]any) *types.AmazonOpenSearchServerlessRetryOptions {
+	apiObject := &types.AmazonOpenSearchServerlessRetryOptions{}
 
-	if retryDuration, ok := es["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(retryDuration))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
 func expandHTTPEndpointRetryOptions(tfMap map[string]any) *types.HttpEndpointRetryOptions {
-	retryOptions := &types.HttpEndpointRetryOptions{}
+	apiObject := &types.HttpEndpointRetryOptions{}
 
-	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
-func expandRedshiftRetryOptions(redshift map[string]any) *types.RedshiftRetryOptions {
-	retryOptions := &types.RedshiftRetryOptions{}
+func expandRedshiftRetryOptions(tfMap map[string]any) *types.RedshiftRetryOptions {
+	apiObject := &types.RedshiftRetryOptions{}
 
-	if retryDuration, ok := redshift["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
 func expandSnowflakeRetryOptions(tfMap map[string]any) *types.SnowflakeRetryOptions {
@@ -3381,8 +3360,8 @@ func expandSnowflakeRetryOptions(tfMap map[string]any) *types.SnowflakeRetryOpti
 }
 
 func expandSnowflakeRoleConfiguration(tfMap map[string]any) *types.SnowflakeRoleConfiguration {
-	config := tfMap["snowflake_role_configuration"].([]any)
-	if len(config) == 0 || config[0] == nil {
+	tfList := tfMap["snowflake_role_configuration"].([]any)
+	if len(tfList) == 0 || tfList[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
 		return &types.SnowflakeRoleConfiguration{
@@ -3390,12 +3369,12 @@ func expandSnowflakeRoleConfiguration(tfMap map[string]any) *types.SnowflakeRole
 		}
 	}
 
-	snowflakeRoleConfiguration := config[0].(map[string]any)
+	tfMap = tfList[0].(map[string]any)
 	apiObject := &types.SnowflakeRoleConfiguration{
-		Enabled: aws.Bool(snowflakeRoleConfiguration[names.AttrEnabled].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := snowflakeRoleConfiguration["snowflake_role"]; ok && len(v.(string)) > 0 {
+	if v, ok := tfMap["snowflake_role"]; ok && len(v.(string)) > 0 {
 		apiObject.SnowflakeRole = aws.String(v.(string))
 	}
 
@@ -3417,14 +3396,14 @@ func expandSnowflakeVPCConfiguration(tfMap map[string]any) *types.SnowflakeVpcCo
 	return apiObject
 }
 
-func expandSplunkRetryOptions(splunk map[string]any) *types.SplunkRetryOptions {
-	retryOptions := &types.SplunkRetryOptions{}
+func expandSplunkRetryOptions(tfMap map[string]any) *types.SplunkRetryOptions {
+	apiObject := &types.SplunkRetryOptions{}
 
-	if retryDuration, ok := splunk["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
 func expandDestinationTableConfigurationList(tfMap map[string]any) []types.DestinationTableConfiguration {
@@ -3434,8 +3413,8 @@ func expandDestinationTableConfigurationList(tfMap map[string]any) []types.Desti
 	}
 
 	apiObjects := make([]types.DestinationTableConfiguration, 0, len(tfList))
-	for _, table := range tfList {
-		apiObjects = append(apiObjects, expandDestinationTableConfiguration(table.(map[string]any)))
+	for _, tfMapRaw := range tfList {
+		apiObjects = append(apiObjects, expandDestinationTableConfiguration(tfMapRaw.(map[string]any)))
 	}
 
 	return apiObjects
@@ -3458,18 +3437,19 @@ func expandDestinationTableConfiguration(tfMap map[string]any) types.Destination
 	return apiObject
 }
 
-func expandCopyCommand(redshift map[string]any) *types.CopyCommand {
-	cmd := &types.CopyCommand{
-		DataTableName: aws.String(redshift["data_table_name"].(string)),
-	}
-	if copyOptions, ok := redshift["copy_options"]; ok {
-		cmd.CopyOptions = aws.String(copyOptions.(string))
-	}
-	if columns, ok := redshift["data_table_columns"]; ok {
-		cmd.DataTableColumns = aws.String(columns.(string))
+func expandCopyCommand(tfMap map[string]any) *types.CopyCommand {
+	apiObject := &types.CopyCommand{
+		DataTableName: aws.String(tfMap["data_table_name"].(string)),
 	}
 
-	return cmd
+	if v, ok := tfMap["copy_options"]; ok {
+		apiObject.CopyOptions = aws.String(v.(string))
+	}
+	if v, ok := tfMap["data_table_columns"]; ok {
+		apiObject.DataTableColumns = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func expandDeliveryStreamEncryptionConfigurationInput(tfList []any) *types.DeliveryStreamEncryptionConfigurationInput {
@@ -3478,7 +3458,6 @@ func expandDeliveryStreamEncryptionConfigurationInput(tfList []any) *types.Deliv
 	}
 
 	tfMap, ok := tfList[0].(map[string]any)
-
 	if !ok {
 		return nil
 	}
