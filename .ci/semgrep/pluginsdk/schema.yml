@@ -31,17 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/finspace
-        - /internal/service/firehose
-        - /internal/service/fis
-        - /internal/service/fms
-        - /internal/service/fsx
-        - /internal/service/gamelift
-        - /internal/service/glacier
-        - /internal/service/globalaccelerator
-        - /internal/service/glue
-        - /internal/service/grafana
-        - /internal/service/guardduty
         - /internal/service/iam
         - /internal/service/identitystore
         - /internal/service/imagebuilder
