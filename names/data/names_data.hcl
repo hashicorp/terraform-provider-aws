@@ -4811,7 +4811,7 @@ service "kinesis" {
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
   brand                    = "AWS"
 }
 
