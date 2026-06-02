@@ -37,28 +37,30 @@ func ResourceRoleAlias() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"credential_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(900, 43200),
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"credential_duration": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      3600,
+					ValidateFunc: validation.IntBetween(900, 43200),
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
