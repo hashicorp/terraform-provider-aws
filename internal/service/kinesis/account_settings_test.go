@@ -17,6 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccKinesisAccountSettings_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccAccountSettings_basic,
+		"enabled":       testAccAccountSettings_enabled,
+		"Identity":      testAccKinesisAccountSettings_identitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func testAccAccountSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_account_settings.test"
