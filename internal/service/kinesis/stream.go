@@ -132,81 +132,83 @@ func resourceStream() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"encryption_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.EncryptionTypeNone,
-				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
-			"enforce_consumer_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_record_size_in_kib": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1024, 10240),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrRetentionPeriod: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      24,
-				ValidateFunc: validation.IntBetween(24, 8760),
-			},
-			"shard_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"warm_throughput_mib_ps"},
-			},
-			"shard_level_metrics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.MetricsName](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"stream_mode_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stream_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.StreamMode](),
-						},
+				"encryption_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.EncryptionTypeNone,
+					ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+				},
+				"enforce_consumer_deletion": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"max_record_size_in_kib": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1024, 10240),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrRetentionPeriod: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      24,
+					ValidateFunc: validation.IntBetween(24, 8760),
+				},
+				"shard_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"warm_throughput_mib_ps"},
+				},
+				"shard_level_metrics": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.MetricsName](),
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"warm_throughput_mib_ps": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"shard_count"},
-			},
+				"stream_mode_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"stream_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.StreamMode](),
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"warm_throughput_mib_ps": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"shard_count"},
+				},
+			}
 		},
 	}
 }
@@ -224,12 +226,12 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.MaxRecordSizeInKiB = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.StreamModeDetails = expandStreamModeDetails(v.([]any)[0].(map[string]any))
-	}
-
 	if streamMode := getStreamMode(d); streamMode == types.StreamModeProvisioned {
 		input.ShardCount = aws.Int32(int32(d.Get("shard_count").(int)))
+	}
+
+	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.StreamModeDetails = expandStreamModeDetails(v.([]any)[0].(map[string]any))
 	}
 
 	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {

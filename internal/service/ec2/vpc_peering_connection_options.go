@@ -27,14 +27,16 @@ func resourceVPCPeeringConnectionOptions() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accepter":  vpcPeeringConnectionOptionsSchema,
-			"requester": vpcPeeringConnectionOptionsSchema,
-			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accepter":  vpcPeeringConnectionOptionsSchema,
+				"requester": vpcPeeringConnectionOptionsSchema,
+				"vpc_peering_connection_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -70,105 +70,107 @@ func resourceRouteTable() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagating_vgws": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"route": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						///
-						// Destinations.
-						///
-						names.AttrCIDRBlock: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-						},
-						"destination_prefix_list_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-						},
-						//
-						// Targets.
-						//
-						"carrier_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"core_network_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"egress_only_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"local_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"nat_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"odb_network_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrTransitGatewayID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagating_vgws": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"route": {
+					Type:       schema.TypeSet,
+					Computed:   true,
+					Optional:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							///
+							// Destinations.
+							///
+							names.AttrCIDRBlock: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+							},
+							"destination_prefix_list_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ipv6_cidr_block": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+							},
+							//
+							// Targets.
+							//
+							"carrier_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"core_network_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"egress_only_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"local_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"nat_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"odb_network_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"vpc_peering_connection_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					Set: resourceRouteTableHash,
 				},
-				Set: resourceRouteTableHash,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

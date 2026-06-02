@@ -45,56 +45,58 @@ func resourceHost() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"outpost_arn"},
-				Computed:     true,
-			},
-			"auto_placement": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AutoPlacementOn,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"host_recovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HostRecoveryOff,
-				ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
-			},
-			"instance_family": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			names.AttrInstanceType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"asset_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"outpost_arn"},
+					Computed:     true,
+				},
+				"auto_placement": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AutoPlacementOn,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"host_recovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.HostRecoveryOff,
+					ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
+				},
+				"instance_family": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				names.AttrInstanceType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				"outpost_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

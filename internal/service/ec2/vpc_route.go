@@ -76,124 +76,126 @@ func resourceRoute() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			///
-			// Destinations.
-			///
-			routeDestinationCIDRBlock: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-				ExactlyOneOf: routeValidDestinations,
-			},
-			routeDestinationIPv6CIDRBlock: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     verify.ValidIPv6CIDRNetworkAddress,
-				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
-				ExactlyOneOf:     routeValidDestinations,
-			},
-			routeDestinationPrefixListID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: routeValidDestinations,
-			},
-
-			//
-			// Targets.
-			//
-			"carrier_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{routeDestinationIPv6CIDRBlock}, // IPv4 destinations only.
-			},
-			"core_network_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: routeValidTargets,
-			},
-			"egress_only_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{routeDestinationCIDRBlock}, // IPv6 destinations only.
-			},
-			"gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			"local_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			"nat_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			"odb_network_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: routeValidTargets,
-			},
-			names.AttrTransitGatewayID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
-			names.AttrVPCEndpointID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-				ConflictsWith: []string{
-					routeDestinationPrefixListID, // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"vpc_peering_connection_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: routeValidTargets,
-			},
 
-			//
-			// Computed attributes.
-			//
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				///
+				// Destinations.
+				///
+				routeDestinationCIDRBlock: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+					ExactlyOneOf: routeValidDestinations,
+				},
+				routeDestinationIPv6CIDRBlock: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateFunc:     verify.ValidIPv6CIDRNetworkAddress,
+					DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
+					ExactlyOneOf:     routeValidDestinations,
+				},
+				routeDestinationPrefixListID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: routeValidDestinations,
+				},
+
+				//
+				// Targets.
+				//
+				"carrier_gateway_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ExactlyOneOf:  routeValidTargets,
+					ConflictsWith: []string{routeDestinationIPv6CIDRBlock}, // IPv4 destinations only.
+				},
+				"core_network_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: routeValidTargets,
+				},
+				"egress_only_gateway_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ExactlyOneOf:  routeValidTargets,
+					ConflictsWith: []string{routeDestinationCIDRBlock}, // IPv6 destinations only.
+				},
+				"gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+				"local_gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+				"nat_gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+				"odb_network_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: routeValidTargets,
+				},
+				names.AttrTransitGatewayID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+				names.AttrVPCEndpointID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+					ConflictsWith: []string{
+						routeDestinationPrefixListID, // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
+					},
+				},
+				"vpc_peering_connection_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: routeValidTargets,
+				},
+
+				//
+				// Computed attributes.
+				//
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
