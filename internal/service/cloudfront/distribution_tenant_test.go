@@ -62,7 +62,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("managed_certificate_request"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -468,8 +468,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   domain {
     domain = %[2]q
   }
-  name    = %[1]q
-  enabled = false
+  name = %[1]q
 
   parameter {
     name  = "origin_domain"
