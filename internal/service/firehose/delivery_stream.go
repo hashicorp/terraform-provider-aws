@@ -2008,111 +2008,89 @@ func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Cl
 	return nil, err
 }
 
-func expandKinesisStreamSourceConfiguration(source map[string]any) *types.KinesisStreamSourceConfiguration {
-	configuration := &types.KinesisStreamSourceConfiguration{
-		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
-		RoleARN:          aws.String(source[names.AttrRoleARN].(string)),
+func expandKinesisStreamSourceConfiguration(tfMap map[string]any) *types.KinesisStreamSourceConfiguration {
+	apiObject := &types.KinesisStreamSourceConfiguration{
+		KinesisStreamARN: aws.String(tfMap["kinesis_stream_arn"].(string)),
+		RoleARN:          aws.String(tfMap[names.AttrRoleARN].(string)),
 	}
 
-	return configuration
+	return apiObject
 }
 
 func expandS3DestinationConfiguration(tfList []any) *types.S3DestinationConfiguration {
-	s3 := tfList[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
-	configuration := &types.S3DestinationConfiguration{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3[names.AttrRoleARN].(string)),
+	apiObject := &types.S3DestinationConfiguration{
+		BucketARN: aws.String(tfMap["bucket_arn"].(string)),
 		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
-		Prefix:                  expandPrefix(s3),
-		CompressionFormat:       types.CompressionFormat(s3["compression_format"].(string)),
-		EncryptionConfiguration: expandEncryptionConfiguration(s3),
+		CompressionFormat:       types.CompressionFormat(tfMap["compression_format"].(string)),
+		EncryptionConfiguration: expandEncryptionConfiguration(tfMap),
+		Prefix:                  expandPrefix(tfMap),
+		RoleARN:                 aws.String(tfMap[names.AttrRoleARN].(string)),
 	}
 
-	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
-		configuration.ErrorOutputPrefix = aws.String(v)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
+	if v, ok := tfMap["error_output_prefix"].(string); ok && v != "" {
+		apiObject.ErrorOutputPrefix = aws.String(v)
 	}
 
-	return configuration
+	return apiObject
 }
 
-func expandS3DestinationConfigurationBackup(d map[string]any) *types.S3DestinationConfiguration {
-	config := d["s3_backup_configuration"].([]any)
-	if len(config) == 0 {
+func expandS3DestinationConfigurationBackup(tfMap map[string]any) *types.S3DestinationConfiguration {
+	tfList := tfMap["s3_backup_configuration"].([]any)
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	s3 := config[0].(map[string]any)
-
-	configuration := &types.S3DestinationConfiguration{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3[names.AttrRoleARN].(string)),
-		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
-		},
-		Prefix:                  expandPrefix(s3),
-		CompressionFormat:       types.CompressionFormat(s3["compression_format"].(string)),
-		EncryptionConfiguration: expandEncryptionConfiguration(s3),
-	}
-
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
-	}
-
-	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
-		configuration.ErrorOutputPrefix = aws.String(v)
-	}
-
-	return configuration
+	return expandS3DestinationConfiguration(tfList)
 }
 
-func expandExtendedS3DestinationConfiguration(s3 map[string]any) *types.ExtendedS3DestinationConfiguration {
-	roleARN := s3[names.AttrRoleARN].(string)
-	configuration := &types.ExtendedS3DestinationConfiguration{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(roleARN),
+func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.ExtendedS3DestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.ExtendedS3DestinationConfiguration{
+		BucketARN: aws.String(tfMap["bucket_arn"].(string)),
 		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
-		Prefix:                            expandPrefix(s3),
-		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
-		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
-		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
-		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
-		FileExtension:                     aws.String(s3["file_extension"].(string)),
+		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
+		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
+		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
+		FileExtension:                     aws.String(tfMap["file_extension"].(string)),
+		Prefix:                            expandPrefix(tfMap),
+		RoleARN:                           aws.String(roleARN),
 	}
 
-	if _, ok := s3["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN)
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeExtendedS3, roleARN)
 	}
 
-	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
-		configuration.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(s3)
+	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
+		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(tfMap)
 	}
 
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
-		configuration.ErrorOutputPrefix = aws.String(v)
+	if v, ok := tfMap["error_output_prefix"].(string); ok && v != "" {
+		apiObject.ErrorOutputPrefix = aws.String(v)
 	}
 
-	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.S3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(s3)
+	if s3BackupMode, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.S3BackupMode(s3BackupMode.(string))
+		apiObject.S3BackupConfiguration = expandS3DestinationConfigurationBackup(tfMap)
 	}
 
-	return configuration
+	return apiObject
 }
 
 func expandS3DestinationUpdate(tfList []any) *types.S3DestinationUpdate {
