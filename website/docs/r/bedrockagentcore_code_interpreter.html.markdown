@@ -65,10 +65,23 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `certificates` - (Optional) Certificates to install in the code interpreter. Between 1 and 200 blocks are supported. See [`certificates`](#certificates) below.
 * `description` - (Optional) Description of the code interpreter.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the code interpreter assumes for execution. Required when using `SANDBOX` network mode.
 * `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `certificates`
+
+The `certificates` block supports the following:
+
+* `secrets_manager` - (Required) Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager) below.
+
+### `secrets_manager`
+
+The `secrets_manager` block supports the following:
+
+* `secret_arn` - (Required) ARN of the Secrets Manager secret containing the certificate.
 
 ### `network_configuration`
 

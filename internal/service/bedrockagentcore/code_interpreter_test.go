@@ -179,6 +179,47 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreCodeInterpreter_certificates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_code_interpreter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckCodeInterpreters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodeInterpreterConfig_certificates(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
+					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificates.0.secrets_manager.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificates.0.secrets_manager.0.secret_arn"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "code_interpreter_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "code_interpreter_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreCodeInterpreter_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
@@ -334,6 +375,36 @@ resource "aws_bedrockagentcore_code_interpreter" "test" {
   }
 }
 `, rName, tagKey1, tagValue1)
+}
+
+func testAccCodeInterpreterConfig_certificates(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA\n-----END CERTIFICATE-----\n"
+}
+
+resource "aws_bedrockagentcore_code_interpreter" "test" {
+  name = %[1]q
+
+  network_configuration {
+    network_mode = "SANDBOX"
+  }
+
+  certificates {
+    secrets_manager {
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
+  }
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+`, rName)
 }
 
 func testAccCodeInterpreterConfig_tags2(rName, tagKey1, tagValue1, tag2Key, tag2Value string) string {
