@@ -18,6 +18,7 @@ import (
 )
 
 func TestAccKinesisAccountSettings_serial(t *testing.T) {
+	acctest.Skip(t, "Kinesis Data Streams On-demand Advantage has a minimum 24 hour commitment and costs > $100/day")
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
