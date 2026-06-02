@@ -130,6 +130,7 @@ The `redirect` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `hosted_zone_id` - [Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-object-lambda-cloudfront.html) hosted zone ID for the S3 website endpoint. This is used to create Route 53 alias records.
 * `website_domain` - Domain of the website endpoint. This is used to create Route 53 alias records.
 * `website_endpoint` - Website endpoint.
 
