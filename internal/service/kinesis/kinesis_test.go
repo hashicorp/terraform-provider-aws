@@ -15,6 +15,7 @@ func TestAccKinesis_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"AccountSettings": {
 			acctest.CtBasic: testAccAccountSettings_basic,
+			"enabled":       testAccAccountSettings_enabled,
 			"Identity":      testAccKinesisAccountSettings_identitySerial,
 		},
 	}

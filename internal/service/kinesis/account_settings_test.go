@@ -43,6 +43,34 @@ func testAccAccountSettings_basic(t *testing.T) {
 	})
 }
 
+func testAccAccountSettings_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kinesis_account_settings.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccountSettings/status/"),
+				ConfigVariables: config.Variables{
+					"status": config.StringVariable("ENABLED"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountSettingsExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAccountSettingsExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
