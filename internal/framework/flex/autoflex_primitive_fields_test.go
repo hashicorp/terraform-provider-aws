@@ -16,9 +16,8 @@ import (
 )
 
 type fieldTestCase struct {
-	source        any
-	expected      any
-	expectedDiags diag.Diagnostics
+	source   any
+	expected any
 }
 
 type awsPrimitiveField[T any] struct {
@@ -29,27 +28,27 @@ type awsPrimitivePointerField[T any] struct {
 	Field1 *T
 }
 
-func TestExpandStringField(t *testing.T) {
+func TestExpandStringField(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, stringValueHandler{})
 }
 
-func TestExpandBoolField(t *testing.T) {
+func TestExpandBoolField(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, boolValueHandler{})
 }
 
-func TestExpandInt64Field(t *testing.T) {
+func TestExpandInt64Field(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, int64ValueHandler{})
 }
 
-func TestExpandInt32Field(t *testing.T) {
+func TestExpandInt32Field(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, int32ValueHandler{})
 }
 
-func TestExpandFloat64Field(t *testing.T) {
+func TestExpandFloat64Field(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, float64ValueHandler{})
 }
 
-func TestExpandFloat32Field(t *testing.T) {
+func TestExpandFloat32Field(t *testing.T) { //nolint:paralleltest // false positive
 	testExpandField(t, float32ValueHandler{})
 }
 
@@ -496,23 +495,23 @@ func (h stringValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h stringValueHandler) awsScalarFieldWithValue() any {
+func (h stringValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[string]{Field1: h.nonZeroValue()}
 }
 
-func (h stringValueHandler) awsScalarFieldWithZeroValue() any {
+func (h stringValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[string]{Field1: h.zeroValue()}
 }
 
-func (h stringValueHandler) awsPointerFieldWithValue() any {
+func (h stringValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[string]{Field1: aws.String(h.nonZeroValue())}
 }
 
-func (h stringValueHandler) awsPointerFieldWithZeroValue() any {
+func (h stringValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[string]{Field1: aws.String(h.zeroValue())}
 }
 
-func (h stringValueHandler) awsPointerFieldWithNilValue() any {
+func (h stringValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[string]{Field1: nil}
 }
 
@@ -560,23 +559,23 @@ func (h boolValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h boolValueHandler) awsScalarFieldWithValue() any {
+func (h boolValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[bool]{Field1: h.nonZeroValue()}
 }
 
-func (h boolValueHandler) awsScalarFieldWithZeroValue() any {
+func (h boolValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[bool]{Field1: h.zeroValue()}
 }
 
-func (h boolValueHandler) awsPointerFieldWithValue() any {
+func (h boolValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[bool]{Field1: aws.Bool(h.nonZeroValue())}
 }
 
-func (h boolValueHandler) awsPointerFieldWithZeroValue() any {
+func (h boolValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[bool]{Field1: aws.Bool(h.zeroValue())}
 }
 
-func (h boolValueHandler) awsPointerFieldWithNilValue() any {
+func (h boolValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[bool]{Field1: nil}
 }
 
@@ -624,23 +623,23 @@ func (h int64ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h int64ValueHandler) awsScalarFieldWithValue() any {
+func (h int64ValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[int64]{Field1: h.nonZeroValue()}
 }
 
-func (h int64ValueHandler) awsScalarFieldWithZeroValue() any {
+func (h int64ValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[int64]{Field1: h.zeroValue()}
 }
 
-func (h int64ValueHandler) awsPointerFieldWithValue() any {
+func (h int64ValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int64]{Field1: aws.Int64(h.nonZeroValue())}
 }
 
-func (h int64ValueHandler) awsPointerFieldWithZeroValue() any {
+func (h int64ValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int64]{Field1: aws.Int64(h.zeroValue())}
 }
 
-func (h int64ValueHandler) awsPointerFieldWithNilValue() any {
+func (h int64ValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int64]{Field1: nil}
 }
 
@@ -688,23 +687,23 @@ func (h int32ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h int32ValueHandler) awsScalarFieldWithValue() any {
+func (h int32ValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[int32]{Field1: h.nonZeroValue()}
 }
 
-func (h int32ValueHandler) awsScalarFieldWithZeroValue() any {
+func (h int32ValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[int32]{Field1: h.zeroValue()}
 }
 
-func (h int32ValueHandler) awsPointerFieldWithValue() any {
+func (h int32ValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int32]{Field1: aws.Int32(h.nonZeroValue())}
 }
 
-func (h int32ValueHandler) awsPointerFieldWithZeroValue() any {
+func (h int32ValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int32]{Field1: aws.Int32(h.zeroValue())}
 }
 
-func (h int32ValueHandler) awsPointerFieldWithNilValue() any {
+func (h int32ValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[int32]{Field1: nil}
 }
 
@@ -752,23 +751,23 @@ func (h float64ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h float64ValueHandler) awsScalarFieldWithValue() any {
+func (h float64ValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[float64]{Field1: h.nonZeroValue()}
 }
 
-func (h float64ValueHandler) awsScalarFieldWithZeroValue() any {
+func (h float64ValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[float64]{Field1: h.zeroValue()}
 }
 
-func (h float64ValueHandler) awsPointerFieldWithValue() any {
+func (h float64ValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float64]{Field1: aws.Float64(h.nonZeroValue())}
 }
 
-func (h float64ValueHandler) awsPointerFieldWithZeroValue() any {
+func (h float64ValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float64]{Field1: aws.Float64(h.zeroValue())}
 }
 
-func (h float64ValueHandler) awsPointerFieldWithNilValue() any {
+func (h float64ValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float64]{Field1: nil}
 }
 
@@ -816,23 +815,23 @@ func (h float32ValueHandler) tfFieldWithUnknownValue(typ reflect.Type) any {
 	return p.Interface()
 }
 
-func (h float32ValueHandler) awsScalarFieldWithValue() any {
+func (h float32ValueHandler) awsScalarFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[float32]{Field1: h.nonZeroValue()}
 }
 
-func (h float32ValueHandler) awsScalarFieldWithZeroValue() any {
+func (h float32ValueHandler) awsScalarFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitiveField[float32]{Field1: h.zeroValue()}
 }
 
-func (h float32ValueHandler) awsPointerFieldWithValue() any {
+func (h float32ValueHandler) awsPointerFieldWithValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float32]{Field1: aws.Float32(h.nonZeroValue())}
 }
 
-func (h float32ValueHandler) awsPointerFieldWithZeroValue() any {
+func (h float32ValueHandler) awsPointerFieldWithZeroValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float32]{Field1: aws.Float32(h.zeroValue())}
 }
 
-func (h float32ValueHandler) awsPointerFieldWithNilValue() any {
+func (h float32ValueHandler) awsPointerFieldWithNilValue() any { // nosemgrep:ci.aws-in-func-name
 	return &awsPrimitivePointerField[float32]{Field1: nil}
 }
 
@@ -895,23 +894,23 @@ func TestFlattenStringField(t *testing.T) {
 	}
 }
 
-func TestFlattenBoolField(t *testing.T) {
+func TestFlattenBoolField(t *testing.T) { //nolint:paralleltest // false positive
 	testFlattenField(t, boolValueHandler{})
 }
 
-func TestFlattenInt64Field(t *testing.T) {
+func TestFlattenInt64Field(t *testing.T) { //nolint:paralleltest // false positive
 	testFlattenField(t, int64ValueHandler{})
 }
 
-func TestFlattenInt32Field(t *testing.T) {
+func TestFlattenInt32Field(t *testing.T) { //nolint:paralleltest // false positive
 	testFlattenField(t, int32ValueHandler{})
 }
 
-func TestFlattenFloat64Field(t *testing.T) {
+func TestFlattenFloat64Field(t *testing.T) { //nolint:paralleltest // false positive
 	testFlattenField(t, float64ValueHandler{})
 }
 
-func TestFlattenFloat32Field(t *testing.T) {
+func TestFlattenFloat32Field(t *testing.T) { //nolint:paralleltest // false positive
 	testFlattenField(t, float32ValueHandler{})
 }
 
