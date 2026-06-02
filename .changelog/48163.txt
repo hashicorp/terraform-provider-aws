@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53domains_delegation_signer_record: Fix resource being removed from state or showing a permanent diff on refresh by matching the DS record on its digest and no longer refreshing the write-only `signing_attributes`
+```
