@@ -5,11 +5,13 @@ package kinesis
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -191,5 +193,33 @@ type minimumThroughputBillingCommitmentModel struct {
 	EndedAt              timetypes.RFC3339                                                           `tfsdk:"ended_at"`
 	StartedAt            timetypes.RFC3339                                                           `tfsdk:"started_at"`
 	Status               fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentInputStatus]  `tfsdk:"status"`
-	StatusActual         fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentOutputStatus] `tfsdk:"status_actual" autoflex:"-"`
+	StatusActual         fwtypes.StringEnum[awstypes.MinimumThroughputBillingCommitmentOutputStatus] `tfsdk:"status_actual"`
+}
+
+var (
+	_ fwflex.Flattener = &minimumThroughputBillingCommitmentModel{}
+)
+
+func (m *minimumThroughputBillingCommitmentModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.MinimumThroughputBillingCommitmentOutput:
+		m.EarliestAllowedEndAt = timetypes.NewRFC3339TimePointerValue(t.EarliestAllowedEndAt)
+		m.EndedAt = timetypes.NewRFC3339TimePointerValue(t.EndedAt)
+		m.StartedAt = timetypes.NewRFC3339TimePointerValue(t.StartedAt)
+		switch t.Status {
+		case awstypes.MinimumThroughputBillingCommitmentOutputStatusEnabled:
+			m.Status = fwtypes.StringEnumValue(awstypes.MinimumThroughputBillingCommitmentInputStatusEnabled)
+		default:
+			m.Status = fwtypes.StringEnumValue(awstypes.MinimumThroughputBillingCommitmentInputStatusDisabled)
+		}
+		m.StatusActual = fwtypes.StringEnumValue(t.Status)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("minimum throughput billing commitment flatten: %T", v),
+		)
+	}
+	return diags
 }
