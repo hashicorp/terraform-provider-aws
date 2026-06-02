@@ -546,6 +546,54 @@ func TestAccS3Bucket_Basic_upgradeFromV5(t *testing.T) {
 	})
 }
 
+// TestAccS3Bucket_Basic_upgradeFromV5WithStandalonePolicy is a regression test for the bug
+// where upgrading from provider v5 to v6 deletes a bucket policy managed by the standalone
+// aws_s3_bucket_policy resource. The aws_s3_bucket Read function unconditionally writes
+// the live policy into state even when the inline policy attribute is not configured,
+// causing HasChange("policy") to fire during the v6 update and call DeleteBucketPolicy.
+// Fixed in v6.46.0 by guarding the Update path with deprecatedAttributeInRawConfig.
+// See: https://github.com/hashicorp/terraform-provider-aws/issues/47962
+func TestAccS3Bucket_Basic_upgradeFromV5WithStandalonePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	bucketResourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.92.0",
+					},
+				},
+				Config: testAccBucketPolicyConfig_migrateNoChange(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, bucketResourceName),
+					testAccCheckBucketPolicyExists(ctx, t, bucketResourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketPolicyConfig_migrateNoChange(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, bucketResourceName),
+					// Bug: policy is deleted by the v6 upgrade; this check should pass but fails.
+					testAccCheckBucketPolicyExists(ctx, t, bucketResourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(bucketResourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 // Test TestAccS3Bucket_disappears is designed to fail with a "plan
 // not empty" error in Terraform, to check against regressions.
 // See https://github.com/hashicorp/terraform/pull/2925
