@@ -42,66 +42,68 @@ func resourceTarget() *schema.Resource {
 			StateContext: resourceTargetImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"min_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"scalable_dimension": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"suspended_state": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dynamic_scaling_in_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"dynamic_scaling_out_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"scheduled_scaling_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"min_capacity": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"scalable_dimension": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_namespace": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"suspended_state": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dynamic_scaling_in_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"dynamic_scaling_out_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"scheduled_scaling_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

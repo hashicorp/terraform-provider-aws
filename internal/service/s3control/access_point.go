@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_access_point, name="Access Point")
+// @SDKResource("aws_s3_access_point", name="Access Point")
 // @Tags(identifierAttribute="arn")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{

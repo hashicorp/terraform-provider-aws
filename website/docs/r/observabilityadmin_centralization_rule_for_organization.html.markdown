@@ -183,7 +183,8 @@ The following arguments are optional:
 #### source_logs_configuration
 
 * `encrypted_log_group_strategy` - (Required) Strategy for handling encrypted log groups. Valid values: `ALLOW`, `SKIP`.
-* `log_group_selection_criteria` - (Required) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
+* `data_source_selection_criteria` - (Optional) Criteria for selecting data sources. Uses the same filter expression format as `log_group_selection_criteria`, but operates on Data Source Name and Data Source Type operands. When both `log_group_selection_criteria` and `data_source_selection_criteria` are specified, a log event must match both criteria to be centralized. Must be between 1 and 2000 characters.
+* `log_group_selection_criteria` - (Optional) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
 
 ## Attribute Reference
 

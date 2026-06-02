@@ -22,282 +22,284 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cors_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_control_allow_credentials": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"access_control_allow_headers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"access_control_allow_methods": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"access_control_allow_origins": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"access_control_expose_headers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"access_control_max_age_sec": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"origin_override": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"custom_headers_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						attrItems: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrHeader: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Computed: true,
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cors_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_control_allow_credentials": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"access_control_allow_headers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
+							},
+							"access_control_allow_methods": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"access_control_allow_origins": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"access_control_expose_headers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"access_control_max_age_sec": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"origin_override": {
+								Type:     schema.TypeBool,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			"remove_headers_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						attrItems: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrHeader: {
-										Type:     schema.TypeString,
-										Computed: true,
+				"custom_headers_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrItems: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrHeader: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"security_headers_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content_security_policy": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"content_security_policy": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"content_type_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"frame_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"frame_option": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"referrer_policy": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"referrer_policy": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"strict_transport_security": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"access_control_max_age_sec": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"include_subdomains": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"preload": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"xss_protection": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"mode_block": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"override": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"protection": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"report_uri": {
-										Type:     schema.TypeString,
-										Computed: true,
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				"remove_headers_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrItems: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrHeader: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"server_timing_headers_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"security_headers_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"content_security_policy": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"content_security_policy": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"content_type_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"frame_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"frame_option": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"referrer_policy": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"referrer_policy": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"strict_transport_security": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_control_max_age_sec": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"include_subdomains": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"preload": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"xss_protection": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"mode_block": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"override": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"protection": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"report_uri": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 						},
-						"sampling_rate": {
-							Type:     schema.TypeFloat,
-							Computed: true,
-						},
-					}},
-			},
+					},
+				},
+				"server_timing_headers_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"sampling_rate": {
+								Type:     schema.TypeFloat,
+								Computed: true,
+							},
+						}},
+				},
+			}
 		},
 	}
 }

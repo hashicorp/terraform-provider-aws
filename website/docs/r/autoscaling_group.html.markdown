@@ -768,6 +768,7 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
+- `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
 ## Waiting for Capacity

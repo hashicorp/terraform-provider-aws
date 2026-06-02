@@ -49,100 +49,102 @@ func resourceFramework() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_parameter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"control": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"input_parameter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-						names.AttrScope: {
-							// The control scope can include
-							// one or more resource types,
-							// a combination of a tag key and value,
-							// or a combination of one resource type and one resource ID.
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"compliance_resource_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							names.AttrScope: {
+								// The control scope can include
+								// one or more resource types,
+								// a combination of a tag key and value,
+								// or a combination of one resource type and one resource ID.
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"compliance_resource_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"compliance_resource_types": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"compliance_resource_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
+										// A maximum of one key-value pair can be provided.
+										// The tag value is optional, but it cannot be an empty string
+										names.AttrTags: tftags.TagsSchema(),
 									},
-									// A maximum of one key-value pair can be provided.
-									// The tag value is optional, but it cannot be an empty string
-									names.AttrTags: tftags.TagsSchema(),
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validFrameworkName,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validFrameworkName,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -53,6 +53,7 @@ var (
 	ResourceLaunchTemplate                                = resourceLaunchTemplate
 	ResourceLocalGatewayRoute                             = resourceLocalGatewayRoute
 	ResourceLocalGatewayRouteTable                        = newLocalGatewayRouteTableResource
+	ResourceLocalGatewayRouteTableVIFGroupAssociation     = newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource
 	ResourceLocalGatewayRouteTableVPCAssociation          = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                     = resourceMainRouteTableAssociation
 	ResourceManagedPrefixList                             = resourceManagedPrefixList
@@ -144,6 +145,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
@@ -191,6 +193,7 @@ var (
 	FindLaunchTemplateByID                                      = findLaunchTemplateByID
 	FindLocalGatewayRouteByTwoPartKey                           = findLocalGatewayRouteByTwoPartKey
 	FindLocalGatewayRouteTableByID                              = findLocalGatewayRouteTableByID
+	FindLocalGatewayRouteTableVIFGroupAssociationByID           = findLocalGatewayRouteTableVIFGroupAssociationByID
 	FindLocalGatewayRouteTableVPCAssociationByID                = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                           = findMainRouteTableAssociationByID
 	FindManagedPrefixListByID                                   = findManagedPrefixListByID

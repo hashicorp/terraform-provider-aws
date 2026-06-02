@@ -47,84 +47,86 @@ func resourceCapacityReservation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"end_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			"end_date_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.EndDateTypeUnlimited,
-				ValidateDiagFunc: enum.Validate[awstypes.EndDateType](),
-			},
-			"ephemeral_storage": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"instance_match_criteria": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.InstanceMatchCriteriaOpen,
-				ValidateDiagFunc: enum.Validate[awstypes.InstanceMatchCriteria](),
-			},
-			"instance_platform": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationInstancePlatform](),
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placement_group_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tenancy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.CapacityReservationTenancyDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationTenancy](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"end_date": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				"end_date_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.EndDateTypeUnlimited,
+					ValidateDiagFunc: enum.Validate[awstypes.EndDateType](),
+				},
+				"ephemeral_storage": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"instance_match_criteria": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.InstanceMatchCriteriaOpen,
+					ValidateDiagFunc: enum.Validate[awstypes.InstanceMatchCriteria](),
+				},
+				"instance_platform": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationInstancePlatform](),
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"outpost_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"placement_group_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tenancy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.CapacityReservationTenancyDefault,
+					ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationTenancy](),
+				},
+			}
 		},
 	}
 }

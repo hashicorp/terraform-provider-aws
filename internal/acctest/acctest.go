@@ -1168,6 +1168,8 @@ func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	}
 }
 
+// PreCheckOrganizationsAccount ensures that the default provider instance is configured with an AWS account that is *not* a member of an AWS Organization.
+// WARNING: The name suggests the *opposite* of what it does.
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1184,26 +1186,16 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
+// PreCheckOrganizationsEnabled ensures that the default provider instance is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
 	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
-func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
-	t.Helper()
-
-	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
-
-	if err != nil {
-		t.Fatalf("reading Organization service principals: %s", err)
-	}
-
-	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		t.Skipf("trusted access for %s must be enabled in AWS Organizations", servicePrincipalName)
-	}
-}
-
+// PreCheckOrganizationsEnabled ensures that the provider instance returned by `providerF` is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
 func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
 	t.Helper()
 
@@ -1220,12 +1212,29 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 	return organization
 }
 
+// PreCheckOrganizationsEnabledServicePrincipal ensures that the default provider instance is configured with an AWS account that has trusted access enabled for the specified AWS service principal in AWS Organizations.
+func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
+	t.Helper()
+
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+
+	if err != nil {
+		t.Fatalf("reading Organization service principals: %s", err)
+	}
+
+	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
+		t.Skipf("trusted access for %s must be enabled in AWS Organizations", servicePrincipalName)
+	}
+}
+
+// PreCheckOrganizationManagementAccount ensures that the default provider instance is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationManagementAccountWithProvider ensures that the provider instance returned by `providerF` is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1242,12 +1251,14 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 	}
 }
 
+// PreCheckOrganizationMemberAccount ensures that the default provider instance is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationMemberAccountWithProvider ensures that the provider instance returned by `providerF` is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1264,6 +1275,7 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+// PreCheckSameOrganization ensures that all provider instances returned by `providerFs` are configured with AWS accounts that are members of the same AWS Organization.
 func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
 	t.Helper()
 
