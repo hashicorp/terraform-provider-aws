@@ -52,7 +52,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_kinesis_stream_consumer.example
   identity = {
-    "arn" = "arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553"
+    arn = "arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553"
   }
 }
 
