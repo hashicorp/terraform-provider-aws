@@ -119,9 +119,6 @@ func (r *membershipResource) Schema(ctx context.Context, _ resource.SchemaReques
 			"update_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -293,6 +290,9 @@ func (r *membershipResource) Update(ctx context.Context, request resource.Update
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// set computed only fields to state defaults.
+	plan.UpdateTime = state.UpdateTime
 
 	if diff.HasChanges() {
 		input := cleanrooms.UpdateMembershipInput{
