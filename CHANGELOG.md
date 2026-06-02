@@ -31,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_lb: Add `enable_prefix_for_ipv6_source_nat` argument ([#40431](https://github.com/hashicorp/terraform-provider-aws/issues/40431))
 * resource/aws_observabilityadmin_telemetry_rule: Expand `rule` schema to cover the full SDK shape, including `all_regions`, `allow_field_updates`, `regions`, `scope`, `selection_criteria`, `telemetry_source_types`, and the full `destination_configuration` tree (`cloudtrail_parameters`, `elb_load_balancer_logging_parameters`, `log_delivery_parameters`, `msk_monitoring_parameters`, `vpc_flow_log_parameters`, `waf_logging_parameters`) ([#48072](https://github.com/hashicorp/terraform-provider-aws/issues/48072))
 * resource/aws_observabilityadmin_telemetry_rule_for_organization: Expand `rule` schema to cover the full SDK shape, including `all_regions`, `allow_field_updates`, `regions`, `scope`, `selection_criteria`, `telemetry_source_types`, and the full `destination_configuration` tree (`cloudtrail_parameters`, `elb_load_balancer_logging_parameters`, `log_delivery_parameters`, `msk_monitoring_parameters`, `vpc_flow_log_parameters`, `waf_logging_parameters`) ([#48072](https://github.com/hashicorp/terraform-provider-aws/issues/48072))
+* resource/aws_osis_pipeline: Adds resource identity ([#48155](https://github.com/hashicorp/terraform-provider-aws/issues/48155))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Add tagging support ([#48084](https://github.com/hashicorp/terraform-provider-aws/issues/48084))
 
 BUG FIXES:
