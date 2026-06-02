@@ -13,6 +13,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_host: Add `state`, `allocation_time`, `release_time`, `host_maintenance`, `host_reservation_id`, `availability_zone_id`, `allows_multiple_instance_types`, `member_of_service_linked_resource_group`, `instances`, and `available_capacity` attributes ([#47991](https://github.com/hashicorp/terraform-provider-aws/issues/47991))
+* data-source/aws_kinesis_stream: Add `warm_throughput` attribute ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
 * data-source/aws_lb: Add `enable_prefix_for_ipv6_source_nat` attribute ([#40431](https://github.com/hashicorp/terraform-provider-aws/issues/40431))
 * resource/aws_bedrockagentcore_gateway: Mark `protocol_type` as Optional. Omit it to create a gateway that routes traffic directly to HTTP targets (e.g. AgentCore Runtime) ([#47897](https://github.com/hashicorp/terraform-provider-aws/issues/47897))
 * resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.caller_iam_credentials` and `credential_provider_configuration.jwt_passthrough` arguments ([#47780](https://github.com/hashicorp/terraform-provider-aws/issues/47780))
@@ -29,6 +31,10 @@ ENHANCEMENTS:
 * resource/aws_datazone_glossary_term: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_project: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_user_profile: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
+* resource/aws_kinesis_stream: Add Resource Identity support ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
+* resource/aws_kinesis_stream: Add `warm_throughput_mib_ps` argument. This functionality requires the `kinesis:UpdateStreamWarmThroughput` IAM permission ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
+* resource/aws_kinesis_stream: Add plan-time validation of `shard_level_metrics` ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
+* resource/aws_kinesis_stream_consumer: Add Resource Identity support ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
 * resource/aws_lb: Add `enable_prefix_for_ipv6_source_nat` argument ([#40431](https://github.com/hashicorp/terraform-provider-aws/issues/40431))
 * resource/aws_observabilityadmin_telemetry_rule: Expand `rule` schema to cover the full SDK shape, including `all_regions`, `allow_field_updates`, `regions`, `scope`, `selection_criteria`, `telemetry_source_types`, and the full `destination_configuration` tree (`cloudtrail_parameters`, `elb_load_balancer_logging_parameters`, `log_delivery_parameters`, `msk_monitoring_parameters`, `vpc_flow_log_parameters`, `waf_logging_parameters`) ([#48072](https://github.com/hashicorp/terraform-provider-aws/issues/48072))
 * resource/aws_observabilityadmin_telemetry_rule_for_organization: Expand `rule` schema to cover the full SDK shape, including `all_regions`, `allow_field_updates`, `regions`, `scope`, `selection_criteria`, `telemetry_source_types`, and the full `destination_configuration` tree (`cloudtrail_parameters`, `elb_load_balancer_logging_parameters`, `log_delivery_parameters`, `msk_monitoring_parameters`, `vpc_flow_log_parameters`, `waf_logging_parameters`) ([#48072](https://github.com/hashicorp/terraform-provider-aws/issues/48072))
