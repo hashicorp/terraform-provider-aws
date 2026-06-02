@@ -88,6 +88,22 @@ func dataSourceStream() *schema.Resource {
 					},
 				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
+				"warm_throughput": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"current_mib_ps": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_mib_ps": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
