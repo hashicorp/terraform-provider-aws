@@ -3,12 +3,12 @@ subcategory: "End User Messaging SMS"
 layout: "aws"
 page_title: "AWS: aws_pinpointsmsvoicev2_pool"
 description: |-
-  Lists End User Messaging SMS Pool resources.
+  Lists AWS End User Messaging SMS Pool resources.
 ---
 
 # List Resource: aws_pinpointsmsvoicev2_pool
 
-Lists End User Messaging SMS Pool resources.
+Lists AWS End User Messaging SMS Pool resources.
 
 ## Example Usage
 
