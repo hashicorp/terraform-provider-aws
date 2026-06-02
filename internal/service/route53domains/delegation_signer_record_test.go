@@ -37,6 +37,17 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 				),
 			},
 			{
+				// Regression guard for #47928: after Create the very next
+				// refresh + plan must be empty. Prior to the digest-keying
+				// fix, Read would fail to match the stored dnssec_key_id
+				// against any DnssecKey returned by GetDomainDetail and would
+				// remove the resource from state, producing a non-empty plan
+				// (a fresh Create).
+				Config:             testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
