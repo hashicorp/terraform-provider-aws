@@ -32,146 +32,148 @@ func dataSourceHost() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allocation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"allows_multiple_instance_types": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_placement": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"available_capacity": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"available_instance_capacity": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"available_capacity": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrInstanceType: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"total_capacity": {
-										Type:     schema.TypeInt,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allocation_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"allows_multiple_instance_types": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"asset_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_placement": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"available_capacity": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"available_instance_capacity": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"available_capacity": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrInstanceType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"total_capacity": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"available_vcpus": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cores": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"host_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"host_maintenance": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_recovery": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_reservation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrInstanceID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrOwnerID: {
-							Type:     schema.TypeString,
-							Computed: true,
+							"available_vcpus": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"member_of_service_linked_resource_group": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"release_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sockets": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"total_vcpus": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cores": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"host_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"host_maintenance": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_recovery": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_reservation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrInstanceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrOwnerID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"member_of_service_linked_resource_group": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"outpost_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"release_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sockets": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"total_vcpus": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

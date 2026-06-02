@@ -40,27 +40,29 @@ func resourceDeployment() *schema.Resource {
 			StateContext: resourceDeploymentImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"auto_deployed": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"auto_deployed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

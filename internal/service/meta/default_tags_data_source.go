@@ -32,10 +32,7 @@ type defaultTagsDataSource struct {
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID:   idAttributeDeprecatedNoReplacement(),
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}

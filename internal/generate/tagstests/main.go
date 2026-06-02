@@ -508,7 +508,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
 				d.IsDataSource = true
 				fallthrough

@@ -11,9 +11,9 @@ description: |-
 Creates an Amazon CloudFront origin access identity.
 
 For information about CloudFront distributions, see the
-[Amazon CloudFront Developer Guide][1]. For more information on generating
+[Amazon CloudFront Developer Guide](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html). For more information on generating
 origin access identities, see
-[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content][2].
+[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html).
 
 ## Example Usage
 
@@ -56,7 +56,7 @@ Normally, when referencing an origin access identity in CloudFront, you need to
 prefix the ID with the `origin-access-identity/cloudfront/` special path.
 The `cloudfront_access_identity_path` allows this to be circumvented.
 The below snippet demonstrates use with the `s3_origin_config` structure for the
-[`aws_cloudfront_distribution`][3] resource:
+[`aws_cloudfront_distribution`](/docs/providers/aws/r/cloudfront_distribution.html) resource:
 
 ```terraform
 resource "aws_cloudfront_distribution" "example" {
@@ -74,7 +74,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 Note that the AWS API may translate the `s3_canonical_user_id` `CanonicalUser`
 principal into an `AWS` IAM ARN principal when supplied in an
-[`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
+[`aws_s3_bucket`](/docs/providers/aws/r/s3_bucket.html) bucket policy, causing spurious diffs in Terraform. If
 you see this behavior, use the `iam_arn` instead:
 
 ```terraform
@@ -95,11 +95,6 @@ resource "aws_s3_bucket_policy" "example" {
   policy = data.aws_iam_policy_document.s3_policy.json
 }
 ```
-
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
-[3]: /docs/providers/aws/r/cloudfront_distribution.html
-[4]: /docs/providers/aws/r/s3_bucket.html
 
 ## Import
 

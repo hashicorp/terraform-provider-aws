@@ -93,6 +93,14 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceSubscriptionFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -117,6 +125,14 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

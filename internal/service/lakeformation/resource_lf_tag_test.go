@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -148,6 +149,14 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 					testAccCheckResourceLFTagExists(ctx, t, resourceName, &resourcelftag),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

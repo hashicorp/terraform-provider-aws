@@ -268,7 +268,7 @@ provider "aws" {
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
 |Parallel Computing Service|`pcs`|`AWS_ENDPOINT_URL_PCS`|`pcs`|
-|Pinpoint|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
+|End User Messaging|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
 |End User Messaging SMS|`pinpointsmsvoicev2`|`AWS_ENDPOINT_URL_PINPOINT_SMS_VOICE_V2`|`pinpoint_sms_voice_v2`|
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|

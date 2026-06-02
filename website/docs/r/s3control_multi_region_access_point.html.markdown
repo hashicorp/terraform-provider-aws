@@ -62,13 +62,6 @@ This resource supports the following arguments:
 * `account_id` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `delete` - (Default `15m`)
-
 ### Details Configuration
 
 The `details` block supports the following:
@@ -105,13 +98,47 @@ The `region` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `alias` - The alias for the Multi-Region Access Point.
+* `alias` - Alias for the Multi-Region Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
-* `domain_name` - The DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
-* `id` - The AWS account ID and access point name separated by a colon (`:`).
-* `status` - The current status of the Multi-Region Access Point. One of: `READY`, `INCONSISTENT_ACROSS_REGIONS`, `CREATING`, `PARTIALLY_CREATED`, `PARTIALLY_DELETED`, `DELETING`.
+* `domain_name` - DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
+* `id` - AWS account ID and access point name separated by a colon (`:`).
+* `name` - Name of the Multi-Region Access Point.
+* `status` Status of the Multi-Region Access Point. One of: `READY`, `INCONSISTENT_ACROSS_REGIONS`, `CREATING`, `PARTIALLY_CREATED`, `PARTIALLY_DELETED`, `DELETING`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `60m`)
+* `delete` - (Default `15m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3control_multi_region_access_point.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_s3control_multi_region_access_point" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the Multi-Region Access Point.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
 

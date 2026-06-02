@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kms_secrets", name="Secrets)
+// @SDKDataSource("aws_kms_secrets", name="Secrets")
 func dataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretsRead,

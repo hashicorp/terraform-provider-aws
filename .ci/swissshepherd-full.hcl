@@ -174,6 +174,7 @@ check "schema_docs" {
   heading     = true
   labels      = true
   ordering    = true
+  deprecated  = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",

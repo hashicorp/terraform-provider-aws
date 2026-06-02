@@ -27,468 +27,470 @@ func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_rebalancing": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCapacityProviderStrategy: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrWeight: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"cluster_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarms": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarm_names": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"enable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"rollback": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
+				"availability_zone_rebalancing": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCapacityProviderStrategy: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"base": {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
-						},
-						"bake_time_in_minutes": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"canary_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"canary_bake_time_in_minutes": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"canary_percent": {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-								},
+							"capacity_provider": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"deployment_circuit_breaker": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"rollback": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"linear_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"step_bake_time_in_minutes": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"step_percent": {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"lifecycle_hook": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hook_details": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"hook_target_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"lifecycle_stages": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrRoleARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"maximum_percent": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"minimum_healthy_percent": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"strategy": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"deployment_controller": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"deployments": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCreatedAt: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"desired_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"pending_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"running_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"task_definition": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"updated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"desired_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"enable_ecs_managed_tags": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_execute_command": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"events": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCreatedAt: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"health_check_grace_period_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"iam_role": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNetworkConfiguration: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"load_balancer": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"container_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"elb_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"advanced_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alternate_target_group_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"production_listener_rule": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"test_listener_rule": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrRoleARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							names.AttrWeight: {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"ordered_placement_strategy": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrField: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"cluster_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarms": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarm_names": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"enable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"rollback": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"bake_time_in_minutes": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"canary_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"canary_bake_time_in_minutes": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"canary_percent": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"deployment_circuit_breaker": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"rollback": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"linear_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"step_bake_time_in_minutes": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"step_percent": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"lifecycle_hook": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hook_details": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"hook_target_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"lifecycle_stages": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrRoleARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"maximum_percent": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"minimum_healthy_percent": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"strategy": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"placement_constraints": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"deployment_controller": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"platform_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pending_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"platform_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPropagateTags: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"running_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"scheduling_strategy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_registries": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"container_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"registry_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"deployments": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCreatedAt: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"desired_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"pending_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"running_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"task_definition": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"updated_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"task_definition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"task_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrCreatedAt: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"pending_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"running_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"stability_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"task_definition": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"updated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"desired_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"enable_ecs_managed_tags": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_execute_command": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"events": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCreatedAt: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"health_check_grace_period_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"iam_role": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"launch_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNetworkConfiguration: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"assign_public_ip": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"load_balancer": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"container_port": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"elb_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_group_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"advanced_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alternate_target_group_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"production_listener_rule": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"test_listener_rule": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrRoleARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"ordered_placement_strategy": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrField: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"placement_constraints": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"platform_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pending_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"platform_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPropagateTags: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"running_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"scheduling_strategy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_registries": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"container_port": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"registry_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"task_definition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"task_sets": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrCreatedAt: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"pending_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"running_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"stability_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"task_definition": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"updated_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

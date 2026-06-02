@@ -103,7 +103,7 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.UpdateGcmChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting Pinpoint GCM Channel for application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "putting End User Messaging GCM Channel for application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -115,18 +115,18 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint GCM Channel for application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging GCM Channel for application %s", d.Id())
 
 	output, err := findGCMChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint GCM Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging GCM Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint GCM Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging GCM Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -140,7 +140,7 @@ func resourceGCMChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint GCM Channel for application %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging GCM Channel for application %s", d.Id())
 	_, err := conn.DeleteGcmChannel(ctx, &pinpoint.DeleteGcmChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -150,7 +150,7 @@ func resourceGCMChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint GCM Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging GCM Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
 }

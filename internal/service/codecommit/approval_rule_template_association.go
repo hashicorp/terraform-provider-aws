@@ -38,22 +38,24 @@ func resourceApprovalRuleTemplateAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"approval_rule_template_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrRepositoryName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[\w\.-]+`), ""),
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"approval_rule_template_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrRepositoryName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`[\w\.-]+`), ""),
+					),
+				},
+			}
 		},
 	}
 }
