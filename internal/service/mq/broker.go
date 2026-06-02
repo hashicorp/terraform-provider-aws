@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -480,7 +482,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("engine_type", output.EngineType)
 	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
+	d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
@@ -1142,7 +1144,62 @@ func flattenConfiguration(config *types.Configurations) []any {
 	return []any{m}
 }
 
-func flattenBrokerInstances(instances []types.BrokerInstance) []any {
+// brokerEndpointOrder defines the canonical sort priority for known MQ broker endpoints,
+// keyed by "engine:scheme:port" (engine lowercased). The engine prefix scopes the key
+// to a single engine so ports shared across engines (e.g., 5671 for ActiveMQ amqp+ssl
+// and RabbitMQ amqps) cannot collide. Lower values sort earlier; entries not present
+// receive math.MaxInt priority and sort to the end of the list.
+//
+// In RabbitMQ 4.2 and later, the Prometheus metrics endpoint is placed after amqps so
+// that instances.0.endpoints.0 continues to point at the AMQP endpoint across versions.
+var brokerEndpointOrder = map[string]int{
+	"activemq:ssl:61617":       0, // ActiveMQ OpenWire
+	"activemq:amqp+ssl:5671":   1, // ActiveMQ AMQP Secure
+	"activemq:stomp+ssl:61614": 2, // ActiveMQ STOMP Secure
+	"activemq:mqtt+ssl:8883":   3, // ActiveMQ MQTT Secure
+	"activemq:wss:61619":       4, // ActiveMQ WebSocket Secure
+	"rabbitmq:amqps:5671":      0, // RabbitMQ AMQP Secure
+	"rabbitmq:https:16001":     1, // RabbitMQ Prometheus metrics (4.2+)
+}
+
+func brokerEndpointPriority(endpoint string, engineType types.EngineType) int {
+	scheme, rest, found := strings.Cut(endpoint, "://")
+	if !found {
+		return math.MaxInt
+	}
+	portIdx := strings.LastIndex(rest, ":")
+	if portIdx < 0 {
+		return math.MaxInt
+	}
+	key := strings.ToLower(string(engineType)) + ":" + scheme + ":" + rest[portIdx+1:]
+	if p, ok := brokerEndpointOrder[key]; ok {
+		return p
+	}
+	return math.MaxInt
+}
+
+// sortBrokerInstanceEndpoints returns a copy of endpoints sorted in the canonical order
+// defined for the given engine type. Endpoints whose "engine:scheme:port" is not in
+// brokerEndpointOrder (including any endpoint when the engine type is unrecognized)
+// receive math.MaxInt priority and sort to the end while preserving their original
+// relative order.
+func sortBrokerInstanceEndpoints(endpoints []string, engineType types.EngineType) []string {
+	sorted := make([]string, len(endpoints))
+	copy(sorted, endpoints)
+	slices.SortStableFunc(sorted, func(a, b string) int {
+		pa, pb := brokerEndpointPriority(a, engineType), brokerEndpointPriority(b, engineType)
+		if pa < pb {
+			return -1
+		}
+		if pa > pb {
+			return 1
+		}
+		return 0
+	})
+	return sorted
+}
+
+func flattenBrokerInstances(instances []types.BrokerInstance, engineType types.EngineType) []any {
 	if len(instances) == 0 {
 		return []any{}
 	}
@@ -1153,7 +1210,7 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []any {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m[names.AttrEndpoints] = instance.Endpoints
+			m[names.AttrEndpoints] = sortBrokerInstanceEndpoints(instance.Endpoints, engineType)
 		}
 		if instance.IpAddress != nil {
 			m[names.AttrIPAddress] = aws.ToString(instance.IpAddress)

@@ -13,6 +13,8 @@ var (
 
 	NormalizeEngineVersion = normalizeEngineVersion
 
+	SortBrokerInstanceEndpoints = sortBrokerInstanceEndpoints
+
 	WaitBrokerRebooted = waitBrokerRebooted
 	WaitBrokerDeleted  = waitBrokerDeleted
 )
