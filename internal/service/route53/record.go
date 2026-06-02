@@ -336,6 +336,11 @@ func resourceRecord() *schema.Resource {
 
 func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if err := validateTXTRecordStringLengths(d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Record: %s", err)
+	}
+
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	zoneID := cleanZoneID(d.Get("zone_id").(string))
@@ -498,6 +503,11 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if err := validateTXTRecordStringLengths(d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Record (%s): %s", d.Id(), err)
+	}
+
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	// Route 53 supports CREATE, DELETE, and UPSERT actions. We use UPSERT, and
@@ -880,6 +890,41 @@ func nilString(s string) *string {
 		return nil
 	}
 	return aws.String(s)
+}
+
+// validateTXTRecordStringLengths checks that each quoted string part in TXT and
+// SPF records does not exceed the DNS 255-character limit. Users split long
+// values using \"\" notation, and each resulting part must be ≤ 255 characters.
+func validateTXTRecordStringLengths(d *schema.ResourceData) error {
+	rrType := awstypes.RRType(d.Get(names.AttrType).(string))
+	if rrType != awstypes.RRTypeTxt && rrType != awstypes.RRTypeSpf {
+		return nil
+	}
+
+	v, ok := d.GetOk("records")
+	if !ok {
+		return nil
+	}
+
+	return validateTXTStringParts(flex.ExpandStringValueSet(v.(*schema.Set)))
+}
+
+// validateTXTStringParts checks that each quoted string part in a set of TXT
+// record values does not exceed the DNS 255-character limit per RFC 1035.
+func validateTXTStringParts(records []string) error {
+	for _, record := range records {
+		// Split on escaped quote pairs that represent multi-string TXT entries.
+		parts := strings.Split(record, "\"\"")
+		for _, part := range parts {
+			if len(part) > 255 {
+				return fmt.Errorf("a TXT record contains a string part longer than 255 characters (%d characters). "+
+					"DNS TXT records require each quoted string to be at most 255 characters. "+
+					"Split long values using \\\"\\\" notation, e.g. \"first255chars\\\"\\\"remaining\"", len(part))
+			}
+		}
+	}
+
+	return nil
 }
 
 func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.ResourceRecordSet {
