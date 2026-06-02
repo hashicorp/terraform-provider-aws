@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_kinesis_stream", name="Stream")
 // @Tags(identifierAttribute="name", resourceType="Stream")
+// @Testing(tagsTest=false)
 func dataSourceStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamRead,
@@ -87,6 +88,22 @@ func dataSourceStream() *schema.Resource {
 					},
 				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
+				"warm_throughput": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"current_mib_ps": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_mib_ps": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -143,12 +160,19 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set("shard_level_metrics", shardLevelMetrics)
 	d.Set(names.AttrStatus, stream.StreamStatus)
-	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
+	if v := stream.StreamModeDetails; v != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
 		d.Set("stream_mode_details", nil)
+	}
+	if v := stream.WarmThroughput; v != nil {
+		if err := d.Set("warm_throughput", []any{flattenWarmThroughputObject(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_throughput: %s", err)
+		}
+	} else {
+		d.Set("warm_throughput", nil)
 	}
 
 	return diags

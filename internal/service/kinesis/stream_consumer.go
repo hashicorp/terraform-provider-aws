@@ -27,17 +27,16 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.47.0")
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
 		ReadWithoutTimeout:   resourceStreamConsumerRead,
 		UpdateWithoutTimeout: resourceStreamConsumerUpdate,
 		DeleteWithoutTimeout: resourceStreamConsumerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -158,7 +157,11 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 		ConsumerARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStreamConsumer(ctx, &input)
+	return findStreamConsumerDescription(ctx, conn, &input)
+}
+
+func findStreamConsumerDescription(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamConsumerInput) (*types.ConsumerDescription, error) {
+	output, err := conn.DescribeStreamConsumer(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

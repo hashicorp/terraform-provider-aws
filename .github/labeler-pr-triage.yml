@@ -1274,6 +1274,7 @@ service/kinesis:
               - 'internal/service/kinesis/**/*'
               - 'website/**/kinesis_stream*'
               - 'website/**/kinesis_resource_policy*'
+              - 'website/**/kinesis_account_settings*'
 service/kinesisanalytics:
   - any:
       - changed-files:
