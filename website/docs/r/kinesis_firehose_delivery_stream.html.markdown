@@ -1168,7 +1168,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_kinesis_firehose_delivery_stream.example
   identity = {
-    "arn" = "arn:aws:firehose:us-east-1:123456789012:deliverystream/example-delivery-stream"
+    arn = "arn:aws:firehose:us-east-1:123456789012:deliverystream/example-delivery-stream"
   }
 }
 
