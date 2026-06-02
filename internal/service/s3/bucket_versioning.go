@@ -330,7 +330,7 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 	if config.MFADelete != "" {
 		m["mfa_delete"] = config.MFADelete
 	} else {
-		m["mfa_delete"] = bucketVersioningMfaDeleteDisabled
+		m["mfa_delete"] = bucketVersioningMFADeleteDisabled
 	}
 
 	if config.Status != "" {
