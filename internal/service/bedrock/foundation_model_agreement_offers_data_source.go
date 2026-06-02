@@ -83,7 +83,7 @@ func (d *foundationModelAgreementOffersDataSource) Read(ctx context.Context, req
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type foundationModelAgreementOffersDataSourceModel struct {
