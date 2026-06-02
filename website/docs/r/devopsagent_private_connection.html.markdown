@@ -17,10 +17,39 @@ A Private Connection enables AWS DevOps Agent to securely connect to resources i
 ### Self Managed
 
 ```terraform
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
+  cidr_block = "10.0.1.0/24"
+}
+
+resource "aws_vpclattice_resource_gateway" "example" {
+  name       = "example"
+  vpc_id     = aws_vpc.example.id
+  subnet_ids = [aws_subnet.example.id]
+}
+
+resource "aws_vpclattice_resource_configuration" "example" {
+  name                        = "example"
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.example.id
+  protocol                    = "TCP"
+  port_ranges                 = ["443"]
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
 resource "aws_devopsagent_private_connection" "example" {
   name                      = "example-connection"
   mode                      = "SELF_MANAGED"
-  resource_configuration_id = aws_vpc_lattice_resource_configuration.example.id
+  resource_configuration_id = aws_vpclattice_resource_configuration.example.id
   certificate               = var.certificate_pem
 }
 ```
@@ -28,12 +57,21 @@ resource "aws_devopsagent_private_connection" "example" {
 ### Service Managed
 
 ```terraform
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
+  cidr_block = "10.0.1.0/24"
+}
+
 resource "aws_devopsagent_private_connection" "example" {
   name         = "example-connection"
   mode         = "SERVICE_MANAGED"
   host_address = "10.0.0.1"
   vpc_id       = aws_vpc.example.id
-  subnet_ids   = aws_subnet.example[*].id
+  subnet_ids   = [aws_subnet.example.id]
 }
 ```
 
@@ -72,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DevOps Agent Private Connection can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Agent Private Connection using `name`. For example:
 
+```terraform
+import {
+  to = aws_devopsagent_private_connection.example
+  id = "example-connection"
+}
 ```
-$ terraform import aws_devopsagent_private_connection.example example-connection
+
+Using `terraform import`, import DevOps Agent Private Connection using `name`. For example:
+
+```console
+% terraform import aws_devopsagent_private_connection.example example-connection
 ```
