@@ -67,6 +67,29 @@ func testAccAccountSettings_enabled(t *testing.T) {
 					},
 				},
 			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccountSettings/status/"),
+				ConfigVariables: config.Variables{
+					"status": config.StringVariable("ENABLED"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccountSettings/status/"),
+				ConfigVariables: config.Variables{
+					"status": config.StringVariable("DISABLED"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountSettingsExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }

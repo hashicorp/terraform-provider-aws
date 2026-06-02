@@ -171,10 +171,16 @@ func (r *accountSettingsResource) Update(ctx context.Context, request resource.U
 		return
 	}
 
-	_, err := conn.UpdateAccountSettings(ctx, &input)
+	output, err := conn.UpdateAccountSettings(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("updating Kinesis Account Settings", err.Error())
+		return
+	}
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
