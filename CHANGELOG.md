@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_cleanrooms_membership` ([#48166](https://github.com/hashicorp/terraform-provider-aws/issues/48166))
 * **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
 * **New Resource:** `aws_ec2_local_gateway_route_table` ([#48013](https://github.com/hashicorp/terraform-provider-aws/issues/48013))
 * **New Resource:** `aws_ec2_local_gateway_route_table_virtual_interface_group_association` ([#48014](https://github.com/hashicorp/terraform-provider-aws/issues/48014))
@@ -20,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.caller_iam_credentials` and `credential_provider_configuration.jwt_passthrough` arguments ([#47780](https://github.com/hashicorp/terraform-provider-aws/issues/47780))
 * resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.gateway_iam_role.service` and `credential_provider_configuration.gateway_iam_role.region` arguments to enable SigV4 signing of upstream requests for `mcp_server` targets pointing at AWS-hosted endpoints ([#47626](https://github.com/hashicorp/terraform-provider-aws/issues/47626))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.http` argument ([#47897](https://github.com/hashicorp/terraform-provider-aws/issues/47897))
+* resource/aws_cleanrooms_membership: Add resource identity support ([#48166](https://github.com/hashicorp/terraform-provider-aws/issues/48166))
 * resource/aws_datazone_asset_type: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_domain: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_environment: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
