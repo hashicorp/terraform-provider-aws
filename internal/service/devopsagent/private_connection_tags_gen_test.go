@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -26,7 +25,7 @@ func TestAccDevOpsAgentPrivateConnection_tags(t *testing.T) {
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -235,7 +234,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_null(t *testing.T) {
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -307,7 +306,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_emptyMap(t *testing.T) {
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -367,7 +366,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_addOnUpdate(t *testing.T) {
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -459,7 +458,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -566,7 +565,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_EmptyTag_OnUpdate_add(t *testing.T
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -722,7 +721,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_EmptyTag_OnUpdate_replace(t *testi
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -824,7 +823,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_providerOnly(t *testin
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1032,7 +1031,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_nonOverlapping(t *test
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1214,7 +1213,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_overlapping(t *testing
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1412,7 +1411,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_updateToProviderOnly(t
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1514,7 +1513,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_updateToResourceOnly(t
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1615,7 +1614,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_emptyResourceTag(t *te
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1693,7 +1692,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_emptyProviderOnlyTag(t
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1763,7 +1762,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_nullOverlappingResourc
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1842,7 +1841,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_DefaultTags_nullNonOverlappingReso
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1923,7 +1922,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_ComputedTag_onCreate(t *testing.T)
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1990,7 +1989,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_ComputedTag_OnUpdate_add(t *testin
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2099,7 +2098,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_ComputedTag_OnUpdate_replace(t *te
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2198,7 +2197,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_IgnoreTags_Overlap_defaultTag(t *t
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2367,7 +2366,7 @@ func TestAccDevOpsAgentPrivateConnection_Tags_IgnoreTags_Overlap_resourceTag(t *
 
 	var v devopsagent.DescribePrivateConnectionOutput
 	resourceName := "aws_devopsagent_private_connection.test"
-	rName := sdkacctest.RandString(20)
+	rName := randomPrivateConnectionName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

@@ -21,10 +21,10 @@ func RegisterSweepers() {
 
 func sweepPrivateConnections(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.DevOpsAgentClient(ctx)
-	input := &devopsagent.ListPrivateConnectionsInput{}
+	input := devopsagent.ListPrivateConnectionsInput{}
 	var sweepResources []sweep.Sweepable
 
-	out, err := conn.ListPrivateConnections(ctx, input)
+	out, err := conn.ListPrivateConnections(ctx, &input)
 	if err != nil {
 		return nil, err
 	}

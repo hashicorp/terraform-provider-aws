@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsagent/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -43,12 +45,12 @@ func TestAccDevOpsAgentPrivateConnection_basic(t *testing.T) {
 				Config: testAccPrivateConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrivateConnectionExists(ctx, t, resourceName, &privateconnection),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aidevops", regexache.MustCompile(`private-connection/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "mode", "SELF_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, string(awstypes.PrivateConnectionTypeSelfManaged)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -224,9 +226,9 @@ func TestAccDevOpsAgentPrivateConnection_serviceManaged(t *testing.T) {
 				Config: testAccPrivateConnectionConfig_serviceManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrivateConnectionExists(ctx, t, resourceName, &privateconnection),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aidevops", regexache.MustCompile(`private-connection/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "mode", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, string(awstypes.PrivateConnectionTypeServiceManaged)),
 					resource.TestCheckResourceAttrSet(resourceName, "host_address"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
@@ -299,9 +301,9 @@ func testAccCheckPrivateConnectionExists(ctx context.Context, t *testing.T, name
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).DevOpsAgentClient(ctx)
 
-	input := &devopsagent.ListPrivateConnectionsInput{}
+	input := devopsagent.ListPrivateConnectionsInput{}
 
-	_, err := conn.ListPrivateConnections(ctx, input)
+	_, err := conn.ListPrivateConnections(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -403,4 +405,8 @@ resource "aws_devopsagent_private_connection" "test" {
   subnet_ids   = aws_subnet.test[*].id
 }
 `, rName))
+}
+
+func randomPrivateConnectionName(t *testing.T) string {
+	return acctest.RandString(t, 20)
 }

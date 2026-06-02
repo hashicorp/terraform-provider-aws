@@ -43,7 +43,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsagent;devopsagent.DescribePrivateConnectionOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(20)")
+// @Testing(generator="randomPrivateConnectionName(t)")
 // @Testing(importStateIdAttribute="name")
 // @Testing(importIgnore="resource_configuration_id")
 // @Testing(identityTest=false)
@@ -81,7 +81,7 @@ func (r *privateConnectionResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"mode": schema.StringAttribute{
+			names.AttrMode: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -146,7 +146,7 @@ func (r *privateConnectionResource) Create(ctx context.Context, req resource.Cre
 
 	name := plan.Name.ValueString()
 
-	input := &devopsagent.CreatePrivateConnectionInput{
+	input := devopsagent.CreatePrivateConnectionInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -185,7 +185,7 @@ func (r *privateConnectionResource) Create(ctx context.Context, req resource.Cre
 	// that occur when the resource gateway dependency isn't fully ready.
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, createTimeout, func(ctx context.Context) (*devopsagent.CreatePrivateConnectionOutput, error) {
-		return conn.CreatePrivateConnection(ctx, input)
+		return conn.CreatePrivateConnection(ctx, &input)
 	}, "ValidationException", "Failed to create resource association")
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
@@ -248,12 +248,12 @@ func (r *privateConnectionResource) Update(ctx context.Context, req resource.Upd
 
 	// Only the certificate can be updated in-place.
 	if !plan.Certificate.Equal(state.Certificate) {
-		input := &devopsagent.UpdatePrivateConnectionCertificateInput{
+		input := devopsagent.UpdatePrivateConnectionCertificateInput{
 			Name:        plan.Name.ValueStringPointer(),
 			Certificate: plan.Certificate.ValueStringPointer(),
 		}
 
-		_, err := conn.UpdatePrivateConnectionCertificate(ctx, input)
+		_, err := conn.UpdatePrivateConnectionCertificate(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
@@ -292,11 +292,11 @@ func (r *privateConnectionResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	input := &devopsagent.DeletePrivateConnectionInput{
+	input := devopsagent.DeletePrivateConnectionInput{
 		Name: state.Name.ValueStringPointer(),
 	}
 
-	_, err := conn.DeletePrivateConnection(ctx, input)
+	_, err := conn.DeletePrivateConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -353,7 +353,7 @@ func waitPrivateConnectionCreated(ctx context.Context, conn *devopsagent.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PrivateConnectionStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.PrivateConnectionStatusActive),
-		Refresh:                   statusPrivateConnection(ctx, conn, name),
+		Refresh:                   statusPrivateConnection(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -371,7 +371,7 @@ func waitPrivateConnectionUpdated(ctx context.Context, conn *devopsagent.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PrivateConnectionStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.PrivateConnectionStatusActive),
-		Refresh:                   statusPrivateConnection(ctx, conn, name),
+		Refresh:                   statusPrivateConnection(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -389,7 +389,7 @@ func waitPrivateConnectionDeleted(ctx context.Context, conn *devopsagent.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PrivateConnectionStatusDeleteInProgress, awstypes.PrivateConnectionStatusActive),
 		Target:  []string{},
-		Refresh: statusPrivateConnection(ctx, conn, name),
+		Refresh: statusPrivateConnection(conn, name),
 		Timeout: timeout,
 	}
 
@@ -403,7 +403,7 @@ func waitPrivateConnectionDeleted(ctx context.Context, conn *devopsagent.Client,
 
 // Status function
 
-func statusPrivateConnection(ctx context.Context, conn *devopsagent.Client, name string) retry.StateRefreshFunc {
+func statusPrivateConnection(conn *devopsagent.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findPrivateConnectionByName(ctx, conn, name)
 		if retry.NotFound(err) {
@@ -421,11 +421,11 @@ func statusPrivateConnection(ctx context.Context, conn *devopsagent.Client, name
 // Finder
 
 func findPrivateConnectionByName(ctx context.Context, conn *devopsagent.Client, name string) (*devopsagent.DescribePrivateConnectionOutput, error) {
-	input := &devopsagent.DescribePrivateConnectionInput{
+	input := devopsagent.DescribePrivateConnectionInput{
 		Name: aws.String(name),
 	}
 
-	out, err := conn.DescribePrivateConnection(ctx, input)
+	out, err := conn.DescribePrivateConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{

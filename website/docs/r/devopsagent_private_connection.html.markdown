@@ -41,30 +41,25 @@ resource "aws_devopsagent_private_connection" "example" {
 
 The following arguments are required:
 
-* `name` - (Required, Forces new resource) The name of the Private Connection. Must be unique within the account.
-* `mode` - (Required, Forces new resource) The mode of the Private Connection. Valid values: `SELF_MANAGED`, `SERVICE_MANAGED`.
+* `mode` - (Required, Forces new resource) Mode of the Private Connection. Valid values: `SELF_MANAGED`, `SERVICE_MANAGED`.
+* `name` - (Required, Forces new resource) Unique name for the Private Connection within the account. Must be between 3 and 30 characters.
 
-The following arguments are applicable for `SELF_MANAGED` type:
+The following arguments are optional:
 
-* `resource_configuration_id` - (Optional, Forces new resource) The ID or ARN of the VPC Lattice resource configuration.
-
-The following arguments are applicable for `SERVICE_MANAGED` type:
-
-* `host_address` - (Optional, Forces new resource) IP address or DNS name of the target resource.
-* `subnet_ids` - (Optional, Forces new resource) Subnets that the service-managed Resource Gateway will span.
-* `vpc_id` - (Optional, Forces new resource) VPC to create the service-managed Resource Gateway in.
-
-The following arguments are optional for both types:
-
-* `certificate` - (Optional, Sensitive) The certificate to associate with the Private Connection. This is the only field that can be updated in-place.
+* `certificate` - (Optional, Sensitive) Certificate to associate with the Private Connection. This is the only field that can be updated in-place.
+* `host_address` - (Optional, Forces new resource) IP address or DNS name of the target resource. Only applicable for `SERVICE_MANAGED` connections.
+* `region` - (Optional) AWS region for the Private Connection. If not specified, uses the provider's default region.
+* `resource_configuration_id` - (Optional, Forces new resource) ID or ARN of the VPC Lattice resource configuration. Only applicable for `SELF_MANAGED` connections.
+* `subnet_ids` - (Optional, Forces new resource) Subnets that the service-managed Resource Gateway will span. Only applicable for `SERVICE_MANAGED` connections.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_id` - (Optional, Forces new resource) VPC to create the service-managed Resource Gateway in. Only applicable for `SERVICE_MANAGED` connections.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Private Connection.
-* `status` - The current status of the Private Connection. Values include `ACTIVE`, `CREATE_IN_PROGRESS`, `CREATE_FAILED`, `DELETE_IN_PROGRESS`, `DELETE_FAILED`.
+* `arn` - ARN of the Private Connection.
+* `status` - Current status of the Private Connection. Values include `ACTIVE`, `CREATE_IN_PROGRESS`, `CREATE_FAILED`, `DELETE_IN_PROGRESS`, `DELETE_FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
