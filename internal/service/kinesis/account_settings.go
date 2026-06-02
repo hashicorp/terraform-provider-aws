@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -100,13 +101,26 @@ func (r *accountSettingsResource) Create(ctx context.Context, request resource.C
 
 	_, err := conn.UpdateAccountSettings(ctx, &input)
 
-	if err != nil {
+	switch status := input.MinimumThroughputBillingCommitment.Status; {
+	case status == awstypes.MinimumThroughputBillingCommitmentInputStatusDisabled && errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Account isn't opted in"):
+	case err != nil:
 		response.Diagnostics.AddError("creating Kinesis Account Settings", err.Error())
 		return
 	}
 
 	// Set values for unknowns.
 	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
+	output, err := findAccountSettings(ctx, conn)
+
+	if err != nil {
+		response.Diagnostics.AddError("reading Kinesis Account Settings", err.Error())
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
