@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -64,6 +65,11 @@ func (destinationType) Values() []destinationType {
 
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
+// @ArnIdentity
+// @CustomImport
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/firehose/types;awstypes;awstypes.DeliveryStreamDescription")
 func resourceDeliveryStream() *schema.Resource {
 	// lintignore:R011
 	return &schema.Resource{
@@ -74,8 +80,13 @@ func resourceDeliveryStream() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:firehose:REGION:ACCOUNTID:deliverystream/NAME and provided: %s", d.Id())
-				resARN, err := arn.Parse(d.Id())
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				id := d.Id()
+				idErr := fmt.Errorf("unexpected format for ID (%[1]s), expected  arn:<partition>:firehose:<region>:<account-id>:deliverystream/<stream-name>", id)
+				resARN, err := arn.Parse(id)
 				if err != nil {
 					return nil, idErr
 				}
@@ -1491,13 +1502,13 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
 	sn := d.Get(names.AttrName).(string)
-	input := &firehose.CreateDeliveryStreamInput{
+	input := firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
 		DeliveryStreamType: types.DeliveryStreamTypeDirectPut,
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
+	if v, ok := d.GetOk("kinesis_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.DeliveryStreamType = types.DeliveryStreamTypeKinesisStreamAsSource
 		input.KinesisStreamSourceConfiguration = expandKinesisStreamSourceConfiguration(v.([]any)[0].(map[string]any))
 	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1545,7 +1556,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
-		return conn.CreateDeliveryStream(ctx, input)
+		return conn.CreateDeliveryStream(ctx, &input)
 	})
 
 	if err != nil {
@@ -1561,12 +1572,12 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.DeliveryStreamARN))
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && !isDeliveryStreamOptionDisabled(v) {
-		input := &firehose.StartDeliveryStreamEncryptionInput{
+		input := firehose.StartDeliveryStreamEncryptionInput{
 			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]any)),
 			DeliveryStreamName:                         aws.String(sn),
 		}
 
-		_, err := conn.StartDeliveryStreamEncryption(ctx, input)
+		_, err := conn.StartDeliveryStreamEncryption(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1617,11 +1628,11 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 		names.AttrEnabled: false,
 		"key_type":        types.KeyTypeAwsOwnedCmk,
 	}
-	if s.DeliveryStreamEncryptionConfiguration != nil && s.DeliveryStreamEncryptionConfiguration.Status == types.DeliveryStreamEncryptionStatusEnabled {
+	if v := s.DeliveryStreamEncryptionConfiguration; v != nil && v.Status == types.DeliveryStreamEncryptionStatusEnabled {
 		sseOptions[names.AttrEnabled] = true
-		sseOptions["key_type"] = s.DeliveryStreamEncryptionConfiguration.KeyType
+		sseOptions["key_type"] = v.KeyType
 
-		if v := s.DeliveryStreamEncryptionConfiguration.KeyARN; v != nil {
+		if v := v.KeyARN; v != nil {
 			sseOptions["key_arn"] = aws.ToString(v)
 		}
 	}
@@ -1695,7 +1706,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 	sn := d.Get(names.AttrName).(string)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &firehose.UpdateDestinationInput{
+		input := firehose.UpdateDestinationInput{
 			CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
 			DeliveryStreamName:             aws.String(sn),
 			DestinationId:                  aws.String(d.Get("destination_id").(string)),
@@ -1741,7 +1752,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
-			return conn.UpdateDestination(ctx, input)
+			return conn.UpdateDestination(ctx, &input)
 		})
 
 		if err != nil {
@@ -1752,11 +1763,11 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("server_side_encryption") {
 		v := d.Get("server_side_encryption")
 		if isDeliveryStreamOptionDisabled(v) {
-			input := &firehose.StopDeliveryStreamEncryptionInput{
+			input := firehose.StopDeliveryStreamEncryptionInput{
 				DeliveryStreamName: aws.String(sn),
 			}
 
-			_, err := conn.StopDeliveryStreamEncryption(ctx, input)
+			_, err := conn.StopDeliveryStreamEncryption(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1766,12 +1777,12 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Firehose Delivery Stream (%s) encryption disable: %s", sn, err)
 			}
 		} else {
-			input := &firehose.StartDeliveryStreamEncryptionInput{
+			input := firehose.StartDeliveryStreamEncryptionInput{
 				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]any)),
 				DeliveryStreamName:                         aws.String(sn),
 			}
 
-			_, err := conn.StartDeliveryStreamEncryption(ctx, input)
+			_, err := conn.StartDeliveryStreamEncryption(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
@@ -1793,9 +1804,10 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	sn := d.Get(names.AttrName).(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Firehose Delivery Stream: (%s)", sn)
-	_, err := conn.DeleteDeliveryStream(ctx, &firehose.DeleteDeliveryStreamInput{
+	input := firehose.DeleteDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
-	})
+	}
+	_, err := conn.DeleteDeliveryStream(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -1839,10 +1851,14 @@ func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, er
 }
 
 func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name string) (*types.DeliveryStreamDescription, error) {
-	input := &firehose.DescribeDeliveryStreamInput{
+	input := firehose.DescribeDeliveryStreamInput{
 		DeliveryStreamName: aws.String(name),
 	}
 
+	return findDeliveryStreamDescription(ctx, conn, &input)
+}
+
+func findDeliveryStreamDescription(ctx context.Context, conn *firehose.Client, input *firehose.DescribeDeliveryStreamInput) (*types.DeliveryStreamDescription, error) {
 	output, err := conn.DescribeDeliveryStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -1922,6 +1938,7 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name 
 
 func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *firehose.Client, name string) (*types.DeliveryStreamEncryptionConfiguration, error) {
 	output, err := findDeliveryStreamByName(ctx, conn, name)
+
 	if err != nil {
 		return nil, err
 	}
