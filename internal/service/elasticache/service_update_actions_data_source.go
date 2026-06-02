@@ -1,0 +1,95 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
+package elasticache
+
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+)
+
+// @FrameworkDataSource("aws_elasticache_service_update_actions", name="Service Update Actions")
+func newServiceUpdateActionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &serviceUpdateActionsDataSource{}, nil
+}
+
+const (
+	DSNameServiceUpdateActions = "Service Update Actions Data Source"
+)
+
+type serviceUpdateActionsDataSource struct {
+	framework.DataSourceWithModel[serviceUpdateActionsDataSourceModel]
+}
+
+func (d *serviceUpdateActionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"update_actions": framework.DataSourceComputedListOfObjectAttribute[updateActionModel](ctx),
+		},
+	}
+}
+
+func (d *serviceUpdateActionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	conn := d.Meta().ElastiCacheClient(ctx)
+
+	var data serviceUpdateActionsDataSourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input elasticache.DescribeUpdateActionsInput
+	updateActions, err := findServiceUpdateActions(ctx, conn, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "xxx")
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, updateActions, &data.UpdateActions), smerr.ID, "xxx")
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, "xxx")
+}
+
+type serviceUpdateActionsDataSourceModel struct {
+	framework.WithRegionModel
+	UpdateActions fwtypes.ListNestedObjectValueOf[updateActionModel] `tfsdk:"update_actions"`
+}
+
+type updateActionModel struct {
+	CacheClusterID      types.String `tfsdk:"cache_cluster_id"`
+	Engine              types.String `tfsdk:"engine"`
+	EstimatedUpdateTime types.String `tfsdk:"estimated_update_time"`
+	ServiceUpdateName   types.String `tfsdk:"service_update_name"`
+}
+
+func findServiceUpdateActions(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUpdateActionsInput) ([]awstypes.UpdateAction, error) {
+	var output []awstypes.UpdateAction
+
+	pages := elasticache.NewDescribeUpdateActionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.UpdateActions...)
+
+	}
+
+	return output, nil
+}
