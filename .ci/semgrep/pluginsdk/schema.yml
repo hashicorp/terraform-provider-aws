@@ -31,24 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/iam
-        - /internal/service/identitystore
-        - /internal/service/imagebuilder
-        - /internal/service/inspector
-        - /internal/service/inspector2
-        - /internal/service/internetmonitor
-        - /internal/service/iot
-        - /internal/service/ivs
-        - /internal/service/ivschat
-        - /internal/service/kafka
-        - /internal/service/kafkaconnect
-        - /internal/service/kendra
-        - /internal/service/keyspaces
-        - /internal/service/kinesis
-        - /internal/service/kinesisanalytics
-        - /internal/service/kinesisanalyticsv2
-        - /internal/service/kinesisvideo
-        - /internal/service/kms
         - /internal/service/lakeformation
         - /internal/service/lambda
         - /internal/service/lexmodels
