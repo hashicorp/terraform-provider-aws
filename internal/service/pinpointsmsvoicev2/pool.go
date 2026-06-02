@@ -5,134 +5,62 @@
 
 package pinpointsmsvoicev2
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/pinpointsmsvoicev2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
+	"fmt"
+	"slices"
+	"strings"
 	"time"
 
-	"github.com/YakDriver/smarterr"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_pinpointsmsvoicev2_pool", name="Pool")
 // @Tags(identifierAttribute="arn")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-// 
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
-// @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
-//
-// TIP: ==== GENERATED ACCEPTANCE TESTS ====
-// Resource Identity and tagging make use of automatically generated acceptance tests.
-// For more information about automatically generated acceptance tests, see
-// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
-//
-// Some common annotations are included below:
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2;pinpointsmsvoicev2.DescribePoolResponse")
-// @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
+// @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheckPool")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.PoolInformation")
+// @Testing(generator=false)
 func newPoolResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &poolResource{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
-
-const (
-	ResNamePool = "Pool"
-)
 
 type poolResource struct {
 	framework.ResourceWithModel[poolResourceModel]
@@ -140,113 +68,102 @@ type poolResource struct {
 	framework.WithImportByIdentity
 }
 
-
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
-// Optional: true,
-//
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
-// Computed: true,
-//
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *poolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+			"deletion_protection_enabled": schema.BoolAttribute{
+				Description: "Whether deletion protection is enabled. When `true`, the pool cannot be deleted.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "PoolId"
 			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+			"iso_country_code": schema.StringAttribute{
+				Description: "Two-character code, in ISO 3166-1 alpha-2 format, for the country or region of the pool. This field is optional for origination identity types that are not country-specific.",
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be a two-character ISO 3166-1 alpha-2 country code in upper case"),
+				},
+			},
+			"message_type": schema.StringAttribute{
+				Description: "Type of message.",
+				CustomType:  fwtypes.StringEnumType[awstypes.MessageType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"opt_out_list_name": schema.StringAttribute{
+				Description: "Name of the opt-out list to associate with the pool. Inherited from the initial origination identity when omitted.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"origination_identities": schema.SetAttribute{
+				Description: "Set of origination identity ARNs to associate with the pool. At least one origination identity is required at creation.",
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
+			},
+			"self_managed_opt_outs_enabled": schema.BoolAttribute{
+				Description: "Whether the pool relies on self-managed opt-out handling. When `false`, AWS auto-replies to HELP/STOP requests and manages the opt-out list. Inherited from the initial origination identity when omitted.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"shared_routes_enabled": schema.BoolAttribute{
+				Description: "Whether shared routes are enabled for the pool. When `true`, messages may use shared phone numbers or sender IDs in countries that allow it.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Required: true,
+			"two_way_channel_arn": schema.StringAttribute{
+				Description: "ARN of the two-way channel that receives inbound messages.",
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(
+						path.MatchRelative().AtParent().AtName("two_way_enabled"),
+					),
+				},
+			},
+			"two_way_channel_role": schema.StringAttribute{
+				Description: "ARN of the IAM role that End User Messaging SMS assumes to publish inbound messages to the two-way channel.",
+				CustomType:  fwtypes.ARNType,
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(
+						path.MatchRelative().AtParent().AtName("two_way_channel_arn"),
+						path.MatchRelative().AtParent().AtName("two_way_enabled"),
+					),
+				},
+			},
+			"two_way_enabled": schema.BoolAttribute{
+				Description: "Whether inbound message reception is enabled for the pool.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -257,494 +174,739 @@ func (r *poolResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 }
 
 func (r *poolResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
-	
-	// TIP: -- 2. Fetch the plan
+
 	var plan poolResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
-	var input pinpointsmsvoicev2.CreatePoolInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `PoolId`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Pool")))
+	identities, d := sortOriginationIdentities(ctx, plan)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.Tags = getTagsIn(ctx)
 
-	// TIP: -- 4. Call the AWS Create function
-	out, err := conn.CreatePool(ctx, &input)
+	// Validate the full origination_identities set against the pool's intended configuration before any AWS write.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, identities, plan.MessageType.ValueEnum(), plan.IsoCountryCode.ValueString()))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Deterministic seed selection: sort lexicographically and pick the first element.
+	// The seed identity is opaque to the user; they always interact with `origination_identities` as a symmetric set.
+	seed, extras := identities[0], identities[1:]
+
+	input := &pinpointsmsvoicev2.CreatePoolInput{
+		ClientToken:         aws.String(create.UniqueId(ctx)),
+		OriginationIdentity: aws.String(seed),
+		Tags:                getTagsIn(ctx),
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input, fwflex.WithIgnoredFieldNamesAppend("OriginationIdentities")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := conn.CreatePool(ctx, input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, seed)
 		return
 	}
-	if out == nil || out.Pool == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+	if out == nil || out.PoolId == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("empty CreatePool output"), smerr.ID, seed)
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	poolID := aws.ToString(out.PoolId)
+	plan.PoolID = types.StringValue(poolID)
+
+	// Check pool's ID into state immediately after CreatePool returns to avoid orphaning.
+	// Any subsequent error leaves the pool in state so Delete can reach it
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), poolID))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPoolCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	pool, err := waitPoolActive(ctx, conn, poolID, createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
 		return
 	}
-	
-	// TIP: -- 7. Save the request plan to response state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+
+	isoCC := fwflex.StringFromFramework(ctx, plan.IsoCountryCode)
+	if err := associateOriginationIdentities(ctx, conn, poolID, isoCC, extras...); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+		return
+	}
+
+	// Account for any update-based arguments set in the plan.
+	if needsPostCreateUpdate(plan, pool) {
+		var updateInput pinpointsmsvoicev2.UpdatePoolInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &updateInput, fwflex.WithIgnoredFieldNames([]string{"DeletionProtectionEnabled"})))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if err := updatePoolWithIAMPropagation(ctx, conn, &updateInput); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+			return
+		}
+		pool, err = waitPoolActive(ctx, conn, poolID, createTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, pool, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	associated, err := waitPoolOriginationIdentitiesConverged(ctx, conn, poolID, identities, createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+		return
+	}
+	plan.OriginationIdentities = fwflex.FlattenFrameworkStringValueSetOfString(ctx, associated)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *poolResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
-	
-	// TIP: -- 2. Fetch the state
+
 	var state poolResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findPoolByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
+
+	pool, err := findPoolByID(ctx, conn, state.PoolID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolID.String())
 		return
 	}
-	
-	// TIP: -- 5. Set the arguments and attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, pool, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 6. Set the state
+
+	poolID := state.PoolID.ValueString()
+	associated, err := findPoolOriginationIdentities(ctx, conn, poolID)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+		return
+	}
+	state.OriginationIdentities = fwflex.FlattenFrameworkStringValueSetOfString(ctx, associated)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *poolResource) flatten(ctx context.Context, pool *awstypes.Pool, data *poolResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, pool, data)...)
-	return diags
-}
-
 func (r *poolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
-	
-	// TIP: -- 2. Fetch the plan
+
 	var plan, state poolResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Get the difference between the plan and state, if any
-	diff, d := flex.Diff(ctx, plan, state)
+
+	poolID := plan.PoolID.ValueString()
+
+	if !plan.OriginationIdentities.Equal(state.OriginationIdentities) {
+		add, remove, d := diffOriginationIdentities(ctx, plan, state)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if len(add) > 0 {
+			smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, add, plan.MessageType.ValueEnum(), plan.IsoCountryCode.ValueString()))
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		isoCC := fwflex.StringFromFramework(ctx, plan.IsoCountryCode)
+
+		// Associate before disassociate to mitigate pool transiently having zero identities.
+		if err := associateOriginationIdentities(ctx, conn, poolID, isoCC, add...); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+			return
+		}
+		if err := disassociateOriginationIdentities(ctx, conn, poolID, isoCC, remove...); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+			return
+		}
+	}
+
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("OriginationIdentities"))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		var input pinpointsmsvoicev2.UpdatePoolInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		input := &pinpointsmsvoicev2.UpdatePoolInput{
+			PoolId: aws.String(poolID),
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input, diff.IgnoredFieldNamesOpts()...))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdatePool(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.Pool == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-		
-		// TIP: Using the output from the update function, re-set any computed attributes
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
+		if err := updatePoolWithIAMPropagation(ctx, conn, input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
 			return
 		}
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitPoolUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	pool, err := waitPoolActive(ctx, conn, poolID, updateTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, pool, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	expected, d := sortOriginationIdentities(ctx, plan)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	associated, err := waitPoolOriginationIdentitiesConverged(ctx, conn, poolID, expected, updateTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+		return
+	}
+	plan.OriginationIdentities = fwflex.FlattenFrameworkStringValueSetOfString(ctx, associated)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *poolResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
-	
-	// TIP: -- 2. Fetch the state
+
 	var state poolResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Populate a delete input structure
-	input := pinpointsmsvoicev2.DeletePoolInput{
-		PoolId: state.ID.ValueStringPointer(),
+
+	input := &pinpointsmsvoicev2.DeletePoolInput{
+		PoolId: state.PoolID.ValueStringPointer(),
 	}
-	
-	// TIP: -- 4. Call the AWS delete function
-	_, err := conn.DeletePool(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
+
+	_, err := conn.DeletePool(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolID.ValueString())
+		return
+	}
+
+	if _, err := waitPoolDeleted(ctx, conn, state.PoolID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolID.ValueString())
+		return
+	}
+}
+
+func sortOriginationIdentities(ctx context.Context, model poolResourceModel) ([]string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var identities []string
+	diags.Append(model.OriginationIdentities.ElementsAs(ctx, &identities, false)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	slices.Sort(identities)
+	return identities, diags
+}
+
+func diffOriginationIdentities(ctx context.Context, plan, state poolResourceModel) (add, remove []string, diags diag.Diagnostics) {
+	// get identities sorted
+	planSet, d := sortOriginationIdentities(ctx, plan)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, nil, diags
+	}
+	var stateSet []string
+	diags.Append(state.OriginationIdentities.ElementsAs(ctx, &stateSet, false)...)
+	if diags.HasError() {
+		return nil, nil, diags
+	}
+	slices.Sort(stateSet)
+
+	// build maps for lookup
+	planMap := make(map[string]struct{}, len(planSet))
+	for _, v := range planSet {
+		planMap[v] = struct{}{}
+	}
+	stateMap := make(map[string]struct{}, len(stateSet))
+	for _, v := range stateSet {
+		stateMap[v] = struct{}{}
+	}
+
+	// add identities in the plan but not in state
+	for _, v := range planSet {
+		if _, ok := stateMap[v]; !ok {
+			add = append(add, v)
+		}
+	}
+	// remove identities in state but not in the plan
+	for _, v := range stateSet {
+		if _, ok := planMap[v]; !ok {
+			remove = append(remove, v)
+		}
+	}
+
+	return add, remove, diags
+}
+
+// order-independent equality test; no duplicates expected
+func originationIdentitiesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	set := make(map[string]struct{}, len(a))
+	for _, v := range a {
+		set[v] = struct{}{}
+	}
+	for _, v := range b {
+		if _, ok := set[v]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func needsPostCreateUpdate(plan poolResourceModel, pool *awstypes.PoolInformation) bool {
+	if !plan.OptOutListName.IsNull() && plan.OptOutListName.ValueString() != aws.ToString(pool.OptOutListName) {
+		return true
+	}
+	if !plan.SelfManagedOptOutsEnabled.IsNull() && plan.SelfManagedOptOutsEnabled.ValueBool() != pool.SelfManagedOptOutsEnabled {
+		return true
+	}
+	if !plan.SharedRoutesEnabled.IsNull() && plan.SharedRoutesEnabled.ValueBool() != pool.SharedRoutesEnabled {
+		return true
+	}
+	if !plan.TwoWayEnabled.IsNull() && plan.TwoWayEnabled.ValueBool() != pool.TwoWayEnabled {
+		return true
+	}
+	if !plan.TwoWayChannelARN.IsNull() && plan.TwoWayChannelARN.ValueString() != aws.ToString(pool.TwoWayChannelArn) {
+		return true
+	}
+	if !plan.TwoWayChannelRole.IsNull() && plan.TwoWayChannelRole.ValueString() != aws.ToString(pool.TwoWayChannelRole) {
+		return true
+	}
+	return false
+}
+
+func updatePoolWithIAMPropagation(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.UpdatePoolInput) error {
+	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (*pinpointsmsvoicev2.UpdatePoolOutput, error) {
+			return conn.UpdatePool(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Could not assume IAM role") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "RESOURCE_NOT_ACCESSIBLE") {
+				return true, err
+			}
+			return false, err
+		},
+	)
+	return err
+}
+
+func validateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, identities []string, intendedMessageType awstypes.MessageType, intendedIsoCountryCode string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if len(identities) == 0 {
+		return diags
+	}
+
+	var phoneARNs []string
+	var senderRefs []awstypes.SenderIdAndCountry
+	unknownARN := map[string]struct{}{}
+
+	// Parse and group by resource type
+	for _, identityARN := range identities {
+		parsed, err := arn.Parse(identityARN)
+		if err != nil {
+			unknownARN[identityARN] = struct{}{}
+			continue
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
+		parts := strings.SplitN(parsed.Resource, "/", 3)
+		switch parts[0] {
+		case "phone-number":
+			phoneARNs = append(phoneARNs, identityARN)
+		case "sender-id":
+			if len(parts) >= 3 {
+				senderRefs = append(senderRefs, awstypes.SenderIdAndCountry{
+					SenderId:       aws.String(parts[1]),
+					IsoCountryCode: aws.String(parts[2]),
+				})
+			} else {
+				unknownARN[identityARN] = struct{}{}
+			}
+		default:
+			unknownARN[identityARN] = struct{}{}
+		}
 	}
-	
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPoolDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
+
+	// Pass the full list of ARNs to avoid N DescribePhoneNumbers calls.
+	// Surface errors as one diagnostic rather than attempting per-identity recovery.
+	phoneByARN := map[string]awstypes.PhoneNumberInformation{}
+	if len(phoneARNs) > 0 {
+		pages := pinpointsmsvoicev2.NewDescribePhoneNumbersPaginator(conn, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
+			PhoneNumberIds: phoneARNs,
+		})
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				diags.AddError(
+					"Invalid origination identity",
+					"one or more phone-number origination identities do not exist in the configured AWS account and region. Verify every phone-number ARN in `origination_identities` refers to an existing aws_pinpointsmsvoicev2_phone_number in this region.",
+				)
+				return diags
+			}
+			if err != nil {
+				diags.AddError(
+					"reading phone-number origination identities",
+					fmt.Sprintf("DescribePhoneNumbers failed: %s", err),
+				)
+				return diags
+			}
+
+			// Capture PhoneNumberInformation for each ARN.
+			for _, p := range page.PhoneNumbers {
+				phoneByARN[aws.ToString(p.PhoneNumberArn)] = p
+			}
+		}
 	}
+
+	// Pass the full list of ARNs to avoid N DescribeSenderIds calls.
+	// Surface errors as one diagnostic rather than attempting per-identity recovery.
+	senderByARN := map[string]awstypes.SenderIdInformation{}
+	if len(senderRefs) > 0 {
+		pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, &pinpointsmsvoicev2.DescribeSenderIdsInput{
+			SenderIds: senderRefs,
+		})
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				diags.AddError(
+					"Invalid origination identity",
+					"one or more sender-id origination identities do not exist in the configured AWS account and region. Verify every sender-id ARN in `origination_identities` refers to an existing sender ID in this region.",
+				)
+				return diags
+			}
+			if err != nil {
+				diags.AddError(
+					"reading sender-id origination identities",
+					fmt.Sprintf("DescribeSenderIds failed: %s", err),
+				)
+				return diags
+			}
+
+			// Capture SenderIdInformation for each ARN.
+			for _, s := range page.SenderIds {
+				senderByARN[aws.ToString(s.SenderIdArn)] = s
+			}
+		}
+	}
+
+	// Validation checklist for all identities by resource type
+	for _, identityARN := range identities {
+		if _, ok := unknownARN[identityARN]; ok {
+			// Fail-open. We don't recognize the ARN shape; defer to AWS to reject.
+			continue
+		}
+
+		if p, ok := phoneByARN[identityARN]; ok {
+			if p.Status != awstypes.NumberStatusActive {
+				diags.AddError(
+					fmt.Sprintf("origination identity %s is not ACTIVE", identityARN),
+					fmt.Sprintf("the pool requires identities in ACTIVE state; the phone number is currently %q. Ensure the upstream resource has reached ACTIVE status before referencing it from the pool.",
+						string(p.Status)),
+				)
+				continue
+			}
+			if p.MessageType != intendedMessageType {
+				diags.AddError(
+					fmt.Sprintf("origination identity %s has mismatched message_type", identityARN),
+					fmt.Sprintf("the pool's message_type is %q; the phone number's message_type is %q. All identities in a pool must share the same message_type.",
+						string(intendedMessageType), string(p.MessageType)),
+				)
+			}
+			if intendedIsoCountryCode != "" && aws.ToString(p.IsoCountryCode) != intendedIsoCountryCode {
+				diags.AddError(
+					fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
+					fmt.Sprintf("the pool's iso_country_code is %q; the phone number's iso_country_code is %q. All identities in a pool must share the same country.",
+						intendedIsoCountryCode, aws.ToString(p.IsoCountryCode)),
+				)
+			}
+			continue
+		}
+
+		if s, ok := senderByARN[identityARN]; ok {
+			if !slices.Contains(s.MessageTypes, intendedMessageType) {
+				diags.AddError(
+					fmt.Sprintf("origination identity %s does not support message_type=%q", identityARN, string(intendedMessageType)),
+					fmt.Sprintf("the sender ID supports message types %v; the pool's intended message_type is %q.",
+						s.MessageTypes, string(intendedMessageType)),
+				)
+			}
+			if intendedIsoCountryCode != "" && aws.ToString(s.IsoCountryCode) != intendedIsoCountryCode {
+				diags.AddError(
+					fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
+					fmt.Sprintf("the pool's iso_country_code is %q; the sender ID's iso_country_code is %q.",
+						intendedIsoCountryCode, aws.ToString(s.IsoCountryCode)),
+				)
+			}
+			continue
+		}
+
+		// ARN shape valid but could not be found
+		diags.AddError(
+			fmt.Sprintf("origination identity %s not found", identityARN),
+			"the identity does not exist in the configured AWS account/region. Ensure the upstream resource is fully provisioned before referencing it from the pool.",
+		)
+	}
+
+	return diags
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// The built-in import function, and Import ID Handler, if any, should handle populating the required
-// attributes from the Import ID or Resource Identity.
-// In some cases, additional attributes must be set when importing.
-// Adding a custom ImportState function can handle those.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
-// func (r *poolResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
-// 
-// 	// Set needed attribute values here
-// }
+func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
+	for _, identity := range identities {
+		input := &pinpointsmsvoicev2.AssociateOriginationIdentityInput{
+			ClientToken:         aws.String(create.UniqueId(ctx)),
+			PoolId:              aws.String(poolID),
+			OriginationIdentity: aws.String(identity),
+			IsoCountryCode:      isoCountryCode,
+		}
 
+		// AssociateOriginationIdentity call is rate-limited (1 RPS per Pool ops); wrap to handle throttles.
+		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, *awstypes.ThrottlingException](
+			ctx, 2*time.Minute,
+			func(ctx context.Context) (*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, error) {
+				return conn.AssociateOriginationIdentity(ctx, input)
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("associating origination identity %s: %w", identity, err)
+		}
+	}
+	return nil
+}
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
+func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
+	for _, identity := range identities {
+		input := &pinpointsmsvoicev2.DisassociateOriginationIdentityInput{
+			ClientToken:         aws.String(create.UniqueId(ctx)),
+			PoolId:              aws.String(poolID),
+			OriginationIdentity: aws.String(identity),
+			IsoCountryCode:      isoCountryCode,
+		}
+		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, *awstypes.ThrottlingException](
+			ctx, 2*time.Minute,
+			func(ctx context.Context) (*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, error) {
+				return conn.DisassociateOriginationIdentity(ctx, input)
+			},
+		)
+		// Tolerate ResourceNotFoundException and two ConflictExceptions
+		// that imply the desired post-condition is already satisfied.
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			continue
+		}
+		if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok &&
+			(ce.Reason == awstypes.ConflictExceptionReasonPhoneNumberNotAssociatedToPool ||
+				ce.Reason == awstypes.ConflictExceptionReasonLastPhoneNumber) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("disassociating origination identity %s: %w", identity, err)
+		}
+	}
+	return nil
+}
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitPoolCreated(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.Pool, error) {
+func waitPoolActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PoolInformation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusPool(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.PoolStatusCreating),
+		Target:  enum.Slice(awstypes.PoolStatusActive),
+		Refresh: statusPool(conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pool); ok {
-		return out, smarterr.NewError(err)
+	if output, ok := outputRaw.(*awstypes.PoolInformation); ok {
+		return output, err
 	}
-
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitPoolUpdated(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.Pool, error) {
+func waitPoolDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PoolInformation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusPool(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pool); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitPoolDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.Pool, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: enum.Slice(awstypes.PoolStatusDeleting, awstypes.PoolStatusActive),
 		Target:  []string{},
 		Refresh: statusPool(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pool); ok {
-		return out, smarterr.NewError(err)
+	if output, ok := outputRaw.(*awstypes.PoolInformation); ok {
+		return output, err
 	}
-
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
+type originationIdentitiesStatus string
+
+const (
+	originationIdentitiesStatusConverging originationIdentitiesStatus = "CONVERGING"
+	originationIdentitiesStatusConverged  originationIdentitiesStatus = "CONVERGED"
+)
+
+func waitPoolOriginationIdentitiesConverged(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, expected []string, timeout time.Duration) ([]string, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(originationIdentitiesStatusConverging),
+		Target:  enum.Slice(originationIdentitiesStatusConverged),
+		Refresh: func(ctx context.Context) (any, string, error) {
+			got, err := findPoolOriginationIdentities(ctx, conn, poolID)
+			if err != nil {
+				return nil, "", err
+			}
+			if !originationIdentitiesEqual(got, expected) {
+				return got, string(originationIdentitiesStatusConverging), nil
+			}
+			return got, string(originationIdentitiesStatusConverged), nil
+		},
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.([]string); ok {
+		return output, err
+	}
+	return nil, err
+}
+
 func statusPool(conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findPoolByID(ctx, conn, id)
+		output, err := findPoolByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
-
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
-
-		return out, aws.ToString(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findPoolByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.Pool, error) {
-	input := pinpointsmsvoicev2.GetPoolInput{
-		Id: aws.String(id),
+func findPoolByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PoolInformation, error) {
+	input := &pinpointsmsvoicev2.DescribePoolsInput{
+		PoolIds: []string{id},
 	}
 
-	out, err := conn.GetPool(ctx, &input)
+	output, err := findPool(ctx, conn, input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-			})
-		}
-
-		return nil, smarterr.NewError(err)
+		return nil, err
 	}
 
-	if out == nil || out.Pool == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	return output, nil
+}
+
+func findPool(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribePoolsInput) (*awstypes.PoolInformation, error) {
+	output, err := findPools(ctx, conn, input)
+	if err != nil {
+		return nil, err
 	}
-
-	return out.Pool, nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
-type poolResourceModel struct {
-	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Tags            tftags.Map                                            `tfsdk:"tags"`
-	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
-}
+func findPools(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribePoolsInput) ([]awstypes.PoolInformation, error) {
+	var output []awstypes.PoolInformation
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
-
-
-// TIP: ==== IMPORT ID HANDLER ====
-// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
-// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
-//
-// The parser takes the string value of the Import ID and returns:
-// * A string value that is typically ignored. See documentation for more details.
-// * A map of the resource attributes derived from the Import ID.
-// * An error value if there are parsing errors.
-//
-// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
-var (
-	_ inttypes.ImportIDParser = poolImportID{}
-)
-
-type poolImportID struct{}
-
-func (poolImportID) Parse(id string) (string, map[string]string, error) {
-	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
-	}
-
-	result := map[string]string{
-		"some-value":    someValue,
-		"another-value": anotherValue,
-	}
-
-	return id, result, nil
-}
-
-
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//  awsv2.Register("aws_pinpointsmsvoicev2_pool", sweepPools)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
-func sweepPools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := pinpointsmsvoicev2.ListPoolsInput{}
-	conn := client.PinpointSMSVoiceV2Client(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := pinpointsmsvoicev2.NewListPoolsPaginator(conn, &input)
+	pages := pinpointsmsvoicev2.NewDescribePoolsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{LastError: err}
+		}
 		if err != nil {
-			return nil, smarterr.NewError(err)
+			return nil, err
 		}
 
-		for _, v := range page.Pools {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newPoolResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.PoolId))),
-			)
+		output = append(output, page.Pools...)
+	}
+
+	return output, nil
+}
+
+func findPoolOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string) ([]string, error) {
+	var arns []string
+
+	pages := pinpointsmsvoicev2.NewListPoolOriginationIdentitiesPaginator(conn, &pinpointsmsvoicev2.ListPoolOriginationIdentitiesInput{
+		PoolId: aws.String(poolID),
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{LastError: err}
+		}
+		if err != nil {
+			return nil, err
+		}
+		for _, identity := range page.OriginationIdentities {
+			arns = append(arns, aws.ToString(identity.OriginationIdentityArn))
 		}
 	}
 
-	return sweepResources, nil
+	return arns, nil
+}
+
+type poolResourceModel struct {
+	framework.WithRegionModel
+	DeletionProtectionEnabled types.Bool                               `tfsdk:"deletion_protection_enabled"`
+	IsoCountryCode            types.String                             `tfsdk:"iso_country_code"`
+	MessageType               fwtypes.StringEnum[awstypes.MessageType] `tfsdk:"message_type"`
+	OptOutListName            types.String                             `tfsdk:"opt_out_list_name"`
+	OriginationIdentities     fwtypes.SetOfString                      `tfsdk:"origination_identities"`
+	PoolARN                   types.String                             `tfsdk:"arn"`
+	PoolID                    types.String                             `tfsdk:"id"`
+	SelfManagedOptOutsEnabled types.Bool                               `tfsdk:"self_managed_opt_outs_enabled"`
+	SharedRoutesEnabled       types.Bool                               `tfsdk:"shared_routes_enabled"`
+	Tags                      tftags.Map                               `tfsdk:"tags"`
+	TagsAll                   tftags.Map                               `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                           `tfsdk:"timeouts"`
+	TwoWayChannelARN          types.String                             `tfsdk:"two_way_channel_arn"`
+	TwoWayChannelRole         fwtypes.ARN                              `tfsdk:"two_way_channel_role"`
+	TwoWayEnabled             types.Bool                               `tfsdk:"two_way_enabled"`
 }
