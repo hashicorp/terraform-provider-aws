@@ -326,8 +326,11 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 		return []any{}
 	}
 
-	m := map[string]any{
-		"mfa_delete": config.MFADelete,
+	m := map[string]any{}
+	if config.MFADelete != "" {
+		m["mfa_delete"] = config.MFADelete
+	} else {
+		m["mfa_delete"] = bucketVersioningMfaDeleteDisabled
 	}
 
 	if config.Status != "" {
@@ -408,7 +411,8 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket,
 }
 
 const (
-	bucketVersioningStatusDisabled = "Disabled"
+	bucketVersioningStatusDisabled    = "Disabled"
+	bucketVersioningMfaDeleteDisabled = "Disabled"
 )
 
 func bucketVersioningStatus_Values() []string {
