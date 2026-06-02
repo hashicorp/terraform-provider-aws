@@ -149,7 +149,11 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
+	// Use the digest as the key identifier rather than Id: GetDomainDetail
+	// (used by Read) does not reliably return DnssecKey.Id, whereas Digest is
+	// the stable value the registry returns for the DS record. Keying on Id
+	// causes Read to fail to match and remove the resource from state.
+	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Digest)
 	id, err := data.setID()
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
@@ -175,7 +179,9 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
+	// Confirm the DS record still exists; signing_attributes are not refreshed
+	// (see below), so the found key itself is not needed.
+	_, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -190,14 +196,12 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	// Set attributes for import.
-	var signingAttributes delegationSignerRecordSigningAttributesModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAttributes)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &signingAttributes)
+	// Don't refresh signing_attributes from the API: GetDomainDetail does not
+	// return the Algorithm, Flags, or PublicKey fields on DnssecKey, so
+	// flattening here would overwrite the configured values with zero values
+	// and produce a permanent diff. All signing_attributes fields are
+	// RequiresReplace and effectively write-only, so no drift detection is
+	// needed beyond confirming the key still exists (above).
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -211,9 +215,26 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
+	// DisassociateDelegationSignerFromDomain requires the DS record's Id
+	// (an internal identifier), not its digest. dnssec_key_id stores the
+	// digest (the stable value Read matches on), so resolve the current Id
+	// from GetDomainDetail by digest before deleting. If the key is already
+	// gone, treat the delete as a no-op.
+	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
+
+	if retry.NotFound(err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Delegation Signer Record (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
 	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &route53domains.DisassociateDelegationSignerFromDomainInput{
 		DomainName: data.DomainName.ValueStringPointer(),
-		Id:         data.DNSSECKeyID.ValueStringPointer(),
+		Id:         dnssecKey.Id,
 	})
 
 	if err != nil {
@@ -280,7 +301,7 @@ func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client,
 	}
 
 	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
-		return aws.ToString(v.Id) == keyID
+		return aws.ToString(v.Digest) == keyID
 	}))
 }
 
