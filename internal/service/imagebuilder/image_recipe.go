@@ -144,9 +144,8 @@ func resourceImageRecipe() *schema.Resource {
 			},
 			"component": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"component_arn": {
