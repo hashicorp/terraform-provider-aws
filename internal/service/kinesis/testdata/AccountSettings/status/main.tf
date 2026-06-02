@@ -8,6 +8,6 @@ resource "aws_kinesis_account_settings" "test" {
 }
 
 variable "status" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
