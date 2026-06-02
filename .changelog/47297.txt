@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_nat_gateway: Fix perpetual drift for regional NAT Gateway by clearing zonal-only attributes (`regional_nat_gateway_address`, `regional_nat_gateway_auto_mode`, `route_table_id`, `auto_provision_zones`, `auto_scaling_ips`) when the gateway mode is `availability-zone`
+```
