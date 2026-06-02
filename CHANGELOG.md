@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
+* **New Resource:** `aws_ec2_local_gateway_route_table` ([#48013](https://github.com/hashicorp/terraform-provider-aws/issues/48013))
 * **New Resource:** `aws_ec2_local_gateway_route_table_virtual_interface_group_association` ([#48014](https://github.com/hashicorp/terraform-provider-aws/issues/48014))
 * **New Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
 
