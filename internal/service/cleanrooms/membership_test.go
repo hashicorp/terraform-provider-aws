@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -50,7 +51,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cleanrooms", "membership/{id}"),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:cleanrooms:[^:]*:[^:]*:collaboration/.+$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_creator_account_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_creator_display_name"), knownvalue.StringExact(TEST_CREATOR_DISPLAY_NAME)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_id"), knownvalue.NotNull()),
