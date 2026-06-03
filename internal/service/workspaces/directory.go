@@ -187,6 +187,57 @@ func resourceDirectory() *schema.Resource {
 					},
 				},
 			},
+			"streaming_properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"storage_connectors": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"connector_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.StorageConnectorTypeEnum](),
+									},
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          string(types.StorageConnectorStatusEnumEnabled),
+										ValidateDiagFunc: enum.Validate[types.StorageConnectorStatusEnum](),
+									},
+								},
+							},
+						},
+						"streaming_experience_preferred_protocol": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.StreamingExperiencePreferredProtocolEnum](),
+						},
+						"user_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrAction: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.UserSettingActionEnum](),
+									},
+									"permission": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.UserSettingPermissionEnum](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -354,6 +405,9 @@ func resourceDirectory() *schema.Resource {
 						return fmt.Errorf("`%[1]s` cannot be set when `workspace_type` is set to `%[2]s`", name, workspaceType)
 					}
 				}
+				if v := config.GetAttr("streaming_properties"); v.IsWhollyKnown() && !v.IsNull() && v.LengthInt() > 0 {
+					return fmt.Errorf("`streaming_properties` cannot be set when `workspace_type` is set to `%[1]s`", workspaceType)
+				}
 			}
 
 			return nil
@@ -482,6 +536,19 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	if v, ok := d.GetOk("streaming_properties"); ok {
+		input := workspaces.ModifyStreamingPropertiesInput{
+			ResourceId:           aws.String(d.Id()),
+			StreamingProperties:  expandStreamingProperties(v.([]any)),
+		}
+
+		_, err := conn.ModifyStreamingProperties(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) streaming properties: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input := workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
@@ -541,6 +608,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
+	}
+	if err := d.Set("streaming_properties", flattenStreamingProperties(directory.StreamingProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting streaming_properties: %s", err)
 	}
 	d.Set("workspace_directory_description", directory.WorkspaceDirectoryDescription)
 	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
@@ -639,6 +709,19 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("streaming_properties") {
+		input := workspaces.ModifyStreamingPropertiesInput{
+			ResourceId:          aws.String(d.Id()),
+			StreamingProperties: expandStreamingProperties(d.Get("streaming_properties").([]any)),
+		}
+
+		_, err := conn.ModifyStreamingProperties(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) streaming properties: %s", d.Id(), err)
 		}
 	}
 
@@ -1122,4 +1205,115 @@ func flattenDefaultWorkspaceCreationProperties(apiObject *types.DefaultWorkspace
 			"user_enabled_as_local_administrator": aws.ToBool(apiObject.UserEnabledAsLocalAdministrator),
 		},
 	}
+}
+
+func expandStreamingProperties(tfList []any) *types.StreamingProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.StreamingProperties{}
+
+	if v, ok := tfMap["streaming_experience_preferred_protocol"].(string); ok && v != "" {
+		apiObject.StreamingExperiencePreferredProtocol = types.StreamingExperiencePreferredProtocolEnum(v)
+	}
+
+	if v, ok := tfMap["storage_connectors"].([]any); ok && len(v) > 0 {
+		apiObject.StorageConnectors = expandStorageConnectors(v)
+	}
+
+	if v, ok := tfMap["user_settings"].([]any); ok && len(v) > 0 {
+		apiObject.UserSettings = expandUserSettings(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageConnectors(tfList []any) []types.StorageConnector {
+	apiObjects := make([]types.StorageConnector, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.StorageConnector{
+			ConnectorType: types.StorageConnectorTypeEnum(tfMap["connector_type"].(string)),
+			Status:        types.StorageConnectorStatusEnum(tfMap[names.AttrStatus].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandUserSettings(tfList []any) []types.UserSetting {
+	apiObjects := make([]types.UserSetting, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.UserSetting{
+			Action:     types.UserSettingActionEnum(tfMap[names.AttrAction].(string)),
+			Permission: types.UserSettingPermissionEnum(tfMap["permission"].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenStreamingProperties(apiObject *types.StreamingProperties) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"storage_connectors":                      flattenStorageConnectors(apiObject.StorageConnectors),
+			"streaming_experience_preferred_protocol": apiObject.StreamingExperiencePreferredProtocol,
+			"user_settings":                           flattenUserSettings(apiObject.UserSettings),
+		},
+	}
+}
+
+func flattenStorageConnectors(apiObjects []types.StorageConnector) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"connector_type": apiObject.ConnectorType,
+			names.AttrStatus: apiObject.Status,
+		})
+	}
+
+	return tfList
+}
+
+func flattenUserSettings(apiObjects []types.UserSetting) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			names.AttrAction: apiObject.Action,
+			"permission":     apiObject.Permission,
+		})
+	}
+
+	return tfList
 }

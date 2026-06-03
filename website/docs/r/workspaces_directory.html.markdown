@@ -178,6 +178,29 @@ resource "aws_workspaces_directory" "example" {
     user_access_url            = "https://sso.example.com/"
     status                     = "ENABLED"
   }
+
+  streaming_properties {
+    streaming_experience_preferred_protocol = "TCP"
+
+    user_settings {
+      action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
+      permission = "ENABLED"
+    }
+
+    user_settings {
+      action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
+      permission = "ENABLED"
+    }
+
+    user_settings {
+      action     = "PRINTING_TO_LOCAL_DEVICE"
+      permission = "ENABLED"
+    }
+
+    storage_connectors {
+      connector_type = "HOMEFOLDERS"
+    }
+  }
 }
 ```
 
@@ -209,11 +232,12 @@ This resource supports the following arguments:
 * `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.
 * `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
 * `saml_properties` - (Optional) Configuration of SAML authentication integration. Defined below.
-* `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.
+* `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`. Defined below.
 * `workspace_access_properties` - (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` - (Optional) Default properties that are used for creating WorkSpaces. Defined below.
 * `workspace_type` - (Optional) Specifies the type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
 * `active_directory_config` - (Optional) Configuration for Active Directory integration when `workspace_type` is set to `POOLS`. Defined below.
+* `streaming_properties` - (Optional) Configuration for streaming properties when `workspace_type` is set to `POOLS`. Defined below.
 * `workspace_directory_name` - (Required for `POOLS`) The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
 * `workspace_directory_description` - (Required for `POOLS`) The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
 * `user_identity_type` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
@@ -262,10 +286,27 @@ This resource supports the following arguments:
 
 ### active_directory_config
 
--> **Note:** `active_directory_config` is only valid if `workspaces_type` is set to `POOLS`.
+-> **Note:** `active_directory_config` is only valid if `workspace_type` is set to `POOLS`.
 
 * `domain_name` - Fully qualified domain name of the AWS Directory Service directory.
 * `service_account_secret_arn` - ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
+
+### streaming_properties
+
+-> **Note:** `streaming_properties` is only valid if `workspace_type` is set to `POOLS`.
+
+* `streaming_experience_preferred_protocol` - (Optional) The preferred protocol for streaming. Valid values are `TCP` and `UDP`.
+* `user_settings` - (Optional) A list of permission settings for users. Defined below.
+* `storage_connectors` - (Optional) A list of storage connector configurations. Defined below.
+
+#### user_settings
+
+* `action` - (Required) The action for which permissions are configured. Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `PRINTING_TO_LOCAL_DEVICE`, `SMART_CARD`.
+* `permission` - (Required) Indicates whether the action is enabled or disabled. Valid values are `ENABLED` and `DISABLED`.
+
+#### storage_connectors
+
+* `connector_type` - (Required) The type of storage connector. Valid values are `HOMEFOLDERS`.
 
 ## Attribute Reference
 

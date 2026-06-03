@@ -56,3 +56,13 @@ awssdk.patch
 
 # go-vcr recordings
 /testdata
+
+#ignore claude
+*.claude
+.claude
+
+#ignore backups
+*.tfbak
+
+#ignore vault token
+.vault-token
