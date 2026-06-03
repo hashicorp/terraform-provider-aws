@@ -209,6 +209,12 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
+func (r *idcApplicationResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		lakehouseServiceIntegrationsValidator{},
+	}
+}
+
 func (r *idcApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
@@ -226,6 +232,13 @@ func (r *idcApplicationResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	si, d := expandServiceIntegrations(ctx, plan.ServiceIntegrations)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input.ServiceIntegrations = si
+
 	out, err := conn.CreateRedshiftIdcApplication(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RedshiftIDCApplicationName.String())
@@ -240,6 +253,14 @@ func (r *idcApplicationResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	flatSI, d := flattenServiceIntegrations(ctx, out.RedshiftIdcApplication.ServiceIntegrations)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.ServiceIntegrations = flatSI
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -270,6 +291,13 @@ func (r *idcApplicationResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	flatSI, d := flattenServiceIntegrations(ctx, out.ServiceIntegrations)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.ServiceIntegrations = flatSI
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -289,12 +317,22 @@ func (r *idcApplicationResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	if diff.HasChanges() {
+	// service_integration is handled outside autoflex (autoflex:"-"), so detect changes manually.
+	siChanged := !plan.ServiceIntegrations.Equal(state.ServiceIntegrations)
+
+	if diff.HasChanges() || siChanged {
 		var input redshift.ModifyRedshiftIdcApplicationInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		si, d := expandServiceIntegrations(ctx, plan.ServiceIntegrations)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.ServiceIntegrations = si
 
 		out, err := conn.ModifyRedshiftIdcApplication(ctx, &input)
 		if err != nil {
@@ -310,6 +348,13 @@ func (r *idcApplicationResource) Update(ctx context.Context, req resource.Update
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		flatSI, d := flattenServiceIntegrations(ctx, out.RedshiftIdcApplication.ServiceIntegrations)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.ServiceIntegrations = flatSI
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -354,9 +399,10 @@ type idcApplicationResourceModel struct {
 	IdentityNamespace          types.String                                                `tfsdk:"identity_namespace"`
 	RedshiftIDCApplicationARN  types.String                                                `tfsdk:"redshift_idc_application_arn"`
 	RedshiftIDCApplicationName types.String                                                `tfsdk:"redshift_idc_application_name"`
-	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]   `tfsdk:"service_integration"`
-	Tags                       tftags.Map                                                  `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                  `tfsdk:"tags_all"`
+	// Handled manually so a single block can fan out into multiple ServiceIntegrationsUnion entries.
+	ServiceIntegrations fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel] `tfsdk:"service_integration" autoflex:"-"`
+	Tags                tftags.Map                                                `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
 }
 
 type authorizedTokenIssuerModel struct {
@@ -368,164 +414,6 @@ type serviceIntegrationsModel struct {
 	LakeFormation  fwtypes.ListNestedObjectValueOf[lakeFormationModel]  `tfsdk:"lake_formation"`
 	Redshift       fwtypes.ListNestedObjectValueOf[redshiftModel]       `tfsdk:"redshift"`
 	S3AccessGrants fwtypes.ListNestedObjectValueOf[s3AccessGrantsModel] `tfsdk:"s3_access_grants"`
-}
-
-var (
-	_ fwflex.Expander  = serviceIntegrationsModel{}
-	_ fwflex.Flattener = &serviceIntegrationsModel{}
-)
-
-func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	switch {
-	case !m.LakeFormation.IsNull():
-		lakeFormationData, d := m.LakeFormation.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		lfQuery, d := lakeFormationData.LakeFormationQuery.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.ServiceIntegrationsUnionMemberLakeFormation
-		if lfQuery != nil {
-			var query awstypes.LakeFormationScopeUnionMemberLakeFormationQuery
-			diags.Append(fwflex.Expand(ctx, lfQuery, &query.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			r.Value = []awstypes.LakeFormationScopeUnion{&query}
-		}
-
-		return &r, diags
-
-	case !m.Redshift.IsNull():
-		redshiftData, d := m.Redshift.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		connect, d := redshiftData.Connect.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.ServiceIntegrationsUnionMemberRedshift
-		if connect != nil {
-			var connectScope awstypes.RedshiftScopeUnionMemberConnect
-			diags.Append(fwflex.Expand(ctx, connect, &connectScope.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			r.Value = []awstypes.RedshiftScopeUnion{&connectScope}
-		}
-
-		return &r, diags
-
-	case !m.S3AccessGrants.IsNull():
-		s3AccessGrants, d := m.S3AccessGrants.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		readWriteAccess, d := s3AccessGrants.ReadWriteAccess.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.ServiceIntegrationsUnionMemberS3AccessGrants
-		if readWriteAccess != nil {
-			var rwaGrantsScope awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess
-			diags.Append(fwflex.Expand(ctx, readWriteAccess, &rwaGrantsScope.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			r.Value = []awstypes.S3AccessGrantsScopeUnion{&rwaGrantsScope}
-		}
-
-		return &r, diags
-	}
-
-	return nil, diags
-}
-
-func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch t := v.(type) {
-	case awstypes.ServiceIntegrationsUnionMemberLakeFormation:
-		var data lakeFormationModel
-		if len(t.Value) > 0 {
-			var lfQueryData lakeFormationQueryModel
-
-			// Type switch on the LakeFormationScopeUnion to get LakeFormationQuery
-			switch scopeUnion := t.Value[0].(type) {
-			case *awstypes.LakeFormationScopeUnionMemberLakeFormationQuery:
-				// Flatten the LakeFormationQuery value into the model
-				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &lfQueryData)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				// Set the LakeFormationQuery in the parent model
-				data.LakeFormationQuery = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &lfQueryData)
-			}
-		}
-		m.LakeFormation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-
-	case awstypes.ServiceIntegrationsUnionMemberRedshift:
-		var data redshiftModel
-
-		// Handle the nested RedshiftScope union
-		if len(t.Value) > 0 {
-			var connectData connectModel
-
-			// Type switch on the RedshiftScopeUnion to get Connect
-			switch scopeUnion := t.Value[0].(type) {
-			case *awstypes.RedshiftScopeUnionMemberConnect:
-				// Flatten the Connect value into the model
-				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &connectData)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				// Set the Connect in the parent model
-				data.Connect = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &connectData)
-			}
-		}
-		m.Redshift = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-
-	case awstypes.ServiceIntegrationsUnionMemberS3AccessGrants:
-		var data s3AccessGrantsModel
-
-		// Handle the nested S3AccessGrantsScope union
-		if len(t.Value) > 0 {
-			var readWriteAccessData readWriteAccessModel
-
-			// Type switch on the S3AccessGrantsScopeUnion to get ReadWriteAccess
-			switch scopeUnion := t.Value[0].(type) {
-			case *awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess:
-				// Flatten the ReadWriteAccess value into the model
-				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &readWriteAccessData)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				// Set the ReadWriteAccess in the parent model
-				data.ReadWriteAccess = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &readWriteAccessData)
-			}
-		}
-		m.S3AccessGrants = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-	}
-
-	return diags
 }
 
 type lakeFormationModel struct {
@@ -550,4 +438,220 @@ type s3AccessGrantsModel struct {
 
 type readWriteAccessModel struct {
 	Authorization fwtypes.StringEnum[awstypes.ServiceAuthorization] `tfsdk:"authorization"`
+}
+
+// expandServiceIntegrations turns the single HCL service_integration block into
+// the array of ServiceIntegrationsUnion entries the Redshift API expects.
+// This is required for application_type = "Lakehouse", which requires both
+// LakeFormation:LakeFormationQuery and Redshift:Connect to be present.
+func expandServiceIntegrations(ctx context.Context, l fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]) ([]awstypes.ServiceIntegrationsUnion, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if l.IsNull() || l.IsUnknown() {
+		return nil, diags
+	}
+
+	m, d := l.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || m == nil {
+		return nil, diags
+	}
+
+	var out []awstypes.ServiceIntegrationsUnion
+
+	if !m.LakeFormation.IsNull() && !m.LakeFormation.IsUnknown() {
+		lf, d := m.LakeFormation.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		if lf != nil {
+			q, d := lf.LakeFormationQuery.ToPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if q != nil {
+				var scope awstypes.LakeFormationScopeUnionMemberLakeFormationQuery
+				diags.Append(fwflex.Expand(ctx, q, &scope.Value)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+				out = append(out, &awstypes.ServiceIntegrationsUnionMemberLakeFormation{
+					Value: []awstypes.LakeFormationScopeUnion{&scope},
+				})
+			}
+		}
+	}
+
+	if !m.Redshift.IsNull() && !m.Redshift.IsUnknown() {
+		rs, d := m.Redshift.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		if rs != nil {
+			c, d := rs.Connect.ToPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if c != nil {
+				var scope awstypes.RedshiftScopeUnionMemberConnect
+				diags.Append(fwflex.Expand(ctx, c, &scope.Value)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+				out = append(out, &awstypes.ServiceIntegrationsUnionMemberRedshift{
+					Value: []awstypes.RedshiftScopeUnion{&scope},
+				})
+			}
+		}
+	}
+
+	if !m.S3AccessGrants.IsNull() && !m.S3AccessGrants.IsUnknown() {
+		sg, d := m.S3AccessGrants.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		if sg != nil {
+			rwa, d := sg.ReadWriteAccess.ToPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if rwa != nil {
+				var scope awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess
+				diags.Append(fwflex.Expand(ctx, rwa, &scope.Value)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+				out = append(out, &awstypes.ServiceIntegrationsUnionMemberS3AccessGrants{
+					Value: []awstypes.S3AccessGrantsScopeUnion{&scope},
+				})
+			}
+		}
+	}
+
+	return out, diags
+}
+
+// flattenServiceIntegrations folds an API []ServiceIntegrationsUnion back into
+// a single service_integration block with multiple sub-blocks set.
+func flattenServiceIntegrations(ctx context.Context, unions []awstypes.ServiceIntegrationsUnion) (fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if len(unions) == 0 {
+		return fwtypes.NewListNestedObjectValueOfNull[serviceIntegrationsModel](ctx), diags
+	}
+
+	model := serviceIntegrationsModel{
+		LakeFormation:  fwtypes.NewListNestedObjectValueOfNull[lakeFormationModel](ctx),
+		Redshift:       fwtypes.NewListNestedObjectValueOfNull[redshiftModel](ctx),
+		S3AccessGrants: fwtypes.NewListNestedObjectValueOfNull[s3AccessGrantsModel](ctx),
+	}
+
+	for _, u := range unions {
+		switch t := u.(type) {
+		case *awstypes.ServiceIntegrationsUnionMemberLakeFormation:
+			data := lakeFormationModel{
+				LakeFormationQuery: fwtypes.NewListNestedObjectValueOfNull[lakeFormationQueryModel](ctx),
+			}
+			if len(t.Value) > 0 {
+				if s, ok := t.Value[0].(*awstypes.LakeFormationScopeUnionMemberLakeFormationQuery); ok {
+					var q lakeFormationQueryModel
+					diags.Append(fwflex.Flatten(ctx, s.Value, &q)...)
+					if diags.HasError() {
+						return fwtypes.NewListNestedObjectValueOfNull[serviceIntegrationsModel](ctx), diags
+					}
+					data.LakeFormationQuery = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &q)
+				}
+			}
+			model.LakeFormation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+		case *awstypes.ServiceIntegrationsUnionMemberRedshift:
+			data := redshiftModel{
+				Connect: fwtypes.NewListNestedObjectValueOfNull[connectModel](ctx),
+			}
+			if len(t.Value) > 0 {
+				if s, ok := t.Value[0].(*awstypes.RedshiftScopeUnionMemberConnect); ok {
+					var c connectModel
+					diags.Append(fwflex.Flatten(ctx, s.Value, &c)...)
+					if diags.HasError() {
+						return fwtypes.NewListNestedObjectValueOfNull[serviceIntegrationsModel](ctx), diags
+					}
+					data.Connect = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &c)
+				}
+			}
+			model.Redshift = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+		case *awstypes.ServiceIntegrationsUnionMemberS3AccessGrants:
+			data := s3AccessGrantsModel{
+				ReadWriteAccess: fwtypes.NewListNestedObjectValueOfNull[readWriteAccessModel](ctx),
+			}
+			if len(t.Value) > 0 {
+				if s, ok := t.Value[0].(*awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess); ok {
+					var r readWriteAccessModel
+					diags.Append(fwflex.Flatten(ctx, s.Value, &r)...)
+					if diags.HasError() {
+						return fwtypes.NewListNestedObjectValueOfNull[serviceIntegrationsModel](ctx), diags
+					}
+					data.ReadWriteAccess = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &r)
+				}
+			}
+			model.S3AccessGrants = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		}
+	}
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model), diags
+}
+
+// lakehouseServiceIntegrationsValidator surfaces the AWS Lakehouse precondition
+// (must enable both LakeFormation:LakeFormationQuery and Redshift:Connect) at
+// plan time instead of waiting for the API to return InvalidParameterValue.
+type lakehouseServiceIntegrationsValidator struct{}
+
+func (lakehouseServiceIntegrationsValidator) Description(_ context.Context) string {
+	return `When application_type = "Lakehouse", service_integration must enable both lake_formation.lake_formation_query and redshift.connect.`
+}
+
+func (v lakehouseServiceIntegrationsValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (lakehouseServiceIntegrationsValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var cfg idcApplicationResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if cfg.ApplicationType.IsNull() || cfg.ApplicationType.IsUnknown() {
+		return
+	}
+	if cfg.ApplicationType.ValueString() != string(awstypes.ApplicationTypeLakehouse) {
+		return
+	}
+	if cfg.ServiceIntegrations.IsNull() || cfg.ServiceIntegrations.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("service_integration"),
+			"Invalid Lakehouse service_integration",
+			`application_type = "Lakehouse" requires both lake_formation.lake_formation_query.authorization = "Enabled" and redshift.connect.authorization = "Enabled".`,
+		)
+		return
+	}
+
+	si, diags := cfg.ServiceIntegrations.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || si == nil {
+		return
+	}
+
+	if si.LakeFormation.IsNull() || si.LakeFormation.IsUnknown() ||
+		si.Redshift.IsNull() || si.Redshift.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("service_integration"),
+			"Invalid Lakehouse service_integration",
+			`application_type = "Lakehouse" requires both lake_formation.lake_formation_query.authorization = "Enabled" and redshift.connect.authorization = "Enabled".`,
+		)
+	}
 }
