@@ -1,0 +1,108 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-schema-func
+    languages: [go]
+    message: Prefer schema.Resource.SchemaFunc to schema.Resource.Schema
+    patterns:
+      - pattern: "Schema: $SCHEMA"
+      - metavariable-pattern:
+          metavariable: $SCHEMA
+          pattern: "map[string]*schema.Schema{...}"
+      - pattern-inside: |
+          func $FUNC() *schema.Resource {
+            ...
+            return &schema.Resource{
+              ...,
+            }
+          }
+      - pattern-not-inside: |
+          Elem: &schema.Resource{
+            ...,
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^.*(?<!V\d)$
+    fix: |
+      SchemaFunc: func() map[string]*schema.Schema {
+      	return $SCHEMA
+      }
+    severity: WARNING
+    paths:
+      exclude:
+        - /internal/service/lakeformation
+        - /internal/service/lambda
+        - /internal/service/lexmodels
+        - /internal/service/licensemanager
+        - /internal/service/lightsail
+        - /internal/service/location
+        - /internal/service/logs
+        - /internal/service/macie2
+        - /internal/service/mediaconvert
+        - /internal/service/medialive
+        - /internal/service/mediapackage
+        - /internal/service/mediastore
+        - /internal/service/memorydb
+        - /internal/service/mq
+        - /internal/service/mwaa
+        - /internal/service/neptune
+        - /internal/service/networkfirewall
+        - /internal/service/networkmanager
+        - /internal/service/oam
+        - /internal/service/opensearch
+        - /internal/service/opensearchserverless
+        - /internal/service/organizations
+        - /internal/service/outposts
+        - /internal/service/pinpoint
+        - /internal/service/pricing
+        - /internal/service/qldb
+        - /internal/service/quicksight
+        - /internal/service/ram
+        - /internal/service/rbin
+        - /internal/service/rds
+        - /internal/service/redshift
+        - /internal/service/redshiftdata
+        - /internal/service/redshiftserverless
+        - /internal/service/resourcegroups
+        - /internal/service/resourcegroupstaggingapi
+        - /internal/service/rolesanywhere
+        - /internal/service/route53
+        - /internal/service/route53recoverycontrolconfig
+        - /internal/service/route53recoveryreadiness
+        - /internal/service/route53resolver
+        - /internal/service/rum
+        - /internal/service/s3
+        - /internal/service/s3control
+        - /internal/service/s3outposts
+        - /internal/service/sagemaker
+        - /internal/service/scheduler
+        - /internal/service/schemas
+        - /internal/service/secretsmanager
+        - /internal/service/securityhub
+        - /internal/service/serverlessrepo
+        - /internal/service/servicecatalog
+        - /internal/service/servicediscovery
+        - /internal/service/servicequotas
+        - /internal/service/ses
+        - /internal/service/sesv2
+        - /internal/service/sfn
+        - /internal/service/shield
+        - /internal/service/signer
+        - /internal/service/sns
+        - /internal/service/sqs
+        - /internal/service/ssm
+        - /internal/service/ssmcontacts
+        - /internal/service/ssmincidents
+        - /internal/service/ssoadmin
+        - /internal/service/storagegateway
+        - /internal/service/swf
+        - /internal/service/synthetics
+        - /internal/service/timestreamwrite
+        - /internal/service/transcribe
+        - /internal/service/transfer
+        - /internal/service/vpclattice
+        - /internal/service/waf
+        - /internal/service/wafregional
+        - /internal/service/workspaces
+        - /internal/service/xray

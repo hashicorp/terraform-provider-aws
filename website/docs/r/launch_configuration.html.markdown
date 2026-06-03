@@ -45,8 +45,8 @@ resource "aws_launch_configuration" "as_conf" {
 Launch Configurations cannot be updated after creation with the Amazon
 Web Service API. In order to update a Launch Configuration, Terraform will
 destroy the existing resource and create a replacement. In order to effectively
-use a Launch Configuration resource with an [AutoScaling Group resource][1],
-it's recommended to specify `create_before_destroy` in a [lifecycle][2] block.
+use a Launch Configuration resource with an [AutoScaling Group resource](/docs/providers/aws/r/autoscaling_group.html),
+it's recommended to specify `create_before_destroy` in a [lifecycle](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) block.
 Either omit the Launch Configuration `name` attribute, or specify a partial name
 with `name_prefix`.  Example:
 
@@ -100,7 +100,7 @@ Auto Scaling Group to reserve instances. Simply specifying the `spot_price`
 parameter will set the price on the Launch Configuration which will attempt to
 reserve your instances at this price.  See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
-for more information or how to launch [Spot Instances][3] with Terraform.
+for more information or how to launch [Spot Instances](/docs/providers/aws/r/spot_instance_request.html) with Terraform.
 
 ```terraform
 data "aws_ami" "ubuntu" {
@@ -225,23 +225,45 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name of the launch configuration.
 * `name` - The name of the launch configuration.
 
-[1]: /docs/providers/aws/r/autoscaling_group.html
-[2]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
-[3]: /docs/providers/aws/r/spot_instance_request.html
-
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_launch_configuration.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_launch_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) name of the launch configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import launch configurations using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_launch_configuration.as_conf
-  id = "terraform-lg-123456"
+  to = aws_launch_configuration.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import launch configurations using the `name`. For example:
 
 ```console
-% terraform import aws_launch_configuration.as_conf terraform-lg-123456
+% terraform import aws_launch_configuration.example example
 ```

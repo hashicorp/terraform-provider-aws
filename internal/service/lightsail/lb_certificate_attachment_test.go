@@ -18,7 +18,7 @@ func testAccLoadBalancerCertificateAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	lbName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	cName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {

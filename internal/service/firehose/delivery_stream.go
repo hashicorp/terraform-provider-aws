@@ -261,49 +261,51 @@ func resourceDeliveryStream() *schema.Resource {
 			}
 			s3ConfigurationElem := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"buffering_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  300,
-						},
-						"buffering_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-						"compression_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.CompressionFormatUncompressed,
-							ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
-						},
-						"error_output_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"bucket_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"buffering_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  300,
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"compression_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.CompressionFormatUncompressed,
+								ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
+							},
+							"error_output_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						}
 					},
 				}
 			}

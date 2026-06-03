@@ -63,9 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The user's name.
 * `name` - The user's name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `unique_id` - The [unique ID][1] assigned by AWS.
-
-  [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
+* `unique_id` - The [unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
 ## Import
 
@@ -93,7 +91,6 @@ resource "aws_iam_user" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Users using the `name`. For example:
 

@@ -42,13 +42,13 @@ func TestStringUTF8LenBetween(t *testing.T) {
 			t.Fatalf("expected 1 diagnostic, got %#v", diags)
 		}
 		if diags[0].Severity != diag.Error {
-			t.Fatalf("expected severity %q, got %q", diag.Error, diags[0].Severity)
+			t.Fatalf("expected severity %v, got %v", diag.Error, diags[0].Severity)
 		}
 		if got, want := diags[0].Summary, "Invalid character length"; got != want {
-			t.Fatalf("expected summary %q, got %q", want, got)
+			t.Fatalf("expected summary %v, got %v", want, got)
 		}
 		if got, want := diags[0].Detail, "expected length of pattern to be between 2 and 4 UTF-8 characters, got 1"; got != want {
-			t.Fatalf("expected detail %q, got %q", want, got)
+			t.Fatalf("expected detail %v, got %v", want, got)
 		}
 	})
 
@@ -61,13 +61,13 @@ func TestStringUTF8LenBetween(t *testing.T) {
 			t.Fatalf("expected 1 diagnostic, got %#v", diags)
 		}
 		if diags[0].Severity != diag.Error {
-			t.Fatalf("expected severity %q, got %q", diag.Error, diags[0].Severity)
+			t.Fatalf("expected severity %v, got %v", diag.Error, diags[0].Severity)
 		}
 		if got, want := diags[0].Summary, "Invalid character length"; got != want {
-			t.Fatalf("expected summary %q, got %q", want, got)
+			t.Fatalf("expected summary %v, got %v", want, got)
 		}
 		if got, want := diags[0].Detail, "expected length of pattern to be between 1 and 2 UTF-8 characters, got 3"; got != want {
-			t.Fatalf("expected detail %q, got %q", want, got)
+			t.Fatalf("expected detail %v, got %v", want, got)
 		}
 	})
 
@@ -80,13 +80,13 @@ func TestStringUTF8LenBetween(t *testing.T) {
 			t.Fatalf("expected 1 diagnostic, got %#v", diags)
 		}
 		if diags[0].Severity != diag.Error {
-			t.Fatalf("expected severity %q, got %q", diag.Error, diags[0].Severity)
+			t.Fatalf("expected severity %v, got %v", diag.Error, diags[0].Severity)
 		}
 		if got, want := diags[0].Summary, "expected a string, got int"; got != want {
-			t.Fatalf("expected summary %q, got %q", want, got)
+			t.Fatalf("expected summary %v, got %v", want, got)
 		}
 		if got, want := diags[0].Detail, "expected a string, got int"; got != want {
-			t.Fatalf("expected detail %q, got %q", want, got)
+			t.Fatalf("expected detail %v, got %v", want, got)
 		}
 	})
 }

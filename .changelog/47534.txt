@@ -1,0 +1,3 @@
+```release-note:documentation
+resource/aws_grafana_workspace: Update `grafana_version` argument to support v12.4 and remove outdated v8.4 reference
+```

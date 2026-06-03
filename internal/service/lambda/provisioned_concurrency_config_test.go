@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -66,6 +67,14 @@ func TestAccLambdaProvisionedConcurrencyConfig_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceProvisionedConcurrencyConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,6 +98,14 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), lambdaFunctionResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -206,6 +223,44 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func TestAccLambdaProvisionedConcurrencyConfig_aliasChangeWithProvisionedConcurrency(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	filename1 := "test-fixtures/lambdapinpoint.zip"
+	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
+	lambdaAliasResourceName := "aws_lambda_alias.test"
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename1, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+				),
+			},
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename2, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+				),
 			},
 		},
 	})
@@ -397,7 +452,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   publish       = true
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
@@ -446,6 +501,25 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
   qualifier                         = aws_lambda_alias.test.name
 }
 `,
+	)
+}
+
+func testAccProvisionedConcurrencyConfigConfig_qualifierAliasNameVersionUpdate(rName, filename string, provisionedConcurrentExecutions int) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, filename),
+		fmt.Sprintf(`
+resource "aws_lambda_alias" "test" {
+  function_name    = aws_lambda_function.test.function_name
+  function_version = aws_lambda_function.test.version
+  name             = "test"
+}
+
+resource "aws_lambda_provisioned_concurrency_config" "test" {
+  function_name                     = aws_lambda_function.test.function_name
+  provisioned_concurrent_executions = %[1]d
+  qualifier                         = aws_lambda_alias.test.name
+}
+`, provisionedConcurrentExecutions),
 	)
 }
 

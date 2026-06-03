@@ -338,7 +338,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.lambda.arn
   handler          = "index.handler"
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs22.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
 
   depends_on = [aws_iam_role_policy.lambda_basic]

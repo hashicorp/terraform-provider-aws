@@ -36,21 +36,23 @@ func resourceDocumentationVersion() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -59,7 +61,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	input := apigateway.CreateDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		RestApiId:            aws.String(apiID),
@@ -102,7 +104,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set(names.AttrDescription, version.Description)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 	d.Set(names.AttrVersion, version.Version)
 
 	return diags

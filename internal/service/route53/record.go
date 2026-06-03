@@ -371,7 +371,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 
@@ -671,7 +671,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := conn.ChangeResourceRecordSets(ctx, input)
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 

@@ -321,6 +321,36 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_integration.example
+  identity = {
+    rest_api_id = "12345abcde"
+    resource_id = "67890fghij"
+    http_method = "GET"
+  }
+}
+
+resource "aws_api_gateway_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `rest_api_id` (String) - ID of the associated REST API.
+* `resource_id` (String) - API resource ID.
+* `http_method` (String) - HTTP Method.
+
+#### Optional
+
+* `account_id` (String) - AWS Account where this resource is managed.
+* `region` (String) - Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
 
 ```terraform

@@ -23,24 +23,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_metric_filter", name="Metric Filter")
+// @IdentityAttribute("log_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("metricFilterImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.MetricFilter")
+// @Testing(importStateIdFunc=testAccMetricFilterImportStateIDFunc)
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceMetricFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricFilterPut,
 		ReadWithoutTimeout:   resourceMetricFilterRead,
 		UpdateWithoutTimeout: resourceMetricFilterPut,
 		DeleteWithoutTimeout: resourceMetricFilterDelete,
-
-		Importer: &schema.ResourceImporter{
-			State: resourceMetricFilterImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"apply_on_transformed_logs": {
@@ -104,13 +108,7 @@ func resourceMetricFilter() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
-				StateFunc: func(v any) string {
-					s, ok := v.(string)
-					if !ok {
-						return ""
-					}
-					return strings.TrimSpace(s)
-				},
+				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 			},
 		},
 	}
@@ -169,13 +167,9 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
-	d.Set(names.AttrLogGroupName, mf.LogGroupName)
-	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting metric_transformation: %s", err)
+	if err := resourceMetricFilterFlatten(ctx, mf, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set(names.AttrName, mf.FilterName)
-	d.Set("pattern", mf.FilterPattern)
 
 	return diags
 }
@@ -209,17 +203,16 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceMetricFilterImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected <log_group_name>:<name>", d.Id())
+func resourceMetricFilterFlatten(_ context.Context, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
+	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
+	d.Set(names.AttrLogGroupName, mf.LogGroupName)
+	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
+		return fmt.Errorf("setting metric_transformation: %w", err)
 	}
-	logGroupName := idParts[0]
-	name := idParts[1]
-	d.Set(names.AttrLogGroupName, logGroupName)
-	d.Set(names.AttrName, name)
-	d.SetId(name)
-	return []*schema.ResourceData{d}, nil
+	d.Set(names.AttrName, mf.FilterName)
+	d.Set("pattern", mf.FilterPattern)
+
+	return nil
 }
 
 func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.MetricFilter, error) {
@@ -376,4 +369,40 @@ func flattenMetricTransformations(apiObjects []awstypes.MetricTransformation) []
 	}
 
 	return tfList
+}
+
+const metricFilterImportIDSeparator = ":"
+
+func metricFilterParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, metricFilterImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected log-group-name%[2]sfilter-name", id, metricFilterImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = metricFilterImportID{}
+)
+
+type metricFilterImportID struct{}
+
+func (metricFilterImportID) Parse(id string) (string, map[string]any, error) {
+	logGroupName, filterName, err := metricFilterParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrLogGroupName: logGroupName,
+		names.AttrName:         filterName,
+	}
+
+	return filterName, result, nil
+}
+
+func (metricFilterImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }

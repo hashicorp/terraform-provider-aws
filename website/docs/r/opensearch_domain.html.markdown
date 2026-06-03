@@ -328,6 +328,7 @@ The following arguments are optional:
 * `auto_tune_options` - (Optional) Configuration block for the Auto-Tune options of the domain. Detailed below.
 * `cluster_config` - (Optional) Configuration block for the cluster of the domain. Detailed below.
 * `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
+* `deployment_strategy_options` - (Optional) Configuration block for the deployment strategy options of the domain. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
@@ -448,6 +449,10 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use.
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
+
+### deployment_strategy_options
+
+* `deployment_strategy` - (Optional) Deployment strategy for the domain. Valid values: `Default` and `CapacityOptimized`.
 
 ### domain_endpoint_options
 

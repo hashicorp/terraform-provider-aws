@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -77,6 +78,14 @@ func TestAccImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 					testAccCheckDistributionConfigurationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -340,7 +349,19 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
-func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationARNs(t *testing.T) {
+// Organization-dependent tests use AWS Organizations (account singleton).
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"organizationARNs": testAccDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationARNs,
+		"ouARNs":           testAccDistributionConfiguration_DistributionAMIDistributionLaunchPermission_ouARNs,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	organizationResourceName := "aws_organizations_organization.test"
@@ -372,7 +393,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
-func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_ouARNs(t *testing.T) {
+func testAccDistributionConfiguration_DistributionAMIDistributionLaunchPermission_ouARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	organizationalUnitResourceName := "aws_organizations_organizational_unit.test"

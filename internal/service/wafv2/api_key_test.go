@@ -23,7 +23,7 @@ func TestAccWAFV2APIKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey awstypes.APIKeySummary
 	resourceName := "aws_wafv2_api_key.test"
-	domain := []string{acctest.RandomDomainName()}
+	domain := []string{acctest.RandomDomainName(t)}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
@@ -57,7 +57,7 @@ func TestAccWAFV2APIKey_multipleTokenDomains(t *testing.T) {
 	resourceName := "aws_wafv2_api_key.test"
 	var domains []string
 	for range 4 {
-		domains = append(domains, acctest.RandomDomainName())
+		domains = append(domains, acctest.RandomDomainName(t))
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -90,8 +90,8 @@ func TestAccWAFV2APIKey_changeTokenDomainsForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey awstypes.APIKeySummary
 	resourceName := "aws_wafv2_api_key.test"
-	domain := []string{acctest.RandomDomainName()}
-	domainNew := []string{acctest.RandomDomainName()}
+	domain := []string{acctest.RandomDomainName(t)}
+	domainNew := []string{acctest.RandomDomainName(t)}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
@@ -125,7 +125,7 @@ func TestAccWAFV2APIKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey awstypes.APIKeySummary
 	resourceName := "aws_wafv2_api_key.test"
-	domain := []string{acctest.RandomDomainName()}
+	domain := []string{acctest.RandomDomainName(t)}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },

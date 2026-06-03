@@ -224,6 +224,8 @@ service/detective:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_detective_'
 service/devicefarm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devicefarm_'
+service/devopsagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsagent_'
 service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
@@ -626,6 +628,8 @@ service/s3:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
+service/s3files:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3files_'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
 service/s3tables:

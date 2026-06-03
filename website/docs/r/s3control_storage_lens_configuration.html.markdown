@@ -77,7 +77,9 @@ The `storage_lens_configuration` block supports the following:
 * `data_export` (Optional) Properties of S3 Storage Lens metrics export including the destination, schema and format. See [Data Export](#data-export) below for more details.
 * `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
 * `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
+* `expanded_prefixes_data_export` (Optional) Configuration for the S3 Storage Lens expanded prefix metrics report. Unlike the default Storage Lens metrics report, the enhanced prefix metrics report includes all S3 Storage Lens storage and activity data related to the full list of prefixes in your Storage Lens configuration. See [Expanded Prefixes Data Export](#expanded-prefixes-data-export) below for more details.
 * `include` (Optional) What is included in this configuration. Conflicts with `exclude`. See [Include](#include) below for more details.
+* `prefix_delimiter` (Optional) Prefix delimiter used for object keys in this S3 Storage Lens configuration.
 
 ### Account Level
 
@@ -165,6 +167,13 @@ The `data_export` block supports the following:
 * `cloud_watch_metrics` (Optional) Amazon CloudWatch publishing for S3 Storage Lens metrics. See [Cloud Watch Metrics](#cloud-watch-metrics) below for more details.
 * `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
 * `storage_lens_table_destination` (Optional) S3 table bucket where the S3 Storage Lens metrics export will be located. See [Storage Lens Table Destination](#storage-lens-table-destination) below for more details.
+
+### Expanded Prefixes Data Export
+
+The `expanded_prefixes_data_export` block supports the following:
+
+* `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens expanded prefix metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
+* `storage_lens_table_destination` (Optional) S3 table bucket where the S3 Storage Lens expanded prefix metrics export will be located. See [Storage Lens Table Destination](#storage-lens-table-destination) below for more details.
 
 ### Cloud Watch Metrics
 

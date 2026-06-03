@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_odb_network: Enhancements to support cross-region restore.
+```
+
+```release-note:enhancement
+data-source/aws_odb_network: Enhancements to support cross-region restore.
+```

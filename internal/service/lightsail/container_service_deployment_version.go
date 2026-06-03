@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service_deployment_version", name=Container Service Deployment Version")
+// @SDKResource("aws_lightsail_container_service_deployment_version", name="Container Service Deployment Version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,

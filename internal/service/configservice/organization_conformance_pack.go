@@ -34,6 +34,12 @@ import (
 )
 
 // @SDKResource("aws_config_organization_conformance_pack", name="Organization Conformance Pack")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConformancePack")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
+// @Testing(importIgnore="template_body")
 func resourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConformancePackCreate,
@@ -41,90 +47,88 @@ func resourceOrganizationConformancePack() *schema.Resource {
 		UpdateWithoutTimeout: resourceOrganizationConformancePackUpdate,
 		DeleteWithoutTimeout: resourceOrganizationConformancePackDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delivery_s3_bucket": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
-				),
-			},
-			"delivery_s3_key_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"excluded_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"input_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 60,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameter_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"parameter_value": {
-							Type:     schema.TypeString,
-							Required: true,
+				"delivery_s3_bucket": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
+					),
+				},
+				"delivery_s3_key_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"excluded_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
+				},
+				"input_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 60,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameter_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"parameter_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"template_body": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 51200),
-					verify.ValidStringIsJSONOrYAML,
-				),
-				ConflictsWith: []string{"template_s3_uri"},
-			},
-			"template_s3_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-				ConflictsWith: []string{"template_body"},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"template_body": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 51200),
+						verify.ValidStringIsJSONOrYAML,
+					),
+					ConflictsWith: []string{"template_s3_uri"},
+				},
+				"template_s3_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					),
+					ConflictsWith: []string{"template_body"},
+				},
+			}
 		},
 	}
 }

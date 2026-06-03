@@ -95,9 +95,13 @@ func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.ToString(outpost_id))
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
-	d.Set("host_id", asset.ComputeAttributes.HostId)
-	d.Set("instance_families", asset.ComputeAttributes.InstanceFamilies)
-	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	if asset.ComputeAttributes != nil {
+		d.Set("host_id", asset.ComputeAttributes.HostId)
+		d.Set("instance_families", asset.ComputeAttributes.InstanceFamilies)
+	}
+	if asset.AssetLocation != nil {
+		d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	}
 	d.Set("rack_id", asset.RackId)
 	return diags
 }

@@ -116,18 +116,18 @@ The following arguments are required:
 
 * `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`, `AWS_IAM`. When set to `CUSTOM_JWT`, `authorizer_configuration` block is required.
 * `name` - (Required) Name of the gateway.
-* `protocol_type` - (Required) Protocol type for the gateway. Valid values: `MCP`.
 * `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
-* `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
+* `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
+* `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `authorizer_configuration`
