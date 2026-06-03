@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_hosts` ([#47986](https://github.com/hashicorp/terraform-provider-aws/issues/47986))
 * **New List Resource:** `aws_cleanrooms_membership` ([#48166](https://github.com/hashicorp/terraform-provider-aws/issues/48166))
 * **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
 * **New Resource:** `aws_ec2_local_gateway_route_table` ([#48013](https://github.com/hashicorp/terraform-provider-aws/issues/48013))
