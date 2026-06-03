@@ -43,6 +43,8 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "runtime", "cloudfront-js-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{

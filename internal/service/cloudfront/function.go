@@ -199,7 +199,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	etag := d.Get("etag").(string)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChanges("code", names.AttrComment, "key_value_store_associations", "runtime") {
 		input := &cloudfront.UpdateFunctionInput{
 			FunctionCode: []byte(d.Get("code").(string)),
 			FunctionConfig: &awstypes.FunctionConfig{
