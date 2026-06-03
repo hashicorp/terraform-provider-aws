@@ -2690,6 +2690,21 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 			tfMap["lifecycle_stages"] = v
 		}
 
+		if v := apiObject.TargetType; v != "" {
+			tfMap["target_type"] = string(v)
+		}
+
+		if v := apiObject.TimeoutConfiguration; v != nil {
+			timeoutConfigMap := map[string]any{}
+			if v.Action != "" {
+				timeoutConfigMap[names.AttrAction] = string(v.Action)
+			}
+			if v.TimeoutInMinutes != nil {
+				timeoutConfigMap["timeout_in_minutes"] = flex.Int32ToStringValue(v.TimeoutInMinutes)
+			}
+			tfMap["timeout_configuration"] = []any{timeoutConfigMap}
+		}
+
 		tfList = append(tfList, tfMap)
 	}
 
@@ -2755,6 +2770,30 @@ func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
 			if err := json.Unmarshal([]byte(v), &jsonValue); err == nil {
 				hook.HookDetails = document.NewLazyDocument(jsonValue)
 			}
+		}
+
+		if v, ok := tfMap["target_type"].(string); ok && v != "" {
+			hook.TargetType = awstypes.DeploymentLifecycleHookTargetType(v)
+		}
+
+		if v, ok := tfMap["timeout_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			timeoutConfigMap := v[0].(map[string]any)
+			timeoutConfig := &awstypes.DeploymentLifecycleHookTimeoutConfiguration{}
+
+			if action, ok := timeoutConfigMap[names.AttrAction].(string); ok && action != "" {
+				timeoutConfig.Action = awstypes.DeploymentLifecycleHookAction(action)
+			}
+
+			if timeout, ok := timeoutConfigMap["timeout_in_minutes"].(string); ok {
+				timeoutMinutes := nullable.Int(timeout)
+				if !timeoutMinutes.IsNull() {
+					if minutes, _, err := timeoutMinutes.ValueInt32(); err == nil {
+						timeoutConfig.TimeoutInMinutes = aws.Int32(minutes)
+					}
+				}
+			}
+
+			hook.TimeoutConfiguration = timeoutConfig
 		}
 
 		apiObject = append(apiObject, hook)
