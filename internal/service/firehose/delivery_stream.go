@@ -18,6 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -517,7 +519,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"custom_time_zone": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Computed:     true,
+								Default:      "UTC",
 								ValidateFunc: validation.StringLenBetween(0, 50),
 							},
 							"data_format_conversion_configuration": {
@@ -1499,7 +1501,9 @@ func resourceDeliveryStream() *schema.Resource {
 
 func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
+	c := meta.(*conns.AWSClient)
+	partition := c.Partition(ctx)
+	conn := c.FirehoseClient(ctx)
 
 	sn := d.Get(names.AttrName).(string)
 	input := firehose.CreateDeliveryStreamInput{
@@ -1558,6 +1562,15 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 		return conn.CreateDeliveryStream(ctx, &input)
 	})
+
+	// Some partitions (e.g. ISO) may not support all ExtendedS3DestinationConfiguration fields.
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationConfiguration") && partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationConfiguration != nil {
+		input.ExtendedS3DestinationConfiguration.CustomTimeZone = nil
+		input.ExtendedS3DestinationConfiguration.FileExtension = nil
+		_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
+			return conn.CreateDeliveryStream(ctx, &input)
+		})
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
@@ -1701,7 +1714,9 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
+	c := meta.(*conns.AWSClient)
+	partition := c.Partition(ctx)
+	conn := c.FirehoseClient(ctx)
 
 	sn := d.Get(names.AttrName).(string)
 
@@ -1754,6 +1769,15 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, &input)
 		})
+
+		// Some partitions (e.g. ISO) may not support all ExtendedS3DestinationUpdate fields.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationUpdate") && partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationUpdate != nil {
+			input.ExtendedS3DestinationUpdate.CustomTimeZone = nil
+			input.ExtendedS3DestinationUpdate.FileExtension = nil
+			_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
+				return conn.UpdateDestination(ctx, &input)
+			})
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
@@ -2061,8 +2085,10 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
+		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
+		FileExtension:                     aws.String(tfMap["file_extension"].(string)),
 		Prefix:                            expandPrefix(tfMap),
 		RoleARN:                           aws.String(roleARN),
 	}
@@ -2071,20 +2097,12 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := tfMap["custom_time_zone"].(string); ok && v != "" {
-		apiObject.CustomTimeZone = aws.String(v)
-	}
-
 	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
 		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(tfMap)
 	}
 
 	if v, ok := tfMap["error_output_prefix"].(string); ok && v != "" {
 		apiObject.ErrorOutputPrefix = aws.String(v)
-	}
-
-	if v, ok := tfMap["file_extension"].(string); ok && v != "" {
-		apiObject.FileExtension = aws.String(v)
 	}
 
 	if _, ok := tfMap["processing_configuration"]; ok {
@@ -2139,9 +2157,11 @@ func expandExtendedS3DestinationUpdate(tfMap map[string]any) *types.ExtendedS3De
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
+		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
 		ErrorOutputPrefix:                 aws.String(tfMap["error_output_prefix"].(string)),
+		FileExtension:                     aws.String(tfMap["file_extension"].(string)),
 		Prefix:                            expandPrefix(tfMap),
 		ProcessingConfiguration:           expandProcessingConfiguration(tfMap, destinationTypeExtendedS3, roleARN),
 		RoleARN:                           aws.String(roleARN),
@@ -2151,16 +2171,8 @@ func expandExtendedS3DestinationUpdate(tfMap map[string]any) *types.ExtendedS3De
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if v, ok := tfMap["custom_time_zone"].(string); ok && v != "" {
-		apiObject.CustomTimeZone = aws.String(v)
-	}
-
 	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
 		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(tfMap)
-	}
-
-	if v, ok := tfMap["file_extension"].(string); ok && v != "" {
-		apiObject.FileExtension = aws.String(v)
 	}
 
 	if v, ok := tfMap["s3_backup_mode"]; ok {
