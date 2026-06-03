@@ -1,4 +1,4 @@
-## 6.48.0 (Unreleased)
+## 6.48.0 (June 3, 2026)
 
 NOTES:
 
