@@ -7,6 +7,7 @@ package pinpointsmsvoicev2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -44,7 +45,8 @@ import (
 )
 
 const (
-	iamPropagationTimeout = 2 * time.Minute
+	iamPropagationTimeout     = 2 * time.Minute
+	poolDisassociationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
@@ -359,10 +361,19 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	_, err := conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
-		PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
-	})
-
+	_, err := tfresource.RetryWhen(ctx, poolDisassociationTimeout,
+		func(ctx context.Context) (*pinpointsmsvoicev2.ReleasePhoneNumberOutput, error) {
+			return conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
+				PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
+			})
+		},
+		func(err error) (bool, error) {
+			if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok && ce.Reason == awstypes.ConflictExceptionReasonPhoneNumberAssociatedToPool {
+				return true, err
+			}
+			return false, err
+		},
+	)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
