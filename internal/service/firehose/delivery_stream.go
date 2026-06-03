@@ -2064,7 +2064,6 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
-		FileExtension:                     aws.String(tfMap["file_extension"].(string)),
 		Prefix:                            expandPrefix(tfMap),
 		RoleARN:                           aws.String(roleARN),
 	}
@@ -2079,6 +2078,10 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 
 	if v, ok := tfMap["error_output_prefix"].(string); ok && v != "" {
 		apiObject.ErrorOutputPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_extension"].(string); ok && v != "" {
+		apiObject.FileExtension = aws.String(v)
 	}
 
 	if _, ok := tfMap["processing_configuration"]; ok {
@@ -2124,36 +2127,39 @@ func expandS3DestinationUpdateBackup(tfMap map[string]any) *types.S3DestinationU
 	return expandS3DestinationUpdate(tfList)
 }
 
-func expandExtendedS3DestinationUpdate(s3 map[string]any) *types.ExtendedS3DestinationUpdate {
-	roleARN := s3[names.AttrRoleARN].(string)
+func expandExtendedS3DestinationUpdate(tfMap map[string]any) *types.ExtendedS3DestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.ExtendedS3DestinationUpdate{
-		BucketARN: aws.String(s3["bucket_arn"].(string)),
+		BucketARN: aws.String(tfMap["bucket_arn"].(string)),
 		BufferingHints: &types.BufferingHints{
-			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
-			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
-		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
-		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
-		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
-		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
-		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
-		FileExtension:                     aws.String(s3["file_extension"].(string)),
-		Prefix:                            expandPrefix(s3),
-		ProcessingConfiguration:           expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN),
+		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
+		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
+		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
+		ErrorOutputPrefix:                 aws.String(tfMap["error_output_prefix"].(string)),
+		Prefix:                            expandPrefix(tfMap),
+		ProcessingConfiguration:           expandProcessingConfiguration(tfMap, destinationTypeExtendedS3, roleARN),
 		RoleARN:                           aws.String(roleARN),
 	}
 
-	if _, ok := s3["cloudwatch_logging_options"]; ok {
-		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(s3)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
-		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(s3)
+	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
+		apiObject.DynamicPartitioningConfiguration = expandDynamicPartitioningConfiguration(tfMap)
 	}
 
-	if v, ok := s3["s3_backup_mode"]; ok {
+	if v, ok := tfMap["file_extension"].(string); ok && v != "" {
+		apiObject.FileExtension = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
 		apiObject.S3BackupMode = types.S3BackupMode(v.(string))
-		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(s3)
+		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(tfMap)
 	}
 
 	return apiObject
