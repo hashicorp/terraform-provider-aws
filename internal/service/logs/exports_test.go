@@ -21,8 +21,10 @@ var (
 	ResourceResourcePolicy            = resourceResourcePolicy
 	ResourceStream                    = resourceStream
 	ResourceSubscriptionFilter        = resourceSubscriptionFilter
+	ResourceS3TableSourceAssociation  = newS3TableSourceAssociationResource
 	ResourceTransformer               = newTransformerResource
 
+	FindS3TableSourceAssociationByTwoPartKey               = findS3TableSourceAssociationByTwoPartKey
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName
 	FindDeliveryByID                                       = findDeliveryByID
