@@ -35,3 +35,19 @@ func compareActualEngineVersion(d *schema.ResourceData, oldVersion, newVersion, 
 
 	d.Set(names.AttrEngineVersion, newVersion)
 }
+
+// setParameterGroupName sets parameter group related attributes
+//
+// `parameter_group_name_actual` is always set to currentPG
+//
+// `parameter_group_name` is set to currentPG unless there is a pending engine
+// version upgrade (e.g. major version upgrade deferred to maintenance window).
+// In that case, the parameter group in the configuration may belong to the new
+// engine family and differ from the currently active parameter group.
+func setParameterGroupName(d *schema.ResourceData, currentPG string, hasPendingEngineVersionUpgrade bool) {
+	d.Set("parameter_group_name_actual", currentPG)
+
+	if !hasPendingEngineVersionUpgrade {
+		d.Set(names.AttrParameterGroupName, currentPG)
+	}
+}

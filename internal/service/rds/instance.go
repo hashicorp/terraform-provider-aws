@@ -492,6 +492,10 @@ func resourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"parameter_group_name_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -2041,7 +2045,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 	if len(v.DBParameterGroups) > 0 {
-		d.Set(names.AttrParameterGroupName, v.DBParameterGroups[0].DBParameterGroupName)
+		hasPendingEngineVersionUpgrade := v.PendingModifiedValues != nil && v.PendingModifiedValues.EngineVersion != nil
+		setParameterGroupName(d, aws.ToString(v.DBParameterGroups[0].DBParameterGroupName), hasPendingEngineVersionUpgrade)
 	}
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
