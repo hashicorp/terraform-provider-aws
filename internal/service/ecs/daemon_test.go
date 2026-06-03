@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -102,9 +103,9 @@ func TestAccECSDaemon_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"capacity_provider_arns",     // API doesn't return this
-					"daemon_task_definition_arn", // API doesn't return this
-					"deployment_configuration",   // API doesn't return this
+					"capacity_provider_arns",
+					"daemon_task_definition_arn",
+					"deployment_configuration",
 				},
 			},
 		},
@@ -311,7 +312,7 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 	})
 }
 
-func TestAccECSDaemon_enableManagedTags(t *testing.T) {
+func TestAccECSDaemon_enableECSManagedTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
@@ -323,16 +324,23 @@ func TestAccECSDaemon_enableManagedTags(t *testing.T) {
 		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonConfig_enableManagedTags(rName, true),
+				Config: testAccDaemonConfig_enableECSManagedTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
 				),
 			},
 			{
-				Config: testAccDaemonConfig_enableManagedTags(rName, false),
+				Config: testAccDaemonConfig_enableECSManagedTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "false"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -353,13 +361,20 @@ func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -377,16 +392,23 @@ func TestAccECSDaemon_propagateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaemonConfig_propagateTags(rName, "DAEMON"),
+				Config: testAccDaemonConfig_propagateTags(rName, string(awstypes.DaemonPropagateTagsDaemon)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", string(awstypes.DaemonPropagateTagsDaemon)),
 				),
 			},
 			{
-				Config: testAccDaemonConfig_propagateTags(rName, "NONE"),
+				Config: testAccDaemonConfig_propagateTags(rName, string(awstypes.DaemonPropagateTagsNone)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", string(awstypes.DaemonPropagateTagsNone)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -656,7 +678,7 @@ resource "aws_ecs_daemon" "test" {
 `, rName, enable))
 }
 
-func testAccDaemonConfig_enableManagedTags(rName string, enable bool) string {
+func testAccDaemonConfig_enableECSManagedTags(rName string, enable bool) string {
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                       = %[1]q

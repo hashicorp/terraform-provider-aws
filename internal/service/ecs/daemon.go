@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -89,12 +88,10 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed:   true,
 			},
 			"enable_ecs_managed_tags": schema.BoolAttribute{
-				Optional:  true,
-				WriteOnly: true,
+				Optional: true,
 			},
 			"enable_execute_command": schema.BoolAttribute{
-				Optional:  true,
-				WriteOnly: true,
+				Optional: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -107,9 +104,8 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 			names.AttrPropagateTags: schema.StringAttribute{
-				Optional:   true,
-				WriteOnly:  true,
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonPropagateTags](),
+				Optional:   true,
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.DaemonStatus](),
@@ -188,21 +184,6 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	// Fields AutoFlex can't handle
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
-
-	// Write-only fields — read from config
-	managedTags, execCmd, propagateTags := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if !managedTags.IsNull() {
-		input.EnableECSManagedTags = managedTags.ValueBool()
-	}
-	if !execCmd.IsNull() {
-		input.EnableExecuteCommand = execCmd.ValueBool()
-	}
-	if !propagateTags.IsNull() {
-		input.PropagateTags = awstypes.DaemonPropagateTags(propagateTags.ValueString())
-	}
 
 	output, err := retryDaemonCreate(ctx, conn, &input)
 
@@ -303,10 +284,6 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var plan, state daemonResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -329,21 +306,6 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-
-		// Write-only fields — read from config, always send
-		managedTags, execCmd, propagateTags := expandDaemonWriteOnlyFields(ctx, request.Config, &response.Diagnostics)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if !managedTags.IsNull() {
-			input.EnableECSManagedTags = managedTags.ValueBool()
-		}
-		if !execCmd.IsNull() {
-			input.EnableExecuteCommand = execCmd.ValueBool()
-		}
-		if !propagateTags.IsNull() {
-			input.PropagateTags = awstypes.DaemonPropagateTags(propagateTags.ValueString())
 		}
 
 		err := retryDaemonUpdate(ctx, conn, &input)
@@ -420,17 +382,6 @@ func daemonNameFromARN(arnStr string) types.String {
 		return types.StringValue(parts[2])
 	}
 	return types.StringNull()
-}
-
-// expandDaemonWriteOnlyFields reads write-only fields from the Terraform config.
-// These fields are not returned by the API, so they must always be read from config.
-func expandDaemonWriteOnlyFields(ctx context.Context, cfg tfsdk.Config, diags *diag.Diagnostics) (enableManagedTags, enableExecCmd types.Bool, propagateTags fwtypes.StringEnum[awstypes.DaemonPropagateTags]) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
-	var data daemonResourceModel
-	diags.Append(cfg.Get(ctx, &data)...)
-	if diags.HasError() {
-		return
-	}
-	return data.EnableECSManagedTags, data.EnableExecuteCommand, data.PropagateTags
 }
 
 // flattenDaemonRevision populates task definition ARN and capacity
