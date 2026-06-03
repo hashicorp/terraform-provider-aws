@@ -200,13 +200,37 @@ func testAccCheckPrefixListAssociationExists(ctx context.Context, t *testing.T, 
 
 func testAccPrefixListAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_networkmanager_prefix_list_association" "test" {
+  core_network_id   = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  prefix_list_arn   = aws_ec2_managed_prefix_list.test.arn
+  prefix_list_alias = "testprefixlist"
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+
+  entry {
+    cidr        = "10.0.0.0/8"
+    description = "Test CIDR"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_networkmanager_global_network" "test" {
   tags = {
     Name = %[1]q
   }
 }
 
-data "aws_region" "current" {}
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   version = "2025.11"
@@ -233,30 +257,6 @@ resource "aws_networkmanager_core_network" "test" {
   }
 }
 
-resource "aws_networkmanager_core_network_policy_attachment" "test" {
-  core_network_id = aws_networkmanager_core_network.test.id
-  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
-}
-
-resource "aws_ec2_managed_prefix_list" "test" {
-  name           = %[1]q
-  address_family = "IPv4"
-  max_entries    = 5
-
-  entry {
-    cidr        = "10.0.0.0/8"
-    description = "Test CIDR"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_prefix_list_association" "test" {
-  core_network_id   = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  prefix_list_arn   = aws_ec2_managed_prefix_list.test.arn
-  prefix_list_alias = "testprefixlist"
-}
+data "aws_region" "current" {}
 `, rName)
 }
