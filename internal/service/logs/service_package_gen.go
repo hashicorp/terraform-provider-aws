@@ -86,6 +86,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newS3TableSourceAssociationResource,
+			TypeName: "aws_cloudwatch_log_s3_table_source_association",
+			Name:     "S3 Table Source Association",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
