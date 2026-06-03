@@ -185,12 +185,12 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	output, err := retryDaemonCreate(ctx, conn, &input)
+	output, err := createDaemonWithRetry(ctx, conn, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(r.Meta().Partition(ctx), err) {
 		input.Tags = nil
-		output, err = retryDaemonCreate(ctx, conn, &input)
+		output, err = createDaemonWithRetry(ctx, conn, &input)
 	}
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		err := retryDaemonUpdate(ctx, conn, &input)
+		err := updateDaemonWithRetry(ctx, conn, &input)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 			return
@@ -419,13 +419,9 @@ func flattenDaemonCurrentRevision(ctx context.Context, conn *ecs.Client, daemon 
 	flattenDaemonRevision(ctx, revision, daemon.CurrentRevisions[0], model)
 }
 
-func retryDaemonCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateDaemonInput) (*ecs.CreateDaemonOutput, error) {
-	const (
-		daemonCreateTimeout = 2 * time.Minute
-		timeout             = propagationTimeout + daemonCreateTimeout
-	)
-	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func(ctx context.Context) (any, error) {
+func createDaemonWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.CreateDaemonInput) (*ecs.CreateDaemonOutput, error) {
+	output, err := tfresource.RetryWhen[*ecs.CreateDaemonOutput](ctx, propagationTimeout,
+		func(ctx context.Context) (*ecs.CreateDaemonOutput, error) {
 			return conn.CreateDaemon(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -444,26 +440,17 @@ func retryDaemonCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateD
 		return nil, err
 	}
 
-	return outputRaw.(*ecs.CreateDaemonOutput), nil
+	return output, nil
 }
 
-func retryDaemonUpdate(ctx context.Context, conn *ecs.Client, input *ecs.UpdateDaemonInput) error {
-	const (
-		daemonUpdateTimeout = 2 * time.Minute
-		timeout             = propagationTimeout + daemonUpdateTimeout
-	)
-	_, err := tfresource.RetryWhen(ctx, timeout,
-		func(ctx context.Context) (any, error) {
+func updateDaemonWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.UpdateDaemonInput) error {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*ecs.UpdateDaemonOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout,
+		func(ctx context.Context) (*ecs.UpdateDaemonOutput, error) {
 			return conn.UpdateDaemon(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Unable to assume the service linked role") {
-				return true, err
-			}
-
-			return false, err
-		},
+		"Unable to assume the service linked role",
 	)
+
 	return err
 }
 
