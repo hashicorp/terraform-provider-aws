@@ -30,6 +30,7 @@ import (
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(identityTest=false)
+// @Region(global=true)
 // @NoImport
 func newUseCaseForModelAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &useCaseForModelAccessResource{}
