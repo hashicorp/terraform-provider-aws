@@ -1123,6 +1123,12 @@ service/inspector2:
           - any-glob-to-any-file:
               - 'internal/service/inspector2/**/*'
               - 'website/**/inspector2_*'
+service/interconnect:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/interconnect/**/*'
+              - 'website/**/interconnect_*'
 service/internetmonitor:
   - any:
       - changed-files:
