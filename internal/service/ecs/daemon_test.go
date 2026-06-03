@@ -678,7 +678,7 @@ resource "aws_ecs_daemon" "test" {
 `, rName, enable))
 }
 
-func testAccDaemonConfig_enableECSManagedTags(rName string, enable bool) string {
+func testAccDaemonConfig_enableECSManagedTags(rName string, enable bool) string { // nosemgrep:ci.ecs-in-func-name
 	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_daemon" "test" {
   name                       = %[1]q
