@@ -67,7 +67,7 @@ func (r *localGatewayRouteTableResource) Schema(ctx context.Context, request res
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"outpost_arn": schema.StringAttribute{
+			names.AttrOutpostARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

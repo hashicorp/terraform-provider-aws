@@ -54,7 +54,7 @@ func dataSourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"outpost_arn": {
+							names.AttrOutpostARN: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
