@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_elasticache_service_updates", name="Service Updates")
@@ -36,6 +37,11 @@ type serviceUpdatesDataSource struct {
 func (d *serviceUpdatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrStatus: schema.SetAttribute{
+				Optional:    true,
+				CustomType:  fwtypes.SetOfStringEnumType[awstypes.ServiceUpdateStatus](),
+				ElementType: fwtypes.StringEnumType[awstypes.ServiceUpdateStatus](),
+			},
 			"service_updates": framework.DataSourceComputedListOfObjectAttribute[serviceUpdateModel](ctx),
 		},
 	}
@@ -51,6 +57,11 @@ func (d *serviceUpdatesDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	var input elasticache.DescribeServiceUpdatesInput
+	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	serviceUpdates, err := findServiceUpdates(ctx, conn, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
@@ -67,7 +78,8 @@ func (d *serviceUpdatesDataSource) Read(ctx context.Context, req datasource.Read
 
 type serviceUpdatesDataSourceModel struct {
 	framework.WithRegionModel
-	ServiceUpdates fwtypes.ListNestedObjectValueOf[serviceUpdateModel] `tfsdk:"service_updates"`
+	ServiceUpdates      fwtypes.ListNestedObjectValueOf[serviceUpdateModel]   `tfsdk:"service_updates"`
+	ServiceUpdateStatus fwtypes.SetOfStringEnum[awstypes.ServiceUpdateStatus] `tfsdk:"status"`
 }
 
 type serviceUpdateModel struct {
@@ -86,7 +98,8 @@ type serviceUpdateModel struct {
 }
 
 func findServiceUpdates(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServiceUpdatesInput) ([]awstypes.ServiceUpdate, error) {
-	var output []awstypes.ServiceUpdate
+	// Ensure that if no results are returned, an empty slice is returned instead of nil
+	output := make([]awstypes.ServiceUpdate, 0)
 
 	pages := elasticache.NewDescribeServiceUpdatesPaginator(conn, input)
 
