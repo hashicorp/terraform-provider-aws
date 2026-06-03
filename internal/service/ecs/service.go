@@ -724,17 +724,20 @@ func resourceService() *schema.Resource {
 									"timeout_configuration": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												names.AttrAction: {
 													Type:             schema.TypeString,
-													Required:         true,
+													Optional:         true,
+													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
 												},
 												"timeout_in_minutes": {
 													Type:         nullable.TypeNullableInt,
-													Required:     true,
+													Optional:     true,
+													Computed:     true,
 													ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
 												},
 											},
