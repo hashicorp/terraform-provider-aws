@@ -225,6 +225,11 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
 			},
+			"ec2_placement_group_ids": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "A list of EC2 placement group IDs associated with the ODB network.",
+			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
 				Computed:    true,
@@ -994,6 +999,7 @@ type odbNetworkResourceModel struct {
 	ManagedServices                   fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
 	CreatedAt                         timetypes.RFC3339                                                          `tfsdk:"created_at"`
 	DeleteAssociatedResources         types.Bool                                                                 `tfsdk:"delete_associated_resources"`
+	Ec2PlacementGroupIds              fwtypes.ListOfString                                                       `tfsdk:"ec2_placement_group_ids"`
 	Tags                              tftags.Map                                                                 `tfsdk:"tags"`
 	TagsAll                           tftags.Map                                                                 `tfsdk:"tags_all"`
 }

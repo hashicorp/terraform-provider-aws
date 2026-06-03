@@ -9,7 +9,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -35,6 +37,10 @@ func resourceAlias() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAliasImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -155,6 +161,12 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Alias (%s): %s", d.Id(), err)
 	}
 
+	if len(input.RoutingConfig.AdditionalVersionWeights) == 0 {
+		if err := waitAliasRoutingWeightsCleared(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Alias (%s) routing weights to clear: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
@@ -220,6 +232,43 @@ func findAlias(ctx context.Context, conn *lambda.Client, input *lambda.GetAliasI
 	}
 
 	return output, nil
+}
+
+func statusAliasRoutingWeights(conn *lambda.Client, functionName, aliasName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findAliasByTwoPartKey(ctx, conn, functionName, aliasName)
+
+		if retry.NotFound(err) {
+			return nil, "stable", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.RoutingConfig != nil && len(output.RoutingConfig.AdditionalVersionWeights) > 0 {
+			return output, "pending", nil
+		}
+
+		return output, "stable", nil
+	}
+}
+
+func waitAliasRoutingWeightsCleared(ctx context.Context, conn *lambda.Client, functionName, aliasName string, timeout time.Duration) error {
+	if _, err := strconv.Atoi(aliasName); err == nil {
+		return nil
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"pending"},
+		Target:  []string{"stable"},
+		Refresh: statusAliasRoutingWeights(conn, functionName, aliasName),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func expandAliasRoutingConfiguration(tfList []any) *awstypes.AliasRoutingConfiguration {

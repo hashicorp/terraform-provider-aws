@@ -7,6 +7,7 @@ resource "aws_cleanrooms_collaboration" "test" {
   creator_display_name     = "Creator"
   description              = var.rName
   query_log_status         = "DISABLED"
+  analytics_engine         = "SPARK"
 }
 
 resource "aws_cleanrooms_membership" "test" {

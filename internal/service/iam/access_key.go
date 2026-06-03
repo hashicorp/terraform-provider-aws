@@ -75,49 +75,51 @@ func resourceAccessKey() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_ses_smtp_password_v4": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pgp_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"secret": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"ses_smtp_password_v4": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.StatusTypeActive,
-				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
-			},
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_secret": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_ses_smtp_password_v4": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pgp_key": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"secret": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"ses_smtp_password_v4": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.StatusTypeActive,
+					ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
+				},
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
