@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -30,7 +29,7 @@ func TestAccNetworkManagerPrefixListAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPrefixListAssociationDestroy(ctx, t),
@@ -57,7 +56,7 @@ func TestAccNetworkManagerPrefixListAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPrefixListAssociationDestroy(ctx, t),
@@ -200,9 +199,7 @@ func testAccCheckPrefixListAssociationExists(ctx context.Context, t *testing.T, 
 }
 
 func testAccPrefixListAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, endpoints.UsWest2RegionID),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
     Name = %[1]q
@@ -242,8 +239,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 }
 
 resource "aws_ec2_managed_prefix_list" "test" {
-  provider = "awsalternate"
-
   name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
@@ -263,5 +258,5 @@ resource "aws_networkmanager_prefix_list_association" "test" {
   prefix_list_arn   = aws_ec2_managed_prefix_list.test.arn
   prefix_list_alias = "testprefixlist"
 }
-`, rName))
+`, rName)
 }
