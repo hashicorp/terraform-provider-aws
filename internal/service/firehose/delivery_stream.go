@@ -517,7 +517,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"custom_time_zone": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Default:      "UTC",
+								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(0, 50),
 							},
 							"data_format_conversion_configuration": {
@@ -2061,7 +2061,6 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
-		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
 		Prefix:                            expandPrefix(tfMap),
@@ -2070,6 +2069,10 @@ func expandExtendedS3DestinationConfiguration(tfMap map[string]any) *types.Exten
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if v, ok := tfMap["custom_time_zone"].(string); ok && v != "" {
+		apiObject.CustomTimeZone = aws.String(v)
 	}
 
 	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {
@@ -2136,7 +2139,6 @@ func expandExtendedS3DestinationUpdate(tfMap map[string]any) *types.ExtendedS3De
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		CompressionFormat:                 types.CompressionFormat(tfMap["compression_format"].(string)),
-		CustomTimeZone:                    aws.String(tfMap["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(tfMap["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(tfMap),
 		ErrorOutputPrefix:                 aws.String(tfMap["error_output_prefix"].(string)),
@@ -2147,6 +2149,10 @@ func expandExtendedS3DestinationUpdate(tfMap map[string]any) *types.ExtendedS3De
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if v, ok := tfMap["custom_time_zone"].(string); ok && v != "" {
+		apiObject.CustomTimeZone = aws.String(v)
 	}
 
 	if _, ok := tfMap["dynamic_partitioning_configuration"]; ok {

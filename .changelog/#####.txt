@@ -3,5 +3,9 @@ resource/aws_kinesis_firehose_delivery_stream: Add Resource Identity support
 ```
 
 ```release-note:bug
-resource/aws_kinesis_firehose_delivery_stream: Do not send any empty `FileExtension` value to the AWS API if `file_extension` is not configured 
+resource/aws_kinesis_firehose_delivery_stream: Do not send any empty `FileExtension` value to the AWS API if `extended_s3_configuration.file_extension` is not configured 
+```
+
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Remove Terraform default for `extended_s3_configuration.custom_time_zone` and change the attribute to Optional and Computed. This fixes `ValidationException: Unknown parameter: ExtendedS3DestinationConfiguration.CustomTimeZone` errors in AWS partitions which do not yet support selecting a time zone for bucket prefixes
 ```
