@@ -327,14 +327,14 @@ func TestAccECSDaemon_enableECSManagedTags(t *testing.T) {
 				Config: testAccDaemonConfig_enableECSManagedTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableECSManagedTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -361,14 +361,14 @@ func TestAccECSDaemon_enableExecuteCommand(t *testing.T) {
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_enableExecuteCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -395,14 +395,14 @@ func TestAccECSDaemon_propagateTags(t *testing.T) {
 				Config: testAccDaemonConfig_propagateTags(rName, string(awstypes.DaemonPropagateTagsDaemon)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", string(awstypes.DaemonPropagateTagsDaemon)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.DaemonPropagateTagsDaemon)),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_propagateTags(rName, string(awstypes.DaemonPropagateTagsNone)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", string(awstypes.DaemonPropagateTagsNone)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.DaemonPropagateTagsNone)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
