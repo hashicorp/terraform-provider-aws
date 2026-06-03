@@ -1,4 +1,4 @@
-## 6.48.0 (Unreleased)
+## 6.48.0 (June 3, 2026)
 
 NOTES:
 
@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_hosts` ([#47986](https://github.com/hashicorp/terraform-provider-aws/issues/47986))
 * **New List Resource:** `aws_cleanrooms_membership` ([#48166](https://github.com/hashicorp/terraform-provider-aws/issues/48166))
 * **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
 * **New Resource:** `aws_ec2_local_gateway_route_table` ([#48013](https://github.com/hashicorp/terraform-provider-aws/issues/48013))
@@ -34,6 +35,7 @@ ENHANCEMENTS:
 * resource/aws_datazone_glossary_term: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_project: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
 * resource/aws_datazone_user_profile: Add resource identity support ([#48136](https://github.com/hashicorp/terraform-provider-aws/issues/48136))
+* resource/aws_kinesis_firehose_delivery_stream: Add Resource Identity support ([#48186](https://github.com/hashicorp/terraform-provider-aws/issues/48186))
 * resource/aws_kinesis_stream: Add Resource Identity support ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
 * resource/aws_kinesis_stream: Add `warm_throughput_mib_ps` argument. This functionality requires the `kinesis:UpdateStreamWarmThroughput` IAM permission ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
 * resource/aws_kinesis_stream: Add plan-time validation of `shard_level_metrics` ([#48152](https://github.com/hashicorp/terraform-provider-aws/issues/48152))
@@ -52,6 +54,7 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_gateway_target: Include `FAILED` and `SYNCHRONIZING` as pending states while a target is deleting ([#47626](https://github.com/hashicorp/terraform-provider-aws/issues/47626))
 * resource/aws_db_instance_automated_backups_replication: Fix `InvalidDBInstanceState: Cannot create a snapshot because the database instance ... is not currently in the available state` errors on delete ([#46687](https://github.com/hashicorp/terraform-provider-aws/issues/46687))
 * resource/aws_elasticache_replication_group: Fix `CacheClusterNotFound` when enabling snapshots after the primary cache cluster has been changed away from `-001`, and `InvalidParameterCombination` when enabling snapshots on cluster mode enabled groups ([#46326](https://github.com/hashicorp/terraform-provider-aws/issues/46326))
+* resource/aws_kinesis_firehose_delivery_stream: Fix `ValidationException: Unknown parameter: ExtendedS3DestinationConfiguration.CustomTimeZone` errors in AWS partitions which do not yet support selecting a time zone for bucket prefixes ([#48186](https://github.com/hashicorp/terraform-provider-aws/issues/48186))
 * resource/aws_lambda_alias: Fix plan drift caused by transient routing weights appearing in state after updating `function_version` ([#48116](https://github.com/hashicorp/terraform-provider-aws/issues/48116))
 * resource/aws_lambda_provisioned_concurrency_config: Fix `InvalidParameterValueException: Alias with weights can not be used with Provisioned Concurrency` error when updating provisioned concurrency simultaneously with alias version change ([#48116](https://github.com/hashicorp/terraform-provider-aws/issues/48116))
 * resource/aws_s3_bucket_versioning: Fix perpetual drift on `versioning_configuration.mfa_delete` when `status` is `Disabled` ([#48161](https://github.com/hashicorp/terraform-provider-aws/issues/48161))
