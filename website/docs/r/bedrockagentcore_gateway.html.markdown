@@ -206,8 +206,8 @@ The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
 * `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
-* `session_configutraion` - (Optional) Configuration block for session configuration for the MCP gateway. See [`session_configuration`](#session_configuration) below.
-* `streaming_configuration` - (Optional) Configuration block for streaming configuration for the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
+* `session_configuration` - (Optional) Configuration block for session settings of the MCP gateway. See [`session_configuration`](#session_configuration) below.
+* `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
 
 ### `session_configuration`
