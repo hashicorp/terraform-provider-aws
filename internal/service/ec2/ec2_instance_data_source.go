@@ -266,7 +266,7 @@ func dataSourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -491,7 +491,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
-	d.Set("outpost_arn", instance.OutpostArn)
+	d.Set(names.AttrOutpostARN, instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("public_dns", instance.PublicDnsName)

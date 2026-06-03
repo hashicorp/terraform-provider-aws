@@ -39,7 +39,7 @@ func (d *hostsDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			"outpost_arn": schema.StringAttribute{
+			names.AttrOutpostARN: schema.StringAttribute{
 				Optional: true,
 			},
 			names.AttrTags: tftags.TagsAttribute(),

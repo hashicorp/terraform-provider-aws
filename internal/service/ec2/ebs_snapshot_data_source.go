@@ -61,7 +61,7 @@ func dataSourceEBSSnapshot() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -172,7 +172,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
-	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set(names.AttrOutpostARN, snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)

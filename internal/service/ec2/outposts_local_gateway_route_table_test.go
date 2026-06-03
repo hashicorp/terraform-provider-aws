@@ -35,7 +35,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTable_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`local-gateway-route-table/lgw-rtb-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "local_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMode, "direct-vpc-routing"),
-					resource.TestCheckResourceAttrSet(resourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOutpostARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

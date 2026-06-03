@@ -113,7 +113,7 @@ func dataSourceSubnet() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -226,7 +226,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
+	d.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	d.Set(names.AttrOwnerID, subnet.OwnerId)
 	d.Set(names.AttrState, subnet.State)
 
