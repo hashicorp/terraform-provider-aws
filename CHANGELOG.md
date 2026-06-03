@@ -6,8 +6,6 @@ NOTES:
 
 FEATURES:
 
-* **New Resource:** `aws_cloudwatch_log_s3_table_source_association` ([#48137](https://github.com/hashicorp/terraform-provider-aws/issues/48137))
-* **New Resource:** `aws_observabilityadmin_s3_table_integration` ([#48137](https://github.com/hashicorp/terraform-provider-aws/issues/48137))
 * **New List Resource:** `aws_cleanrooms_membership` ([#48166](https://github.com/hashicorp/terraform-provider-aws/issues/48166))
 * **New List Resource:** `aws_pinpointsmsvoicev2_event_destination` ([#48034](https://github.com/hashicorp/terraform-provider-aws/issues/48034))
 * **New Resource:** `aws_ec2_local_gateway_route_table` ([#48013](https://github.com/hashicorp/terraform-provider-aws/issues/48013))

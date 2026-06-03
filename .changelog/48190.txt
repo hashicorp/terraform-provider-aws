@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_observabilityadmin_s3_table_integration
+```
+
+```release-note:new-resource
+aws_cloudwatch_log_s3_table_source_association
+```
