@@ -999,6 +999,7 @@ type odbNetworkResourceModel struct {
 	ManagedServices                   fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
 	CreatedAt                         timetypes.RFC3339                                                          `tfsdk:"created_at"`
 	DeleteAssociatedResources         types.Bool                                                                 `tfsdk:"delete_associated_resources"`
+	Ec2PlacementGroupIds              fwtypes.ListOfString                                                       `tfsdk:"ec2_placement_group_ids"`
 	Tags                              tftags.Map                                                                 `tfsdk:"tags"`
 	TagsAll                           tftags.Map                                                                 `tfsdk:"tags_all"`
 }

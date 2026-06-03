@@ -188,3 +188,30 @@ func (oracleDBNetworkDataSourceTest) testAccNetworkDataSourcePreCheck(ctx contex
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
+
+func (oracleDBNetworkDataSourceTest) basicNetworkDataSourceForEC2PlacementGroup(rName string) string {
+	networkRes := fmt.Sprintf(`
+
+resource "aws_odb_network" "test_resource" {
+  display_name         = %[1]q
+  availability_zone_id = "aps2-az3"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+  sts_access           = "DISABLED"
+  kms_access           = "DISABLED"
+  tags = {
+    "env" = "dev"
+  }
+}
+
+
+data "aws_odb_network" "test" {
+  id = aws_odb_network.test_resource.id
+}
+
+
+`, rName)
+	return networkRes
+}
