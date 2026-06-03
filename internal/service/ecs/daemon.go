@@ -66,13 +66,7 @@ type daemonResource struct {
 func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"capacity_provider_arns": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
 				Required:   true,
@@ -236,7 +230,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 	}
 
-	plan.DaemonArn = fwtypes.ARNValue(aws.ToString(output.DaemonArn))
+	plan.DaemonArn = types.StringValue(aws.ToString(output.DaemonArn))
 
 	// Save ARN to state so Terraform can track the resource if the waiter times out.
 	response.State.SetAttribute(ctx, path.Root(names.AttrARN), output.DaemonArn)
@@ -612,7 +606,7 @@ func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeou
 
 type daemonResourceModel struct {
 	framework.WithRegionModel
-	DaemonArn               fwtypes.ARN                                                   `tfsdk:"arn"`
+	DaemonArn               types.String                                                  `tfsdk:"arn"`
 	CapacityProviderArns    fwtypes.SetOfString                                           `tfsdk:"capacity_provider_arns"`
 	ClusterArn              fwtypes.ARN                                                   `tfsdk:"cluster_arn"`
 	DaemonTaskDefinitionArn fwtypes.ARN                                                   `tfsdk:"daemon_task_definition_arn"`
