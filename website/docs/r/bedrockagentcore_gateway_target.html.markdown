@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_bedrockagentcore_gateway_target
 
-Manages an AWS Bedrock AgentCore Gateway Target. Gateway targets define the endpoints and configurations that a gateway can invoke, such as Lambda functions or APIs, allowing agents to interact with external services through the Model Context Protocol (MCP).
+Manages an AWS Bedrock AgentCore Gateway Target. Gateway targets define the endpoints and configurations that a gateway can invoke, such as Lambda functions, APIs, or AgentCore Runtime agents, allowing agents to interact with external services through the Model Context Protocol (MCP) or by routing HTTP traffic directly to a runtime.
 
 ## Example Usage
 
@@ -339,6 +339,45 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
 }
 ```
 
+### HTTP Target Routing to an AgentCore Runtime
+
+Routes gateway traffic directly to an AgentCore Runtime agent over HTTP, without MCP aggregation. The gateway must not have a `protocol_type` set.
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example-runtime"
+  role_arn           = aws_iam_role.runtime_role.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "111122223333.dkr.ecr.us-west-2.amazonaws.com/example-runtime:latest"
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "runtime" {
+  name               = "runtime-target"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn       = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
+        qualifier = "DEFAULT"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -352,14 +391,16 @@ The following arguments are optional:
 * `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
 * `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
-* `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `credential_provider_configuration`
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role`](#gateway_iam_role) below.
 * `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
+* `caller_iam_credentials` - (Optional) Caller IAM credentials-based authentication configuration. See [`caller_iam_credentials`](#caller_iam_credentials) below.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role`](#gateway_iam_role) below.
+* `jwt_passthrough` - (Optional) JWT passthrough-based authentication configuration. This is an empty configuration block.
 * `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
 
 ### `api_key`
@@ -370,6 +411,13 @@ The `api_key` block supports the following:
 * `credential_location` - (Optional) Location where the API key credential is provided. Valid values: `HEADER`, `QUERY_PARAMETER`.
 * `credential_parameter_name` - (Optional) Name of the parameter containing the API key credential.
 * `credential_prefix` - (Optional) Prefix to add to the API key credential value.
+
+### `caller_iam_credentials`
+
+The `caller_iam_credentials` block supports the following:
+
+* `service` - (Required) The service name for the credentials.
+* `region` - (Optional) The AWS region for the credentials.
 
 ### `oauth`
 
@@ -400,9 +448,10 @@ The `metadata_configuration` block supports the following:
 
 ### `target_configuration`
 
-The `target_configuration` block supports the following:
+The `target_configuration` block supports exactly one of the following:
 
 * `mcp` - (Optional) Model Context Protocol (MCP) configuration. See [`mcp`](#mcp) below.
+* `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent. See [`http`](#http) below.
 
 ### `mcp`
 
@@ -480,6 +529,21 @@ The `s3` block supports the following:
 The `mcp_server` block supports the following:
 
 * `endpoint` - (Required) Endpoint for the MCP server target configuration.
+
+### `http`
+
+The `http` block supports exactly one of the following:
+
+* `agentcore_runtime` - (Optional) AgentCore Runtime target configuration. See [`agentcore_runtime`](#agentcore_runtime) below.
+
+~> **Note:** HTTP targets can only be attached to gateways that do not have a `protocol_type` set. They are not supported on MCP-protocol gateways.
+
+### `agentcore_runtime`
+
+The `agentcore_runtime` block supports the following:
+
+* `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
+* `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
 
 ### `api_schema_configuration`
 

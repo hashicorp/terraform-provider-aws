@@ -21,6 +21,9 @@ rules:
           Elem: &schema.Resource{
             ...,
           }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^.*(?<!V\d)$
     fix: |
       SchemaFunc: func() map[string]*schema.Schema {
       	return $SCHEMA
@@ -28,93 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/ce
-        - /internal/service/chime
-        - /internal/service/chimesdkmediapipelines
-        - /internal/service/chimesdkvoice
-        - /internal/service/cleanrooms
-        - /internal/service/cloud9
-        - /internal/service/cloudcontrol
-        - /internal/service/cloudformation
-        - /internal/service/cloudfront
-        - /internal/service/cloudhsmv2
-        - /internal/service/cloudsearch
-        - /internal/service/cloudtrail
-        - /internal/service/cloudwatch
-        - /internal/service/codeartifact
-        - /internal/service/codebuild
-        - /internal/service/codecatalyst
-        - /internal/service/codecommit
-        - /internal/service/codegurureviewer
-        - /internal/service/codepipeline
-        - /internal/service/codestarconnections
-        - /internal/service/codestarnotifications
-        - /internal/service/cognitoidentity
-        - /internal/service/cognitoidp
-        - /internal/service/comprehend
-        - /internal/service/configservice
-        - /internal/service/connect
-        - /internal/service/controltower
-        - /internal/service/cur
-        - /internal/service/dataexchange
-        - /internal/service/datapipeline
-        - /internal/service/datasync
-        - /internal/service/dax
-        - /internal/service/deploy
-        - /internal/service/detective
-        - /internal/service/devicefarm
-        - /internal/service/directconnect
-        - /internal/service/dlm
-        - /internal/service/dms
-        - /internal/service/docdb
-        - /internal/service/ds
-        - /internal/service/dynamodb
-        - /internal/service/ec2
-        - /internal/service/ecr
-        - /internal/service/ecrpublic
-        - /internal/service/ecs
-        - /internal/service/efs
-        - /internal/service/eks
-        - /internal/service/elasticache
-        - /internal/service/elasticbeanstalk
-        - /internal/service/elasticsearch
-        - /internal/service/elastictranscoder
-        - /internal/service/elb
-        - /internal/service/elbv2
-        - /internal/service/emr
-        - /internal/service/emrcontainers
-        - /internal/service/emrserverless
-        - /internal/service/events
-        - /internal/service/evidently
-        - /internal/service/finspace
-        - /internal/service/firehose
-        - /internal/service/fis
-        - /internal/service/fms
-        - /internal/service/fsx
-        - /internal/service/gamelift
-        - /internal/service/glacier
-        - /internal/service/globalaccelerator
-        - /internal/service/glue
-        - /internal/service/grafana
-        - /internal/service/guardduty
-        - /internal/service/iam
-        - /internal/service/identitystore
-        - /internal/service/imagebuilder
-        - /internal/service/inspector
-        - /internal/service/inspector2
-        - /internal/service/internetmonitor
-        - /internal/service/iot
-        - /internal/service/ivs
-        - /internal/service/ivschat
-        - /internal/service/kafka
-        - /internal/service/kafkaconnect
-        - /internal/service/kendra
-        - /internal/service/keyspaces
-        - /internal/service/kinesis
-        - /internal/service/kinesisanalytics
-        - /internal/service/kinesisanalyticsv2
-        - /internal/service/kinesisvideo
-        - /internal/service/kms
         - /internal/service/lakeformation
         - /internal/service/lambda
         - /internal/service/lexmodels

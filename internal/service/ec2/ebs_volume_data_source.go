@@ -32,70 +32,72 @@ func dataSourceEBSVolume() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"multi_attach_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSize: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrThroughput: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVolumeType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_initialization_rate": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"multi_attach_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"outpost_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSize: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrThroughput: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVolumeType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_initialization_rate": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
