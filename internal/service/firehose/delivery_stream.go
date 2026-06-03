@@ -521,6 +521,12 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional:     true,
 								Default:      "UTC",
 								ValidateFunc: validation.StringLenBetween(0, 50),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if old == "" && new == "UTC" {
+										return true
+									}
+									return new == old
+								},
 							},
 							"data_format_conversion_configuration": {
 								Type:     schema.TypeList,
