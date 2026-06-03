@@ -222,7 +222,7 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	daemon, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
+	outputFind, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -233,13 +233,13 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputFind, &plan)...)
 	plan.DaemonName = daemonNameFromARN(plan.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &plan)
+	flattenDaemonCurrentRevision(ctx, conn, outputFind, &response.Diagnostics, &plan)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -256,7 +256,7 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	conn := r.Meta().ECSClient(ctx)
 
-	daemon, err := findDaemonByARN(ctx, conn, state.DaemonArn.ValueString())
+	output, err := findDaemonByARN(ctx, conn, state.DaemonArn.ValueString())
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -267,13 +267,13 @@ func (r *daemonResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &state)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	state.DaemonName = daemonNameFromARN(state.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &state)
+	flattenDaemonCurrentRevision(ctx, conn, output, &response.Diagnostics, &state)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -321,19 +321,19 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
-	daemon, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
+	output, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, daemon, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	plan.DaemonName = daemonNameFromARN(plan.DaemonArn.ValueString())
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	flattenDaemonCurrentRevision(ctx, conn, daemon, &response.Diagnostics, &plan)
+	flattenDaemonCurrentRevision(ctx, conn, output, &response.Diagnostics, &plan)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -350,10 +350,11 @@ func (r *daemonResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	conn := r.Meta().ECSClient(ctx)
 
-	_, err := conn.DeleteDaemon(ctx, &ecs.DeleteDaemonInput{
+	input := ecs.DeleteDaemonInput{
 		DaemonArn: state.DaemonArn.ValueStringPointer(),
-	})
+	}
 
+	_, err := conn.DeleteDaemon(ctx, &input)
 	if errs.IsA[*awstypes.DaemonNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "not found") {
 		return
 	}
