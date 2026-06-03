@@ -65,6 +65,10 @@ func (destinationType) Values() []destinationType {
 	}
 }
 
+const (
+	defaultBucketPrefixTimeZone = "UTC"
+)
+
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
 // @ArnIdentity
@@ -519,14 +523,8 @@ func resourceDeliveryStream() *schema.Resource {
 							"custom_time_zone": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Default:      "UTC",
+								Default:      defaultBucketPrefixTimeZone,
 								ValidateFunc: validation.StringLenBetween(0, 50),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if old == "" && new == "UTC" {
-										return true
-									}
-									return new == old
-								},
 							},
 							"data_format_conversion_configuration": {
 								Type:     schema.TypeList,
@@ -3758,7 +3756,6 @@ func flattenExtendedS3DestinationDescription(apiObject *types.ExtendedS3Destinat
 		"bucket_arn":                           aws.ToString(apiObject.BucketARN),
 		"cloudwatch_logging_options":           flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		"compression_format":                   apiObject.CompressionFormat,
-		"custom_time_zone":                     aws.ToString(apiObject.CustomTimeZone),
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(apiObject.DataFormatConversionConfiguration),
 		"dynamic_partitioning_configuration":   flattenDynamicPartitioningConfiguration(apiObject.DynamicPartitioningConfiguration),
 		"error_output_prefix":                  aws.ToString(apiObject.ErrorOutputPrefix),
@@ -3777,6 +3774,14 @@ func flattenExtendedS3DestinationDescription(apiObject *types.ExtendedS3Destinat
 		if v.SizeInMBs != nil {
 			tfMap["buffering_size"] = aws.ToInt32(v.SizeInMBs)
 		}
+	}
+
+	// API omits default values
+	// Return defaults that are not type zero values to prevent extraneous difference.
+
+	tfMap["custom_time_zone"] = defaultBucketPrefixTimeZone
+	if apiObject.CustomTimeZone != nil {
+		tfMap["custom_time_zone"] = aws.ToString(apiObject.CustomTimeZone)
 	}
 
 	if v := apiObject.EncryptionConfiguration; v != nil && v.KMSEncryptionConfig != nil {
