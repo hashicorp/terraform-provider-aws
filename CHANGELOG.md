@@ -1,4 +1,4 @@
-## 6.49.0 (Unreleased)
+## 6.49.0 (June 4, 2026)
 
 ENHANCEMENTS:
 
