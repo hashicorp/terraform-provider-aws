@@ -485,8 +485,8 @@ github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.1 h1:ClKOAYZxCvc6zHn524Ucr
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.1/go.mod h1:S/VGb9HHw6JE20LkOGzK08/zpUf+4xsLx+jSvZZ2Yc8=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.5 h1:FwrmUgq1YQPZc4lUGPqzHE29a8zRYYHCn/5kF/lFkLQ=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.5/go.mod h1:VyVho2vqKZzwW18svgroOz9/NzERW0pOxD+EBhRRggg=
-github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.4 h1:Qm90uJP5i0VALhxRqUIKZPsThSjm6Lfevipcu+q6sGk=
-github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.4/go.mod h1:gVuvWz2BNJkWC5EUXVoBuP3krJ0B8FBYsOp4t/ubn84=
+github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.5 h1:ep1J3OW+4jRr65i3n98c0s4jgz31B6DoBSE5CsQqQbM=
+github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.5/go.mod h1:E5NbY+CJNqOPPhl5pQFf64EjNPnWnyUnDPnEOrw0HFI=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.251.1 h1:zJxRzdzRBEJbKHv1/cR7yNA9TRlM/Tswhoj81JNzdLQ=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.251.1/go.mod h1:10SNw+uPBnjPAG89OJz6YRr8ZKshMOP0AdXlIAkvzys=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.33.4 h1:ABPMwCAbJo4oXGFINz57GsFyeJdlUQuvzkQrpDuglnE=
