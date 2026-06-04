@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/account v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.39.5
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.47.4
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/amp v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.40.4
