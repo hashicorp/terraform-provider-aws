@@ -1802,7 +1802,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointManagedVPC(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = %[1]q
@@ -1829,7 +1829,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
 resource "aws_vpclattice_resource_configuration" "test" {
   name = %[1]q
   type = "SINGLE"
@@ -1875,7 +1875,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointWithRoutingDomain(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = %[1]q
@@ -1900,8 +1900,31 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName))
 }
 
-func testAccGatewayTargetConfig_baseVPC(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+func testAccGatewayTargetConfig_baseVPC(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -1910,5 +1933,5 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
