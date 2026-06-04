@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,7 +35,11 @@ import (
 // @FrameworkResource("aws_observabilityadmin_s3_table_integration", name="S3 Table Integration")
 // @ArnIdentity
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;*observabilityadmin.GetS3TableIntegrationOutput")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetS3TableIntegrationOutput")
+// @Testing(existsTakesT=true)
+// @Testing(generator="testAccRandomS3TableIntegrationName(t)")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccS3TableIntegrationPreCheck")
 // @Testing(tagsTest=false)
 func newS3TableIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &s3TableIntegrationResource{}
