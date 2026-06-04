@@ -6,8 +6,13 @@ ENHANCEMENTS:
 * data-source/aws_opensearchserverless_collection_group: Add `generation` attribute ([#48125](https://github.com/hashicorp/terraform-provider-aws/issues/48125))
 * resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.session_configuration` block ([#48179](https://github.com/hashicorp/terraform-provider-aws/issues/48179))
 * resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.streaming_configuration` block ([#48179](https://github.com/hashicorp/terraform-provider-aws/issues/48179))
+* resource/aws_cloudfront_function: Add `tags` and `tags_all` arguments ([#47916](https://github.com/hashicorp/terraform-provider-aws/issues/47916))
 * resource/aws_opensearch_domain: Add `advanced_security_options.jwt_options.jwks_url` argument ([#48146](https://github.com/hashicorp/terraform-provider-aws/issues/48146))
 * resource/aws_opensearchserverless_collection_group: Add `generation` argument ([#48125](https://github.com/hashicorp/terraform-provider-aws/issues/48125))
+
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway_target: Fix `runtime error: slice bounds out of range [1:0]` panics when refreshing state. This fixes a regression introduced in [v6.48.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6480-june-3-2026) ([#48215](https://github.com/hashicorp/terraform-provider-aws/issues/48215))
 
 ## 6.48.0 (June 3, 2026)
 
