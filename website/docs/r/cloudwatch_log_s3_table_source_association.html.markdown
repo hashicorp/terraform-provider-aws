@@ -37,16 +37,17 @@ resource "aws_cloudwatch_log_s3_table_source_association" "example" {
 
 This resource supports the following arguments:
 
-* `integration_arn` - (Required, Forces new resource) The ARN of the `aws_observabilityadmin_s3_table_integration` to associate the data source with.
-* `datasource_name` - (Optional, Forces new resource) The name of the data source. Defaults to `*` to match all data source names.
-* `datasource_type` - (Optional, Forces new resource) The type of the data source. Defaults to `*` to match all data source types.
+* `datasource_name` - (Optional, Forces new resource) Name of the data source. Defaults to `*` to match all data source names.
+* `datasource_type` - (Optional, Forces new resource) Type of the data source. Defaults to `*` to match all data source types.
+* `integration_arn` - (Required, Forces new resource) ARN of the `aws_observabilityadmin_s3_table_integration` to associate the data source with.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier for this source association.
-* `status` - The current status of the association. Valid values: `ACTIVE`, `UNHEALTHY`, `FAILED`, `DATA_SOURCE_DELETE_IN_PROGRESS`.
+* `id` - Unique identifier for this source association.
+* `status` - Current status of the association. Valid values: `ACTIVE`, `UNHEALTHY`, `FAILED`, `DATA_SOURCE_DELETE_IN_PROGRESS`.
 * `status_reason` - Additional information about the current status.
 
 ## Import

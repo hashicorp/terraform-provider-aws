@@ -105,22 +105,23 @@ resource "aws_observabilityadmin_s3_table_integration" "example" {
 
 This resource supports the following arguments:
 
-* `role_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the IAM role that grants the S3 Table integration permissions to access necessary resources.
-* `encryption` - (Required, Forces new resource) Encryption configuration block. [Documented below](#encryption).
+* `encryption` - (Required, Forces new resource) Encryption configuration block. [Documented below](#encryption-block).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM role that grants the S3 Table integration permissions to access necessary resources.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### encryption
+### `encryption` Block
 
-* `sse_algorithm` - (Required, Forces new resource) The server-side encryption algorithm. Valid values: `AES256`, `aws:kms`.
-* `kms_key_arn` - (Optional, Forces new resource) The ARN of the KMS key to use for encryption. Required when `sse_algorithm` is `aws:kms`.
+* `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key to use for encryption. Required when `sse_algorithm` is `aws:kms`.
+* `sse_algorithm` - (Required, Forces new resource) Server-side encryption algorithm. Valid values: `AES256`, `aws:kms`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the S3 Table integration.
-* `destination_table_bucket_arn` - The ARN of the S3 Table bucket where CloudWatch data is stored. AWS automatically creates a bucket named `_aws-cloudwatch_` if one does not already exist.
-* `status` - The current status of the integration. Valid values: `ACTIVE`, `DELETING`.
+* `arn` - Amazon Resource Name (ARN) of the S3 Table integration.
+* `destination_table_bucket_arn` - ARN of the S3 Table bucket where CloudWatch data is stored. AWS automatically creates a bucket named `_aws-cloudwatch_` if one does not already exist.
+* `status` - Current status of the integration. Valid values: `ACTIVE`, `DELETING`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -131,6 +132,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_observabilityadmin_s3_table_integration.example
+  identity = {
+    "arn" = "arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id"
+  }
+}
+
+resource "aws_observabilityadmin_s3_table_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the S3 Table integration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin S3 Table Integrations using the `arn`. For example:
 
