@@ -227,6 +227,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 										"column_name":     sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 										names.AttrFormat:  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, 0, 32),
 										"new_column_type": sdkschema.StringEnumSchema[awstypes.ColumnDataType](sdkschema.AttrRequired),
+										"sub_type":        sdkschema.StringEnumSchema[awstypes.ColumnDataSubType](sdkschema.AttrOptionalComputed),
 									},
 								},
 							},
@@ -573,6 +574,7 @@ func DataSetOutputColumnsSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				names.AttrDescription: sdkschema.StringComputedOnly(),
 				names.AttrName:        sdkschema.StringComputedOnly(),
+				"sub_type":            sdkschema.StringComputedOnly(),
 				names.AttrType:        sdkschema.StringComputedOnly(),
 			},
 		},
@@ -600,6 +602,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"sub_type":     sdkschema.StringEnumSchema[awstypes.ColumnDataSubType](sdkschema.AttrOptionalComputed),
 										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
@@ -630,6 +633,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"sub_type":     sdkschema.StringEnumSchema[awstypes.ColumnDataSubType](sdkschema.AttrOptionalComputed),
 										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
@@ -658,6 +662,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"sub_type":     sdkschema.StringEnumSchema[awstypes.ColumnDataSubType](sdkschema.AttrOptionalComputed),
 										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
@@ -1251,6 +1256,9 @@ func expandCastColumnTypeOperation(tfList []any) *awstypes.CastColumnTypeOperati
 	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		apiObject.Format = aws.String(v)
 	}
+	if v, ok := tfMap["sub_type"].(string); ok && v != "" {
+		apiObject.SubType = awstypes.ColumnDataSubType(v)
+	}
 
 	return apiObject
 }
@@ -1580,6 +1588,9 @@ func expandInputColumn(tfMap map[string]any) *awstypes.InputColumn {
 	if v, ok := tfMap[names.AttrType].(string); ok {
 		apiObject.Type = awstypes.InputColumnDataType(v)
 	}
+	if v, ok := tfMap["sub_type"].(string); ok && v != "" {
+		apiObject.SubType = awstypes.ColumnDataSubType(v)
+	}
 
 	return apiObject
 }
@@ -1874,6 +1885,9 @@ func FlattenOutputColumns(apiObjects []awstypes.OutputColumn) []any {
 		if apiObject.Name != nil {
 			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
+		if apiObject.SubType != "" {
+			tfMap["sub_type"] = string(apiObject.SubType)
+		}
 		tfMap[names.AttrType] = apiObject.Type
 
 		tfList = append(tfList, tfMap)
@@ -2038,6 +2052,9 @@ func flattenCastColumnTypeOperation(apiObject *awstypes.CastColumnTypeOperation)
 		tfMap[names.AttrFormat] = aws.ToString(apiObject.Format)
 	}
 	tfMap["new_column_type"] = apiObject.NewColumnType
+	if apiObject.SubType != "" {
+		tfMap["sub_type"] = string(apiObject.SubType)
+	}
 
 	return []any{tfMap}
 }
@@ -2317,6 +2334,9 @@ func flattenInputColumns(apiObjects []awstypes.InputColumn) []any {
 
 		if apiObject.Name != nil {
 			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+		}
+		if apiObject.SubType != "" {
+			tfMap["sub_type"] = string(apiObject.SubType)
 		}
 		tfMap[names.AttrType] = apiObject.Type
 
