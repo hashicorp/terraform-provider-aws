@@ -319,7 +319,7 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.alarm_names.#", "2"),
 				),
 			},
@@ -328,7 +328,7 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.alarm_names.#", "2"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
