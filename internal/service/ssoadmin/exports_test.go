@@ -8,6 +8,7 @@ var (
 	ResourceAccountAssignment                         = resourceAccountAssignment
 	ResourceApplication                               = newApplicationResource
 	ResourceApplicationAccessScope                    = newApplicationAccessScopeResource
+	ResourceApplicationGrant                          = newApplicationGrantResource
 	ResourceApplicationAssignment                     = newApplicationAssignmentResource
 	ResourceApplicationAssignmentConfiguration        = newApplicationAssignmentConfigurationResource
 	ResourceCustomerManagedPolicyAttachment           = resourceCustomerManagedPolicyAttachment
@@ -22,6 +23,7 @@ var (
 
 	FindAccountAssignmentByFivePartKey               = findAccountAssignmentByFivePartKey
 	FindApplicationAccessScopeByID                   = findApplicationAccessScopeByID
+	FindApplicationGrantByID                         = findApplicationGrantByID
 	FindApplicationAssignmentByID                    = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID       = findApplicationAssignmentConfigurationByID
 	FindApplicationByID                              = findApplicationByID
