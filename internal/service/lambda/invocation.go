@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,8 +23,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,6 +92,12 @@ func resourceInvocation() *schema.Resource {
 			"result": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"maximum_retry_attempts": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntBetween(0, 20),
 			},
 			"tenant_id": {
 				Type:     schema.TypeString,
@@ -226,7 +235,18 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		input.TenantId = aws.String(v.(string))
 	}
 
-	output, err := conn.Invoke(ctx, input)
+	retryCount := d.Get("maximum_retry_attempts").(int)
+	delay := backoff.DefaultSDKv2HelperRetryCompatibleDelay()
+	var output *lambda.InvokeOutput
+	for attempt := 0; attempt <= retryCount; attempt++ {
+		if attempt > 0 {
+			time.Sleep(delay.Next(uint(attempt)))
+		}
+		output, err = conn.Invoke(ctx, input)
+		if err == nil || !isRetryableInvokeError(err) {
+			break
+		}
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
@@ -246,6 +266,11 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	d.Set("result", string(output.Payload))
 
 	return diags
+}
+
+func isRetryableInvokeError(err error) bool {
+	return errs.IsA[*awstypes.TooManyRequestsException](err) ||
+		errs.IsA[*awstypes.ResourceNotReadyException](err)
 }
 
 // customizeDiffValidateInput validates that `input` is JSON object when
