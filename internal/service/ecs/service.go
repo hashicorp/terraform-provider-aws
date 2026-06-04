@@ -2714,10 +2714,8 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 			tfMap["lifecycle_stages"] = v
 		}
 
-		if v := apiObject.TargetType; v != "" {
-			tfMap["target_type"] = string(v)
-		}
-
+		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
+			tfMap["target_type"] = string(apiObject.TargetType)
 		if v := apiObject.TimeoutConfiguration; v != nil {
 			timeoutConfigMap := map[string]any{}
 			if v.Action != "" {
@@ -2727,6 +2725,7 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 				timeoutConfigMap["timeout_in_minutes"] = flex.Int32ToStringValue(v.TimeoutInMinutes)
 			}
 			tfMap["timeout_configuration"] = []any{timeoutConfigMap}
+		}
 		}
 
 		tfList = append(tfList, tfMap)
