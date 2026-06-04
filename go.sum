@@ -449,8 +449,8 @@ github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.40.4 h1:0x4qce1Ybg+NEAyF35N
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.40.4/go.mod h1:AV0Xx51WkciKWJzcrLrz3I9SbmBtXnO/qKJSjbCoS4E=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.35.5 h1:X24JxNZpOt1MAyLT5f0Q0aHHePax0vVa5aDWfrkQZnk=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.35.5/go.mod h1:IAzrgzMZiDQuNDP4KzzVxl6BcRD/gMlkVAcfH2AJSl8=
-github.com/aws/aws-sdk-go-v2/service/rekognition v1.52.1 h1:V8Bo5mPeJkgWFWTOj/eNCnLP2mNe7h2R8lI/r+7dcyw=
-github.com/aws/aws-sdk-go-v2/service/rekognition v1.52.1/go.mod h1:oP3ywIx11dG8w/QgfrogZnTSKmxgwnSBYZi9G9XSC2U=
+github.com/aws/aws-sdk-go-v2/service/rekognition v1.52.2 h1:fupHwX9ofyOs2QFQNAC0UCnxCJJotzcB4Wo7HMKKmnY=
+github.com/aws/aws-sdk-go-v2/service/rekognition v1.52.2/go.mod h1:VtVKQ9l8Nhypimq/ACawQlWMm2EH1MtLtKSAlTsCfCM=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.36.4 h1:QOWGvZA/IMACyeHSuHSOXiKQSP8M93ofoUwhkrAhIvw=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.36.4/go.mod h1:25W25zlf8wcmxifBrXvWyyD9QT0a1rmnuMzw4dSVldM=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.24.4 h1:ShrQgxoEUs28a8WYCz9q76wWaGXi9MHNqU0UMX9+ksY=
