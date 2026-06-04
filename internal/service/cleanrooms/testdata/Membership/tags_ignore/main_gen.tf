@@ -10,6 +10,13 @@ provider "aws" {
   }
 }
 
+resource "aws_cleanrooms_membership" "test" {
+  collaboration_id = aws_cleanrooms_collaboration.test.id
+  query_log_status = "DISABLED"
+
+  tags = var.resource_tags
+}
+
 resource "aws_cleanrooms_collaboration" "test" {
   name                     = var.rName
   creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
@@ -17,13 +24,6 @@ resource "aws_cleanrooms_collaboration" "test" {
   description              = var.rName
   query_log_status         = "DISABLED"
   analytics_engine         = "SPARK"
-}
-
-resource "aws_cleanrooms_membership" "test" {
-  collaboration_id = aws_cleanrooms_collaboration.test.id
-  query_log_status = "DISABLED"
-
-  tags = var.resource_tags
 }
 
 variable "rName" {
