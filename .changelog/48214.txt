@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_invocation: Add `maximum_retry_attempts` argument to support retrying invocation up to the maximum configured when a Lambda is initializing or rate limits the request.
+```
