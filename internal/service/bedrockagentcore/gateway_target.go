@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -749,6 +750,12 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															"Must start with https://",
 														),
 													},
+												},
+												"listing_mode": schema.StringAttribute{
+													Optional:   true,
+													Computed:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ListingMode](),
+													Default:    stringdefault.StaticString(string(awstypes.ListingModeDefault)),
 												},
 											},
 										},
@@ -2194,7 +2201,8 @@ type s3ConfigurationModel struct {
 }
 
 type mcpServerTargetConfigurationModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
+	Endpoint    types.String                             `tfsdk:"endpoint"`
+	ListingMode fwtypes.StringEnum[awstypes.ListingMode] `tfsdk:"listing_mode"`
 }
 
 type apiSchemaConfigurationModel struct {

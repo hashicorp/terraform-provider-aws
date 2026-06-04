@@ -263,6 +263,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DEFAULT"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -279,6 +280,52 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://docs.mcp.cloudflare.com/mcp"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", "DYNAMIC"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DYNAMIC"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", "DEFAULT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DEFAULT"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1236,6 +1283,24 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, endpoint))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint, listingMode string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint     = %[2]q
+        listing_mode = %[3]q
+      }
+    }
+  }
+}
+`, rName, endpoint, listingMode))
 }
 
 func testAccSchema_primitive() string {
