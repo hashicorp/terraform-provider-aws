@@ -535,8 +535,8 @@ github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.40.4 h1:io8mfFepiaMrdqRp9Z6
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.40.4/go.mod h1:53mpp/q779P4QbzJ9ud9wIpFV16ITlBe5t9LWMEnHqM=
 github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.9.5 h1:v8MoCrsA06EzvtJz7GGlVvrB8gSddBIjZM0ZDJNJvro=
 github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.9.5/go.mod h1:+mYrpqDc+OCDd8ac2iJgNOjqI8r5uXoSO5KgeIXWdx4=
-github.com/aws/aws-sdk-go-v2/service/ssmsap v1.27.4 h1:909WeBRWjLoUMJnU0f9sc/Fz0aAB7IBT15ojAav11uU=
-github.com/aws/aws-sdk-go-v2/service/ssmsap v1.27.4/go.mod h1:csDI6wkwExz2EX4sTtwSWKuHo8r7CaKWys8Rt75FArA=
+github.com/aws/aws-sdk-go-v2/service/ssmsap v1.27.5 h1:296UkS0P8GpFl60X1HAfd3WnTty+H2+1wOujDqdzj1Q=
+github.com/aws/aws-sdk-go-v2/service/ssmsap v1.27.5/go.mod h1:YhGCSynd1u1zvzsZvBpIuSHZCQuIYOu8xYu/wgNuoJs=
 github.com/aws/aws-sdk-go-v2/service/sso v1.31.2 h1:ySNWu7TPmj5fKFIa1GYvX+Ddxd5ccruqC20aMNuyWDM=
 github.com/aws/aws-sdk-go-v2/service/sso v1.31.2/go.mod h1:A+U9luAOwFeB1kseyWCITVg7/NntoPebCFR9pQ4ch9A=
 github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.39.4 h1:JCh9+qbMDNhpNg/yLjjp9CwiZfCWMU2JveSPLxvR8ow=
