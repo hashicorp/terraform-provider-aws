@@ -152,7 +152,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -180,7 +180,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -273,7 +273,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -612,7 +612,7 @@ func TestAccLambdaInvocation_tenantID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key", "tenant_id"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key", "tenant_id"},
 			},
 		},
 	})
