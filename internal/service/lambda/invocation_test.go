@@ -104,7 +104,7 @@ func TestBuildInputPanic(t *testing.T) {
 	t.Parallel()
 
 	// Create ResourceData with empty input and CRUD lifecycle scope
-	resourceSchema := tflambda.ResourceInvocation().Schema
+	resourceSchema := tflambda.ResourceInvocation().SchemaMap()
 	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
 		"function_name":   "test-function",
 		"input":           "", // Empty input causes getObjectFromJSONString to return nil

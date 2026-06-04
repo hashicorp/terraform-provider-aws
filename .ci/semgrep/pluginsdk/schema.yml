@@ -99,3 +99,10 @@ rules:
         - /internal/service/wafregional
         - /internal/service/workspaces
         - /internal/service/xray
+
+  - id: use-schema-map
+    languages: [go]
+    message: Use .SchemaMap() instead of .Schema to access a schema.Resource's schema map
+    pattern: $FUNC().Schema
+    fix: $FUNC().SchemaMap()
+    severity: WARNING
