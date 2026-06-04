@@ -10,6 +10,12 @@ description: |-
 
 Manages an AWS Bedrock Use Case For Model Access.
 
+**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
+
+The `aws_bedrock_use_case_for_model_access` resource behaves differently from normal resources in that if an Use Case For Model Access already exists, Terraform does not _create_ this resource, but instead "adopts" it into management if it is the same. As the ability to update doesn't exist, changes compared to the existing resource generate an error.
+If no Use Case For Model Access exists, Terraform creates a new Use Case For Model Access.
+By default, `terraform destroy` does not delete the Use Case For Model Access but does remove the resource from Terraform state. Real deletion does not exist for this resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -39,10 +45,32 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-## Timeouts
+* `account_id` - AWS Account ID number of the account that contains the Use Case For Model Access.
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+## Import
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to       = aws_bedrock_use_case_for_model_access.example
+  identity = {}
+}
+
+resource "aws_bedrock_use_case_for_model_access" "example" {}
+```
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Bedrock Use Case For Model Access resources using the AWS account ID. For example:
+
+```terraform
+import {
+  to = aws_bedrock_use_case_for_model_access.example
+  id = "123456789012"
+}
+```
+
+Using `terraform import`, import AWS Bedrock Use Case For Model Access resources using the AWS account ID. For example:
+
+```console
+% terraform import aws_bedrock_use_case_for_model_access.example 123456789012
+```

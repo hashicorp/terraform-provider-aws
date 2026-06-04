@@ -37,6 +37,11 @@ func TestAccBedrock_serial(t *testing.T) {
 			acctest.CtDisappears: testAccBedrockFoundationModelAgreement_disappears,
 			"Identity":           testAccBedrockFoundationModelAgreement_identitySerial,
 		},
+		"UseCaseForModelAccess": {
+			acctest.CtBasic: testAccBedrockUseCaseForModelAccess_basic,
+			"createImport":  testAccBedrockUseCaseForModelAccess_createImport,
+			"Identity":      testAccBedrockUseCaseForModelAccess_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

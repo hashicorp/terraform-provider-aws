@@ -64,6 +64,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Inference Profiles",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUseCaseForModelAccessDataSource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
@@ -145,6 +151,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Use Case For Model Access",
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
 }

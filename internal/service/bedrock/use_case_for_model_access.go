@@ -7,13 +7,12 @@ package bedrock
 
 import (
 	"context"
-	"time"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,15 +28,16 @@ import (
 // @FrameworkResource("aws_bedrock_use_case_for_model_access", name="Use Case For Model Access")
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(identityTest=false)
 // @Region(global=true)
-// @NoImport
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="account_id")
+// @Testing(preCheck="testAccPreCheckFoundationModelUseCase")
+// @Testing(importIgnore="form_data")
+// @Testing(checkDestroyNoop=true)
+// @Testing(serialize=true)
+// @Testing(plannableImportAction="NoOp")
 func newUseCaseForModelAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &useCaseForModelAccessResource{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -48,8 +48,9 @@ const (
 
 type useCaseForModelAccessResource struct {
 	framework.ResourceWithModel[useCaseForModelAccessResourceModel]
-	framework.WithTimeouts
 	framework.WithNoOpDelete
+	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *useCaseForModelAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -59,13 +60,10 @@ func (r *useCaseForModelAccessResource) Schema(ctx context.Context, req resource
 				Required:   true,
 				CustomType: jsontypes.NormalizedType{},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
+			// account_id is purely for import purposes to facilitate import (testing), as form_data can contain spaces and doesn't work as identity
+			names.AttrAccountID: schema.StringAttribute{
+				Computed: true,
+			},
 		},
 	}
 }
@@ -79,6 +77,36 @@ func (r *useCaseForModelAccessResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Validate if exist, as the resource cannot be updated or deleted.
+	// If exists, import if the form data is the same, otherwise return an error as the form data cannot be updated.
+	in := bedrock.GetUseCaseForModelAccessInput{}
+	out, err := conn.GetUseCaseForModelAccess(ctx, &in)
+	if err == nil {
+		v, diags := flattenFormData(ctx, out.FormData)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		equal, diags := plan.FormData.StringSemanticEquals(ctx, jsontypes.NewNormalizedValue(v.ValueString()))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !equal {
+			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("resource already exists with different form data. Form data cannot be updated, please update the form data from %s to %s and create/import the resource", plan.FormData.ValueString(), v.ValueString()))
+			return
+		}
+
+		plan.AccountID = types.StringValue(r.Meta().AccountID(ctx))
+		plan.FormData = jsontypes.NewNormalizedValue(plan.FormData.ValueString())
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+
+		return
+	}
+
 	var input bedrock.PutUseCaseForModelAccessInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("UseCaseForModelAccess")))
 	if resp.Diagnostics.HasError() {
@@ -86,11 +114,13 @@ func (r *useCaseForModelAccessResource) Create(ctx context.Context, req resource
 	}
 
 	input.FormData = []byte(plan.FormData.ValueString())
-	_, err := conn.PutUseCaseForModelAccess(ctx, &input)
+	_, err = conn.PutUseCaseForModelAccess(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Region.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
+
+	plan.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -112,74 +142,43 @@ func (r *useCaseForModelAccessResource) Read(ctx context.Context, req resource.R
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Region.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
-	v, diags := flattenFormData(ctx, aws.String(string(out.FormData)))
+	v, diags := flattenFormData(ctx, out.FormData)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	state.FormData = jsontypes.NewNormalizedValue(v.ValueString())
+	state.AccountID = types.StringValue(r.Meta().AccountID(ctx))
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func flattenFormData(ctx context.Context, configs *string) (types.String, diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenFormData(ctx context.Context, formData []byte) (types.String, diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	// FormData is base64encoded in the AWS API
-	if configs != nil {
-		v, err := inttypes.Base64Decode(aws.ToString(configs))
-		if err != nil {
-			diags.AddError("base64 decoding form data", err.Error())
-			return types.StringNull(), diags
-		}
-
-		return flex.StringValueToFramework(ctx, v), diags
+	v, err := inttypes.Base64Decode(string(formData))
+	if err != nil {
+		diags.AddError("base64 decoding form data", err.Error())
+		return types.StringNull(), diags
 	}
 
-	return types.StringNull(), diags
+	return flex.StringValueToFramework(ctx, v), diags
 }
 
-func (r *useCaseForModelAccessResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().BedrockClient(ctx)
+func (r *useCaseForModelAccessResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	r.WithImportByIdentity.ImportState(ctx, req, resp)
 
-	var plan, state useCaseForModelAccessResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input bedrock.PutUseCaseForModelAccessInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("UseCaseForModelAccess")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		input.FormData = []byte(plan.FormData.ValueString())
-
-		_, err := conn.PutUseCaseForModelAccess(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Region.String())
-			return
-		}
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	// Touch a value to bypass a Framework check
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAccountID), types.StringUnknown())...)
 }
 
 type useCaseForModelAccessResourceModel struct {
-	framework.WithRegionModel
-	FormData jsontypes.Normalized `tfsdk:"form_data" autoflex:"-"`
-	Timeouts timeouts.Value       `tfsdk:"timeouts"`
+	FormData  jsontypes.Normalized `tfsdk:"form_data" autoflex:"-"`
+	AccountID types.String         `tfsdk:"account_id" computed:"true"`
 }
