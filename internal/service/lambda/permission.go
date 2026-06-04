@@ -46,80 +46,82 @@ func resourcePermission() *schema.Resource {
 		ReadWithoutTimeout:   resourcePermissionRead,
 		DeleteWithoutTimeout: resourcePermissionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validPermissionAction(),
-			},
-			"event_source_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validPermissionEventSourceToken(),
-			},
-			"function_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validFunctionName(),
-			},
-			"function_url_auth_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
-			},
-			"invoked_via_function_url": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"principal_org_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"qualifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validQualifier(),
-			},
-			"source_account": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"source_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"statement_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validPolicyStatementID(),
-				ConflictsWith: []string{"statement_id_prefix"},
-			},
-			"statement_id_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validPolicyStatementID(),
-				ConflictsWith: []string{"statement_id"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validPermissionAction(),
+				},
+				"event_source_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validPermissionEventSourceToken(),
+				},
+				"function_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validFunctionName(),
+				},
+				"function_url_auth_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
+				},
+				"invoked_via_function_url": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"principal_org_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"qualifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validQualifier(),
+				},
+				"source_account": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"source_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"statement_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validPolicyStatementID(),
+					ConflictsWith: []string{"statement_id_prefix"},
+				},
+				"statement_id_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validPolicyStatementID(),
+					ConflictsWith: []string{"statement_id"},
+				},
+			}
 		},
 	}
 }
