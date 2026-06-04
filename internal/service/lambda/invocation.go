@@ -94,6 +94,12 @@ func resourceInvocation() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"maximum_retry_attempts": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 20),
+				},
 				"tenant_id": {
 					Type:     schema.TypeString,
 					Optional: true,
