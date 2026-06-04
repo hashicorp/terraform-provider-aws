@@ -406,6 +406,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 										"column_name":     sdkschema.StringComputedOnly(),
 										names.AttrFormat:  sdkschema.StringComputedOnly(),
 										"new_column_type": sdkschema.StringEnumDataSourceSchema[awstypes.ColumnDataType](),
+										"sub_type":        sdkschema.StringComputedOnly(),
 									},
 								},
 							},
@@ -715,6 +716,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringComputedOnly(),
+										"sub_type":     sdkschema.StringComputedOnly(),
 										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
@@ -739,6 +741,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringComputedOnly(),
+										"sub_type":     sdkschema.StringComputedOnly(),
 										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
@@ -760,6 +763,7 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: sdkschema.StringComputedOnly(),
+										"sub_type":     sdkschema.StringComputedOnly(),
 										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
