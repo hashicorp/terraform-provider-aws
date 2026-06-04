@@ -19,21 +19,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// All UXC tests run serially — the service is account-scoped and tests would interfere if run in parallel.
 func TestAccUXC_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		"accountCustomizationsBasic":                testAccAccountCustomizations_basic,
-		"accountCustomizationsVisibleRegions":       testAccAccountCustomizations_visibleRegions,
-		"accountCustomizationsVisibleRegionsEmpty":  testAccAccountCustomizations_visibleRegionsEmpty,
-		"accountCustomizationsVisibleServices":      testAccAccountCustomizations_visibleServices,
-		"accountCustomizationsVisibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
-		"accountCustomizationsDisappears":           testAccAccountCustomizations_disappears,
-		"servicesDataSourceBasic":                   testAccServicesDataSource_basic,
+	testCases := map[string]map[string]func(t *testing.T){
+		"AccountCustomizations": {
+			"basic":                testAccAccountCustomizations_basic,
+			"visibleRegions":       testAccAccountCustomizations_visibleRegions,
+			"visibleRegionsEmpty":  testAccAccountCustomizations_visibleRegionsEmpty,
+			"visibleServices":      testAccAccountCustomizations_visibleServices,
+			"visibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
+			"disappears":           testAccAccountCustomizations_disappears,
+		},
+		"ServicesDataSource": {
+			"basic": testAccServicesDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccAccountCustomizations_basic(t *testing.T) {
