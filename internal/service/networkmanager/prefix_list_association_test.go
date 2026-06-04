@@ -9,14 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,82 +76,6 @@ func TestAccNetworkManagerPrefixListAssociation_disappears(t *testing.T) {
 	})
 }
 
-// Adapted from generated test.
-func TestAccNetworkManagerPrefixListAssociation_Identity_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_networkmanager_prefix_list_association.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckPrefixListAssociationDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				Config: testAccPrefixListAssociationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrefixListAssociationExists(ctx, t, resourceName),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						"core_network_id":   knownvalue.NotNull(),
-						"prefix_list_arn":   knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("core_network_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("prefix_list_arn")),
-				},
-			},
-
-			// Step 2: Import command
-			{
-				Config:                               testAccPrefixListAssociationConfig_basic(rName),
-				ImportStateKind:                      resource.ImportCommandWithID,
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "prefix_list_arn",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn"),
-			},
-
-			// Step 3: Import block with Import ID
-			{
-				Config:            testAccPrefixListAssociationConfig_basic(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn"),
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("core_network_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("prefix_list_arn"), knownvalue.NotNull()),
-					},
-				},
-			},
-
-			// Step 4: Import block with Resource Identity
-			{
-				Config:          testAccPrefixListAssociationConfig_basic(rName),
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("core_network_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("prefix_list_arn"), knownvalue.NotNull()),
-					},
-				},
-			},
-		},
-	})
-}
-
 func testAccCheckPrefixListAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
@@ -196,6 +115,10 @@ func testAccCheckPrefixListAssociationExists(ctx context.Context, t *testing.T, 
 
 		return err
 	}
+}
+
+func testAccPrefixListAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "core_network_id", "prefix_list_arn")
 }
 
 func testAccPrefixListAssociationConfig_basic(rName string) string {
