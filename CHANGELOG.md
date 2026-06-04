@@ -1,5 +1,14 @@
 ## 6.49.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_opensearch_domain: Add `advanced_security_options.jwt_options.jwks_url` attribute ([#48146](https://github.com/hashicorp/terraform-provider-aws/issues/48146))
+* data-source/aws_opensearchserverless_collection_group: Add `generation` attribute ([#48125](https://github.com/hashicorp/terraform-provider-aws/issues/48125))
+* resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.session_configuration` block ([#48179](https://github.com/hashicorp/terraform-provider-aws/issues/48179))
+* resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.streaming_configuration` block ([#48179](https://github.com/hashicorp/terraform-provider-aws/issues/48179))
+* resource/aws_opensearch_domain: Add `advanced_security_options.jwt_options.jwks_url` argument ([#48146](https://github.com/hashicorp/terraform-provider-aws/issues/48146))
+* resource/aws_opensearchserverless_collection_group: Add `generation` argument ([#48125](https://github.com/hashicorp/terraform-provider-aws/issues/48125))
+
 ## 6.48.0 (June 3, 2026)
 
 NOTES:

@@ -462,6 +462,83 @@ func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_protocolConfigurationWithSessionAndStreamingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, "First set of instructions", 1200, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.0.session_timeout_in_seconds", "1200"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.0.enable_response_streaming", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, "Second set of instructions", 1800, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.0.session_timeout_in_seconds", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.0.enable_response_streaming", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Remove session_configuration and streaming_configuration blocks
+				Config: testAccGatewayConfig_protocolConfiguration(rName, "Third set of instructions"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_noProtocolType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -1003,6 +1080,41 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, instructions))
+}
+
+func testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, instructions string, sessionTimeoutInSeconds int, enableResponseStreaming bool) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_configuration {
+    mcp {
+      instructions       = %[2]q
+      search_type        = "SEMANTIC"
+      supported_versions = ["2025-03-26"]
+
+      session_configuration {
+        session_timeout_in_seconds = %[3]d
+      }
+
+      streaming_configuration {
+        enable_response_streaming = %[4]t
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, instructions, sessionTimeoutInSeconds, enableResponseStreaming))
 }
 
 func testAccGatewayConfig_description(rName, description string) string {

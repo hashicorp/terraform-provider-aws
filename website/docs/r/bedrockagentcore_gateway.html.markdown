@@ -206,7 +206,21 @@ The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
 * `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
+* `session_configuration` - (Optional) Configuration block for session settings of the MCP gateway. See [`session_configuration`](#session_configuration) below.
+* `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
+
+### `session_configuration`
+
+The `session_configuration` block supports the following:
+
+* `session_timeout_in_seconds` - (Optional) Integer value for session timeout in seconds. Must be between 900 and 28800.
+
+### `streaming_configuration`
+
+The `streaming_configuration` block supports the following:
+
+* `enable_response_streaming` - (Optional) Boolean indicating whether response streaming is enabled for the gateway.
 
 ## Attribute Reference
 

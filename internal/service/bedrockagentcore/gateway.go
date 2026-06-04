@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -200,6 +201,37 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 									"supported_versions": schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"session_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sessionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"session_timeout_in_seconds": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.Between(900, 28800),
+													},
+												},
+											},
+										},
+									},
+									"streaming_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[streamingConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"enable_response_streaming": schema.BoolAttribute{
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -576,9 +608,19 @@ func (m gatewayProtocolConfigurationModel) Expand(ctx context.Context) (any, dia
 }
 
 type mcpGatewayConfigurationModel struct {
-	Instructions      types.String                            `tfsdk:"instructions"`
-	SearchType        fwtypes.StringEnum[awstypes.SearchType] `tfsdk:"search_type"`
-	SupportedVersions fwtypes.SetOfString                     `tfsdk:"supported_versions"`
+	Instructions           types.String                                                 `tfsdk:"instructions"`
+	SearchType             fwtypes.StringEnum[awstypes.SearchType]                      `tfsdk:"search_type"`
+	SessionConfiguration   fwtypes.ListNestedObjectValueOf[sessionConfigurationModel]   `tfsdk:"session_configuration"`
+	StreamingConfiguration fwtypes.ListNestedObjectValueOf[streamingConfigurationModel] `tfsdk:"streaming_configuration"`
+	SupportedVersions      fwtypes.SetOfString                                          `tfsdk:"supported_versions"`
+}
+
+type sessionConfigurationModel struct {
+	SessionTimeoutInSeconds types.Int64 `tfsdk:"session_timeout_in_seconds"`
+}
+
+type streamingConfigurationModel struct {
+	EnableResponseStreaming types.Bool `tfsdk:"enable_response_streaming"`
 }
 
 type gatewayInterceptorConfigurationModel struct {
