@@ -42,6 +42,11 @@ func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
