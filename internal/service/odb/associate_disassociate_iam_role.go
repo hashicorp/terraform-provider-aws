@@ -47,7 +47,7 @@ func newResourceAssociateDisassociateIAMRole(context.Context) (resource.Resource
 }
 
 const (
-	ResNameAssociateDisassociateIAMRole = "Associate Disassociate IAM Role"
+	ResNameAssociateDisassociateIAMRole = "IAM Role Association"
 )
 
 type resourceAssociateDisassociateIAMRole struct {
