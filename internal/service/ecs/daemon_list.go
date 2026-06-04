@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkListResource("aws_ecs_daemon")
@@ -111,23 +112,22 @@ func (r *listResourceDaemon) List(ctx context.Context, request list.ListRequest,
 
 func listDaemonSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonsInput) iter.Seq2[awstypes.DaemonSummary, error] {
 	return func(yield func(awstypes.DaemonSummary, error) bool) {
-		for {
-			output, err := conn.ListDaemons(ctx, input)
-			if err != nil {
-				yield(awstypes.DaemonSummary{}, err)
-				return
+		var stopped bool
+		err := listDaemonsPages(ctx, conn, input, func(page *ecs.ListDaemonsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
-
-			for _, summary := range output.DaemonSummariesList {
-				if !yield(summary, nil) {
-					return
+			for _, item := range page.DaemonSummariesList {
+				if !yield(item, nil) {
+					stopped = true
+					return false
 				}
 			}
-
-			if output.NextToken == nil {
-				return
-			}
-			input.NextToken = output.NextToken
+			return !lastPage
+		})
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.DaemonSummary](), fmt.Errorf("listing ECS Daemons: %w", err))
+			return
 		}
 	}
 }
