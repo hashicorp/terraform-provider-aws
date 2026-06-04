@@ -38,7 +38,7 @@ func TestAccLogsS3TableSourceAssociation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableSourceAssociationPreCheck(ctx, t)
@@ -84,7 +84,7 @@ func TestAccLogsS3TableSourceAssociation_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableSourceAssociationPreCheck(ctx, t)
@@ -100,6 +100,11 @@ func TestAccLogsS3TableSourceAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceS3TableSourceAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

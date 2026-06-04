@@ -40,7 +40,9 @@ func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 
-	resource.Test(t, resource.TestCase{
+	var v observabilityadmin.GetS3TableIntegrationOutput
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -52,7 +54,7 @@ func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
 			{
 				Config: testAccS3TableIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckS3TableIntegrationExists(ctx, t, resourceName),
+					testAccCheckS3TableIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -85,7 +87,9 @@ func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 
-	resource.Test(t, resource.TestCase{
+	var v observabilityadmin.GetS3TableIntegrationOutput
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -97,10 +101,15 @@ func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
 			{
 				Config: testAccS3TableIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckS3TableIntegrationExists(ctx, t, resourceName),
+					testAccCheckS3TableIntegrationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceS3TableIntegration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -132,7 +141,7 @@ func testAccCheckS3TableIntegrationDestroy(ctx context.Context, t *testing.T) re
 	}
 }
 
-func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n string, v *observabilityadmin.GetS3TableIntegrationOutput) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -141,10 +150,19 @@ func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n s
 
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
-		_, err := tfobservabilityadmin.FindS3TableIntegrationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfobservabilityadmin.FindS3TableIntegrationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		if err != nil {
+			return err
+		}
 
-		return err
+		*v = *output
+
+		return nil
 	}
+}
+
+func testAccRandomS3TableIntegrationName(t *testing.T) string {
+	return acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 }
 
 func testAccS3TableIntegrationConfig_base(rName string) string {
