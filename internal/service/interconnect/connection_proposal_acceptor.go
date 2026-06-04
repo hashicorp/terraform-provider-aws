@@ -296,7 +296,7 @@ func (r *connectionProposalAcceptorResource) Delete(ctx context.Context, req res
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	err = waitConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return

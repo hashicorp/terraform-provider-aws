@@ -335,7 +335,7 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	err = waitConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
@@ -435,7 +435,7 @@ func waitConnectionUpdated(ctx context.Context, conn *interconnect.Client, id st
 	return nil, err
 }
 
-func waitConnectionDeleted(ctx context.Context, conn *interconnect.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
+func waitConnectionDeleted(ctx context.Context, conn *interconnect.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStateDeleting, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStatePending),
 		Target:  []string{},
@@ -443,12 +443,9 @@ func waitConnectionDeleted(ctx context.Context, conn *interconnect.Client, id st
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Connection); ok {
-		return out, err
-	}
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	return nil, err
+	return err
 }
 
 type connectionResourceModel struct {
