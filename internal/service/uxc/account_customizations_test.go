@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/uxc/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,6 +26,7 @@ func TestAccUXC_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"AccountCustomizations": {
 			"basic":                testAccAccountCustomizations_basic,
+			"accountColor":         testAccAccountCustomizations_accountColor,
 			"visibleRegions":       testAccAccountCustomizations_visibleRegions,
 			"visibleRegionsEmpty":  testAccAccountCustomizations_visibleRegionsEmpty,
 			"visibleServices":      testAccAccountCustomizations_visibleServices,
@@ -53,7 +55,37 @@ func testAccAccountCustomizations_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountCustomizationsConfig_basic("pink"),
+				Config: testAccAccountCustomizationsConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "account_color", string(awstypes.AccountColorNone)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "account_color",
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_accountColor(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.UXCServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountCustomizationsConfig_accountColor("pink"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_color", "pink"),
@@ -66,11 +98,17 @@ func testAccAccountCustomizations_basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 			{
-				Config: testAccAccountCustomizationsConfig_basic("purple"),
+				Config: testAccAccountCustomizationsConfig_accountColor("purple"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_color", "purple"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 		},
 	})
@@ -257,7 +295,7 @@ func testAccAccountCustomizations_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountCustomizationsConfig_basic("pink"),
+				Config: testAccAccountCustomizationsConfig_accountColor("pink"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfuxc.ResourceAccountCustomizations, resourceName),
@@ -340,7 +378,13 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccAccountCustomizationsConfig_basic(color string) string {
+func testAccAccountCustomizationsConfig_basic() string {
+	return `
+resource "aws_uxc_account_customizations" "test" {}
+`
+}
+
+func testAccAccountCustomizationsConfig_accountColor(color string) string {
 	return fmt.Sprintf(`
 resource "aws_uxc_account_customizations" "test" {
   account_color = %[1]q
