@@ -58,13 +58,7 @@ type daemonTaskDefinitionResource struct {
 func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"cpu": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -562,7 +556,7 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	plan.DaemonTaskDefinitionArn = fwtypes.ARNValue(aws.ToString(output.DaemonTaskDefinitionArn))
+	plan.DaemonTaskDefinitionArn = types.StringValue(aws.ToString(output.DaemonTaskDefinitionArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -727,7 +721,7 @@ func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolum
 
 type daemonTaskDefinitionResourceModel struct {
 	framework.WithRegionModel
-	DaemonTaskDefinitionArn fwtypes.ARN                                               `tfsdk:"arn"`
+	DaemonTaskDefinitionArn types.String                                              `tfsdk:"arn"`
 	ContainerDefinitions    fwtypes.ListNestedObjectValueOf[containerDefinitionModel] `tfsdk:"container_definition"`
 	Cpu                     types.String                                              `tfsdk:"cpu"`
 	ExecutionRoleArn        fwtypes.ARN                                               `tfsdk:"execution_role_arn"`
