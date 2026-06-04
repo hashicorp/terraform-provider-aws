@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -393,6 +394,12 @@ func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.
 	}
 
 	for v, err := range listGatewayTargets(ctx, conn, &input) {
+		// Can't use error unwrapping because ultimately the error may be smithy.GenericAPIError.
+		// if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
