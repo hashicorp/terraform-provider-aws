@@ -15,6 +15,7 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkListResource("aws_ecs_daemon_task_definition")
@@ -92,23 +93,22 @@ func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request lis
 
 func listDaemonTaskDefinitionSummaries(ctx context.Context, conn *ecs.Client, input *ecs.ListDaemonTaskDefinitionsInput) iter.Seq2[awstypes.DaemonTaskDefinitionSummary, error] {
 	return func(yield func(awstypes.DaemonTaskDefinitionSummary, error) bool) {
-		for {
-			output, err := conn.ListDaemonTaskDefinitions(ctx, input)
-			if err != nil {
-				yield(awstypes.DaemonTaskDefinitionSummary{}, err)
-				return
+		var stopped bool
+		err := listDaemonTaskDefinitionsPages(ctx, conn, input, func(page *ecs.ListDaemonTaskDefinitionsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
-
-			for _, summary := range output.DaemonTaskDefinitions {
-				if !yield(summary, nil) {
-					return
+			for _, item := range page.DaemonTaskDefinitions {
+				if !yield(item, nil) {
+					stopped = true
+					return false
 				}
 			}
-
-			if output.NextToken == nil {
-				return
-			}
-			input.NextToken = output.NextToken
+			return !lastPage
+		})
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.DaemonTaskDefinitionSummary](), fmt.Errorf("listing ECS Daemon Task Definitions: %w", err))
+			return
 		}
 	}
 }
