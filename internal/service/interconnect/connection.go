@@ -145,12 +145,12 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"arn": schema.StringAttribute{
+						names.AttrARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Validators: []validator.String{
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrARN),
 									path.MatchRelative().AtParent().AtName("direct_connect_gateway"),
 								),
 							},

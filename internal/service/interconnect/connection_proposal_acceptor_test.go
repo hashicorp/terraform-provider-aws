@@ -38,7 +38,7 @@ func testAccInterconnectConnectionProposalAcceptor_basic(t *testing.T) {
 				Config: testAccConnectionProposalAcceptorConfig_basic(activationKey, directConnectGatewayID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionProposalAcceptorExists(ctx, t, resourceName, &connection),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "interconnect", "connection/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
