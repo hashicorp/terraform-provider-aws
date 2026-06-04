@@ -393,8 +393,8 @@ github.com/aws/aws-sdk-go-v2/service/networkmanager v1.42.5 h1:t6iHK8Ob8OV7Ycxns
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.42.5/go.mod h1:wvNr95Em2Z4q1pgBhUYUbuJBVPM2fYq2J3JhPDWj3gw=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.14.4 h1:VspRlxcx5aAy/+e00yAuI+wmiZMJYjmvf6MCLqFn+lU=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.14.4/go.mod h1:4tjjlNwoBY5Df1ZCzX1leNe8jhRcjBYOBERQQRi6pd8=
-github.com/aws/aws-sdk-go-v2/service/notifications v1.8.4 h1:JO+fSHIWWojmY7hGPHLQKBFPwoOpzwCfmXNm5UoP7oQ=
-github.com/aws/aws-sdk-go-v2/service/notifications v1.8.4/go.mod h1:FGOUj/aw5DKIp8eJqRoESufoEc1OfZlCcvGes6xgP/s=
+github.com/aws/aws-sdk-go-v2/service/notifications v1.8.5 h1:QLvZ282mdUTKYPtln/uMvSvdFuTIoXQDB0vsD90GUB8=
+github.com/aws/aws-sdk-go-v2/service/notifications v1.8.5/go.mod h1:aewhjehOSC9tdKRKsJ83wcSZnKyhQDIsWMi74Fsu/6c=
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.6.4 h1:6KI+GwgGYtNQcwiIs1bjcVcp/2YVqodTGhg22ncF+lk=
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.6.4/go.mod h1:dQiKEeHAFJPRXGp0AErWv660bMb2+jfP+67urbrbooU=
 github.com/aws/aws-sdk-go-v2/service/oam v1.24.4 h1:hq6tluVEui9BW5PgAaVR6+OFBY4shn/dK7E09m8r0E4=
