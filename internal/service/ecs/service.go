@@ -2696,15 +2696,9 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 
 		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
 			tfMap["target_type"] = string(apiObject.TargetType)
+
 			if v := apiObject.TimeoutConfiguration; v != nil {
-				timeoutConfigMap := map[string]any{}
-				if v.Action != "" {
-					timeoutConfigMap[names.AttrAction] = string(v.Action)
-				}
-				if v.TimeoutInMinutes != nil {
-					timeoutConfigMap["timeout_in_minutes"] = flex.Int32ToStringValue(v.TimeoutInMinutes)
-				}
-				tfMap["timeout_configuration"] = []any{timeoutConfigMap}
+				tfMap["timeout_configuration"] = flattenLifecycleHookTimeoutConfiguration(v)
 			}
 		}
 
@@ -2712,6 +2706,24 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 	}
 
 	return tfList
+}
+
+func flattenLifecycleHookTimeoutConfiguration(apiObject *awstypes.DeploymentLifecycleHookTimeoutConfiguration) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Action; v != "" {
+		tfMap[names.AttrAction] = string(v)
+	}
+
+	if v := apiObject.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = flex.Int32ToStringValue(v)
+	}
+
+	return []map[string]any{tfMap}
 }
 
 func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[string]any {
@@ -2780,26 +2792,29 @@ func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
 		}
 
 		if v, ok := tfMap["timeout_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
-			timeoutConfigMap := v[0].(map[string]any)
-			timeoutConfig := &awstypes.DeploymentLifecycleHookTimeoutConfiguration{}
-
-			if action, ok := timeoutConfigMap[names.AttrAction].(string); ok && action != "" {
-				timeoutConfig.Action = awstypes.DeploymentLifecycleHookAction(action)
-			}
-
-			if timeout, ok := timeoutConfigMap["timeout_in_minutes"].(string); ok {
-				timeoutMinutes := nullable.Int(timeout)
-				if !timeoutMinutes.IsNull() {
-					if minutes, _, err := timeoutMinutes.ValueInt32(); err == nil {
-						timeoutConfig.TimeoutInMinutes = aws.Int32(minutes)
-					}
-				}
-			}
-
-			hook.TimeoutConfiguration = timeoutConfig
+			hook.TimeoutConfiguration = expandLifecycleHookTimeoutConfiguration(v[0].(map[string]any))
 		}
 
 		apiObject = append(apiObject, hook)
+	}
+
+	return apiObject
+}
+
+func expandLifecycleHookTimeoutConfiguration(tfMap map[string]any) *awstypes.DeploymentLifecycleHookTimeoutConfiguration {
+	apiObject := &awstypes.DeploymentLifecycleHookTimeoutConfiguration{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.DeploymentLifecycleHookAction(v)
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(string); ok {
+		timeoutMinutes := nullable.Int(v)
+		if !timeoutMinutes.IsNull() {
+			if minutes, _, err := timeoutMinutes.ValueInt32(); err == nil {
+				apiObject.TimeoutInMinutes = aws.Int32(minutes)
+			}
+		}
 	}
 
 	return apiObject
