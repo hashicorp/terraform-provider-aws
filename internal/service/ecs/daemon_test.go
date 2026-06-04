@@ -131,6 +131,9 @@ func TestAccECSDaemon_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -178,6 +181,11 @@ func TestAccECSDaemon_deploymentConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.drain_percent", "75"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "20"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -222,6 +230,11 @@ func TestAccECSDaemon_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccDaemonConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
@@ -230,6 +243,11 @@ func TestAccECSDaemon_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -300,13 +318,24 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 				Config: testAccDaemonConfig_alarms(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.alarm_names.#", "2"),
 				),
 			},
 			{
 				Config: testAccDaemonConfig_alarms(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.alarm_names.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -418,6 +447,7 @@ func TestAccECSDaemon_updateTaskDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_daemon.test"
+	daemonTaskDefinitionResourceName := "aws_ecs_daemon_task_definition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -436,6 +466,12 @@ func TestAccECSDaemon_updateTaskDefinition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDaemonExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(daemonTaskDefinitionResourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
