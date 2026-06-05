@@ -5,7 +5,9 @@ package bcmdashboards
 
 // Exports for use in tests only.
 var (
-	ResourceDashboard = newDashboardResource
+	ResourceDashboard       = newDashboardResource
+	ResourceScheduledReport = newScheduledReportResource
 
-	FindDashboardByARN = findDashboardByARN
+	FindDashboardByARN       = findDashboardByARN
+	FindScheduledReportByARN = findScheduledReportByARN
 )

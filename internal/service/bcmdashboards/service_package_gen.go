@@ -49,6 +49,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newScheduledReportResource,
+			TypeName: "aws_bcmdashboards_scheduled_report",
+			Name:     "Scheduled Report",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
