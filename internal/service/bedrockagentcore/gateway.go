@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -303,7 +304,27 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateGateway(ctx, &input)
+	var (
+		out *bedrockagentcorecontrol.CreateGatewayOutput
+		err error
+	)
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err = conn.CreateGateway(ctx, &input)
+
+		// IAM propagation.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Gateway service failed to perform AssumeRole on Gateway role") {
+			return tfresource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Access denied while calling GetPolicyEngine on Policy Engine") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return

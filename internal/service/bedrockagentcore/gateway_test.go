@@ -1016,6 +1016,8 @@ func testAccPreCheckGateways(ctx context.Context, t *testing.T) {
 
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
@@ -1030,6 +1032,11 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
 }
 `, rName)
 }
