@@ -4249,9 +4249,12 @@ func TestAccElastiCacheReplicationGroup_PendingNodeType_Redis(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "redis"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "redis"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -4288,9 +4291,12 @@ func TestAccElastiCacheReplicationGroup_PendingNodeType_Valkey(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "valkey"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "valkey"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
