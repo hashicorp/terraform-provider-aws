@@ -84,6 +84,12 @@ func resourceInvocation() *schema.Resource {
 					Default:          lifecycleScopeCreateOnly,
 					ValidateDiagFunc: enum.Validate[lifecycleScope](),
 				},
+				"maximum_retry_attempts": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 20),
+				},
 				"qualifier": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -93,12 +99,6 @@ func resourceInvocation() *schema.Resource {
 				"result": {
 					Type:     schema.TypeString,
 					Computed: true,
-				},
-				"maximum_retry_attempts": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      0,
-					ValidateFunc: validation.IntBetween(0, 20),
 				},
 				"tenant_id": {
 					Type:     schema.TypeString,
@@ -272,6 +272,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 
 func isRetryableInvokeError(err error) bool {
 	return errs.IsA[*awstypes.TooManyRequestsException](err) ||
+		errs.IsA[*awstypes.ServiceException](err) ||
 		errs.IsA[*awstypes.ResourceNotReadyException](err)
 }
 
