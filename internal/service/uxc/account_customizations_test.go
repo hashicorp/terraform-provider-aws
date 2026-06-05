@@ -145,10 +145,13 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_regions.*", "us-east-1"), //lintignore:AWSAT003
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_regions.*", "us-west-2"), //lintignore:AWSAT003
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("us-east-1"), //lintignore:AWSAT003
+						knownvalue.StringExact("us-west-2"), //lintignore:AWSAT003
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -162,9 +165,12 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_regions.*", "eu-west-1"), //lintignore:AWSAT003
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("eu-west-1"), //lintignore:AWSAT003
+					})),
+				},
 			},
 		},
 	})
@@ -330,9 +336,6 @@ func testAccAccountCustomizations_visibleServices(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_visibleServices([]string{"s3", "ec2"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_services.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_services.*", "s3"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_services.*", "ec2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetExact([]knownvalue.Check{
