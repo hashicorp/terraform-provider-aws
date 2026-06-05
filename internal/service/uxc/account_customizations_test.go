@@ -33,6 +33,7 @@ func TestAccUXC_serial(t *testing.T) {
 			"accountColor":         testAccAccountCustomizations_accountColor,
 			"visibleRegions":       testAccAccountCustomizations_visibleRegions,
 			"visibleRegionsEmpty":  testAccAccountCustomizations_visibleRegionsEmpty,
+			"visibleRegionsNil":    testAccAccountCustomizations_visibleRegionsNil,
 			"visibleServices":      testAccAccountCustomizations_visibleServices,
 			"visibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
 			"disappears":           testAccAccountCustomizations_disappears,
@@ -170,6 +171,47 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 }
 
 func testAccAccountCustomizations_visibleRegionsEmpty(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"onCreate": testAccAccountCustomizations_visibleRegionsEmpty_onCreate,
+		"onUpdate": testAccAccountCustomizations_visibleRegionsEmpty_onUpdate,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAccountCustomizations_visibleRegionsEmpty_onCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.UXCServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountCustomizationsConfig_visibleRegionsEmpty(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "account_color",
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_visibleRegionsEmpty_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_uxc_account_customizations.test"
 
@@ -186,20 +228,81 @@ func testAccAccountCustomizations_visibleRegionsEmpty(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{"us-east-1"}), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("us-east-1"), //lintignore:AWSAT003
+					})),
+				},
 			},
 			{
 				// Explicitly set an empty set — must not cause a permanent diff.
 				Config: testAccAccountCustomizationsConfig_visibleRegionsEmpty(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				// Confirm no diff on subsequent plan.
 				Config: testAccAccountCustomizationsConfig_visibleRegionsEmpty(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_visibleRegionsNil(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"onUpdate": testAccAccountCustomizations_visibleRegionsNil_onUpdate,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAccountCustomizations_visibleRegionsNil_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.UXCServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{"us-east-1"}), //lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("us-east-1"), //lintignore:AWSAT003
+					})),
+				},
+			},
+			{
+				// Explicitly set to nil — must not cause a permanent diff.
+				Config: testAccAccountCustomizationsConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				// Confirm no diff on subsequent plan.
+				Config: testAccAccountCustomizationsConfig_basic(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
