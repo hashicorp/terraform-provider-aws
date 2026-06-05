@@ -12,9 +12,13 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/uxc/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfuxc "github.com/hashicorp/terraform-provider-aws/internal/service/uxc"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +36,7 @@ func TestAccUXC_serial(t *testing.T) {
 			"visibleServices":      testAccAccountCustomizations_visibleServices,
 			"visibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
 			"disappears":           testAccAccountCustomizations_disappears,
+			"migrate":              testAccAccountCustomizations_Migrate_basic,
 		},
 		"ServicesDataSource": {
 			"basic": testAccServicesDataSource_basic,
@@ -58,8 +63,13 @@ func testAccAccountCustomizations_basic(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_color", string(awstypes.AccountColorNone)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_color"), tfknownvalue.StringExact(awstypes.AccountColorNone)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -307,6 +317,60 @@ func testAccAccountCustomizations_disappears(t *testing.T) {
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_Migrate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.UXCServiceID),
+		CheckDestroy: testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.49.0",
+					},
+				},
+				Config: testAccAccountCustomizationsConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_color"), tfknownvalue.StringExact(awstypes.AccountColorNone)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.Null()),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountCustomizationsConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_color"), tfknownvalue.StringExact(awstypes.AccountColorNone)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.Null()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
