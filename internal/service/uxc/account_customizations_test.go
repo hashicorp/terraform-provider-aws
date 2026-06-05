@@ -29,7 +29,7 @@ func TestAccUXC_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AccountCustomizations": {
-			"basic":                testAccAccountCustomizations_basic,
+			acctest.CtBasic:        testAccAccountCustomizations_basic,
 			"accountColor":         testAccAccountCustomizations_accountColor,
 			"visibleRegions":       testAccAccountCustomizations_visibleRegions,
 			"visibleRegionsEmpty":  testAccAccountCustomizations_visibleRegionsEmpty,
@@ -37,11 +37,11 @@ func TestAccUXC_serial(t *testing.T) {
 			"visibleServices":      testAccAccountCustomizations_visibleServices,
 			"visibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
 			"visibleServicesNil":   testAccAccountCustomizations_visibleServicesNil,
-			"disappears":           testAccAccountCustomizations_disappears,
+			acctest.CtDisappears:   testAccAccountCustomizations_disappears,
 			"migrate":              testAccAccountCustomizations_Migrate_basic,
 		},
 		"ServicesDataSource": {
-			"basic": testAccServicesDataSource_basic,
+			acctest.CtBasic: testAccServicesDataSource_basic,
 		},
 	}
 
