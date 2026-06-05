@@ -39,10 +39,10 @@ func TestAccLambdaFunctionScalingConfig_basic(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "min_execution_environments", "3"),
-					resource.TestCheckResourceAttr(resourceName, "max_execution_environments", "100"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", "$LATEST.PUBLISHED"),
-					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
 				),
 			},
 			{
@@ -79,16 +79,16 @@ func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "min_execution_environments", "3"),
-					resource.TestCheckResourceAttr(resourceName, "max_execution_environments", "100"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
 				),
 			},
 			{
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 5, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "min_execution_environments", "5"),
-					resource.TestCheckResourceAttr(resourceName, "max_execution_environments", "200"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "5"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "200"),
 				),
 			},
 		},
@@ -244,10 +244,13 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_lambda_function_scaling_config" "test" {
-  function_name              = aws_lambda_function.test.function_name
-  qualifier                  = "$LATEST.PUBLISHED"
-  min_execution_environments = %[2]d
-  max_execution_environments = %[3]d
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = "$LATEST.PUBLISHED"
+
+  function_scaling_config {
+    min_execution_environments = %[2]d
+    max_execution_environments = %[3]d
+  }
 }
 `, rName, minExecEnv, maxExecEnv))
 }

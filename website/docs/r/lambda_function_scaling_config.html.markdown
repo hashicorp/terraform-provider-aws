@@ -48,10 +48,13 @@ resource "aws_lambda_function" "example" {
 }
 
 resource "aws_lambda_function_scaling_config" "example" {
-  function_name              = aws_lambda_function.example.function_name
-  qualifier                  = "$LATEST.PUBLISHED"
-  min_execution_environments = 3
-  max_execution_environments = 100
+  function_name = aws_lambda_function.example.function_name
+  qualifier     = "$LATEST.PUBLISHED"
+
+  function_scaling_config {
+    min_execution_environments = 3
+    max_execution_environments = 100
+  }
 }
 ```
 
@@ -60,18 +63,20 @@ resource "aws_lambda_function_scaling_config" "example" {
 The following arguments are required:
 
 * `function_name` - (Required) Name or ARN of the Lambda function. Changing this forces a new resource.
-* `qualifier` - (Required) Qualifier for the scaling configuration. Use `$LATEST.PUBLISHED` to target the latest published version, or a specific numeric version. The function must have a capacity provider configuration and be published. Changing this forces a new resource.
+* `qualifier` - (Required) Qualifier for the scaling configuration. Valid values: `$LATEST.PUBLISHED` to target the latest published version, or a specific numeric version number (e.g., `1`). Changing this forces a new resource.
 
 The following arguments are optional:
+
+* `function_scaling_config` - (Optional) Scaling configuration block. See [`function_scaling_config`](#function_scaling_config) below.
+
+### `function_scaling_config`
 
 * `max_execution_environments` - (Optional) Maximum number of execution environments that can be provisioned for the function.
 * `min_execution_environments` - (Optional) Minimum number of execution environments to maintain for the function.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `function_arn` - ARN of the Lambda function.
+This resource exports no additional attributes beyond the arguments above.
 
 ## Import
 
