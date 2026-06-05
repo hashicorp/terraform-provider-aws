@@ -235,6 +235,7 @@ check "schema_docs" {
     "data_source/aws_batch_compute_environment",
     "data_source/aws_batch_job_queue",
     "data_source/aws_batch_scheduling_policy",
+    "data_source/aws_bcmdashboards_dashboard",
     "data_source/aws_bedrock_custom_model",
     "data_source/aws_bedrock_custom_models",
     "data_source/aws_bedrock_foundation_model",
