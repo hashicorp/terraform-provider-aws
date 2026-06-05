@@ -31,17 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/macie2
-        - /internal/service/mediaconvert
-        - /internal/service/medialive
-        - /internal/service/mediapackage
-        - /internal/service/mediastore
-        - /internal/service/memorydb
-        - /internal/service/mq
-        - /internal/service/mwaa
-        - /internal/service/neptune
-        - /internal/service/networkfirewall
-        - /internal/service/networkmanager
         - /internal/service/oam
         - /internal/service/opensearch
         - /internal/service/opensearchserverless
