@@ -26,50 +26,52 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_transit_gateway_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_transit_gateway_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

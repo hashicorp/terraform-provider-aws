@@ -61,59 +61,61 @@ func resourceSecurityGroup() *schema.Resource {
 
 		// Keep in sync with aws_default_security_group's schema.
 		// See notes in vpc_default_security_group.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"egress":  securityGroupRuleSetNestedBlock,
-			"ingress": securityGroupRuleSetNestedBlock,
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
-				),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
-				),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"revoke_rules_on_delete": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      "Managed by Terraform",
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"egress":  securityGroupRuleSetNestedBlock,
+				"ingress": securityGroupRuleSetNestedBlock,
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+					),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"revoke_rules_on_delete": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

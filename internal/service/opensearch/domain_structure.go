@@ -70,6 +70,10 @@ func expandJWTOptionsInput(tfMap map[string]any) *awstypes.JWTOptionsInput {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["jwks_url"].(string); ok && v != "" {
+		apiObject.JwksUrl = aws.String(v)
+	}
+
 	if v, ok := tfMap[names.AttrPublicKey].(string); ok && v != "" {
 		// AWS expects the public key without newlines
 		publicKey := strings.ReplaceAll(v, "\n", "")
@@ -358,6 +362,10 @@ func flattenJWTOptionsOutput(apiObject *awstypes.JWTOptionsOutput) []map[string]
 
 	if apiObject.Enabled != nil {
 		m[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
+	}
+
+	if apiObject.JwksUrl != nil {
+		m["jwks_url"] = aws.ToString(apiObject.JwksUrl)
 	}
 
 	if apiObject.PublicKey != nil {

@@ -640,6 +640,7 @@ The `s3` block supports the following:
 The `mcp_server` block supports the following:
 
 * `endpoint` - (Required) Endpoint for the MCP server target configuration.
+* `listing_mode` - (Optional) Listing mode for the MCP server target. Valid values are `DEFAULT` and `DYNAMIC`. MCP resources for `DEFAULT` targets are cached at the control plane for faster access, while resources for `DYNAMIC` targets are retrieved dynamically when listing tools.
 
 ### `http`
 

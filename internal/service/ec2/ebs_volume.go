@@ -53,85 +53,87 @@ func resourceEBSVolume() *schema.Resource {
 
 		CustomizeDiff: resourceEBSVolumeCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"multi_attach_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSize: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
-			},
-			names.AttrSnapshotID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrThroughput: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 2000),
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"volume_initialization_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(100, 300),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"final_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"multi_attach_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOutpostARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSize: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
+				},
+				names.AttrSnapshotID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrThroughput: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(125, 2000),
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"volume_initialization_rate": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(100, 300),
+				},
+			}
 		},
 	}
 }
@@ -162,7 +164,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
 
-	if value, ok := d.GetOk("outpost_arn"); ok {
+	if value, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(value.(string))
 	}
 
@@ -247,7 +249,7 @@ func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, v
 	if err := d.Set("multi_attach_enabled", volume.MultiAttachEnabled); err != nil {
 		return fmt.Errorf("setting multi_attach_enabled: %w", err)
 	}
-	if err := d.Set("outpost_arn", volume.OutpostArn); err != nil {
+	if err := d.Set(names.AttrOutpostARN, volume.OutpostArn); err != nil {
 		return fmt.Errorf("setting outpost_arn: %w", err)
 	}
 	if err := d.Set(names.AttrSize, volume.Size); err != nil {

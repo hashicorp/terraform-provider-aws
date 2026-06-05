@@ -42,36 +42,38 @@ func resourceClientVPNRoute() *schema.Resource {
 			Delete: schema.DefaultTimeout(4 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_vpc_subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"client_vpn_endpoint_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"destination_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_vpc_subnet_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
