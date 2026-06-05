@@ -110,7 +110,6 @@ func findServiceUpdates(ctx context.Context, conn *elasticache.Client, input *el
 		}
 
 		output = append(output, page.ServiceUpdates...)
-
 	}
 
 	return output, nil
