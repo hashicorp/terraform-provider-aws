@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cleanrooms_membership: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_cleanrooms_membership
+```

@@ -161,6 +161,14 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),

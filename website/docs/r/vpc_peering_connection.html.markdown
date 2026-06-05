@@ -107,7 +107,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
-   Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
+   Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to, so must be managed if connecting cross-account.
 * `peer_vpc_id` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
 * `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
@@ -165,5 +165,3 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 ```console
 % terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
-
-[1]: /docs/providers/aws/index.html

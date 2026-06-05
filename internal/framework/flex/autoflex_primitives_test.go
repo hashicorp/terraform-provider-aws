@@ -176,7 +176,7 @@ func testStringRoundtrip(t *testing.T) {
 					runFlattenOnlyTest(t, testName, awsStruct, expectedTFResult)
 				} else {
 					// Use helper for all standard roundtrip cases
-					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{CompareTarget: true})
+					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{})
 				}
 			})
 		}
@@ -231,7 +231,7 @@ func testBoolRoundtrip(t *testing.T) {
 				// Use helper for all standard roundtrip cases
 				// Note: false value should be treated as "zero" for legacy mode
 				isZero := !tc.boolValue && !tc.isNull
-				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{CompareTarget: true})
+				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{})
 			})
 		}
 	}
@@ -279,7 +279,7 @@ func testInt64Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
+				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -327,7 +327,7 @@ func testInt32Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
+				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -381,7 +381,7 @@ func testFloat64Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
+				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -435,7 +435,7 @@ func testFloat32Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
+				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{})
 			})
 		}
 	}
@@ -477,7 +477,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -491,7 +491,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetAWSNil()))
 				}
@@ -505,7 +505,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
@@ -523,7 +523,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			awsFieldType := field.Type()
 			// For null values with non-pointer AWS fields, set to zero value
 			// For pointer fields, leave unset (nil is already the zero value)
-			if awsFieldType.Kind() != reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() != reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetZeroValue()))
 				}
@@ -533,7 +533,7 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+			if awsFieldType.Kind() == reflect.Pointer {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.CreateAWSValue(value)))
 				}
@@ -614,11 +614,8 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 	expandedAWS := reflect.New(reflect.TypeOf(tc.AWSStruct).Elem()).Interface()
 	expandDiags := Expand(ctx, tc.TFStruct, expandedAWS, tc.Options...)
 
-	// Check diagnostics if requested
-	if checks.CompareDiags {
-		if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
-			t.Errorf("unexpected expand diagnostics difference: %s", diff)
-		}
+	if diff := cmp.Diff(expandDiags, tc.ExpectedDiags); diff != "" {
+		t.Errorf("unexpected expand diagnostics difference: %s", diff)
 	}
 
 	if tc.ExpectError {
@@ -695,15 +692,13 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 		}
 	}
 
-	if checks.CompareTarget {
-		if diff := cmp.Diff(expectedTF, flattenedTF); diff != "" {
-			t.Errorf("Roundtrip mismatch for %s (+got, -want): %s", tc.Name, diff)
-		}
+	if diff := cmp.Diff(expectedTF, flattenedTF); diff != "" {
+		t.Errorf("Roundtrip mismatch for %s (+got, -want): %s", tc.Name, diff)
+	}
 
-		// Step 4: Verify AWS structure matches expected
-		if diff := cmp.Diff(tc.AWSStruct, expandedAWS); diff != "" {
-			t.Errorf("AWS structure mismatch for %s (+got, -want): %s", tc.Name, diff)
-		}
+	// Step 4: Verify AWS structure matches expected
+	if diff := cmp.Diff(tc.AWSStruct, expandedAWS); diff != "" {
+		t.Errorf("AWS structure mismatch for %s (+got, -want): %s", tc.Name, diff)
 	}
 
 	// Golden log validation (if requested)

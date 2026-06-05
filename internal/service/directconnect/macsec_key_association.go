@@ -38,43 +38,45 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cak": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"ckn"},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-			},
-			"ckn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{"ckn", "secret_arn"},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"secret_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{"ckn", "secret_arn"},
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_on": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cak": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"ckn"},
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"ckn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{"ckn", "secret_arn"},
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"secret_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{"ckn", "secret_arn"},
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_on": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

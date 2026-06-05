@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -104,7 +105,11 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"protocol_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.GatewayProtocolType](),
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -179,10 +184,6 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 						names.AttrARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 170),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:policy-engine\/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9_]{10}$`), ""),
-							},
 						},
 						names.AttrMode: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.GatewayPolicyEngineMode](),
@@ -218,6 +219,37 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 									"supported_versions": schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"session_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sessionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"session_timeout_in_seconds": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.Between(900, 28800),
+													},
+												},
+											},
+										},
+									},
+									"streaming_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[streamingConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"enable_response_streaming": schema.BoolAttribute{
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -279,12 +311,7 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 
 	gatewayID := aws.ToString(out.GatewayId)
 
-	if _, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
-		return
-	}
-
-	gateway, err := findGatewayByID(ctx, conn, gatewayID)
+	gateway, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
@@ -380,6 +407,14 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	// API requires removing targets before the gateway (failed applies, drift, or orphans can leave targets behind).
+	if err := deleteAllGatewayTargets(ctx, conn, gatewayID, timeout); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+		return
+	}
+
 	input := bedrockagentcorecontrol.DeleteGatewayInput{
 		GatewayIdentifier: aws.String(gatewayID),
 	}
@@ -392,7 +427,7 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, timeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
@@ -400,6 +435,29 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *gatewayResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("gateway_id"), request, response)
+}
+
+func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayID string, timeout time.Duration) error {
+	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
+		GatewayIdentifier: aws.String(gatewayID),
+	}
+
+	for v, err := range listGatewayTargets(ctx, conn, &input) {
+		if err != nil {
+			return err
+		}
+
+		targetID := aws.ToString(v.TargetId)
+		if err := deleteGatewayTarget(ctx, conn, gatewayID, targetID); err != nil {
+			return err
+		}
+
+		if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayID, targetID, timeout); err != nil {
+			return smarterr.NewError(fmt.Errorf("waiting for Bedrock AgentCore Gateway (%s) Target (%s) delete: %w", gatewayID, targetID, err))
+		}
+	}
+
+	return nil
 }
 
 func waitGatewayCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayOutput, error) {
@@ -574,9 +632,19 @@ func (m gatewayProtocolConfigurationModel) Expand(ctx context.Context) (any, dia
 }
 
 type mcpGatewayConfigurationModel struct {
-	Instructions      types.String                            `tfsdk:"instructions"`
-	SearchType        fwtypes.StringEnum[awstypes.SearchType] `tfsdk:"search_type"`
-	SupportedVersions fwtypes.SetOfString                     `tfsdk:"supported_versions"`
+	Instructions           types.String                                                 `tfsdk:"instructions"`
+	SearchType             fwtypes.StringEnum[awstypes.SearchType]                      `tfsdk:"search_type"`
+	SessionConfiguration   fwtypes.ListNestedObjectValueOf[sessionConfigurationModel]   `tfsdk:"session_configuration"`
+	StreamingConfiguration fwtypes.ListNestedObjectValueOf[streamingConfigurationModel] `tfsdk:"streaming_configuration"`
+	SupportedVersions      fwtypes.SetOfString                                          `tfsdk:"supported_versions"`
+}
+
+type sessionConfigurationModel struct {
+	SessionTimeoutInSeconds types.Int64 `tfsdk:"session_timeout_in_seconds"`
+}
+
+type streamingConfigurationModel struct {
+	EnableResponseStreaming types.Bool `tfsdk:"enable_response_streaming"`
 }
 
 type gatewayInterceptorConfigurationModel struct {

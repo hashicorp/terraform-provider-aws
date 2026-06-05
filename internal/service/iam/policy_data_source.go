@@ -27,47 +27,49 @@ func dataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{names.AttrName, "path_prefix"},
-			},
-			"attachment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"path_prefix": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{names.AttrARN},
-				ValidateDiagFunc: validPolicyPath,
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"policy_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{names.AttrName, "path_prefix"},
+				},
+				"attachment_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrARN},
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"path_prefix": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{names.AttrARN},
+					ValidateDiagFunc: validPolicyPath,
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"policy_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
