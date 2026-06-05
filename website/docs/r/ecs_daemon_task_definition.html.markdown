@@ -97,13 +97,17 @@ resource "aws_ecs_daemon_task_definition" "example" {
   }
 
   volume {
-    name      = "data-volume"
-    host_path = "/data"
+    name = "data-volume"
+    host {
+      source_path = "/data"
+    }
   }
 
   volume {
-    name      = "logs-volume"
-    host_path = "/var/log"
+    name = "logs-volume"
+    host {
+      source_path = "/var/log"
+    }
   }
 }
 ```
