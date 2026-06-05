@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic ID generation only
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
@@ -82,18 +80,7 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	retryCount := d.Get("maximum_retry_attempts").(int)
-	delay := backoff.DefaultSDKv2HelperRetryCompatibleDelay()
-	var output *lambda.InvokeOutput
-	var err error
-	for attempt := 0; attempt <= retryCount; attempt++ {
-		if attempt > 0 {
-			time.Sleep(delay.Next(uint(attempt)))
-		}
-		output, err = conn.Invoke(ctx, input)
-		if err == nil || !isRetryableInvokeError(err) {
-			break
-		}
-	}
+	output, err := invokeWithRetry(ctx, conn, input, retryCount)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)

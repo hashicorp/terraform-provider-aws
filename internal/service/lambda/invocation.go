@@ -238,17 +238,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	}
 
 	retryCount := d.Get("maximum_retry_attempts").(int)
-	delay := backoff.DefaultSDKv2HelperRetryCompatibleDelay()
-	var output *lambda.InvokeOutput
-	for attempt := 0; attempt <= retryCount; attempt++ {
-		if attempt > 0 {
-			time.Sleep(delay.Next(uint(attempt)))
-		}
-		output, err = conn.Invoke(ctx, input)
-		if err == nil || !isRetryableInvokeError(err) {
-			break
-		}
-	}
+	output, err := invokeWithRetry(ctx, conn, input, retryCount)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
@@ -268,6 +258,22 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	d.Set("result", string(output.Payload))
 
 	return diags
+}
+
+func invokeWithRetry(ctx context.Context, conn *lambda.Client, input *lambda.InvokeInput, retryCount int) (*lambda.InvokeOutput, error) {
+	delay := backoff.DefaultSDKv2HelperRetryCompatibleDelay()
+	var output *lambda.InvokeOutput
+	var err error
+	for attempt := 0; attempt <= retryCount; attempt++ {
+		if attempt > 0 {
+			time.Sleep(delay.Next(uint(attempt)))
+		}
+		output, err = conn.Invoke(ctx, input)
+		if err == nil || !isRetryableInvokeError(err) {
+			break
+		}
+	}
+	return output, err
 }
 
 func isRetryableInvokeError(err error) bool {

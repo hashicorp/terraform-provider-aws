@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -163,18 +161,7 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	}
 
 	retryCount := int(config.MaximumRetryAttempts.ValueInt64())
-	delay := backoff.DefaultSDKv2HelperRetryCompatibleDelay()
-	var output *lambda.InvokeOutput
-	var err error
-	for attempt := 0; attempt <= retryCount; attempt++ {
-		if attempt > 0 {
-			time.Sleep(delay.Next(uint(attempt)))
-		}
-		output, err = conn.Invoke(ctx, input)
-		if err == nil || !isRetryableInvokeError(err) {
-			break
-		}
-	}
+	output, err := invokeWithRetry(ctx, conn, input, retryCount)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to Invoke Lambda Function",
