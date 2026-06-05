@@ -1867,7 +1867,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointManagedVPC(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseMCPServerInVPC(rName, 2), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = %[1]q
@@ -1875,7 +1875,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     mcp {
       mcp_server {
-        endpoint = "https://mcp.internal.example.com/mcp"
+        endpoint = [for u in aws_ecs_express_gateway_service.test.ingress_paths : u.endpoint if u.access_type == "PUBLIC"][0]
       }
     }
   }
@@ -1894,7 +1894,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointSelfManagedLattice(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseMCPServerInVPC(rName, 1), fmt.Sprintf(`
 resource "aws_vpclattice_resource_configuration" "test" {
   name = %[1]q
   type = "SINGLE"
@@ -1940,7 +1940,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_privateEndpointWithRoutingDomain(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseVPC(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), testAccGatewayTargetConfig_baseMCPServerInVPC(rName, 1), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = %[1]q
@@ -1965,8 +1965,93 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName))
 }
 
-func testAccGatewayTargetConfig_baseVPC(rName string, subnetCount int) string {
+func testAccGatewayTargetConfig_baseMCPServerInVPC(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  wait_for_steady_state = true
+
+  health_check_path = "/health"
+
+  primary_container {
+    image          = "ghcr.io/semgrep/mcp:0.9"
+    command        = ["-t", "streamable-http"]
+    container_port = 8000
+
+    environment {
+      name  = "FASTMCP_HOST"
+      value = "0.0.0.0"
+    }
+
+    environment {
+      name  = "FASTMCP_PORT"
+      value = "8000"
+    }
+  }
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+
+resource "aws_iam_role" "execution" {
+  name               = "%[1]s-execution"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ecs-tasks.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "execution" {
+  role       = aws_iam_role.execution.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "infrastructure" {
+  name               = "%[1]s-infra"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ecs.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "infrastructure" {
+  role       = aws_iam_role.infrastructure.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1994,9 +2079,51 @@ resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
 
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = -1
+    to_port     = 0
+  }
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = -1
+    to_port     = 0
+  }
+
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = %[2]d
+
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
+  route_table_id = aws_route_table.test.id
 }
 `, rName, subnetCount))
 }
