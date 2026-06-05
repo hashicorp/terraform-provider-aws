@@ -33,7 +33,7 @@ func testAccS3TableSourceAssociationPreCheck(ctx context.Context, t *testing.T) 
 	}
 }
 
-func TestAccLogsS3TableSourceAssociation_basic(t *testing.T) {
+func testAccS3TableSourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
@@ -79,7 +79,7 @@ func TestAccLogsS3TableSourceAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsS3TableSourceAssociation_disappears(t *testing.T) {
+func testAccS3TableSourceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
