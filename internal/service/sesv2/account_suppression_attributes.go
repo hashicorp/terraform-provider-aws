@@ -11,8 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -44,6 +46,48 @@ func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, reque
 				CustomType:  fwtypes.SetOfStringEnumType[awstypes.SuppressionListReason](),
 				Required:    true,
 				ElementType: fwtypes.StringEnumType[awstypes.SuppressionListReason](),
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"validation_attributes": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[suppressionValidationAttributesModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"condition_threshold": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[suppressionConditionThresholdModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"condition_threshold_enabled": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.FeatureStatus](),
+										Required:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"overall_confidence_threshold": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[suppressionConfidenceThresholdModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"confidence_verdict_threshold": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.SuppressionConfidenceVerdictThreshold](),
+													Required:   true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -153,6 +197,20 @@ func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (
 
 type accountSuppressionAttributesResourceModel struct {
 	framework.WithRegionModel
-	ID                types.String                                            `tfsdk:"id"`
-	SuppressedReasons fwtypes.SetOfStringEnum[awstypes.SuppressionListReason] `tfsdk:"suppressed_reasons"`
+	ID                   types.String                                                          `tfsdk:"id"`
+	SuppressedReasons    fwtypes.SetOfStringEnum[awstypes.SuppressionListReason]               `tfsdk:"suppressed_reasons"`
+	ValidationAttributes fwtypes.ListNestedObjectValueOf[suppressionValidationAttributesModel] `tfsdk:"validation_attributes"`
+}
+
+type suppressionValidationAttributesModel struct {
+	ConditionThreshold fwtypes.ListNestedObjectValueOf[suppressionConditionThresholdModel] `tfsdk:"condition_threshold"`
+}
+
+type suppressionConditionThresholdModel struct {
+	ConditionThresholdEnabled  fwtypes.StringEnum[awstypes.FeatureStatus]                           `tfsdk:"condition_threshold_enabled"`
+	OverallConfidenceThreshold fwtypes.ListNestedObjectValueOf[suppressionConfidenceThresholdModel] `tfsdk:"overall_confidence_threshold"`
+}
+
+type suppressionConfidenceThresholdModel struct {
+	ConfidenceVerdictThreshold fwtypes.StringEnum[awstypes.SuppressionConfidenceVerdictThreshold] `tfsdk:"confidence_verdict_threshold"`
 }
