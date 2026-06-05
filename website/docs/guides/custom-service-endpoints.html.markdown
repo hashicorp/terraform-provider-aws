@@ -112,6 +112,7 @@ provider "aws" {
 |Auto Scaling Plans|`autoscalingplans`|`AWS_ENDPOINT_URL_AUTO_SCALING_PLANS`|`auto_scaling_plans`|
 |Backup|`backup`|`AWS_ENDPOINT_URL_BACKUP`|`backup`|
 |Batch|`batch`|`AWS_ENDPOINT_URL_BATCH`|`batch`|
+|BCM Dashboards|`bcmdashboards`|`AWS_ENDPOINT_URL_BCM_DASHBOARDS`|`bcm_dashboards`|
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|

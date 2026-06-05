@@ -1834,6 +1834,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Batch"
     severity: WARNING
+  - id: bcmdashboards-in-func-name
+    languages:
+      - go
+    message: Do not use "BCMDashboards" in func name inside bcmdashboards package
+    paths:
+      include:
+        - "/internal/service/bcmdashboards"
+      exclude:
+        - "/internal/service/bcmdashboards/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDashboards"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: bcmdashboards-in-test-name
+    languages:
+      - go
+    message: Include "BCMDashboards" in test name
+    paths:
+      include:
+        - "/internal/service/bcmdashboards/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBCMDashboards"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bcmdashboards-in-const-name
+    languages:
+      - go
+    message: Do not use "BCMDashboards" in const name inside bcmdashboards package
+    paths:
+      include:
+        - "/internal/service/bcmdashboards"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDashboards"
+    severity: WARNING
+  - id: bcmdashboards-in-var-name
+    languages:
+      - go
+    message: Do not use "BCMDashboards" in var name inside bcmdashboards package
+    paths:
+      include:
+        - "/internal/service/bcmdashboards"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDashboards"
+    severity: WARNING
   - id: bcmdataexports-in-func-name
     languages:
       - go
@@ -4576,52 +4637,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConnect"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-const-name
-    languages:
-      - go
-    message: Do not use "Connect" in const name inside connect package
-    paths:
-      include:
-        - "/internal/service/connect"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connect-in-var-name
-    languages:
-      - go
-    message: Do not use "Connect" in var name inside connect package
-    paths:
-      include:
-        - "/internal/service/connect"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connectcases-in-func-name
-    languages:
-      - go
-    message: Do not use "ConnectCases" in func name inside connectcases package
-    paths:
-      include:
-        - "/internal/service/connectcases"
-      exclude:
-        - "/internal/service/connectcases/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConnectCases"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING

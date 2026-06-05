@@ -38,6 +38,7 @@ variable "service_labels" {
     "backup",
     "backupgateway",
     "batch",
+    "bcmdashboards",
     "bcmdataexports",
     "bedrock",
     "bedrockagent",
