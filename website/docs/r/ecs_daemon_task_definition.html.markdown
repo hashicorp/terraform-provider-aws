@@ -149,7 +149,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
-* `volume` - (Optional) Repeatable configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
+* `volume` - (Optional) Repeatable configuration block for volumes that containers in your task may use. Detailed below.
 
 ### `container_definition` Block
 
@@ -185,8 +185,12 @@ The following arguments are optional:
 
 ### `volume` Block
 
-* `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a non-persistent data volume that starts empty and is deleted after the task has finished.
+* `host` - (Optional) Configuration for a host volume. Detailed below.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
+
+### `host` Block
+
+* `source_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a non-persistent data volume that starts empty and is deleted after the task has finished.
 
 ### `depends_on` Block
 
