@@ -36,6 +36,7 @@ func TestAccUXC_serial(t *testing.T) {
 			"visibleRegionsNil":    testAccAccountCustomizations_visibleRegionsNil,
 			"visibleServices":      testAccAccountCustomizations_visibleServices,
 			"visibleServicesEmpty": testAccAccountCustomizations_visibleServicesEmpty,
+			"visibleServicesNil":   testAccAccountCustomizations_visibleServicesNil,
 			"disappears":           testAccAccountCustomizations_disappears,
 			"migrate":              testAccAccountCustomizations_Migrate_basic,
 		},
@@ -67,9 +68,8 @@ func testAccAccountCustomizations_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_color"), tfknownvalue.StringExact(awstypes.AccountColorNone)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
-					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -198,7 +198,7 @@ func testAccAccountCustomizations_visibleRegionsEmpty_onCreate(t *testing.T) {
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -230,7 +230,7 @@ func testAccAccountCustomizations_visibleRegionsEmpty_onUpdate(t *testing.T) {
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("us-east-1"), //lintignore:AWSAT003
 					})),
 				},
@@ -242,7 +242,7 @@ func testAccAccountCustomizations_visibleRegionsEmpty_onUpdate(t *testing.T) {
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -285,7 +285,7 @@ func testAccAccountCustomizations_visibleRegionsNil_onUpdate(t *testing.T) {
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("us-east-1"), //lintignore:AWSAT003
 					})),
 				},
@@ -297,7 +297,7 @@ func testAccAccountCustomizations_visibleRegionsNil_onUpdate(t *testing.T) {
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
@@ -334,6 +334,12 @@ func testAccAccountCustomizations_visibleServices(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "visible_services.*", "s3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "visible_services.*", "ec2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("s3"),
+						knownvalue.StringExact("ec2"),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -345,15 +351,59 @@ func testAccAccountCustomizations_visibleServices(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_visibleServices([]string{"s3"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_services.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "visible_services.*", "s3"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("s3"),
+					})),
+				},
 			},
 		},
 	})
 }
 
 func testAccAccountCustomizations_visibleServicesEmpty(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"onCreate": testAccAccountCustomizations_visibleServicesEmpty_onCreate,
+		"onUpdate": testAccAccountCustomizations_visibleServicesEmpty_onUpdate,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAccountCustomizations_visibleServicesEmpty_onCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.UXCServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountCustomizationsConfig_visibleServicesEmpty(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetSizeExact(0)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "account_color",
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_visibleServicesEmpty_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_uxc_account_customizations.test"
 
@@ -370,20 +420,81 @@ func testAccAccountCustomizations_visibleServicesEmpty(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_visibleServices([]string{"s3"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_services.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("s3"),
+					})),
+				},
 			},
 			{
 				// Explicitly set an empty set — must not cause a permanent diff.
 				Config: testAccAccountCustomizationsConfig_visibleServicesEmpty(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "visible_services.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetSizeExact(0)),
+				},
 			},
 			{
 				// Confirm no diff on subsequent plan.
 				Config: testAccAccountCustomizationsConfig_visibleServicesEmpty(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccAccountCustomizations_visibleServicesNil(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"onUpdate": testAccAccountCustomizations_visibleServicesNil_onUpdate,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAccountCustomizations_visibleServicesNil_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_uxc_account_customizations.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.UXCServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountCustomizationsConfig_visibleServices([]string{"s3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("s3"),
+					})),
+				},
+			},
+			{
+				// Explicitly set nil — must not cause a permanent diff.
+				Config: testAccAccountCustomizationsConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetSizeExact(0)),
+				},
+			},
+			{
+				// Confirm no diff on subsequent plan.
+				Config: testAccAccountCustomizationsConfig_basic(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -464,9 +575,8 @@ func testAccAccountCustomizations_Migrate_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_color"), tfknownvalue.StringExact(awstypes.AccountColorNone)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.ListSizeExact(0)),
-					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_regions"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("visible_services"), knownvalue.SetSizeExact(0)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -579,14 +689,6 @@ resource "aws_uxc_account_customizations" "test" {
 `
 }
 
-func testAccAccountCustomizationsConfig_visibleServicesEmpty() string {
-	return `
-resource "aws_uxc_account_customizations" "test" {
-  visible_services = []
-}
-`
-}
-
 func testAccAccountCustomizationsConfig_visibleServices(services []string) string {
 	quoted := make([]string, len(services))
 	for i, s := range services {
@@ -597,4 +699,12 @@ resource "aws_uxc_account_customizations" "test" {
   visible_services = [%s]
 }
 `, strings.Join(quoted, ", "))
+}
+
+func testAccAccountCustomizationsConfig_visibleServicesEmpty() string {
+	return `
+resource "aws_uxc_account_customizations" "test" {
+  visible_services = []
+}
+`
 }
