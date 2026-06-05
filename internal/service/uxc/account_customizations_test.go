@@ -525,7 +525,7 @@ func testAccAccountCustomizations_disappears(t *testing.T) {
 				Config: testAccAccountCustomizationsConfig_accountColor("pink"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfuxc.ResourceAccountCustomizations, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfuxc.ResourceAccountCustomizations, resourceName), // nosemgrep:disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
