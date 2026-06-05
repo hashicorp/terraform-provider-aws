@@ -72,5 +72,5 @@ import {
 Using `terraform import`, import an Oracle Database@AWS Associate Disassociate IAM Role using `composite_arn` key-value pairs (`iam_role_arn=<value>,resource_arn=<value>`). For example:
 
 ```console
-% terraform import aws_odb_associate_disassociate_iam_role.example "iam_role_arn=arn:aws:iam::123456789012:role/odb-iam-role-example,resource_arn=arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
+% terraform import aws_odb_associate_disassociate_iam_role.example "iarn:aws:iam::123456789012:role/odb-iam-role-example,arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 ```
