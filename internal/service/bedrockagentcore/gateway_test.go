@@ -904,6 +904,56 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeLogOnly),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeEnforce),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1355,4 +1405,32 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine string, mode awstypes.GatewayPolicyEngineMode) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+
+  policy_engine_configuration {
+    arn  = aws_bedrockagentcore_policy_engine.test.policy_engine_arn
+    mode = %[3]q
+  }
+}
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[2]q
+}
+`, rName, rNamePolicyEngine, mode))
 }
