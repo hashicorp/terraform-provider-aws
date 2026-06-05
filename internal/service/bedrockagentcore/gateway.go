@@ -334,6 +334,8 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 
 	gateway, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
