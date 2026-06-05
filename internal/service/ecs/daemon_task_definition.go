@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -498,14 +497,23 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"host_path": schema.StringAttribute{
-							Optional: true,
-						},
 						names.AttrName: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(255),
 								stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"host": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[hostModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"source_path": schema.StringAttribute{
+										Optional: true,
+									},
+								},
 							},
 						},
 					},
@@ -532,14 +540,6 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 
 	// Fields AutoFlex can't handle
 	input.Tags = getTagsIn(ctx)
-	if !plan.Volumes.IsNull() && !plan.Volumes.IsUnknown() {
-		volumeSlice, diags := plan.Volumes.ToSlice(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.Volumes = expandDaemonVolumesFromModel(volumeSlice)
-	}
 
 	output, err := conn.RegisterDaemonTaskDefinition(ctx, &input)
 
@@ -570,13 +570,13 @@ func (r *daemonTaskDefinitionResource) Create(ctx context.Context, request resou
 	}
 
 	// Read back to populate all computed attributes
-	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, plan.DaemonTaskDefinitionArn.ValueString())
+	outputFind, err := findDaemonTaskDefinitionByARN(ctx, conn, plan.DaemonTaskDefinitionArn.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", plan.DaemonTaskDefinitionArn.ValueString()), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemonTaskDefinition(ctx, dtd, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputFind, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -593,7 +593,7 @@ func (r *daemonTaskDefinitionResource) Read(ctx context.Context, request resourc
 
 	conn := r.Meta().ECSClient(ctx)
 
-	dtd, err := findDaemonTaskDefinitionByARN(ctx, conn, state.DaemonTaskDefinitionArn.ValueString())
+	output, err := findDaemonTaskDefinitionByARN(ctx, conn, state.DaemonTaskDefinitionArn.ValueString())
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -604,7 +604,7 @@ func (r *daemonTaskDefinitionResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	response.Diagnostics.Append(flattenDaemonTaskDefinition(ctx, dtd, &state)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -621,10 +621,11 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().ECSClient(ctx)
 
-	_, err := conn.DeleteDaemonTaskDefinition(ctx, &ecs.DeleteDaemonTaskDefinitionInput{
+	input := ecs.DeleteDaemonTaskDefinitionInput{
 		DaemonTaskDefinition: state.DaemonTaskDefinitionArn.ValueStringPointer(),
-	})
+	}
 
+	_, err := conn.DeleteDaemonTaskDefinition(ctx, &input)
 	if errs.Contains(err, "DaemonTaskDefinitionNotFoundException") || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "not found") || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "being deleted") {
 		return
 	}
@@ -632,24 +633,6 @@ func (r *daemonTaskDefinitionResource) Delete(ctx context.Context, request resou
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting ECS Daemon Task Definition (%s)", state.DaemonTaskDefinitionArn.ValueString()), err.Error())
 	}
-}
-
-// flattenDaemonTaskDefinition populates the model from a DaemonTaskDefinition using AutoFlex
-// for matching fields and manual handling for fields that require transformation.
-func flattenDaemonTaskDefinition(ctx context.Context, dtd *awstypes.DaemonTaskDefinition, model *daemonTaskDefinitionResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	var diags diag.Diagnostics
-
-	// AutoFlex handles DaemonTaskDefinitionArn, Family, Cpu, Memory, ExecutionRoleArn,
-	// TaskRoleArn, Revision, Status, ContainerDefinitions
-	diags.Append(fwflex.Flatten(ctx, dtd, model)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Manual: volumes (structural mismatch — Host.SourcePath → HostPath)
-	model.Volumes, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, flattenDaemonVolumes(dtd.Volumes))
-
-	return diags
 }
 
 func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.DaemonTaskDefinition, error) {
@@ -683,44 +666,6 @@ func findDaemonTaskDefinitionByARN(ctx context.Context, conn *ecs.Client, arn st
 
 	return output.DaemonTaskDefinition, nil
 }
-
-// flattenDaemonVolumes converts SDK Volume types to the Terraform model.
-// AutoFlex cannot handle this because the SDK nests SourcePath under Host
-// (Volume.Host.SourcePath) while the Terraform model flattens it (volumeModel.HostPath).
-func flattenDaemonVolumes(volumes []awstypes.DaemonVolume) []volumeModel {
-	models := make([]volumeModel, len(volumes))
-	for i, v := range volumes {
-		models[i] = volumeModel{
-			Name: types.StringPointerValue(v.Name),
-		}
-		if v.Host != nil && v.Host.SourcePath != nil {
-			models[i].HostPath = types.StringPointerValue(v.Host.SourcePath)
-		}
-	}
-	return models
-}
-
-func expandDaemonVolumesFromModel(volumes []*volumeModel) []awstypes.DaemonVolume {
-	if len(volumes) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.DaemonVolume
-	for _, v := range volumes {
-		apiObject := awstypes.DaemonVolume{
-			Name: v.Name.ValueStringPointer(),
-		}
-		if !v.HostPath.IsNull() && v.HostPath.ValueString() != "" {
-			apiObject.Host = &awstypes.HostVolumeProperties{
-				SourcePath: v.HostPath.ValueStringPointer(),
-			}
-		}
-		apiObjects = append(apiObjects, apiObject)
-	}
-	return apiObjects
-}
-
-// Model and helper types.
 
 type daemonTaskDefinitionResourceModel struct {
 	framework.WithRegionModel
@@ -851,8 +796,12 @@ type ulimitModel struct {
 }
 
 type volumeModel struct {
-	HostPath types.String `tfsdk:"host_path"`
-	Name     types.String `tfsdk:"name"`
+	Host fwtypes.ListNestedObjectValueOf[hostModel] `tfsdk:"host" autoflex:",omitempty"`
+	Name types.String                               `tfsdk:"name"`
+}
+
+type hostModel struct {
+	SourcePath types.String `tfsdk:"source_path"`
 }
 
 type daemonSecretModel struct {

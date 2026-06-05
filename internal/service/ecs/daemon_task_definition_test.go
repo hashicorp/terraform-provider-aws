@@ -787,13 +787,17 @@ resource "aws_ecs_daemon_task_definition" "test" {
   }
 
   volume {
-    name      = "data"
-    host_path = "/mnt/data"
+    name = "data"
+    host {
+      source_path = "/mnt/data"
+    }
   }
 
   volume {
-    name      = "logs"
-    host_path = "/var/log"
+    name = "logs"
+    host {
+      source_path = "/var/log"
+    }
   }
 }
 `, rName)
@@ -1015,8 +1019,10 @@ resource "aws_ecs_daemon_task_definition" "test" {
   }
 
   volume {
-    name      = "data"
-    host_path = "/mnt/data"
+    name = "data"
+    host {
+      source_path = "/mnt/data"
+    }
   }
 }
 `, rName)
@@ -1128,8 +1134,10 @@ resource "aws_ecs_daemon_task_definition" "test" {
   }
 
   volume {
-    name      = "data"
-    host_path = "/mnt/data"
+    name = "data"
+    host {
+      source_path = "/mnt/data"
+    }
   }
 }
 `, rName)
