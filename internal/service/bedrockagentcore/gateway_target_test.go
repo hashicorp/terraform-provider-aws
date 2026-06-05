@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -263,7 +264,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DEFAULT"),
+					resource.TestCheckNoResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -307,7 +308,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMod
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", "DYNAMIC"),
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", awstypes.ListingModeDynamic),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -322,7 +323,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMod
 				},
 			},
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", "DEFAULT"),
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", awstypes.ListingModeDefault),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DEFAULT"),
@@ -996,7 +997,6 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_configuration {
     mcp {
       instructions       = "Do something"
-      search_type        = "SEMANTIC"
       supported_versions = ["2025-11-25"]
     }
   }
@@ -1285,7 +1285,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, endpoint))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint, listingMode string) string {
+func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint string, listingMode awstypes.ListingMode) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q

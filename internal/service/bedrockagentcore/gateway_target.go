@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -755,7 +754,9 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													Optional:   true,
 													Computed:   true,
 													CustomType: fwtypes.StringEnumType[awstypes.ListingMode](),
-													Default:    stringdefault.StaticString(string(awstypes.ListingModeDefault)),
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 											},
 										},
@@ -896,10 +897,16 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	targetID := aws.ToString(out.TargetId)
-	data.TargetID = fwflex.StringValueToFramework(ctx, targetID)
 
-	if _, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	target, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, target, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -965,8 +972,7 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err = waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts))
-		if err != nil {
+		if _, err := waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 			return
 		}
