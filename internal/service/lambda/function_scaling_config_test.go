@@ -10,8 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -121,6 +123,11 @@ func TestAccLambdaFunctionScalingConfig_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambda.ResourceFunctionScalingConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -139,8 +146,11 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 			qualifier := rs.Primary.Attributes["qualifier"]
 
 			out, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
+			if retry.NotFound(err) {
+				continue
+			}
 			if err != nil {
-				return nil
+				return err
 			}
 
 			// The resource is "destroyed" if the scaling config has no min/max set.

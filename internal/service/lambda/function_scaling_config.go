@@ -37,7 +37,8 @@ func newFunctionScalingConfigResource(_ context.Context) (resource.ResourceWithC
 }
 
 const (
-	ResNameFunctionScalingConfig = "Function Scaling Config"
+	ResNameFunctionScalingConfig      = "Function Scaling Config"
+	functionScalingConfigRetryTimeout = 10 * time.Minute
 )
 
 type functionScalingConfigResource struct {
@@ -108,7 +109,7 @@ func (r *functionScalingConfigResource) Create(ctx context.Context, req resource
 
 	// Capacity provider functions can take time to stabilize after publishing.
 	// Retry on ResourceConflictException until the version is ready.
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutFunctionScalingConfig(ctx, &input)
 	})
 	if err != nil {
@@ -214,7 +215,7 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 		Qualifier:    state.Qualifier.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutFunctionScalingConfig(ctx, in)
 	})
 	if err != nil {
