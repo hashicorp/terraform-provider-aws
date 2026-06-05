@@ -176,6 +176,9 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 						"user": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"working_directory": schema.StringAttribute{
 							Optional: true,

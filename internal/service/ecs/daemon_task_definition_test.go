@@ -123,12 +123,11 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-				// TODO: investigate why tags fail to update in place
-				// ConfigPlanChecks: resource.ConfigPlanChecks{
-				// 	PreApply: []plancheck.PlanCheck{
-				// 		plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-				// 	},
-				// },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
@@ -137,11 +136,11 @@ func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-				// ConfigPlanChecks: resource.ConfigPlanChecks{
-				// 	PreApply: []plancheck.PlanCheck{
-				// 		plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-				// 	},
-				// },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
