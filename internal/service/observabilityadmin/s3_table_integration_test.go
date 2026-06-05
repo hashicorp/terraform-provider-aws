@@ -35,7 +35,7 @@ func testAccS3TableIntegrationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
+func testAccS3TableIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
@@ -82,7 +82,7 @@ func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
+func testAccS3TableIntegration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
