@@ -96,8 +96,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
 | `cache-info` | Display Go cache and GitHub Actions cache information |  |  |  |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
-| `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
-| `ci-quick`<sup>M</sup> | Run quicker CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
+| `ci`<sup>M</sup> | Run all CI checks (requires docker) | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
+| `ci-quick`<sup>M</sup> | Run quicker CI checks (no docker) | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
 | `clean`<sup>M</sup> | Clean up Go cache, tidy and re-install tools |  |  | `GO_VER` |
 | `clean-go`<sup>D</sup> | Clean up Go cache |  |  | `GO_VER` |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
@@ -180,7 +180,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
-| `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |

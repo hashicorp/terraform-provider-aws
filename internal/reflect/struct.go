@@ -77,7 +77,7 @@ func ExportedStructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 // Tag options (e.g. ",omitempty") are stripped before comparison.
 func FieldByTag(v any, tagKey, tagValue string) (reflect.StructField, bool) {
 	t := reflect.TypeOf(v)
-	if t.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	if t.Kind() != reflect.Struct {

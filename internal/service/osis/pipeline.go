@@ -42,6 +42,12 @@ import (
 
 // @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
+// @IdentityAttribute("name", resourceAttributeName="pipeline_name", identityDuplicateAttributes="id")
+// @ArnFormat("pipeline/{pipeline_name}", attribute="pipeline_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/osis/types;awstypes;awstypes.Pipeline")
+// @Testing(generator="randomPipelineName(t)")
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(importStateIdAttribute="pipeline_name")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
 
@@ -54,14 +60,14 @@ func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type pipelineResource struct {
 	framework.ResourceWithModel[pipelineResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("pipeline_name")),
 			"ingest_endpoint_urls": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
@@ -279,7 +285,6 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	data.PipelineName = data.ID
 	name := data.PipelineName.ValueString()
 	pipeline, err := findPipelineByName(ctx, conn, name)
 

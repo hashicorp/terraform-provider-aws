@@ -200,6 +200,14 @@ func testAccRotation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmcontacts.ResourceRotation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmcontacts_rotation.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmcontacts_rotation.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

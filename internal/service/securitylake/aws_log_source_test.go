@@ -194,6 +194,14 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceAWSLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_aws_log_source.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_aws_log_source.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

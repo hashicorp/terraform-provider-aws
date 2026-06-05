@@ -16,6 +16,8 @@ Amazon-issued, where AWS provides the certificate authority and automatically ma
 imported certificates, issued by another certificate authority;
 and private certificates, issued using an ACM Private Certificate Authority.
 
+-> **Note:** Write-Only argument `private_key_wo` is available to use in place of `private_key`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Amazon-Issued Certificates
 
 For Amazon-issued certificates, this resource deals with requesting certificates and managing their attributes and life-cycle.
@@ -30,7 +32,7 @@ deploy the required validation records and wait for validation to complete.
 
 Domain validation through email is also supported but should be avoided as it requires a manual step outside of Terraform.
 
-It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
+It's recommended to specify `create_before_destroy = true` in a [lifecycle](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) block to replace a certificate
 which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
 
 ## Certificates Imported from Other Certificate Authority
@@ -113,6 +115,38 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
+### Existing Certificate Body Import With Write-Only Private Key
+
+```terraform
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = tls_private_key.example.private_key_pem
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key_wo         = tls_private_key.example.private_key_pem
+  private_key_wo_version = 1
+  certificate_body       = tls_self_signed_cert.example.cert_pem
+}
+```
+
 ### Referencing domain_validation_options With for_each Based Resources
 
 See the [`aws_acm_certificate_validation` resource](acm_certificate_validation.html) for a full example of performing DNS validation.
@@ -149,7 +183,9 @@ This resource supports the following arguments:
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) Certificate's PEM-formatted private key
+    * `private_key` - (Optional) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
+    * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. Must be used together with `private_key_wo_version`.
+    * `private_key_wo_version` - (Optional) Used together with `private_key_wo` to trigger an update. Increment this value when an update to `private_key_wo` is required.
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
@@ -208,8 +244,6 @@ Renewal summary objects export the following attributes:
 
 * `renewal_status` - The status of ACM's managed renewal of the certificate
 * `renewal_status_reason` - The reason that a renewal request was unsuccessful or is pending
-
-[1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 
 ## Import
 

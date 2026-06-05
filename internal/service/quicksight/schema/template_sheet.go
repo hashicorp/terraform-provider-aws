@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,7 +31,7 @@ var analysisDefaultSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"interactive_layout_configuration": interactiveLayoutConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
 							"paginated_layout_configuration":   paginatedLayoutConfigurationSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultPaginatedLayoutConfiguration.html,
-							"sheet_content_type":               stringEnumSchema[awstypes.SheetContentType](attrOptional),
+							"sheet_content_type":               sdkschema.StringEnumSchema[awstypes.SheetContentType](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -52,7 +53,7 @@ var analysisDefaultDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"interactive_layout_configuration": interactiveLayoutConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
 							"paginated_layout_configuration":   paginatedLayoutConfigurationDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultPaginatedLayoutConfiguration.html,
-							"sheet_content_type":               stringEnumDataSourceSchema[awstypes.SheetContentType](),
+							"sheet_content_type":               sdkschema.StringEnumDataSourceSchema[awstypes.SheetContentType](),
 						},
 					},
 				},
@@ -128,7 +129,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
+													"resize_option": sdkschema.StringEnumSchema[awstypes.ResizeOption](sdkschema.AttrRequired),
 												},
 											},
 										},
@@ -190,7 +191,7 @@ func interactiveLayoutConfigurationDataSourceSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"optimized_view_port_width": stringComputedOnly(),
-													"resize_option":             stringEnumDataSourceSchema[awstypes.ResizeOption](),
+													"resize_option":             sdkschema.StringEnumDataSourceSchema[awstypes.ResizeOption](),
 												},
 											},
 										},
@@ -276,8 +277,8 @@ var paperCanvasSizeOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"paper_margin":      spacingSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
-				"paper_orientation": stringEnumSchema[awstypes.PaperOrientation](attrOptional),
-				"paper_size":        stringEnumSchema[awstypes.PaperSize](attrOptional),
+				"paper_orientation": sdkschema.StringEnumSchema[awstypes.PaperOrientation](sdkschema.AttrOptional),
+				"paper_size":        sdkschema.StringEnumSchema[awstypes.PaperSize](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -290,8 +291,8 @@ var paperCanvasSizeOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"paper_margin":      spacingDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
-				"paper_orientation": stringEnumDataSourceSchema[awstypes.PaperOrientation](),
-				"paper_size":        stringEnumDataSourceSchema[awstypes.PaperSize](),
+				"paper_orientation": sdkschema.StringEnumDataSourceSchema[awstypes.PaperOrientation](),
+				"paper_size":        sdkschema.StringEnumDataSourceSchema[awstypes.PaperSize](),
 			},
 		},
 	}
@@ -433,7 +434,7 @@ var layoutSchema = sync.OnceValue(func() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
+																			names.AttrStatus: sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 																		},
 																	},
 																},
@@ -537,7 +538,7 @@ var layoutDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 																	Computed: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			names.AttrStatus: stringEnumDataSourceSchema[awstypes.Status](),
+																			names.AttrStatus: sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 																		},
 																	},
 																},
@@ -586,10 +587,10 @@ var gridLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 430,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_span":  intBetweenSchema(attrRequired, 1, 36),
+							"column_span":  sdkschema.IntBetweenSchema(sdkschema.AttrRequired, 1, 36),
 							"element_id":   idSchema(),
-							"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
-							"row_span":     intBetweenSchema(attrRequired, 1, 21),
+							"element_type": sdkschema.StringEnumSchema[awstypes.LayoutElementType](sdkschema.AttrRequired),
+							"row_span":     sdkschema.IntBetweenSchema(sdkschema.AttrRequired, 1, 21),
 							"column_index": {
 								Type:         nullable.TypeNullableInt,
 								Optional:     true,
@@ -621,7 +622,7 @@ var gridLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
+										"resize_option": sdkschema.StringEnumSchema[awstypes.ResizeOption](sdkschema.AttrRequired),
 									},
 								},
 							},
@@ -646,7 +647,7 @@ var gridLayoutConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Sche
 						Schema: map[string]*schema.Schema{
 							"column_span":  intComputedOnly(),
 							"element_id":   idDataSourceSchema(),
-							"element_type": stringEnumDataSourceSchema[awstypes.LayoutElementType](),
+							"element_type": sdkschema.StringEnumDataSourceSchema[awstypes.LayoutElementType](),
 							"row_span":     intComputedOnly(),
 							"column_index": {
 								Type:     nullable.TypeNullableInt,
@@ -670,7 +671,7 @@ var gridLayoutConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Sche
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"optimized_view_port_width": stringComputedOnly(),
-										"resize_option":             stringEnumDataSourceSchema[awstypes.ResizeOption](),
+										"resize_option":             sdkschema.StringEnumDataSourceSchema[awstypes.ResizeOption](),
 									},
 								},
 							},
@@ -752,7 +753,7 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"element_id":   idSchema(),
-				"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
+				"element_type": sdkschema.StringEnumSchema[awstypes.LayoutElementType](sdkschema.AttrRequired),
 				"height": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -776,8 +777,8 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      sdkschema.StringMatchSchema(sdkschema.AttrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -788,8 +789,8 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      sdkschema.StringMatchSchema(sdkschema.AttrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -800,7 +801,7 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -818,11 +819,11 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
-							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+							names.AttrExpression: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 4096),
 						},
 					},
 				},
@@ -833,12 +834,12 @@ var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrColor:      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
-							attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrColor:      sdkschema.StringMatchSchema(sdkschema.AttrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -851,7 +852,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"element_id":      idDataSourceSchema(),
-				"element_type":    stringEnumDataSourceSchema[awstypes.LayoutElementType](),
+				"element_type":    sdkschema.StringEnumDataSourceSchema[awstypes.LayoutElementType](),
 				"height":          stringComputedOnly(),
 				"width":           stringComputedOnly(),
 				"x_axis_location": stringComputedOnly(),
@@ -862,7 +863,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							attrColor:      stringComputedOnly(),
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -872,7 +873,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							attrColor:      stringComputedOnly(),
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -881,7 +882,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
@@ -895,7 +896,7 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -909,11 +910,11 @@ var freeFormLayoutElementsDataSourceSchema = sync.OnceValue(func() *schema.Schem
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							attrColor:      stringComputedOnly(),
-							attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 						},
 					},
 				},
-				attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}

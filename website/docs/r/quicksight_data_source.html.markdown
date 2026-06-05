@@ -205,6 +205,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### athena Argument Reference
 
 * `work_group` - (Optional) The work-group to which to connect.
+* `role_arn` - (Optional) Use the `role_arn` to override an account-wide role for a specific athena data source.
 
 ### aurora Argument Reference
 
