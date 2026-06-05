@@ -456,7 +456,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   filename      = %[2]q
   role          = aws_iam_role.test.arn
-	handler       = %[4]q
+  handler       = %[4]q
   publish       = true
   runtime       = %[3]q
 
