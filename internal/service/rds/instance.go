@@ -193,6 +193,7 @@ func resourceInstance() *schema.Resource {
 				ForceNew: true,
 				ConflictsWith: []string{
 					"replicate_source_db",
+					"replicate_source_db_cluster",
 					"s3_import",
 					"restore_to_point_in_time",
 					"snapshot_identifier",
@@ -226,6 +227,7 @@ func resourceInstance() *schema.Resource {
 				ForceNew: true,
 				ConflictsWith: []string{
 					"replicate_source_db",
+					"replicate_source_db_cluster",
 				},
 			},
 			"db_subnet_group_name": {
@@ -557,6 +559,18 @@ func resourceInstance() *schema.Resource {
 				Optional:              true,
 				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
 				DiffSuppressOnRefresh: true,
+				ConflictsWith: []string{
+					"replicate_source_db_cluster",
+				},
+			},
+			"replicate_source_db_cluster": {
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
+				DiffSuppressOnRefresh: true,
+				ConflictsWith: []string{
+					"replicate_source_db",
+				},
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -571,6 +585,7 @@ func resourceInstance() *schema.Resource {
 					"s3_import",
 					"snapshot_identifier",
 					"replicate_source_db",
+					"replicate_source_db_cluster",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -607,6 +622,7 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"snapshot_identifier",
 					"replicate_source_db",
+					"replicate_source_db_cluster",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -656,12 +672,16 @@ func resourceInstance() *schema.Resource {
 			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"storage_throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ConflictsWith: []string{
+					"replicate_source_db_cluster",
+				},
 			},
 			names.AttrStorageType: {
 				Type:     schema.TypeString,
@@ -688,11 +708,14 @@ func resourceInstance() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrUsername: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ConflictsWith: []string{
+					"replicate_source_db",
+					"replicate_source_db_cluster",
+				},
 			},
 			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -719,8 +742,8 @@ func resourceInstance() *schema.Resource {
 					return nil
 				}
 
-				source := d.Get("replicate_source_db").(string)
-				if source != "" {
+				sourceInstance := d.Get("replicate_source_db").(string)
+				if sourceInstance != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
 				}
 				return nil
@@ -1015,6 +1038,257 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
 			requiresModifyDbInstance = true
 		}
+	} else if v, ok := d.GetOk("replicate_source_db_cluster"); ok {
+		sourceDBClusterID := v.(string)
+		input := &rds.CreateDBInstanceReadReplicaInput{
+			AutoMinorVersionUpgrade:   aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBInstanceClass:           aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:      aws.String(identifier),
+			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			PubliclyAccessible:        aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+			SourceDBClusterIdentifier: aws.String(sourceDBClusterID),
+			Tags:                      getTagsIn(ctx),
+		}
+
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
+			diags = sdkdiag.AppendWarningf(diags, `"allocated_storage" was ignored for DB Cluster (%s) because a replica inherits the primary's allocated_storage and cannot be changed at creation.`, identifier)
+		}
+
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			cluster, err := findDBClusterByID(ctx, conn, sourceDBClusterID)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "source DB cluster (%s) was not found", identifier)
+			}
+
+			if cluster.DBSubnetGroup == nil {
+				return sdkdiag.AppendErrorf(diags, "source DB cluster (%s) does not have a DB subnet group", identifier)
+			}
+			replicaSubnetGroupName := aws.String(v.(string))
+			sourceSubnetGroupName := cluster.DBSubnetGroup
+
+			sourceSubnetGroup, err := findDBSubnetGroupByName(ctx, conn, aws.ToString(sourceSubnetGroupName))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "source DB cluster (%s) subnet group (%s) was not found", identifier, aws.ToString(sourceSubnetGroupName))
+
+			}
+			replicaSubnetGroup, err := findDBSubnetGroupByName(ctx, conn, aws.ToString(replicaSubnetGroupName))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "replica subnet group (%s) was not found", aws.ToString(replicaSubnetGroupName))
+
+			}
+			replicaVpcId := aws.ToString(replicaSubnetGroup.VpcId)
+			sourceVpcId := aws.ToString(sourceSubnetGroup.VpcId)
+
+			if replicaVpcId != sourceVpcId {
+				return sdkdiag.AppendErrorf(diags, `replica vpc (%s), source vpc (%s) - replica "db_subnet_group_name" (%s) must be in the same VPC as the source DB cluster (%s)`, replicaVpcId, sourceVpcId, aws.ToString(replicaSubnetGroupName), identifier)
+
+			}
+			input.DBSubnetGroupName = replicaSubnetGroupName
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk(names.AttrDomain); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
+			input.Iops = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+			input.KmsKeyId = aws.String(v.(string))
+			if arnParts := strings.Split(sourceDBClusterID, ":"); len(arnParts) >= 4 {
+				input.SourceRegion = aws.String(arnParts[3])
+			}
+		}
+
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("multi_az"); ok {
+			input.MultiAZ = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("option_group_name"); ok {
+			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("performance_insights_enabled"); ok {
+			input.EnablePerformanceInsights = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk(names.AttrPort); ok {
+			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if _, ok := d.GetOk("replica_mode"); ok {
+			diags = sdkdiag.AppendWarningf(diags, `"replica_mode" was ignored for DB Cluster (%s) because DB cluster does not support Oracle databases`, identifier)
+		}
+
+		if v, ok := d.GetOk("storage_throughput"); ok {
+			input.StorageThroughput = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("upgrade_storage_config"); ok {
+			input.UpgradeStorageConfig = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+
+		output, err := dbInstanceCreateReadReplica(ctx, conn, input)
+
+		// Some engines (e.g. PostgreSQL) you cannot specify a custom parameter group for the read replica during creation.
+		// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html#USER_ReadRepl.XRgn.Cnsdr.
+		if input.DBParameterGroupName != nil && tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "A parameter group can't be specified during Read Replica creation for the following DB engine") {
+			input.DBParameterGroupName = nil
+
+			output, err = dbInstanceCreateReadReplica(ctx, conn, input)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "route B - creating RDS DB Instance (read replica) (%s): %s, SourceDBClusterIdentifier is (input)(original) --- (%s)(%s), input is --- %+v", identifier, err, aws.ToString(input.SourceDBClusterIdentifier), sourceDBClusterID, input)
+		}
+
+		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
+
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// "InvalidParameterCombination: No modifications were requested".
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("backup_retention_period"); ok {
+			if current, desired := aws.ToInt32(output.DBInstance.BackupRetentionPeriod), int32(v.(int)); current != desired {
+				modifyDbInstanceInput.BackupRetentionPeriod = aws.Int32(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if v, ok := d.GetOk("backup_window"); ok {
+			if current, desired := aws.ToString(output.DBInstance.PreferredBackupWindow), v.(string); current != desired {
+				modifyDbInstanceInput.PreferredBackupWindow = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if v, ok := d.GetOk("ca_cert_identifier"); ok {
+			if current, desired := aws.ToString(output.DBInstance.CACertificateIdentifier), v.(string); current != desired {
+				modifyDbInstanceInput.CACertificateIdentifier = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			if current, desired := aws.ToString(output.DBInstance.PreferredMaintenanceWindow), v.(string); current != desired {
+				modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("max_allocated_storage"); ok {
+			if current, desired := aws.ToInt32(output.DBInstance.MaxAllocatedStorage), int32(v.(int)); current != desired {
+				modifyDbInstanceInput.MaxAllocatedStorage = aws.Int32(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
+			if len(output.DBInstance.DBParameterGroups) > 0 {
+				if current, desired := aws.ToString(output.DBInstance.DBParameterGroups[0].DBParameterGroupName), v.(string); current != desired {
+					modifyDbInstanceInput.DBParameterGroupName = aws.String(desired)
+					requiresModifyDbInstance = true
+					requiresRebootDbInstance = true
+				}
+			}
+		}
+
+		if v, ok := d.GetOk(names.AttrPassword); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -2068,6 +2342,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 	d.Set("replicate_source_db", sourceDBIdentifier)
+	d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
 
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
@@ -2105,34 +2380,57 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func promoteReadReplica(ctx context.Context, d *schema.ResourceData, conn *rds.Client, deadline inttypes.Deadline) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	input := &rds.PromoteReadReplicaInput{
+		BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
+		DBInstanceIdentifier:  aws.String(d.Get(names.AttrIdentifier).(string)),
+	}
+
+	if attr, ok := d.GetOk("backup_window"); ok {
+		input.PreferredBackupWindow = aws.String(attr.(string))
+	}
+
+	_, err := conn.PromoteReadReplica(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+	return diags
+}
+
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
+	needsPromote := false
 	if d.HasChange("replicate_source_db") {
 		if d.Get("replicate_source_db").(string) == "" {
-			input := &rds.PromoteReadReplicaInput{
-				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
-				DBInstanceIdentifier:  aws.String(d.Get(names.AttrIdentifier).(string)),
-			}
-
-			if attr, ok := d.GetOk("backup_window"); ok {
-				input.PreferredBackupWindow = aws.String(attr.(string))
-			}
-
-			_, err := conn.PromoteReadReplica(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-			}
-
-			if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Get(names.AttrIdentifier).(string), err)
-			}
+			needsPromote = true
 		} else {
 			return sdkdiag.AppendErrorf(diags, "cannot elect new source database for replication")
+		}
+	}
+
+	if d.HasChange("replicate_source_db_cluster") {
+		if d.Get("replicate_source_db_cluster").(string) == "" {
+			needsPromote = true
+		} else {
+			return sdkdiag.AppendErrorf(diags, "cannot elect new source database for replication")
+		}
+	}
+
+	if needsPromote {
+		diags = append(diags, promoteReadReplica(ctx, d, conn, deadline)...)
+		if diags.HasError() {
+			return diags
 		}
 	}
 
@@ -2144,6 +2442,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"delete_automated_backups",
 		names.AttrFinalSnapshotIdentifier,
 		"replicate_source_db",
+		"replicate_source_db_cluster",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
@@ -2153,6 +2452,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			"delete_automated_backups",
 			names.AttrFinalSnapshotIdentifier,
 			"replicate_source_db",
+			"replicate_source_db_cluster",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
 			names.AttrDeletionProtection,
