@@ -24,6 +24,7 @@ Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Dashboards
 BCM Data Exports
 Backup
 Batch

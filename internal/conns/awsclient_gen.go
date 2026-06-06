@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/bcmdashboards"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -374,6 +375,10 @@ func (c *AWSClient) AutoScalingClient(ctx context.Context) *autoscaling.Client {
 
 func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans.Client {
 	return errs.Must(client[*autoscalingplans.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+}
+
+func (c *AWSClient) BCMDashboardsClient(ctx context.Context) *bcmdashboards.Client {
+	return errs.Must(client[*bcmdashboards.Client](ctx, c, names.BCMDashboards, make(map[string]any)))
 }
 
 func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports.Client {
