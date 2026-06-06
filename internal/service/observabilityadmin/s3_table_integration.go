@@ -39,7 +39,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetS3TableIntegrationOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccS3TableIntegrationPreCheck")
-// @Testing(serialize=true)
 // @Testing(tagsTest=false)
 func newS3TableIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &s3TableIntegrationResource{}

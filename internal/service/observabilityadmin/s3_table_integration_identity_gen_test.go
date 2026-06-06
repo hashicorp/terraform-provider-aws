@@ -20,25 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccObservabilityAdminS3TableIntegration_identitySerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccObservabilityAdminS3TableIntegration_Identity_basic,
-		"RegionOverride": testAccObservabilityAdminS3TableIntegration_Identity_regionOverride,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccObservabilityAdminS3TableIntegration_Identity_basic(t *testing.T) {
+func TestAccObservabilityAdminS3TableIntegration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v observabilityadmin.GetS3TableIntegrationOutput
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -120,13 +109,13 @@ func testAccObservabilityAdminS3TableIntegration_Identity_basic(t *testing.T) {
 	})
 }
 
-func testAccObservabilityAdminS3TableIntegration_Identity_regionOverride(t *testing.T) {
+func TestAccObservabilityAdminS3TableIntegration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
