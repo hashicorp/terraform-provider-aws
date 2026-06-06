@@ -800,7 +800,7 @@ data "aws_caller_identity" "source" {
 func testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase_initProviders(), fmt.Sprintf(`
 data "aws_region" "destination" {
-	provider = awsalternate
+  provider = awsalternate
 }
 
 //
@@ -903,8 +903,8 @@ resource "aws_iam_role_policy" "cloudwatch_allow_firehose" {
   policy = jsonencode({
     "Statement" = [
       {
-        "Effect" = "Allow",
-        "Action" = ["firehose:*"],
+        "Effect"   = "Allow",
+        "Action"   = ["firehose:*"],
         "Resource" = ["arn:aws:firehose:${data.aws_region.destination.region}:${data.aws_caller_identity.destination.account_id}:*"]
       }
     ]
@@ -920,23 +920,23 @@ resource "aws_cloudwatch_log_destination" "firehose" {
 }
 
 data "aws_organizations_organization" "current" {
-	provider = awsalternate
+  provider = awsalternate
 }
 
 resource "aws_cloudwatch_log_destination_policy" "firehose_destionation_policy" {
   provider = awsalternate
-  
+
   destination_name = aws_cloudwatch_log_destination.firehose.name
 
   access_policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
       {
-        "Sid" = "",
-        "Effect" = "Allow",
+        "Sid"       = "",
+        "Effect"    = "Allow",
         "Principal" = "*",
-        "Action" = "logs:PutSubscriptionFilter",
-        "Resource" = "${aws_cloudwatch_log_destination.firehose.arn}",
+        "Action"    = "logs:PutSubscriptionFilter",
+        "Resource"  = "${aws_cloudwatch_log_destination.firehose.arn}",
         "Condition" = {
           "StringEquals" = {
             "aws:PrincipalOrgID" = [
@@ -1124,14 +1124,14 @@ resource "aws_iam_role" "cloudwatch_subscription_filter" {
   assume_role_policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
-	  {
-		"Effect" = "Allow",
-		"Principal" = {
-			"Service" = "logs.${data.aws_region.source.region}.amazonaws.com"
-		},
-		"Action" = "sts:AssumeRole"
-	  }
-	]
+      {
+        "Effect" = "Allow",
+        "Principal" = {
+          "Service" = "logs.${data.aws_region.source.region}.amazonaws.com"
+        },
+        "Action" = "sts:AssumeRole"
+      }
+    ]
   })
 }
 
@@ -1140,8 +1140,8 @@ resource "aws_iam_role_policy" "cloudwatch_put_log_events" {
   policy = jsonencode({
     "Statement" = [
       {
-        "Effect" = "Allow",
-        "Action" = "logs:PutLogEvents",
+        "Effect"   = "Allow",
+        "Action"   = "logs:PutLogEvents",
         "Resource" = "arn:aws:logs:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:log-group:${aws_cloudwatch_log_group.source.name}:*"
       }
     ]
@@ -1149,11 +1149,11 @@ resource "aws_iam_role_policy" "cloudwatch_put_log_events" {
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "firehose" {
-  name = "%[1]s-firehoseTestSubFilter"
+  name            = "%[1]s-firehoseTestSubFilter"
   destination_arn = aws_cloudwatch_log_destination.firehose.arn
-  log_group_name = aws_cloudwatch_log_group.source.name
-  filter_pattern = ""
-  role_arn = aws_iam_role.cloudwatch_subscription_filter.arn
+  log_group_name  = aws_cloudwatch_log_group.source.name
+  filter_pattern  = ""
+  role_arn        = aws_iam_role.cloudwatch_subscription_filter.arn
 }
 `, rName))
 }
