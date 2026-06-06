@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: fixes not being able to clear `response_completion_timeout` for origins, once set
+```
