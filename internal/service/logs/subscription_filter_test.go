@@ -411,7 +411,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose_crossAccou
 			{
 				// Apply the configuration in two separate steps to reproduce the IAM eventual consistency issue regarding policy application.
 				// The subscription filter, the IAM role used by the filter and its IAM role policy are created in a dedicated step.
-				// The policy has just been attached to the role, giving CloudWatch Logs no time to observe the updated permissions before calling PutSubscriptionFilter.
+				// The policy will be attached to the role, giving CloudWatch Logs no time to observe the updated permissions before calling PutSubscriptionFilter.
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehoseCrossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
