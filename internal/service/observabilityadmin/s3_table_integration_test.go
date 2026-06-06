@@ -37,13 +37,13 @@ func testAccS3TableIntegrationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
+func testAccS3TableIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	var v observabilityadmin.GetS3TableIntegrationOutput
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -83,13 +83,13 @@ func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
+func testAccS3TableIntegration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	var v observabilityadmin.GetS3TableIntegrationOutput
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -115,13 +115,13 @@ func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminS3TableIntegration_kmsKey(t *testing.T) {
+func testAccS3TableIntegration_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	var v observabilityadmin.GetS3TableIntegrationOutput
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -161,13 +161,13 @@ func TestAccObservabilityAdminS3TableIntegration_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminS3TableIntegration_tags(t *testing.T) {
+func testAccS3TableIntegration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
 	var v observabilityadmin.GetS3TableIntegrationOutput
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccS3TableIntegrationPreCheck(ctx, t)
@@ -262,7 +262,7 @@ func testAccCheckS3TableIntegrationDestroy(ctx context.Context, t *testing.T) re
 	}
 }
 
-func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n string, v *observabilityadmin.GetS3TableIntegrationOutput) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n string, v *observabilityadmin.GetS3TableIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

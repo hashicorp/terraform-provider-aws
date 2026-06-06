@@ -40,6 +40,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccS3TableIntegrationPreCheck")
 // @Testing(tagsTest=false)
+// @Testing(serialize=true)
 func newS3TableIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &s3TableIntegrationResource{}
 
