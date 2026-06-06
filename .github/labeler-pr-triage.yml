@@ -328,6 +328,12 @@ service/batch:
           - any-glob-to-any-file:
               - 'internal/service/batch/**/*'
               - 'website/**/batch_*'
+service/bcmdashboards:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bcmdashboards/**/*'
+              - 'website/**/bcmdashboards_*'
 service/bcmdataexports:
   - any:
       - changed-files:

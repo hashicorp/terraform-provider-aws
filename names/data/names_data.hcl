@@ -969,6 +969,32 @@ service "bedrockagentcore" {
   brand                    = "Amazon"
 }
 
+service "bcmdashboards" {
+  sdk {
+    id            = "BCM Dashboards"
+    arn_namespace = "bcm-dashboards"
+  }
+
+  names {
+    provider_name_upper = "BCMDashboards"
+    human_friendly      = "BCM Dashboards"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListDashboards"
+  }
+
+  resource_prefix {
+    correct = "aws_bcmdashboards_"
+  }
+
+  provider_package_correct = "bcmdashboards"
+  doc_prefix               = ["bcmdashboards_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
 service "bcmdataexports" {
   sdk {
     id            = "BCM Data Exports"

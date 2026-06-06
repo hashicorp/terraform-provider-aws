@@ -98,6 +98,8 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bcmdashboards:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bcmdashboards_'
 service/bcmdataexports:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bcmdataexports_'
 service/bedrock:

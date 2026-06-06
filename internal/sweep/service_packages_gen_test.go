@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdashboards"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
@@ -307,6 +308,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		autoscalingplans.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
+		bcmdashboards.ServicePackage(ctx),
 		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
