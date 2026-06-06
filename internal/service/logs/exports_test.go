@@ -15,6 +15,7 @@ var (
 	ResourceDestination               = resourceDestination
 	ResourceDestinationPolicy         = resourceDestinationPolicy
 	ResourceGroup                     = resourceGroup
+	ResourceGroupRetention            = resourceGroupRetention
 	ResourceIndexPolicy               = newIndexPolicyResource
 	ResourceMetricFilter              = resourceMetricFilter
 	ResourceQueryDefinition           = resourceQueryDefinition
