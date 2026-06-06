@@ -922,6 +922,7 @@ check "schema_docs" {
     "resource/aws_batch_job_definition",
     "resource/aws_batch_job_queue",
     "resource/aws_batch_scheduling_policy",
+    "resource/aws_bcmdashboards_dashboard",
     "resource/aws_bcmdataexports_export",
     "resource/aws_bedrock_custom_model",
     "resource/aws_bedrock_guardrail_version",
