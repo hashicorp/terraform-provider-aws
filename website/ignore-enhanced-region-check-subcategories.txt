@@ -1,6 +1,7 @@
 
 ARC (Application Recovery Controller) Region Switch
 Account Management
+BCM Dashboards
 BCM Data Exports
 Billing
 CE (Cost Explorer)
