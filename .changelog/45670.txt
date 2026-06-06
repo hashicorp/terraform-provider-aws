@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_object: Add skip_version_deletion argument
+```
