@@ -223,7 +223,8 @@ type suppressionConfidenceThresholdModel struct {
 	ConfidenceVerdictThreshold fwtypes.StringEnum[awstypes.SuppressionConfidenceVerdictThreshold] `tfsdk:"confidence_verdict_threshold"`
 }
 
-// When condition_threshold_enabled is disabled, the overall_confidence_threshold block is set to an empty list to prevent drift.
+// When condition_threshold_enabled is set to "DISABLED", and overall_confidence_threshold block is not set in the prior state
+// the overall_confidence_threshold block in the state is set to an empty list to prevent drift.
 func normalizeAccountSuppressionAttributesState(ctx context.Context, data, priorState *accountSuppressionAttributesResourceModel, diags *diag.Diagnostics) {
 	validationAttributes, d := data.ValidationAttributes.ToPtr(ctx)
 	diags.Append(d...)
@@ -254,8 +255,8 @@ func normalizeAccountSuppressionAttributesState(ctx context.Context, data, prior
 	}
 }
 
-// Extracts the overall confidence threshold from the prior state, if it exists.
-// This is used to determine whether to set the overall confidence threshold to an empty list when condition_threshold_enabled is disabled.
+// Extracts overall_confidence_threshold from the prior state, if it exists.
+// This is used to determine whether to set the overall_confidence_threshold to an empty list when condition_threshold_enabled is set to "DISABLED".
 func priorStateOverallConfidenceThreshold(ctx context.Context, priorState *accountSuppressionAttributesResourceModel) (*suppressionConfidenceThresholdModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
