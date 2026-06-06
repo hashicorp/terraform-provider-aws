@@ -1,11 +1,12 @@
 resource "aws_observabilityadmin_s3_table_integration" "test" {
 {{- template "region" }}
-
   role_arn = aws_iam_role.test.arn
 
   encryption {
     sse_algorithm = "AES256"
   }
+
+{{- template "tags" . }}
 
   depends_on = [aws_iam_role_policy.test]
 }

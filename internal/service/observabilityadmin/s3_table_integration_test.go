@@ -343,6 +343,9 @@ resource "aws_observabilityadmin_s3_table_integration" "test" {
 
 func testAccS3TableIntegrationConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccS3TableIntegrationConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_observabilityadmin_s3_table_integration" "test" {
   role_arn = aws_iam_role.test.arn
 
@@ -355,6 +358,28 @@ resource "aws_observabilityadmin_s3_table_integration" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnableIAMUserPermissions",
+      "Effect": "Allow",
+      "Principal": {"AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"},
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "EnableS3TablesMaintenanceKeyUsage",
+      "Effect": "Allow",
+      "Principal": {"Service": "maintenance.s3tables.amazonaws.com"},
+      "Action": ["kms:GenerateDataKey", "kms:Decrypt"],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
 }
 `, rName))
 }

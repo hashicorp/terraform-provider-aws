@@ -4,7 +4,6 @@
 resource "aws_observabilityadmin_s3_table_integration" "test" {
   region = var.region
 
-
   role_arn = aws_iam_role.test.arn
 
   encryption {
