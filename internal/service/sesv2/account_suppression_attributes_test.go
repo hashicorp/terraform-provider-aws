@@ -138,6 +138,7 @@ func testAccAccountSuppressionAttributes_validationAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				// Update confidence_verdict_threshold
 				Config: testAccAccountSuppressionAttributesConfig_validationAttributes(string(types.FeatureStatusEnabled), string(types.SuppressionConfidenceVerdictThresholdManaged)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
@@ -159,6 +160,7 @@ func testAccAccountSuppressionAttributes_validationAttributes(t *testing.T) {
 				},
 			},
 			{
+				// Disable condition_threshold_enabled
 				Config: testAccAccountSuppressionAttributesConfig_validationAttributes(string(types.FeatureStatusDisabled), string(types.SuppressionConfidenceVerdictThresholdManaged)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
@@ -171,6 +173,22 @@ func testAccAccountSuppressionAttributes_validationAttributes(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold").AtSliceIndex(0).AtMapKey("condition_threshold_enabled"),
 						knownvalue.StringExact(string(types.FeatureStatusDisabled)),
 					),
+				},
+			},
+			{
+				// Enable condition_threshold_enabled again
+				Config: testAccAccountSuppressionAttributesConfig_validationAttributes(string(types.FeatureStatusEnabled), string(types.SuppressionConfidenceVerdictThresholdManaged)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold").AtSliceIndex(0).AtMapKey("condition_threshold_enabled"),
+						knownvalue.StringExact(string(types.FeatureStatusEnabled)),
+					),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold").AtSliceIndex(0).AtMapKey("overall_confidence_threshold"),
 						knownvalue.ListSizeExact(1),
 					),
@@ -180,6 +198,23 @@ func testAccAccountSuppressionAttributes_validationAttributes(t *testing.T) {
 				},
 			},
 			{
+				// Disable condition_threshold_enabled without providing overall_confidence_threshold block
+				Config: testAccAccountSuppressionAttributesConfig_validationAttributesConditionThresholdDisabled(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_attributes").AtSliceIndex(0).AtMapKey("condition_threshold").AtSliceIndex(0).AtMapKey("condition_threshold_enabled"),
+						knownvalue.StringExact(string(types.FeatureStatusDisabled)),
+					),
+				},
+			},
+			{
+				// Remove validation_attributes block
 				Config: testAccAccountSuppressionAttributesConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
@@ -233,4 +268,17 @@ resource "aws_sesv2_account_suppression_attributes" "test" {
   }
 }
 `, conditionThresholdEnabled, confidenceVerdictThreshold)
+}
+
+func testAccAccountSuppressionAttributesConfig_validationAttributesConditionThresholdDisabled() string {
+	return `
+resource "aws_sesv2_account_suppression_attributes" "test" {
+  suppressed_reasons = ["COMPLAINT"]
+  validation_attributes {
+    condition_threshold {
+      condition_threshold_enabled = "DISABLED"
+    }
+  }
+}
+`
 }
