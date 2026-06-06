@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -63,8 +65,9 @@ func TestAccObservabilityAdminS3TableIntegration_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"sse_algorithm": knownvalue.StringExact("AES256"),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.Null(),
+							"sse_algorithm":     tfknownvalue.StringExact(awstypes.SSEAlgorithmSseS3),
 						}),
 					})),
 				},
@@ -107,6 +110,52 @@ func TestAccObservabilityAdminS3TableIntegration_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccObservabilityAdminS3TableIntegration_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_s3_table_integration.test"
+	var v observabilityadmin.GetS3TableIntegrationOutput
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccS3TableIntegrationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckS3TableIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3TableIntegrationConfig_kmsKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckS3TableIntegrationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
+							"sse_algorithm":     tfknownvalue.StringExact(awstypes.SSEAlgorithmSseKms),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -205,9 +254,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 func testAccS3TableIntegrationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccS3TableIntegrationConfig_base(rName),
-		`
+	return acctest.ConfigCompose(testAccS3TableIntegrationConfig_base(rName), `
 resource "aws_observabilityadmin_s3_table_integration" "test" {
   role_arn = aws_iam_role.test.arn
 
@@ -217,4 +264,22 @@ resource "aws_observabilityadmin_s3_table_integration" "test" {
 }
 `,
 	)
+}
+
+func testAccS3TableIntegrationConfig_kmsKey(rName string) string {
+	return acctest.ConfigCompose(testAccS3TableIntegrationConfig_base(rName), fmt.Sprintf(`
+resource "aws_observabilityadmin_s3_table_integration" "test" {
+  role_arn = aws_iam_role.test.arn
+
+  encryption {
+    sse_algorithm = "aws:kms"
+    kms_key_arn   = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName))
 }
