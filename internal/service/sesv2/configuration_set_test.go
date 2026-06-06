@@ -299,6 +299,7 @@ func TestAccSESV2ConfigurationSet_suppressionOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				// Update confidence_verdict_threshold to MANAGED
 				Config: testAccConfigurationSetConfig_suppressionOptions(rName,
 					string(types.SuppressionListReasonBounce),
 					string(types.SuppressionListScopeTenant),
@@ -319,6 +320,7 @@ func TestAccSESV2ConfigurationSet_suppressionOptions(t *testing.T) {
 				),
 			},
 			{
+				// Disabled condition_threshold_enabled
 				Config: testAccConfigurationSetConfig_suppressionOptions(rName,
 					string(types.SuppressionListReasonBounce),
 					string(types.SuppressionListScopeTenant),
@@ -334,8 +336,44 @@ func TestAccSESV2ConfigurationSet_suppressionOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled", string(types.FeatureStatusDisabled)),
+				),
+			},
+			{
+				// Enabled condition_threshold_enabled again
+				Config: testAccConfigurationSetConfig_suppressionOptions(rName,
+					string(types.SuppressionListReasonBounce),
+					string(types.SuppressionListScopeTenant),
+					string(types.FeatureStatusEnabled),
+					string(types.SuppressionConfidenceVerdictThresholdManaged),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.0", string(types.SuppressionListReasonBounce)),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppression_scope", string(types.SuppressionListScopeTenant)),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled", string(types.FeatureStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.0.confidence_verdict_threshold", string(types.SuppressionConfidenceVerdictThresholdManaged)),
+				),
+			},
+			{
+				// Disabled condition_threshold_enabled again without overall_configuration threshold
+				Config: testAccConfigurationSetConfig_suppressionOptionsConditionThresholdDisabled(rName,
+					string(types.SuppressionListReasonBounce),
+					string(types.SuppressionListScopeTenant),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.0", string(types.SuppressionListReasonBounce)),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppression_scope", string(types.SuppressionListScopeTenant)),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled", string(types.FeatureStatusDisabled)),
 				),
 			},
 			{
@@ -598,4 +636,22 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, suppressedReason, suppressionScope, conditionThresholdEnabled, confidenceVerdictThreshold)
+}
+
+func testAccConfigurationSetConfig_suppressionOptionsConditionThresholdDisabled(rName, suppressedReason, suppressionScope string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  suppression_options {
+    suppressed_reasons = [%[2]q]
+    suppression_scope  = %[3]q
+    validation_options {
+      condition_threshold {
+        condition_threshold_enabled = "DISABLED"
+      }
+    }
+  }
+}
+`, rName, suppressedReason, suppressionScope)
 }
