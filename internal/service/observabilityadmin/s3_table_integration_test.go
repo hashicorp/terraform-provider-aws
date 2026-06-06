@@ -160,10 +160,6 @@ func testAccCheckS3TableIntegrationExists(ctx context.Context, t *testing.T, n s
 	}
 }
 
-func testAccRandomS3TableIntegrationName(t *testing.T) string {
-	return acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-}
-
 func testAccS3TableIntegrationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {

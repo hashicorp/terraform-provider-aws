@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -36,8 +37,6 @@ import (
 // @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/observabilityadmin;observabilityadmin;observabilityadmin.GetS3TableIntegrationOutput")
-// @Testing(existsTakesT=true)
-// @Testing(generator="testAccRandomS3TableIntegrationName(t)")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccS3TableIntegrationPreCheck")
 // @Testing(serialize=true)
@@ -85,6 +84,9 @@ func (r *s3TableIntegrationResource) Schema(ctx context.Context, request resourc
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrKMSKeyARN: schema.StringAttribute{
@@ -121,20 +123,14 @@ func (r *s3TableIntegrationResource) Create(ctx context.Context, request resourc
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	encryptionData, diags := data.Encryption.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	var input observabilityadmin.CreateS3TableIntegrationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := observabilityadmin.CreateS3TableIntegrationInput{
-		RoleArn: fwflex.StringFromFramework(ctx, data.RoleARN),
-		Encryption: &awstypes.Encryption{
-			SseAlgorithm: encryptionData.SSEAlgorithm.ValueEnum(),
-			KmsKeyArn:    fwflex.StringFromFramework(ctx, encryptionData.KMSKeyARN),
-		},
-		Tags: getTagsIn(ctx),
-	}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateS3TableIntegration(ctx, &input)
 	if err != nil {
@@ -143,27 +139,17 @@ func (r *s3TableIntegrationResource) Create(ctx context.Context, request resourc
 	}
 
 	arn := aws.ToString(output.Arn)
-	data.ARN = fwflex.StringValueToFramework(ctx, arn)
-
 	out, err := waitS3TableIntegrationActive(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
+	// Set values for unknowns.
+	data.ARN = fwflex.StringValueToFramework(ctx, arn)
 	data.DestinationTableBucketARN = fwflex.StringToFramework(ctx, out.DestinationTableBucketArn)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
-}
-
-func (r *s3TableIntegrationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var data s3TableIntegrationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-	// All non-tag attributes use RequiresReplace; tags are handled by the @Tags interceptor.
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *s3TableIntegrationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -187,27 +173,9 @@ func (r *s3TableIntegrationResource) Read(ctx context.Context, request resource.
 		return
 	}
 
-	data.DestinationTableBucketARN = fwflex.StringToFramework(ctx, out.DestinationTableBucketArn)
-	data.RoleARN = fwtypes.ARNValue(aws.ToString(out.RoleArn))
-
-	if out.Encryption != nil {
-		kmsKeyARN := fwtypes.ARNNull()
-		if out.Encryption.KmsKeyArn != nil {
-			kmsKeyARN = fwtypes.ARNValue(aws.ToString(out.Encryption.KmsKeyArn))
-		}
-		encModel := encryptionModel{
-			KMSKeyARN:    kmsKeyARN,
-			SSEAlgorithm: fwtypes.StringEnumValue(out.Encryption.SseAlgorithm),
-		}
-		encryption, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &encModel)
-		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-		data.Encryption = encryption
-	}
-
-	// Tags are not returned in Get response; use ListTagsForResource.
-	tags, err := listTags(ctx, conn, arn)
-	if err == nil {
-		setTagsOut(ctx, svcTags(tags))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))

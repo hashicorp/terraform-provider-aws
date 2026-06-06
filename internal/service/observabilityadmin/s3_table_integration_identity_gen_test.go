@@ -36,7 +36,7 @@ func testAccObservabilityAdminS3TableIntegration_Identity_basic(t *testing.T) {
 
 	var v observabilityadmin.GetS3TableIntegrationOutput
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
-	rName := testAccRandomS3TableIntegrationName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -124,7 +124,7 @@ func testAccObservabilityAdminS3TableIntegration_Identity_regionOverride(t *test
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_observabilityadmin_s3_table_integration.test"
-	rName := testAccRandomS3TableIntegrationName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
