@@ -14,12 +14,14 @@ Provides an SNS platform application resource
 
 ### Apple Push Notification Service (APNS) using certificate-based authentication
 
+~> **NOTE:** Terraform expects string values to be UTF-8 encoded. If you are provided with an Apple `.p12` binary file, you must convert it to `.pem` format to use it for the `platform_credential` and `platform_principal` arguments.
+
 ```terraform
 resource "aws_sns_platform_application" "apns_application" {
   name                = "apns_application"
   platform            = "APNS"
-  platform_credential = "<APNS PRIVATE KEY>"
-  platform_principal  = "<APNS CERTIFICATE>"
+  platform_credential = file("apns-private-key.pem")
+  platform_principal  = file("apns-certificate.pem")
 }
 ```
 
