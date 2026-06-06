@@ -66,9 +66,10 @@ func TestAccODBCloudVmCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 		},
 	})
@@ -103,9 +104,10 @@ func TestAccODBCloudVmCluster_allParams(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 		},
 	})
@@ -146,9 +148,10 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 			{
 				Config: vmcWithTag,
@@ -166,9 +169,10 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 		},
 	})
@@ -252,9 +256,10 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 			{
 				Config: vmcWithTag,
@@ -271,9 +276,10 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 		},
 	})
@@ -357,9 +363,10 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 			{
 				Config: vmcWithTag,
@@ -376,9 +383,10 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ssh_public_keys"},
 			},
 		},
 	})
