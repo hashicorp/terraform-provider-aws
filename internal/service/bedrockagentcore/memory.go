@@ -134,7 +134,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						names.AttrResources: schema.ListNestedBlock{
+						"resource": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[streamDeliveryResourceModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -154,7 +154,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"content_configurations": schema.ListNestedBlock{
+												"content_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[contentConfigurationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeBetween(1, 1),
@@ -451,7 +451,7 @@ type indexedKeyModel struct {
 }
 
 type streamDeliveryResourcesModel struct {
-	Resources fwtypes.ListNestedObjectValueOf[streamDeliveryResourceModel] `tfsdk:"resources"`
+	Resources fwtypes.ListNestedObjectValueOf[streamDeliveryResourceModel] `tfsdk:"resource"`
 }
 
 // streamDeliveryResourceModel maps to the awstypes.StreamDeliveryResource union.
@@ -504,7 +504,7 @@ func (m streamDeliveryResourceModel) Expand(ctx context.Context) (any, diag.Diag
 }
 
 type kinesisResourceModel struct {
-	ContentConfigurations fwtypes.ListNestedObjectValueOf[contentConfigurationModel] `tfsdk:"content_configurations"`
+	ContentConfigurations fwtypes.ListNestedObjectValueOf[contentConfigurationModel] `tfsdk:"content_configuration"`
 	DataStreamARN         fwtypes.ARN                                                `tfsdk:"data_stream_arn"`
 }
 

@@ -264,8 +264,8 @@ func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey(names.AttrResources).AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("data_stream_arn"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey(names.AttrResources).AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("content_configurations").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("MEMORY_RECORDS")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("data_stream_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("content_configuration").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("MEMORY_RECORDS")),
 				},
 			},
 			{
@@ -452,11 +452,11 @@ resource "aws_bedrockagentcore_memory" "test" {
   depends_on = [aws_iam_role_policy.test_kinesis]
 
   stream_delivery_resources {
-    resources {
+    resource {
       kinesis {
         data_stream_arn = aws_kinesis_stream.test.arn
 
-        content_configurations {
+        content_configuration {
           type  = "MEMORY_RECORDS"
           level = "METADATA_ONLY"
         }

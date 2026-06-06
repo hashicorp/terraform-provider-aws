@@ -83,18 +83,18 @@ The following arguments are optional:
 
 ### stream_delivery_resources
 
-* `resources` - (Required) List of stream delivery resource configurations. See [`resources`](#resources) below.
+* `resource` - (Required) List of stream delivery resource configurations. See [`resource`](#resource) below.
 
-### resources
+### resource
 
 * `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis`](#kinesis) below.
 
 ### kinesis
 
 * `data_stream_arn` - (Required) ARN of the Kinesis Data Stream.
-* `content_configurations` - (Required) Content configurations for stream delivery. See [`content_configurations`](#content_configurations) below.
+* `content_configuration` - (Required) Content configurations for stream delivery. See [`content_configuration`](#content_configuration) below.
 
-### content_configurations
+### content_configuration
 
 * `type` - (Required) Type of content to stream. Valid value is `MEMORY_RECORDS`.
 * `level` - (Optional) Level of detail for streamed content. Valid values are `METADATA_ONLY` and `FULL_CONTENT`. Defaults to `METADATA_ONLY`.
