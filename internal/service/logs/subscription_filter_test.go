@@ -406,6 +406,12 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose_crossAccou
 					// Can only run check here because the provider is not available until the previous step.
 					acctest.PreCheckSameOrganization(ctx, t, acctest.DefaultProviderFunc, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
 				},
+				Config: testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase(rName),
+			},
+			{
+				// Apply the configuration in two separate steps to reproduce the IAM eventual consistency issue regarding policy application.
+				// The subscription filter, the IAM role used by the filter and its IAM role policy are created in a dedicated step.
+				// The policy has just been attached to the role, giving CloudWatch Logs no time to observe the updated permissions before calling PutSubscriptionFilter.
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehoseCrossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
