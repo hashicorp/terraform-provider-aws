@@ -163,6 +163,41 @@ func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_Valkey_durability(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Valkey_durability(rName, "sync"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "durability", "sync"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4694,6 +4729,28 @@ resource "aws_elasticache_replication_group" "test" {
   engine               = %[2]q
 }
 `, rName, engine)
+}
+
+func testAccReplicationGroupConfig_Valkey_durability(rName string, durability string) string {
+	return fmt.Sprintf(`
+  resource "aws_elasticache_replication_group" "test" {
+    replication_group_id       = %[1]q
+    description                = "test description"
+    node_type                  = "cache.r6g.large"
+    multi_az_enabled           = "true"
+    port                       = 6379
+    apply_immediately          = true
+    maintenance_window         = "tue:06:30-tue:07:30"
+    snapshot_window            = "01:00-02:00"
+    engine                     = "valkey"
+    engine_version             = "9.0"
+    cluster_mode               = "enabled"
+    num_node_groups            = 2
+    replicas_per_node_group    = 1
+    automatic_failover_enabled = true
+    durability                 = %[2]q
+  }
+  `, rName, durability)
 }
 
 func testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName string, engine string, engineVersion string, numNodeGroups int) string {
