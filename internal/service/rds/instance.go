@@ -811,8 +811,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("dedicated_log_volume"); ok {
-			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		if v := d.GetRawConfig().GetAttr("dedicated_log_volume"); v.IsKnown() && !v.IsNull() {
+			input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrDomain); ok {
@@ -1068,8 +1068,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("dedicated_log_volume"); ok {
-			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		if v := d.GetRawConfig().GetAttr("dedicated_log_volume"); v.IsKnown() && !v.IsNull() {
+			input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 		}
 
 		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
@@ -1259,8 +1259,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("dedicated_log_volume"); ok {
-			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		if v := d.GetRawConfig().GetAttr("dedicated_log_volume"); v.IsKnown() && !v.IsNull() {
+			input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrDomain); ok {
@@ -1517,8 +1517,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("dedicated_log_volume"); ok {
-			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		if v := d.GetRawConfig().GetAttr("dedicated_log_volume"); v.IsKnown() && !v.IsNull() {
+			input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrDomain); ok {
@@ -1719,8 +1719,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("dedicated_log_volume"); ok {
-			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		if v := d.GetRawConfig().GetAttr("dedicated_log_volume"); v.IsKnown() && !v.IsNull() {
+			input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrDomain); ok {
