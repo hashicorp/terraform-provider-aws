@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -57,7 +58,7 @@ func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, reque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"condition_threshold": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[suppressionConditionThresholdModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[suppressionConditionThresholdModel](ctx, fwtypes.WithSemanticEqualityFunc(suppressionConditionThresholdSemanticEquals)),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -147,7 +148,14 @@ func (r *accountSuppressionAttributesResource) Read(ctx context.Context, request
 		return
 	}
 
+	priorState := data
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, suppressionAttributes, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	normalizeAccountSuppressionAttributesState(ctx, &data, &priorState, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -213,4 +221,84 @@ type suppressionConditionThresholdModel struct {
 
 type suppressionConfidenceThresholdModel struct {
 	ConfidenceVerdictThreshold fwtypes.StringEnum[awstypes.SuppressionConfidenceVerdictThreshold] `tfsdk:"confidence_verdict_threshold"`
+}
+
+// When condition_threshold_enabled is disabled, the overall_confidence_threshold block is set to an empty list to prevent drift.
+func normalizeAccountSuppressionAttributesState(ctx context.Context, data, priorState *accountSuppressionAttributesResourceModel, diags *diag.Diagnostics) {
+	validationAttributes, d := data.ValidationAttributes.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || validationAttributes == nil {
+		return
+	}
+
+	conditionThreshold, d := validationAttributes.ConditionThreshold.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || conditionThreshold == nil {
+		return
+	}
+
+	if conditionThreshold.ConditionThresholdEnabled.IsNull() || conditionThreshold.ConditionThresholdEnabled.IsUnknown() {
+		return
+	}
+
+	if conditionThreshold.ConditionThresholdEnabled.ValueEnum() == awstypes.FeatureStatusDisabled {
+		priorOverallConfidenceThreshold, d := priorStateOverallConfidenceThreshold(ctx, priorState)
+		diags.Append(d...)
+		if diags.HasError() || priorOverallConfidenceThreshold != nil {
+			return
+		}
+
+		conditionThreshold.OverallConfidenceThreshold = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*suppressionConfidenceThresholdModel{})
+		validationAttributes.ConditionThreshold = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, conditionThreshold, fwtypes.WithSemanticEqualityFunc(suppressionConditionThresholdSemanticEquals))
+		data.ValidationAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, validationAttributes)
+	}
+}
+
+// Extracts the overall confidence threshold from the prior state, if it exists.
+// This is used to determine whether to set the overall confidence threshold to an empty list when condition_threshold_enabled is disabled.
+func priorStateOverallConfidenceThreshold(ctx context.Context, priorState *accountSuppressionAttributesResourceModel) (*suppressionConfidenceThresholdModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	validationAttributes, d := priorState.ValidationAttributes.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || validationAttributes == nil {
+		return nil, diags
+	}
+
+	conditionThreshold, d := validationAttributes.ConditionThreshold.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || conditionThreshold == nil {
+		return nil, diags
+	}
+
+	overallConfidenceThreshold, d := conditionThreshold.OverallConfidenceThreshold.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return overallConfidenceThreshold, diags
+}
+
+func suppressionConditionThresholdSemanticEquals(ctx context.Context, current, new fwtypes.NestedCollectionValue[suppressionConditionThresholdModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	currentValue, d := current.ToPtr(ctx)
+	diags.Append(d...)
+	newValue, d := new.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || currentValue == nil || newValue == nil {
+		return false, diags
+	}
+
+	if currentValue.ConditionThresholdEnabled.IsNull() || currentValue.ConditionThresholdEnabled.IsUnknown() ||
+		newValue.ConditionThresholdEnabled.IsNull() || newValue.ConditionThresholdEnabled.IsUnknown() {
+		return false, diags
+	}
+
+	if currentValue.ConditionThresholdEnabled.ValueEnum() != newValue.ConditionThresholdEnabled.ValueEnum() {
+		return false, diags
+	}
+
+	return newValue.ConditionThresholdEnabled.ValueEnum() == awstypes.FeatureStatusDisabled, diags
 }
