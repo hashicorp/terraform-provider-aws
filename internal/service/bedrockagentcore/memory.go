@@ -103,7 +103,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"indexed_keys": schema.ListNestedBlock{
+			"indexed_key": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[indexedKeyModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 10),
@@ -436,7 +436,7 @@ type memoryResourceModel struct {
 	EncryptionKeyARN        fwtypes.ARN                                                   `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration     types.Int32                                                   `tfsdk:"event_expiry_duration"`
 	ID                      types.String                                                  `tfsdk:"id"`
-	IndexedKeys             fwtypes.ListNestedObjectValueOf[indexedKeyModel]              `tfsdk:"indexed_keys"`
+	IndexedKeys             fwtypes.ListNestedObjectValueOf[indexedKeyModel]              `tfsdk:"indexed_key"`
 	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
 	Name                    types.String                                                  `tfsdk:"name"`
 	StreamDeliveryResources fwtypes.ListNestedObjectValueOf[streamDeliveryResourcesModel] `tfsdk:"stream_delivery_resources"`

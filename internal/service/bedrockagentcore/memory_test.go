@@ -221,11 +221,11 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_keys"), knownvalue.ListSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_keys").AtSliceIndex(0).AtMapKey(names.AttrKey), knownvalue.StringExact("customer_id")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_keys").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("STRING")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_keys").AtSliceIndex(1).AtMapKey(names.AttrKey), knownvalue.StringExact("score")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_keys").AtSliceIndex(1).AtMapKey(names.AttrType), knownvalue.StringExact("NUMBER")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrKey), knownvalue.StringExact("customer_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("STRING")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrKey), knownvalue.StringExact("score")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrType), knownvalue.StringExact("NUMBER")),
 				},
 			},
 			{
@@ -405,12 +405,12 @@ resource "aws_bedrockagentcore_memory" "test" {
   name                  = %[1]q
   event_expiry_duration = 7
 
-  indexed_keys {
+  indexed_key {
     key  = "customer_id"
     type = "STRING"
   }
 
-  indexed_keys {
+  indexed_key {
     key  = "score"
     type = "NUMBER"
   }
