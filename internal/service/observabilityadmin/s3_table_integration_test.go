@@ -63,7 +63,6 @@ func testAccS3TableIntegration_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"sse_algorithm": knownvalue.StringExact("AES256"),

@@ -74,18 +74,12 @@ func (r *s3TableIntegrationResource) Schema(ctx context.Context, request resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"encryption": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[s3TableIntegrationEncryptionModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -136,8 +130,8 @@ func (r *s3TableIntegrationResource) Create(ctx context.Context, request resourc
 	input := observabilityadmin.CreateS3TableIntegrationInput{
 		RoleArn: fwflex.StringFromFramework(ctx, data.RoleARN),
 		Encryption: &awstypes.Encryption{
-			SseAlgorithm: encryptionData.SseAlgorithm.ValueEnum(),
-			KmsKeyArn:    fwflex.StringFromFramework(ctx, encryptionData.KmsKeyARN),
+			SseAlgorithm: encryptionData.SSEAlgorithm.ValueEnum(),
+			KmsKeyArn:    fwflex.StringFromFramework(ctx, encryptionData.KMSKeyARN),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -158,7 +152,6 @@ func (r *s3TableIntegrationResource) Create(ctx context.Context, request resourc
 	}
 
 	data.DestinationTableBucketARN = fwflex.StringToFramework(ctx, out.DestinationTableBucketArn)
-	data.Status = fwflex.StringValueToFramework(ctx, string(out.Status))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -196,16 +189,15 @@ func (r *s3TableIntegrationResource) Read(ctx context.Context, request resource.
 
 	data.DestinationTableBucketARN = fwflex.StringToFramework(ctx, out.DestinationTableBucketArn)
 	data.RoleARN = fwtypes.ARNValue(aws.ToString(out.RoleArn))
-	data.Status = fwflex.StringValueToFramework(ctx, string(out.Status))
 
 	if out.Encryption != nil {
 		kmsKeyARN := fwtypes.ARNNull()
 		if out.Encryption.KmsKeyArn != nil {
 			kmsKeyARN = fwtypes.ARNValue(aws.ToString(out.Encryption.KmsKeyArn))
 		}
-		encModel := s3TableIntegrationEncryptionModel{
-			KmsKeyARN:    kmsKeyARN,
-			SseAlgorithm: fwtypes.StringEnumValue(out.Encryption.SseAlgorithm),
+		encModel := encryptionModel{
+			KMSKeyARN:    kmsKeyARN,
+			SSEAlgorithm: fwtypes.StringEnumValue(out.Encryption.SseAlgorithm),
 		}
 		encryption, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &encModel)
 		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
@@ -251,19 +243,18 @@ func (r *s3TableIntegrationResource) Delete(ctx context.Context, request resourc
 
 type s3TableIntegrationResourceModel struct {
 	framework.WithRegionModel
-	ARN                       types.String                                                       `tfsdk:"arn"`
-	DestinationTableBucketARN types.String                                                       `tfsdk:"destination_table_bucket_arn"`
-	Encryption                fwtypes.ListNestedObjectValueOf[s3TableIntegrationEncryptionModel] `tfsdk:"encryption"`
-	RoleARN                   fwtypes.ARN                                                        `tfsdk:"role_arn"`
-	Status                    types.String                                                       `tfsdk:"status"`
-	Tags                      tftags.Map                                                         `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                         `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                     `tfsdk:"timeouts"`
+	ARN                       types.String                                     `tfsdk:"arn"`
+	DestinationTableBucketARN types.String                                     `tfsdk:"destination_table_bucket_arn"`
+	Encryption                fwtypes.ListNestedObjectValueOf[encryptionModel] `tfsdk:"encryption"`
+	RoleARN                   fwtypes.ARN                                      `tfsdk:"role_arn"`
+	Tags                      tftags.Map                                       `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                       `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
-type s3TableIntegrationEncryptionModel struct {
-	KmsKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
-	SseAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
+type encryptionModel struct {
+	KMSKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
+	SSEAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
 }
 
 func findS3TableIntegrationByARN(ctx context.Context, conn *observabilityadmin.Client, arn string) (*observabilityadmin.GetS3TableIntegrationOutput, error) {
