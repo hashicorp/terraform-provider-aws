@@ -10,6 +10,8 @@ BUG FIXES:
 
 * resource/aws_default_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 * resource/aws_ecs_express_gateway_service: Fix "inconsistent result after apply" error for `network_configuration[0].security_groups` when using `network_configuration`. `ec2:DescribeSecurityGroups` IAM permission is newly required. ([#47944](https://github.com/hashicorp/terraform-provider-aws/issues/47944))
+* resource/aws_ecs_express_gateway_service: Fix `Resource Already Exists` error when recreating a service after deletion ([#48098](https://github.com/hashicorp/terraform-provider-aws/issues/48098))
+* resource/aws_elasticsearch_domain: Fix unexpected state error during engine version upgrade ([#47316](https://github.com/hashicorp/terraform-provider-aws/issues/47316))
 * resource/aws_route: Fix perpetual drift on `gateway_id` when `odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 * resource/aws_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 
