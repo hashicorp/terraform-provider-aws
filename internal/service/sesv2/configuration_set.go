@@ -151,6 +151,9 @@ func resourceConfigurationSet() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
+													DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+														return d.Get("suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled") == string(types.FeatureStatusDisabled)
+													},
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"confidence_verdict_threshold": {
