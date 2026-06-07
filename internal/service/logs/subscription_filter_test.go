@@ -807,6 +807,9 @@ data "aws_partition" "destination" {
   provider = awsalternate
 }
 
+#
+# Creation of firehose delivery stream
+#
 resource "aws_s3_bucket" "log_collector" {
   provider = awsalternate
 
@@ -866,6 +869,9 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   }
 }
 
+#
+# Creation of a destination with org ID in destination access policy
+#
 resource "aws_iam_role" "cloudwatch_to_firehose" {
   provider = awsalternate
 
