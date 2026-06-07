@@ -35,7 +35,6 @@ func newAccountSuppressionAttributesResource(context.Context) (resource.Resource
 
 type accountSuppressionAttributesResource struct {
 	framework.ResourceWithModel[accountSuppressionAttributesResourceModel]
-	framework.WithNoOpDelete
 	framework.WithImportByID
 }
 
@@ -187,6 +186,36 @@ func (r *accountSuppressionAttributesResource) Update(ctx context.Context, reque
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *accountSuppressionAttributesResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data accountSuppressionAttributesResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().SESV2Client(ctx)
+
+	// Reset singleton settings to the service defaults on Delete.
+	input := &sesv2.PutAccountSuppressionAttributesInput{
+		SuppressedReasons: []awstypes.SuppressionListReason{
+			awstypes.SuppressionListReasonBounce,
+			awstypes.SuppressionListReasonComplaint,
+		},
+		ValidationAttributes: &awstypes.SuppressionValidationAttributes{
+			ConditionThreshold: &awstypes.SuppressionConditionThreshold{
+				ConditionThresholdEnabled: awstypes.FeatureStatusDisabled,
+			},
+		},
+	}
+
+	_, err := conn.PutAccountSuppressionAttributes(ctx, input)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("resetting SESv2 Account Suppression Attributes (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
 }
 
 func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (*awstypes.SuppressionAttributes, error) {
