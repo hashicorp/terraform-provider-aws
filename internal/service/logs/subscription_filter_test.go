@@ -937,7 +937,7 @@ resource "aws_cloudwatch_log_destination_policy" "firehose_destionation_policy" 
         "Effect"    = "Allow",
         "Principal" = "*",
         "Action"    = "logs:PutSubscriptionFilter",
-        "Resource"  = "aws_cloudwatch_log_destination.firehose.arn",
+        "Resource"  = aws_cloudwatch_log_destination.firehose.arn,
         "Condition" = {
           "StringEquals" = {
             "aws:PrincipalOrgID" = [
@@ -1115,6 +1115,8 @@ func testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehoseCrossAccou
 	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase(rName), fmt.Sprintf(`
 data "aws_region" "source" {}
 
+data "aws_partition" "source" {}
+
 resource "aws_cloudwatch_log_group" "source" {
   name              = "%[1]s-testSourceCWLGroup"
   retention_in_days = 1
@@ -1143,7 +1145,7 @@ resource "aws_iam_role_policy" "cloudwatch_put_log_events" {
       {
         "Effect"   = "Allow",
         "Action"   = "logs:PutLogEvents",
-        "Resource" = "arn:${data.aws_partition.destination.partition}:logs:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:log-group:${aws_cloudwatch_log_group.source.name}:*"
+        "Resource" = "arn:${data.aws_partition.source.partition}:logs:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:log-group:${aws_cloudwatch_log_group.source.name}:*"
       }
     ]
   })
