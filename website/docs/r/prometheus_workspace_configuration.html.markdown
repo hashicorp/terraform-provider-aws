@@ -61,6 +61,19 @@ resource "aws_prometheus_workspace_configuration" "example" {
 }
 ```
 
+### With out-of-order and rule query configuration
+
+```terraform
+resource "aws_prometheus_workspace" "example" {}
+
+resource "aws_prometheus_workspace_configuration" "example" {
+  workspace_id                          = aws_prometheus_workspace.example.id
+  retention_period_in_days              = 30
+  out_of_order_time_window_in_seconds   = 120
+  rule_query_offset_in_seconds          = 300
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -70,8 +83,10 @@ The following arguments are required:
 The following arguments are optional:
 
 * `limits_per_label_set` - (Optional) Configuration block for setting limits on metrics with specific label sets. Detailed below.
+* `out_of_order_time_window_in_seconds` - (Optional) Time window in seconds for accepting out-of-order samples. Must be between 0 and 600 seconds.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retention_period_in_days` - (Optional) Number of days to retain metric data in the workspace.
+* `rule_query_offset_in_seconds` - (Optional) Query offset in seconds for rule evaluation. Must be between 0 and 86400 seconds.
 
 ### `limits_per_label_set`
 
