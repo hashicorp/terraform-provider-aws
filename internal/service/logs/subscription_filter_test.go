@@ -823,7 +823,7 @@ resource "aws_iam_role" "firehose_put_data_into_bucket" {
       "Action" = "sts:AssumeRole",
       "Condition" = {
         "StringEquals" = {
-          "sts:ExternalId" = "${data.aws_caller_identity.destination.account_id}"
+          "sts:ExternalId" = data.aws_caller_identity.destination.account_id
         }
       }
     }]
@@ -927,11 +927,11 @@ resource "aws_cloudwatch_log_destination_policy" "firehose_destionation_policy" 
         "Effect"    = "Allow",
         "Principal" = "*",
         "Action"    = "logs:PutSubscriptionFilter",
-        "Resource"  = "${aws_cloudwatch_log_destination.firehose.arn}",
+        "Resource"  = "aws_cloudwatch_log_destination.firehose.arn",
         "Condition" = {
           "StringEquals" = {
             "aws:PrincipalOrgID" = [
-              "${data.aws_organizations_organization.current.id}"
+              data.aws_organizations_organization.current.id
             ]
           }
         }
