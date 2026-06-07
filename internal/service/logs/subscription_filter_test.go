@@ -803,6 +803,10 @@ data "aws_region" "destination" {
   provider = awsalternate
 }
 
+data "aws_partition" "destination" {
+  provider = awsalternate
+}
+
 resource "aws_s3_bucket" "log_collector" {
   provider = awsalternate
 
@@ -843,8 +847,8 @@ resource "aws_iam_role_policy" "permission_for_firehose" {
         "s3:ListBucket"
       ],
       "Resource" = [
-        "arn:aws:s3:::%[1]s",
-        "arn:aws:s3:::%[1]s/*"
+        "arn:${data.aws_partition.destination.partition}:s3:::%[1]s",
+        "arn:${data.aws_partition.destination.partition}:s3:::%[1]s/*"
       ]
     }]
   })
@@ -878,8 +882,8 @@ resource "aws_iam_role" "cloudwatch_to_firehose" {
       "Condition" = {
         "StringLike" = {
           "aws:SourceArn" = [
-            "arn:aws:logs:${data.aws_region.destination.region}:${data.aws_caller_identity.source.account_id}:*",
-            "arn:aws:logs:${data.aws_region.destination.region}:${data.aws_caller_identity.destination.account_id}:*"
+            "arn:${data.aws_partition.destination.partition}:logs:${data.aws_region.destination.region}:${data.aws_caller_identity.source.account_id}:*",
+            "arn:${data.aws_partition.destination.partition}:logs:${data.aws_region.destination.region}:${data.aws_caller_identity.destination.account_id}:*"
           ]
         }
       }
@@ -896,7 +900,7 @@ resource "aws_iam_role_policy" "cloudwatch_allow_firehose" {
       {
         "Effect"   = "Allow",
         "Action"   = ["firehose:*"],
-        "Resource" = ["arn:aws:firehose:${data.aws_region.destination.region}:${data.aws_caller_identity.destination.account_id}:*"]
+        "Resource" = ["arn:${data.aws_partition.destination.partition}:firehose:${data.aws_region.destination.region}:${data.aws_caller_identity.destination.account_id}:*"]
       }
     ]
   })
@@ -1133,7 +1137,7 @@ resource "aws_iam_role_policy" "cloudwatch_put_log_events" {
       {
         "Effect"   = "Allow",
         "Action"   = "logs:PutLogEvents",
-        "Resource" = "arn:aws:logs:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:log-group:${aws_cloudwatch_log_group.source.name}:*"
+        "Resource" = "arn:${data.aws_partition.destination.partition}:logs:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:log-group:${aws_cloudwatch_log_group.source.name}:*"
       }
     ]
   })
