@@ -6,10 +6,8 @@ package logs_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,35 +20,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccS3TableSourceAssociationPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
-	_, err := conn.ListS3TableIntegrations(ctx, &observabilityadmin.ListS3TableIntegrationsInput{})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccS3TableSourceAssociation_basic(t *testing.T) {
+func testAccS3TableIntegrationSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
+	resourceName := "aws_cloudwatch_log_s3_table_integration_source.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccS3TableSourceAssociationPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3TableSourceAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccS3TableIntegrationSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3TableSourceAssociationConfig_basic(rName),
+				Config: testAccS3TableIntegrationSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckS3TableSourceAssociationExists(ctx, t, resourceName),
+					testAccS3TableIntegrationSourceExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -59,8 +43,6 @@ func testAccS3TableSourceAssociation_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("datasource_name"), knownvalue.StringExact("*")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("datasource_type"), knownvalue.StringExact("*")),
 				},
 			},
 			{
@@ -79,28 +61,28 @@ func testAccS3TableSourceAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccS3TableSourceAssociation_disappears(t *testing.T) {
+func testAccS3TableIntegrationSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_log_s3_table_source_association.test"
+	resourceName := "aws_cloudwatch_log_s3_table_integration_source.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccS3TableSourceAssociationPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3TableSourceAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccS3TableIntegrationSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3TableSourceAssociationConfig_specific(rName),
+				Config: testAccS3TableIntegrationSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckS3TableSourceAssociationExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceS3TableSourceAssociation, resourceName),
+					testAccS3TableIntegrationSourceExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceS3TableIntegrationSourceResource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -110,19 +92,16 @@ func testAccS3TableSourceAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckS3TableSourceAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccS3TableIntegrationSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudwatch_log_s3_table_source_association" {
+			if rs.Type != "aws_cloudwatch_log_s3_table_integration_source" {
 				continue
 			}
 
-			integrationARN := rs.Primary.Attributes["integration_arn"]
-			identifier := rs.Primary.Attributes[names.AttrID]
-
-			_, err := tflogs.FindS3TableSourceAssociationByTwoPartKey(ctx, conn, integrationARN, identifier)
+			_, err := tflogs.FindS3TableIntegrationSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["integration_arn"], rs.Primary.Attributes[names.AttrID])
 
 			if retry.NotFound(err) {
 				continue
@@ -132,14 +111,14 @@ func testAccCheckS3TableSourceAssociationDestroy(ctx context.Context, t *testing
 				return err
 			}
 
-			return fmt.Errorf("CloudWatch Logs S3 Table Source Association %s still exists", identifier)
+			return fmt.Errorf("CloudWatch Logs S3 Table Integration Data Source Association %s still exists", rs.Primary.Attributes[names.AttrID])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckS3TableSourceAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccS3TableIntegrationSourceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -148,16 +127,13 @@ func testAccCheckS3TableSourceAssociationExists(ctx context.Context, t *testing.
 
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		integrationARN := rs.Primary.Attributes["integration_arn"]
-		identifier := rs.Primary.Attributes[names.AttrID]
-
-		_, err := tflogs.FindS3TableSourceAssociationByTwoPartKey(ctx, conn, integrationARN, identifier)
+		_, err := tflogs.FindS3TableIntegrationSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["integration_arn"], rs.Primary.Attributes[names.AttrID])
 
 		return err
 	}
 }
 
-func testAccS3TableSourceAssociationConfig_base(rName string) string {
+func testAccS3TableIntegrationSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -211,28 +187,18 @@ resource "aws_observabilityadmin_s3_table_integration" "test" {
 `, rName)
 }
 
-func testAccS3TableSourceAssociationConfig_basic(rName string) string {
+func testAccS3TableIntegrationSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccS3TableSourceAssociationConfig_base(rName),
+		testAccS3TableIntegrationSourceConfig_base(rName),
 		`
-resource "aws_cloudwatch_log_s3_table_source_association" "test" {
+resource "aws_cloudwatch_log_s3_table_integration_source" "test" {
   integration_arn = aws_observabilityadmin_s3_table_integration.test.arn
+
+  data_source {
+    name = "*"
+    type = "*"
+  }
 }
 `,
-	)
-}
-
-func testAccS3TableSourceAssociationConfig_specific(rName string) string {
-	// datasource_name and datasource_type only allow letters, numbers, and underscores.
-	safeName := strings.ReplaceAll(rName, "-", "_")
-	return acctest.ConfigCompose(
-		testAccS3TableSourceAssociationConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_cloudwatch_log_s3_table_source_association" "test" {
-  integration_arn = aws_observabilityadmin_s3_table_integration.test.arn
-  datasource_name = %[1]q
-  datasource_type = %[1]q
-}
-`, safeName),
 	)
 }

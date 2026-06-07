@@ -13,10 +13,6 @@ func TestAccLogs_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"S3TableSourceAssociation": {
-			acctest.CtBasic:      testAccS3TableSourceAssociation_basic,
-			acctest.CtDisappears: testAccS3TableSourceAssociation_disappears,
-		},
 		"Delivery": {
 			acctest.CtBasic:          testAccDelivery_basic,
 			acctest.CtDisappears:     testAccDelivery_disappears,
@@ -28,6 +24,10 @@ func TestAccLogs_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDeliverySource_basic,
 			acctest.CtDisappears: testAccDeliverySource_disappears,
 			"tags":               testAccDeliverySource_tags,
+		},
+		"S3TableIntegrationSource": {
+			acctest.CtBasic:      testAccS3TableIntegrationSource_basic,
+			acctest.CtDisappears: testAccS3TableIntegrationSource_disappears,
 		},
 	}
 
