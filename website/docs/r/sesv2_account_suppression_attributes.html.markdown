@@ -10,6 +10,8 @@ description: |-
 
 Manages AWS SESv2 (Simple Email V2) account-level suppression attributes.
 
+~> **Note:** Destroying this resource resets `suppressed_reasons` to `["BOUNCE", "COMPLAINT"]`. According to the [Amazon SES documentation](https://docs.aws.amazon.com/ses/latest/dg/sending-email-suppression-list.html), this has been the default account-level suppression behavior for SES accounts that started using SES after November 25, 2019.
+
 ## Example Usage
 
 ```terraform
