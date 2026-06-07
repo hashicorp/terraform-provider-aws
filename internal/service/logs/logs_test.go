@@ -28,6 +28,7 @@ func TestAccLogs_serial(t *testing.T) {
 		"S3TableIntegrationSource": {
 			acctest.CtBasic:      testAccS3TableIntegrationSource_basic,
 			acctest.CtDisappears: testAccS3TableIntegrationSource_disappears,
+			"identity":           testAccLogsS3TableIntegrationSource_identitySerial,
 		},
 	}
 

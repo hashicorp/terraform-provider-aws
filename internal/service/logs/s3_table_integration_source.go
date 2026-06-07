@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -33,7 +33,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_cloudwatch_log_s3_table_integration_source", name="S3 Table Integration Data Source Association")
+// @FrameworkResource("aws_cloudwatch_log_s3_table_integration_source", name="S3 Table Integration Source")
+// @IdentityAttribute("integration_arn")
+// @IdentityAttribute("id")
+// @ImportIDHandler("s3TableIntegrationSourceImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccS3TableIntegrationSourceImportStateIDFunc)
 func newS3TableIntegrationSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &s3TableIntegrationSourceResource{}
 
@@ -43,6 +49,7 @@ func newS3TableIntegrationSourceResource(_ context.Context) (resource.ResourceWi
 type s3TableIntegrationSourceResource struct {
 	framework.ResourceWithModel[s3TableIntegrationSourceResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *s3TableIntegrationSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -169,26 +176,43 @@ func (r *s3TableIntegrationSourceResource) Delete(ctx context.Context, request r
 	}
 }
 
-func (r *s3TableIntegrationSourceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// Import ID format: <integration_arn>,<identifier>
-	// The comma separator is used because integration ARNs contain slashes.
-	parts := strings.SplitN(request.ID, ",", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		response.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: integration_arn,id. Got: %q", request.ID),
-		)
-		return
+const s3TableIntegrationSourceImportIDSeparator = intflex.ResourceIdSeparator
+
+func s3TableIntegrationSourceParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, s3TableIntegrationSourceImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("integration_arn"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected integration-arn%[2]sidentifier", id, s3TableIntegrationSourceImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser = s3TableIntegrationSourceImportID{}
+)
+
+type s3TableIntegrationSourceImportID struct{}
+
+func (s3TableIntegrationSourceImportID) Parse(identifier string) (string, map[string]any, error) {
+	integrationARN, identifier, err := s3TableIntegrationSourceParseImportID(identifier)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrID:      identifier,
+		"integration_arn": integrationARN,
+	}
+
+	return identifier, result, nil
 }
 
 func findS3TableIntegrationSourceByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, integrationARN, identifier string) (*awstypes.S3TableIntegrationSource, error) {
 	input := cloudwatchlogs.ListSourcesForS3TableIntegrationInput{
 		IntegrationArn: aws.String(integrationARN),
 	}
+
 	return findS3TableIntegrationSource(ctx, conn, &input, func(v awstypes.S3TableIntegrationSource) bool {
 		return aws.ToString(v.Identifier) == identifier
 	})

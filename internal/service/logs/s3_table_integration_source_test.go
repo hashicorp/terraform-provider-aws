@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -29,12 +30,15 @@ func testAccS3TableIntegrationSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccS3TableIntegrationSourceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckS3TableIntegrationSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3TableIntegrationSourceConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/S3TableIntegrationSource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccS3TableIntegrationSourceExists(ctx, t, resourceName),
+					testAccCheckS3TableIntegrationSourceExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -44,18 +48,6 @@ func testAccS3TableIntegrationSource_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 				},
-			},
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("Not found: %s", resourceName)
-					}
-					return fmt.Sprintf("%s,%s", rs.Primary.Attributes["integration_arn"], rs.Primary.Attributes[names.AttrID]), nil
-				},
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -70,12 +62,15 @@ func testAccS3TableIntegrationSource_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccS3TableIntegrationSourceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckS3TableIntegrationSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3TableIntegrationSourceConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/S3TableIntegrationSource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccS3TableIntegrationSourceExists(ctx, t, resourceName),
+					testAccCheckS3TableIntegrationSourceExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceS3TableIntegrationSourceResource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,7 +87,11 @@ func testAccS3TableIntegrationSource_disappears(t *testing.T) {
 	})
 }
 
-func testAccS3TableIntegrationSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccS3TableIntegrationSourceImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "integration_arn", names.AttrID)
+}
+
+func testAccCheckS3TableIntegrationSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
@@ -118,7 +117,7 @@ func testAccS3TableIntegrationSourceDestroy(ctx context.Context, t *testing.T) r
 	}
 }
 
-func testAccS3TableIntegrationSourceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckS3TableIntegrationSourceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -131,74 +130,4 @@ func testAccS3TableIntegrationSourceExists(ctx context.Context, t *testing.T, n 
 
 		return err
 	}
-}
-
-func testAccS3TableIntegrationSourceConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "logs.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3tables:CreateTableBucket",
-          "s3tables:ListTableBuckets",
-          "s3tables:GetTableBucket",
-          "s3tables:CreateNamespace",
-          "s3tables:GetNamespace",
-          "s3tables:ListNamespaces",
-          "s3tables:CreateTable",
-          "s3tables:GetTable",
-          "s3tables:ListTables",
-          "s3tables:PutTableData",
-          "s3tables:GetTableData",
-        ]
-        Resource = "*"
-      },
-    ]
-  })
-}
-
-resource "aws_observabilityadmin_s3_table_integration" "test" {
-  role_arn = aws_iam_role.test.arn
-
-  encryption {
-    sse_algorithm = "AES256"
-  }
-}
-`, rName)
-}
-
-func testAccS3TableIntegrationSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccS3TableIntegrationSourceConfig_base(rName),
-		`
-resource "aws_cloudwatch_log_s3_table_integration_source" "test" {
-  integration_arn = aws_observabilityadmin_s3_table_integration.test.arn
-
-  data_source {
-    name = "*"
-    type = "*"
-  }
-}
-`,
-	)
 }

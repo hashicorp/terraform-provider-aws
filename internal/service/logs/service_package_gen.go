@@ -79,8 +79,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		{
 			Factory:  newS3TableIntegrationSourceResource,
 			TypeName: "aws_cloudwatch_log_s3_table_integration_source",
-			Name:     "S3 Table Integration Data Source Association",
+			Name:     "S3 Table Integration Source",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("integration_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      s3TableIntegrationSourceImportID{},
+			},
 		},
 		{
 			Factory:  newTransformerResource,
