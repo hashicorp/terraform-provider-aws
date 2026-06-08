@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
@@ -22,6 +23,12 @@ func dataSourceQueues() *schema.Resource {
 		ReadWithoutTimeout: dataSourceQueuesRead,
 
 		Schema: map[string]*schema.Schema{
+			"max_results": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1000,
+				ValidateFunc: validation.IntBetween(1, 1000),
+			},
 			"queue_name_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -39,7 +46,9 @@ func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	input := &sqs.ListQueuesInput{}
+	input := &sqs.ListQueuesInput{
+		MaxResults: aws.Int32(int32(d.Get("max_results").(int))),
+	}
 
 	if v, ok := d.GetOk("queue_name_prefix"); ok {
 		input.QueueNamePrefix = aws.String(v.(string))

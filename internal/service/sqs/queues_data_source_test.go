@@ -52,3 +52,45 @@ data "aws_sqs_queues" "test" {
 }
 `, rName)
 }
+
+func TestAccSQSQueuesDataSource_pagination(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_sqs_queues.test"
+
+	const (
+		queueCount = 7
+		pageSize   = 3
+	)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueuesDataSourceConfig_pagination(rName, queueCount, pageSize),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", fmt.Sprintf("%d", queueCount)),
+					resource.TestCheckResourceAttr(dataSourceName, "max_results", fmt.Sprintf("%d", pageSize)),
+				),
+			},
+		},
+	})
+}
+
+func testAccQueuesDataSourceConfig_pagination(rName string, count, pageSize int) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  count = %[2]d
+  name  = "%[1]s-${count.index}"
+}
+
+data "aws_sqs_queues" "test" {
+  queue_name_prefix = %[1]q
+  max_results       = %[3]d
+
+  depends_on = [aws_sqs_queue.test]
+}
+`, rName, count, pageSize)
+}

@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_sqs_queues: Fix pagination being capped at 1000 queue URLs when `queue_name_prefix` is unset or matches a large number of queues
+```
+
+```release-note:enhancement
+data-source/aws_sqs_queues: Add `max_results` argument to control the `ListQueues` API page size
+```
