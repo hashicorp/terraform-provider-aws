@@ -41,7 +41,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `xss_match_tuples` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
 
-## Nested Blocks
 
 ### `xss_match_tuples`
 
@@ -62,8 +61,6 @@ This resource supports the following arguments:
   e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
-
-## Remarks
 
 ## Attribute Reference
 
