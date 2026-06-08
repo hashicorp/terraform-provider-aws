@@ -55,6 +55,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceAssertion,
+			TypeName: "aws_resiliencehubv2_assertion",
+			Name:     "Assertion",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourceInputSource,
 			TypeName: "aws_resiliencehubv2_input_source",
 			Name:     "Input Source",
