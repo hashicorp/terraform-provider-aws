@@ -38,107 +38,109 @@ func resourceBucketNotification() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketNotificationPut,
 		DeleteWithoutTimeout: resourceBucketNotificationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"eventbridge": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"lambda_function": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"filter_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"filter_suffix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"lambda_function_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"eventbridge": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"lambda_function": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"events": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"filter_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"filter_suffix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"lambda_function_arn": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"queue": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"filter_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"filter_suffix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"topic": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"filter_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"filter_suffix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrTopicARN: {
-							Type:     schema.TypeString,
-							Required: true,
+				"queue": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"events": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"filter_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"filter_suffix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"queue_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+				"topic": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"events": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"filter_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"filter_suffix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrTopicARN: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

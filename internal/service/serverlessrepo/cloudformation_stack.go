@@ -59,44 +59,46 @@ func ResourceCloudFormationStack() *schema.Resource {
 			Delete: schema.DefaultTimeout(cloudFormationStackDeletedDefaultTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"outputs": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"semantic_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"outputs": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"semantic_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

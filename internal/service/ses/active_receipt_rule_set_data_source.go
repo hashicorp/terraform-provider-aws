@@ -23,15 +23,17 @@ func dataSourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActiveReceiptRuleSetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rule_set_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rule_set_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
