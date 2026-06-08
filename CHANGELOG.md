@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_agent_runtime: Add `AGUI` as a valid value for `protocol_configuration.server_protocol` ([#47906](https://github.com/hashicorp/terraform-provider-aws/issues/47906))
 * resource/aws_bedrockagentcore_gateway: Add `policy_engine_configuration` configuration block ([#47818](https://github.com/hashicorp/terraform-provider-aws/issues/47818))
 * resource/aws_bedrockagentcore_gateway_target: Add `listing_mode` argument to the `target_configuration.mcp.mcp_server` configuration block ([#48225](https://github.com/hashicorp/terraform-provider-aws/issues/48225))
+* resource/aws_bedrockagentcore_memory: Add `indexed_key` and `stream_delivery_resources` arguments ([#48240](https://github.com/hashicorp/terraform-provider-aws/issues/48240))
 
 BUG FIXES:
 
