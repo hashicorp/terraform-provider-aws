@@ -105,10 +105,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `column_names` - List of column names for the table. At least one of ColumnNames or ColumnWildcard is required.
 * `column_wildcard` - Wildcard specified by a ColumnWildcard object. At least one of ColumnNames or ColumnWildcard is required.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
