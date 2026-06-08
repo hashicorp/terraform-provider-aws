@@ -30,6 +30,7 @@ This resource supports the following arguments:
 * `custom_events` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. If you omit this parameter, custom events are `DISABLED`. See [custom_events](#custom_events) below.
 * `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
 * `domain_list` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
+* `platform` - (Optional) The platform of the app monitor. It can be `Web`, `iOS`, or `Android`. Defaults to `Web`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### app_monitor_configuration
