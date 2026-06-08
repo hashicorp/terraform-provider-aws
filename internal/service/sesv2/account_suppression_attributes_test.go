@@ -81,7 +81,7 @@ func testAccAccountSuppressionAttributes_disappears(t *testing.T) {
 			{
 				Config: testAccAccountSuppressionAttributesConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceAccountSuppressionAttributes, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceAccountSuppressionAttributes, resourceName), // nosemgrep:disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
