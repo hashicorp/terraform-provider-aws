@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -48,6 +50,10 @@ func dataSourceServer() *schema.Resource {
 				Computed: true,
 			},
 			"invocation_role": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,6 +115,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("protocols", output.Protocols)
 	d.Set("security_policy_name", output.SecurityPolicyName)

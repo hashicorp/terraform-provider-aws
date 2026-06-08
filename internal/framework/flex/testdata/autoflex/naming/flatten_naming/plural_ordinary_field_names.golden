@@ -1,0 +1,99 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsPluralSliceOfNestedObjectValues",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingluarListOfNestedObjects"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsPluralSliceOfNestedObjectValues",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingluarListOfNestedObjects"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsPluralSliceOfNestedObjectValues",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingluarListOfNestedObjects"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Fields",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsPluralSliceOfNestedObjectValues",
+    "autoflex.target.fieldname": "Field",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingluarListOfNestedObjects"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Fields",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "autoflex.target.path": "Field",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Fields",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "autoflex.target.path": "Field",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: First element of nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Fields",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "autoflex.target.path": "Field",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Fields",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "autoflex.target.path": "Field",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "field_name": "Field1",
+    "field_type": "string",
+    "is_nil": false,
+    "is_zero": false
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "Fields[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "Field[0]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Fields[0].Field1",
+    "autoflex.source.type": "string",
+    "autoflex.target.path": "Field[0].Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  }
+]

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,10 +23,10 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	connectionID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_CONNECTION_ID")
 	ownerAccountID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_OWNER_ACCOUNT_ID")
 
-	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(t, 5))
 	resourceName := "aws_dx_hosted_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,7 +35,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 			{
 				Config: testAccHostedConnectionConfig_basic(connectionName, connectionID, ownerAccountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedConnectionExists(ctx, resourceName),
+					testAccCheckHostedConnectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_region"),
@@ -64,7 +63,7 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 			parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
 			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -79,9 +78,9 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 	}
 }
 
-func testAccCheckHostedConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckHostedConnectionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

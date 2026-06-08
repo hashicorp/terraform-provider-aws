@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package macie2
 
@@ -29,29 +31,31 @@ func resourceClassificationExportConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"s3_destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"key_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"s3_destination": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"key_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

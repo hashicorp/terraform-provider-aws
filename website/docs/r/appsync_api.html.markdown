@@ -53,7 +53,7 @@ resource "aws_appsync_api" "example" {
       auth_type = "AMAZON_COGNITO_USER_POOLS"
       cognito_config {
         user_pool_id = aws_cognito_user_pool.example.id
-        aws_region   = data.aws_region.current.name
+        aws_region   = data.aws_region.current.region
       }
     }
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -38,30 +40,32 @@ func resourceAccountPolicy() *schema.Resource {
 			State: resourceAccountPolicyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
-			},
-			names.AttrScope: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ScopeAll,
-				ValidateDiagFunc: enum.Validate[awstypes.Scope](),
-			},
-			"selection_criteria": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+				"policy_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+				},
+				names.AttrScope: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ScopeAll,
+					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+				},
+				"selection_criteria": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -181,7 +185,7 @@ func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Cli
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

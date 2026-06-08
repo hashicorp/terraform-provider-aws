@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptunegraph_test
@@ -82,9 +82,17 @@ func TestAccNeptuneGraphGraph_disappears(t *testing.T) {
 				Config: testAccGraphConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, t, resourceName, &graph),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfneptunegraph.ResourceGraph, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfneptunegraph.ResourceGraph, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

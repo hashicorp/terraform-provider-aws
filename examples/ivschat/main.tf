@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -38,7 +38,7 @@ resource "aws_lambda_function" "example" {
   function_name    = "tf-ivschat-message-handler"
   role             = aws_iam_role.example.arn
   source_code_hash = data.archive_file.message_review_handler.output_base64sha256
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   handler          = "index.handler"
 }
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -21,18 +23,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="Api Key Credential Provider")
+// @Tags(identifierAttribute="credential_provider_arn")
+// @Testing(tagsTest=false)
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil
@@ -93,17 +98,19 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
 func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan, config apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -112,7 +119,7 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input bedrockagentcorecontrol.CreateApiKeyCredentialProviderInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -122,6 +129,8 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 		input.ApiKey = fwflex.StringFromFramework(ctx, config.APIKeyWO)
 	}
 
+	input.Tags = getTagsIn(ctx)
+
 	out, err := conn.CreateApiKeyCredentialProvider(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
@@ -129,17 +138,17 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 	}
 
 	// Set values for unknowns.
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -148,8 +157,8 @@ func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request res
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	out, err := findAPIKeyCredentialProviderByName(ctx, conn, name)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -158,19 +167,19 @@ func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request res
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var plan, state, config apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -178,7 +187,7 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -186,7 +195,7 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 	if diff.HasChanges() {
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
 		var input bedrockagentcorecontrol.UpdateApiKeyCredentialProviderInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -203,12 +212,12 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *apiKeyCredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -245,9 +254,8 @@ func findAPIKeyCredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	out, err := conn.GetApiKeyCredentialProvider(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -256,7 +264,7 @@ func findAPIKeyCredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -270,6 +278,8 @@ type apiKeyCredentialProviderResourceModel struct {
 	APIKeyWOVersion       types.Int64                                  `tfsdk:"api_key_wo_version"`
 	CredentialProviderARN types.String                                 `tfsdk:"credential_provider_arn"`
 	Name                  types.String                                 `tfsdk:"name"`
+	Tags                  tftags.Map                                   `tfsdk:"tags"`
+	TagsAll               tftags.Map                                   `tfsdk:"tags_all"`
 }
 
 type secretModel struct {

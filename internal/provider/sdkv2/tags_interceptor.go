@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -6,8 +6,11 @@ package sdkv2
 import (
 	"context"
 	"fmt"
+	"slices"
 	"unique"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -37,7 +40,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 		return diags
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return diags
 	}
@@ -114,16 +117,44 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 			// Some old resources may not have the required attribute set after Read:
 			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 			if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+				// Read the desired tags from the plan rather than the literal
+				// configuration so that lifecycle.ignore_changes is honored.
+				// Terraform Core resolves ignore_changes during planning, so the
+				// plan's `tags` attribute reflects the effective desired state;
+				// the raw config does not.
+				//
+				// This branch runs when `tags_all` is not wholly known in the
+				// plan (e.g., when `tags` contains an empty string value, which
+				// causes `setTagsAll` to mark `tags_all` as Computed). Without
+				// using the plan here, an unrelated tag change in the config
+				// would cause the API call to also include the value of any
+				// ignored tag, overwriting out-of-band changes. See
+				// https://github.com/hashicorp/terraform-provider-aws/issues/48007.
 				configTags := make(map[string]string)
-				if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
-					c := config.GetAttr(names.AttrTags)
-					if !c.IsNull() {
-						for k, v := range c.AsValueMap() {
-							if !v.IsNull() {
-								configTags[k] = v.AsString()
-							}
+				readTags := func(v cty.Value) bool {
+					if v.IsNull() || !v.IsKnown() {
+						return false
+					}
+					if !v.Type().IsObjectType() || !v.Type().HasAttribute(names.AttrTags) {
+						return false
+					}
+					t := v.GetAttr(names.AttrTags)
+					if t.IsNull() || !t.IsWhollyKnown() {
+						return false
+					}
+					for k, vv := range t.AsValueMap() {
+						if !vv.IsNull() {
+							configTags[k] = vv.AsString()
 						}
 					}
+					return true
+				}
+				if !readTags(d.GetRawPlan()) {
+					// Fall back to the raw config when the plan's tags aren't
+					// wholly known (e.g., values from unknown references). This
+					// preserves the prior behavior for scenarios that don't
+					// involve ignore_changes.
+					_ = readTags(d.GetRawConfig())
 				}
 
 				stateTags := make(map[string]string)
@@ -191,7 +222,7 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 		return diags
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return diags
 	}
@@ -290,6 +321,69 @@ func setTagsAll() customizeDiffInterceptor {
 						}
 						return nil
 					}
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
+func validateRequiredTags() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
+
+		_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+		if !ok {
+			return nil
+		}
+
+		policy := c.TagPolicyConfig(ctx)
+		if policy == nil {
+			return nil
+		}
+		reqTags, ok := policy.RequiredTags[typeName]
+		if !ok {
+			return nil
+		}
+
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				isCreate := d.GetRawState().IsNull()
+				hasTagsChange := d.HasChange(names.AttrTags)
+
+				if !isCreate && !hasTagsChange {
+					return nil
+				}
+
+				if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
+					return nil
+				}
+
+				cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+				allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+				if allTags.ContainsAllKeys(reqTags) {
+					return nil
+				}
+
+				missing := reqTags.Removed(allTags).Keys()
+				slices.Sort(missing)
+				summary := "Missing Required Tags"
+				detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+
+				// CustomizeDiff does not support diagnostics (only an error return)
+				switch policy.Severity {
+				case "warning":
+					// Warning diagnostics are only logged
+					tflog.Warn(ctx, "Required Tags Validation", map[string]any{
+						"summary": summary,
+						"detail":  detail,
+					})
+				default:
+					// Error diagnostics merge summary and detail into a single message
+					return fmt.Errorf("%s - %s", summary, detail)
 				}
 			}
 		}

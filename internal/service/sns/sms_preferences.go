@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sns
 
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -131,7 +134,7 @@ func resourceSMSPreferences() *schema.Resource {
 		UpdateWithoutTimeout: resourceSMSPreferencesSet,
 		DeleteWithoutTimeout: resourceSMSPreferencesDelete,
 
-		Schema: smsPreferencesSchema,
+		Schema: maps.Clone(smsPreferencesSchema),
 	}
 }
 

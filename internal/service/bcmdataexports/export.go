@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bcmdataexports
 
@@ -13,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -118,11 +121,17 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
+					// TODO: Because `Computed` can only be speciied at the top level, default values for specific tables must be specified if any values are specified.
+					// This should be resolved when we can use `schema.MapNestedAttribute` with protov6.
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
+					},
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(1),
 					},
 				},
 			},
@@ -290,7 +299,7 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	out, err := findExportByARN(ctx, conn, state.ARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -407,7 +416,7 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -425,7 +434,7 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -439,10 +448,10 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	return nil, err
 }
 
-func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExport(conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findExportByARN(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -471,7 +480,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -31,19 +31,36 @@ resource "aws_route53_record" "www" {
 }
 ```
 
+The following example shows how to get a Hosted Zone from a unique combination of its tags:
+
+```terraform
+data "aws_route53_zone" "selected" {
+  tags = {
+    scope    = "local"
+    category = "api"
+  }
+}
+
+output "local_api_zone" {
+  value = data.aws_route53_zone.selected.zone_id
+}
+```
+
 ## Argument Reference
 
 This data source supports the following arguments:
 
-* `zone_id` - (Optional) Hosted Zone id of the desired Hosted Zone.
-* `name` - (Optional) Hosted Zone name of the desired Hosted Zone.
-* `private_zone` - (Optional) Used with `name` field to get a private Hosted Zone.
-* `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
-* `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
+* `zone_id` - (Optional) Directly return the Hosted Zone with the specified Zone ID. No further filtering is performed.
+* `name` - (Optional) Hosted Zone name of the desired Hosted Zone. If blank, then accept any name, filtering on only `private_zone`, `vpc_id` and `tags`.
+* `private_zone` - (Optional) Filter to only private Hosted Zones.
+* `vpc_id` - (Optional, string) Filter to private Hosted Zones associated with the specified `vpc_id`.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
-The arguments of this data source act as filters for querying the available
-Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
-Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`.
+The arguments of this data source act as filters for querying the available Hosted Zone.
+
+- The given filter must match exactly one Hosted Zone.
+- `zone_id` and `name` are mutually exclusive.
+- If you use the `name` argument for a private Hosted Zone, you need to set the `private_zone` argument to `true`.
 
 ## Attribute Reference
 
@@ -52,6 +69,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - Comment field of the Hosted Zone.
+* `enable_accelerated_recovery` - Boolean to indicate whether to enable accelerated recovery for the hosted zone.
 * `linked_service_principal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
 * `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
 * `name` - The Hosted Zone name.

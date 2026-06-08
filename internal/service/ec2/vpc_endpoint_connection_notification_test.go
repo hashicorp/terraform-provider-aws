@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,31 +8,29 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointConnectionNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointConnectionNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConnectionNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
+					testAccCheckVPCEndpointConnectionNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
@@ -46,7 +44,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConnectionNotificationConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
+					testAccCheckVPCEndpointConnectionNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
@@ -56,9 +54,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_connection_notification" {
@@ -67,7 +65,7 @@ func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) r
 
 			_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -82,7 +80,7 @@ func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,7 +91,7 @@ func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, n 
 			return fmt.Errorf("No EC2 VPC Endpoint Connection Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 

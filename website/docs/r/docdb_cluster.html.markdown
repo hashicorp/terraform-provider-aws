@@ -71,6 +71,7 @@ This resource supports the following arguments:
   show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password` and `manage_master_user_password`.
 * `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
 * `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
+* `network_type` - The network type of the DB cluster (`IPV4` or `DUAL`).
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
@@ -100,7 +101,8 @@ The `restore_to_point_in_time` block supports the following arguments:
 ### Serverless V2 Scaling Configuration
 
 The `serverless_v2_scaling_configuration` block supports the following arguments.
-Adding this block (i.e. switching to serverless) or removing it (i.e. switching from serverless) will trigger cluster replacement.
+
+~> **NOTE:** Once `serverless_v2_scaling_configuration` is configured, it cannot be removed with an in-place update. Removing it will force replacement of the cluster.
 
 * `max_capacity` - (Required) Maximum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 1 and 256.
 * `min_capacity` - (Required) Minimum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 0.5 and 256.

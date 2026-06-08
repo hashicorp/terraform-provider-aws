@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,62 +44,64 @@ func resourcePortfolioShare() *schema.Resource {
 			Delete: schema.DefaultTimeout(PortfolioShareDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"accepted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"portfolio_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// maintaining organization_node as a separate config block makes weird configs with duplicate types
-			// also, principal_id is true to API since describe gives "PrincipalId"
-			"principal_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validSharePrincipal,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					newARN, err := arn.Parse(new)
-
-					if err != nil {
-						return old == new
-					}
-
-					parts := strings.Split(newARN.Resource, "/")
-
-					return old == parts[len(parts)-1]
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 				},
-			},
-			"share_principals": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"share_tag_options": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DescribePortfolioShareType](),
-			},
-			"wait_for_acceptance": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+				"accepted": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"portfolio_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// maintaining organization_node as a separate config block makes weird configs with duplicate types
+				// also, principal_id is true to API since describe gives "PrincipalId"
+				"principal_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validSharePrincipal,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						newARN, err := arn.Parse(new)
+
+						if err != nil {
+							return old == new
+						}
+
+						parts := strings.Split(newARN.Resource, "/")
+
+						return old == parts[len(parts)-1]
+					},
+				},
+				"share_principals": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"share_tag_options": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DescribePortfolioShareType](),
+				},
+				"wait_for_acceptance": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }
@@ -199,7 +204,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := waitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

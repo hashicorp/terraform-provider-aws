@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transcribe
 
@@ -16,12 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -153,7 +155,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -215,7 +217,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
-		Refresh:                   statusLanguageModel(ctx, conn, id),
+		Refresh:                   statusLanguageModel(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -229,10 +231,10 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLanguageModel(conn *transcribe.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,8 +256,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -264,7 +265,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	}
 
 	if out == nil || out.LanguageModel == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.LanguageModel, nil

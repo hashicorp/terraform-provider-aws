@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,15 +14,15 @@ import (
 
 func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_configuration.test"
 	resourceName := "aws_msk_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationDataSourceConfig_name(rName),
@@ -43,7 +42,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 func testAccConfigurationDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.1.0"]
+  kafka_versions = ["3.8.x"]
   name           = %[1]q
 
   server_properties = <<PROPERTIES

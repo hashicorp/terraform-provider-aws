@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -14,9 +16,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -35,18 +37,20 @@ func resourceUserGroupMembership() *schema.Resource {
 			StateContext: resourceUserGroupMembershipImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"groups": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"groups": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -63,7 +67,7 @@ func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.UniqueId())
+	d.SetId(create.UniqueId(ctx))
 
 	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
@@ -228,7 +232,7 @@ func resourceUserGroupMembershipImport(ctx context.Context, d *schema.ResourceDa
 	d.Set("groups", groupList)
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.UniqueId())
+	d.SetId(create.UniqueId(ctx))
 
 	return []*schema.ResourceData{d}, nil
 }

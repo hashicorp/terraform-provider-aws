@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}_test
@@ -170,7 +170,7 @@ func TestAcc{{ .Service }}{{ .EphemeralResource }}DataSource_basic(t *testing.T)
     dataPath := tfjsonpath.New("data")
     secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,195 +51,197 @@ func resourceFleet() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"build_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"build_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"build_id", "script_id"},
-			},
-			"certificate_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.CertificateTypeDisabled,
-							ValidateDiagFunc: enum.Validate[awstypes.CertificateType](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"ec2_inbound_permission": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"ip_range": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidCIDRNetworkAddress,
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.IpProtocol](),
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-					},
+				"build_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"ec2_instance_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EC2InstanceType](),
-			},
-			"fleet_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.FleetTypeOnDemand,
-				ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
-			},
-			"instance_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"log_paths": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"metric_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
+				"build_id": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"build_id", "script_id"},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"new_game_session_protection_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ProtectionPolicyNoProtection,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectionPolicy](),
-			},
-			"operating_system": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_creation_limit_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"new_game_sessions_per_creator": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"policy_period_in_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
+				"certificate_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Computed: true,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"certificate_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.CertificateTypeDisabled,
+								ValidateDiagFunc: enum.Validate[awstypes.CertificateType](),
+							},
 						},
 					},
 				},
-			},
-			"runtime_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"game_session_activation_timeout_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 600),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"ec2_inbound_permission": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"ip_range": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IpProtocol](),
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
-						"max_concurrent_game_session_activations": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 2147483647),
+					},
+				},
+				"ec2_instance_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EC2InstanceType](),
+				},
+				"fleet_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.FleetTypeOnDemand,
+					ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
+				},
+				"instance_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"log_paths": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"metric_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 255),
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"new_game_session_protection_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ProtectionPolicyNoProtection,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectionPolicy](),
+				},
+				"operating_system": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_creation_limit_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"new_game_sessions_per_creator": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"policy_period_in_minutes": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
 						},
-						"server_process": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 50,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"concurrent_executions": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"launch_path": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrParameters: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
+					},
+				},
+				"runtime_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"game_session_activation_timeout_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 600),
+							},
+							"max_concurrent_game_session_activations": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 2147483647),
+							},
+							"server_process": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 50,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"concurrent_executions": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"launch_path": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrParameters: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"script_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"script_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"build_id", "script_id"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"script_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"script_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"build_id", "script_id"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -321,7 +325,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -483,8 +487,7 @@ func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.Desc
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -515,8 +518,7 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -534,11 +536,11 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -560,7 +562,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 			awstypes.FleetStatusValidating,
 		),
 		Target:  enum.Slice(awstypes.FleetStatusActive),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -568,7 +570,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -586,7 +588,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 			awstypes.FleetStatusTerminated,
 		),
 		Target:  []string{},
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -594,7 +596,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err

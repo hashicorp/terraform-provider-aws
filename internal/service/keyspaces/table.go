@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package keyspaces
 
@@ -16,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -67,237 +69,239 @@ func resourceTable() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"read_capacity_units": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"throughput_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.ThroughputMode](),
-						},
-						"write_capacity_units": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"client_side_timestamps": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ClientSideTimestampsStatus](),
-						},
-					},
-				},
-			},
-			names.AttrComment: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"default_time_to_live": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 630720000),
-			},
-			"encryption_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kms_key_identifier": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-						},
-					},
-				},
-			},
-			"keyspace_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
-					"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
-				),
-			},
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.PointInTimeRecoveryStatus](),
-						},
-					},
-				},
-			},
-			"schema_definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"clustering_key": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-										),
-									},
-									"order_by": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[types.SortOrder](),
-									},
-								},
+				"capacity_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"read_capacity_units": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
 							},
-						},
-						"column": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-										),
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`),
-											"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
-										),
-									},
-								},
+							"throughput_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ThroughputMode](),
 							},
-						},
-						"partition_key": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-										),
-									},
-								},
-							},
-						},
-						"static_column": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringMatch(
-											regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-										),
-									},
-								},
+							"write_capacity_units": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
 							},
 						},
 					},
 				},
-			},
-			names.AttrTableName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^[0-9A-Za-z_]{1,48}$`),
-					"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.TimeToLiveStatus](),
+				"client_side_timestamps": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ClientSideTimestampsStatus](),
+							},
 						},
 					},
 				},
-			},
+				names.AttrComment: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"default_time_to_live": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 630720000),
+				},
+				"encryption_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kms_key_identifier": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+							},
+						},
+					},
+				},
+				"keyspace_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
+						"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
+					),
+				},
+				"point_in_time_recovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.PointInTimeRecoveryStatus](),
+							},
+						},
+					},
+				},
+				"schema_definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"clustering_key": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.StringMatch(
+												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
+												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
+											),
+										},
+										"order_by": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[types.SortOrder](),
+										},
+									},
+								},
+							},
+							"column": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringMatch(
+												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
+												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
+											),
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringMatch(
+												regexache.MustCompile(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`),
+												"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
+											),
+										},
+									},
+								},
+							},
+							"partition_key": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.StringMatch(
+												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
+												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
+											),
+										},
+									},
+								},
+							},
+							"static_column": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.StringMatch(
+												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
+												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrTableName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`^[0-9A-Za-z_]{1,48}$`),
+						"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"ttl": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.TimeToLiveStatus](),
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -373,7 +377,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	table, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -669,8 +673,7 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -679,24 +682,23 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.TableStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusTable(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTable(conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -712,7 +714,7 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusCreating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -729,7 +731,7 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusActive, types.TableStatusDeleting),
 		Target:  []string{},
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -746,7 +748,7 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusUpdating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

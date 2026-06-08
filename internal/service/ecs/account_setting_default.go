@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,21 +37,23 @@ func resourceAccountSettingDefault() *schema.Resource {
 			StateContext: resourceAccountSettingDefaultImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(settingName_Values(), false),
-			},
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(settingName_Values(), false),
+				},
+				"principal_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -80,7 +85,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	settingName := awstypes.SettingName(d.Get(names.AttrName).(string))
 	setting, err := findEffectiveAccountSettingByName(ctx, conn, settingName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Account Setting Default (%s) not found, removing from state", settingName)
 		d.SetId("")
 		return diags

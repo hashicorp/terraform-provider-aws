@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package notifications
 
@@ -19,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -106,7 +108,7 @@ func (r *notificationHubResource) Read(ctx context.Context, request resource.Rea
 
 	_, err := findNotificationHubByRegion(ctx, conn, data.NotificationHubRegion.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -173,7 +175,7 @@ func findNotificationHubByRegion(ctx context.Context, conn *notifications.Client
 	}
 
 	if output.StatusSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -198,8 +200,7 @@ func findNotificationHubs(ctx context.Context, conn *notifications.Client, input
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -217,11 +218,11 @@ func findNotificationHubs(ctx context.Context, conn *notifications.Client, input
 	return output, nil
 }
 
-func statusNotificationHub(ctx context.Context, conn *notifications.Client, region string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNotificationHub(conn *notifications.Client, region string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNotificationHubByRegion(ctx, conn, region)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -237,7 +238,7 @@ func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.NotificationHubStatusRegistering),
 		Target:                    enum.Slice(awstypes.NotificationHubStatusActive),
-		Refresh:                   statusNotificationHub(ctx, conn, region),
+		Refresh:                   statusNotificationHub(conn, region),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -245,7 +246,7 @@ func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
 
 		return output, err
 	}
@@ -257,14 +258,14 @@ func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotificationHubStatusDeregistering),
 		Target:  []string{},
-		Refresh: statusNotificationHub(ctx, conn, region),
+		Refresh: statusNotificationHub(conn, region),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
 
 		return output, err
 	}

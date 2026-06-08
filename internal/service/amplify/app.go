@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package amplify
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,283 +54,285 @@ func resourceApp() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"access_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_branch_creation_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"basic_auth_credentials": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 2000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// These credentials are ignored if basic auth is not enabled.
-								if d.Get("auto_branch_creation_config.0.enable_basic_auth").(bool) {
-									return old == new
-								}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_branch_creation_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"basic_auth_credentials": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(1, 2000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// These credentials are ignored if basic auth is not enabled.
+									if d.Get("auto_branch_creation_config.0.enable_basic_auth").(bool) {
+										return old == new
+									}
 
-								return true
-							},
-						},
-						"build_spec": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 25000),
-						},
-						"enable_auto_build": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_basic_auth": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_performance_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"enable_pull_request_preview": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"environment_variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"framework": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"pull_request_environment_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrStage: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.Stage](),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// API returns "NONE" by default.
-								if old == stageNone && new == "" {
 									return true
-								}
+								},
+							},
+							"build_spec": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 25000),
+							},
+							"enable_auto_build": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_basic_auth": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_performance_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"enable_pull_request_preview": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"environment_variables": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"framework": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"pull_request_environment_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrStage: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.Stage](),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// API returns "NONE" by default.
+									if old == stageNone && new == "" {
+										return true
+									}
 
-								return old == new
+									return old == new
+								},
 							},
 						},
 					},
 				},
-			},
-			"auto_branch_creation_patterns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// These patterns are ignored if branch auto-creation is not enabled.
-					if d.Get("enable_auto_branch_creation").(bool) {
-						return old == new
-					}
+				"auto_branch_creation_patterns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// These patterns are ignored if branch auto-creation is not enabled.
+						if d.Get("enable_auto_branch_creation").(bool) {
+							return old == new
+						}
 
-					return true
+						return true
+					},
 				},
-			},
-			"basic_auth_credentials": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// These credentials are ignored if basic auth is not enabled.
-					if d.Get("enable_basic_auth").(bool) {
-						return old == new
-					}
+				"basic_auth_credentials": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// These credentials are ignored if basic auth is not enabled.
+						if d.Get("enable_basic_auth").(bool) {
+							return old == new
+						}
 
-					return true
+						return true
+					},
 				},
-			},
-			"build_spec": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 25000),
-			},
-			"cache_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.CacheConfigType](),
+				"build_spec": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 25000),
+				},
+				"cache_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.CacheConfigType](),
+							},
 						},
 					},
 				},
-			},
-			"compute_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"custom_headers": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 25000),
-			},
-			"custom_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCondition: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrSource: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"200",
-								"301",
-								"302",
-								"404",
-								"404-200",
-							}, false),
-						},
-						names.AttrTarget: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
+				"compute_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"custom_headers": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 25000),
+				},
+				"custom_rule": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCondition: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrSource: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"200",
+									"301",
+									"302",
+									"404",
+									"404-200",
+								}, false),
+							},
+							names.AttrTarget: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
 						},
 					},
 				},
-			},
-			"default_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"enable_auto_branch_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_basic_auth": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_branch_auto_build": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_branch_auto_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"environment_variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"iam_service_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"job_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"build_compute_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.BuildComputeType](),
+				"default_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"enable_auto_branch_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_basic_auth": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_branch_auto_build": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_branch_auto_deletion": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"environment_variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"iam_service_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"job_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"build_compute_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.BuildComputeType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"oauth_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"platform": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.PlatformWeb,
-				ValidateDiagFunc: enum.Validate[types.Platform](),
-			},
-			"production_branch": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"branch_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_deploy_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"thumbnail_url": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"oauth_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"platform": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.PlatformWeb,
+					ValidateDiagFunc: enum.Validate[types.Platform](),
+				},
+				"production_branch": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"branch_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_deploy_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"thumbnail_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"repository": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"repository": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -442,7 +446,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	app, err := findAppByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -660,8 +664,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+			LastError: err,
 		}
 	}
 
@@ -670,7 +673,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	}
 
 	if output == nil || output.App == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.App, nil

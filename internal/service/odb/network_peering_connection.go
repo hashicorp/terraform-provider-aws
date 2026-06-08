@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package odb
 
@@ -20,9 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,6 +57,7 @@ const (
 )
 
 var OracleDBNetworkPeeringConnection = newResourceNetworkPeeringConnection
+var ResourceNetworkPeeringConnection resourceNetworkPeeringConnection
 
 type resourceNetworkPeeringConnection struct {
 	framework.ResourceWithModel[odbNetworkPeeringConnectionResourceModel]
@@ -67,9 +72,11 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"odb_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Required field. The unique identifier of the ODB network that initiates the peering connection. " +
 					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
@@ -108,8 +115,10 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 
 			"odb_network_arn": schema.StringAttribute{
 				Description: "ARN of the odb network peering connection.",
+				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -119,6 +128,15 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"peer_network_cidrs": schema.SetAttribute{
+				Description: "List of peered network cidrs.",
+				CustomType:  fwtypes.SetOfStringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"odb_peering_connection_type": schema.StringAttribute{
@@ -156,6 +174,34 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 	}
 }
 
+func (r *resourceNetworkPeeringConnection) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data odbNetworkPeeringConnectionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//Neither is present
+	if data.OdbNetworkId.IsNull() && data.OdbNetworkArn.IsNull() {
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Neither is present.")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	//Both are present
+	if !data.OdbNetworkId.IsNull() && !data.OdbNetworkArn.IsNull() {
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Both are present.")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
 func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var plan odbNetworkPeeringConnectionResourceModel
@@ -163,8 +209,22 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	odbNetwork := plan.OdbNetworkArn
+	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
+		odbNetwork = plan.OdbNetworkId
+	}
+	//Validation : check is there any peer cidr for removal
+	if len(plan.PeerNetworkCidrs.Elements()) > 0 {
+		err := errors.New("during creation add / removal of peer network cidr is not supported")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 	input := odb.CreateOdbPeeringConnectionInput{
-		OdbNetworkId:  plan.OdbNetworkId.ValueStringPointer(),
+		OdbNetworkId:  odbNetwork.ValueStringPointer(),
 		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
 		DisplayName:   plan.DisplayName.ValueStringPointer(),
 		Tags:          getTagsIn(ctx),
@@ -233,7 +293,7 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 	}
 
 	out, err := findNetworkPeeringConnectionByID(ctx, conn, state.OdbPeeringConnectionId.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -273,6 +333,77 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().ODBClient(ctx)
+	var plan, state odbNetworkPeeringConnectionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !diff.HasChanges() {
+		return
+	}
+	var input odb.UpdateOdbPeeringConnectionInput
+	var planPeeredCidrs []string
+	plan.PeerNetworkCidrs.ElementsAs(ctx, &planPeeredCidrs, false)
+	var statePeeredCidrs []string
+	state.PeerNetworkCidrs.ElementsAs(ctx, &statePeeredCidrs, false)
+	addedRemovedCidrs := r.FindAddRemovePeeredNetworkCIDR(planPeeredCidrs, statePeeredCidrs)
+	if len(addedRemovedCidrs) > 0 {
+		var addedPeeredCidrs []string
+		var removedPeeredCidrs []string
+
+		for k, v := range addedRemovedCidrs {
+			switch v {
+			case -1:
+				removedPeeredCidrs = append(removedPeeredCidrs, k)
+			case 1:
+				addedPeeredCidrs = append(addedPeeredCidrs, k)
+			}
+		}
+		if len(removedPeeredCidrs) > 0 {
+			input.PeerNetworkCidrsToBeRemoved = removedPeeredCidrs
+		}
+		if len(addedPeeredCidrs) > 0 {
+			input.PeerNetworkCidrsToBeAdded = addedPeeredCidrs
+		}
+	}
+
+	input.OdbPeeringConnectionId = state.OdbPeeringConnectionId.ValueStringPointer()
+	out, err := conn.UpdateOdbPeeringConnection(ctx, &input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.OdbPeeringConnectionId == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameNetwork, state.OdbPeeringConnectionId.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	updatedNetworkPeeringConnections, err := waitNetworkPeeringConnectionUpdated(ctx, conn, state.OdbPeeringConnectionId.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	resp.Diagnostics.Append(flex.Flatten(ctx, updatedNetworkPeeringConnections, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
 func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var state odbNetworkPeeringConnectionResourceModel
@@ -307,8 +438,28 @@ func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resou
 	}
 }
 
+func (r *resourceNetworkPeeringConnection) FindAddRemovePeeredNetworkCIDR(planCIDRs, sateCiders []string) map[string]int {
+	addedRemovedCidrs := make(map[string]int)
+	// 1 = CIDRs to add, -1 = CIDRs to remove
+	// Here we are assuming that all cidrs are new.
+	for _, nCidr := range planCIDRs {
+		addedRemovedCidrs[nCidr] = 1
+	}
+	//Now lets remove those which are not present
+	for _, oCidr := range sateCiders {
+		//if cidr is present in the map; that means no change is required for that cidr so remove it
+		_, ok := addedRemovedCidrs[oCidr]
+		if ok {
+			delete(addedRemovedCidrs, oCidr)
+		} else {
+			addedRemovedCidrs[oCidr] = -1
+		}
+	}
+	return addedRemovedCidrs
+}
+
 func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
@@ -325,8 +476,26 @@ func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, 
 	return nil, err
 }
 
+func waitNetworkPeeringConnectionUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   enum.Slice(odbtypes.ResourceStatusUpdating),
+		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
+		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*odbtypes.OdbPeeringConnection); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
 func waitNetworkPeeringConnectionDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
 		Refresh: statusNetworkPeeringConnection(ctx, conn, id),
@@ -340,10 +509,10 @@ func waitNetworkPeeringConnectionDeleted(ctx context.Context, conn *odb.Client, 
 	return nil, err
 }
 
-func statusNetworkPeeringConnection(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
+func statusNetworkPeeringConnection(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findNetworkPeeringConnectionByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -361,7 +530,7 @@ func findNetworkPeeringConnectionByID(ctx context.Context, conn *odb.Client, id 
 	out, err := conn.GetOdbPeeringConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -371,7 +540,7 @@ func findNetworkPeeringConnectionByID(ctx context.Context, conn *odb.Client, id 
 	}
 
 	if out == nil || out.OdbPeeringConnection == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.OdbPeeringConnection, nil
@@ -388,6 +557,7 @@ type odbNetworkPeeringConnectionResourceModel struct {
 	OdbPeeringConnectionArn  types.String                                `tfsdk:"arn"`
 	OdbNetworkArn            types.String                                `tfsdk:"odb_network_arn"`
 	PeerNetworkArn           types.String                                `tfsdk:"peer_network_arn"`
+	PeerNetworkCidrs         fwtypes.SetValueOf[types.String]            `tfsdk:"peer_network_cidrs"`
 	OdbPeeringConnectionType types.String                                `tfsdk:"odb_peering_connection_type"`
 	CreatedAt                timetypes.RFC3339                           `tfsdk:"created_at"`
 	PercentProgress          types.Float32                               `tfsdk:"percent_progress"`

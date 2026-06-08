@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fwdiag
@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	sdkdiag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
@@ -69,6 +71,32 @@ func NewListResultErrorDiagnostic(err error) list.ListResult {
 			),
 		},
 	}
+}
+
+func NewListResultSDKDiagnostics(diags sdkdiag.Diagnostics) list.ListResult {
+	return list.ListResult{
+		Diagnostics: FromSDKDiagnostics(diags),
+	}
+}
+
+func FromSDKDiagnostics(diags sdkdiag.Diagnostics) diag.Diagnostics {
+	return tfslices.ApplyToAll(diags, FromSDKDiagnostic)
+}
+
+func FromSDKDiagnostic(d sdkdiag.Diagnostic) diag.Diagnostic {
+	switch d.Severity {
+	case sdkdiag.Error:
+		return diag.NewErrorDiagnostic(
+			d.Summary,
+			d.Detail,
+		)
+	case sdkdiag.Warning:
+		return diag.NewWarningDiagnostic(
+			d.Summary,
+			d.Detail,
+		)
+	}
+	return nil
 }
 
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {

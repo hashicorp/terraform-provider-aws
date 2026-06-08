@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package synthetics
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,25 +34,27 @@ func ResourceGroupAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"canary_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"canary_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -94,7 +98,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	group, err := FindAssociatedGroup(ctx, conn, canaryArn, groupName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Synthetics Group Association between canary (%s) and group (%s) not found, removing from state", canaryArn, groupName)
 		d.SetId("")
 		return diags

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appautoscaling
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -34,81 +37,83 @@ func resourceScheduledAction() *schema.Resource {
 		UpdateWithoutTimeout: resourceScheduledActionPut,
 		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"end_time": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scalable_dimension": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scalable_target_action": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMaxCapacity: {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-							AtLeastOneOf: []string{
-								"scalable_target_action.0.max_capacity",
-								"scalable_target_action.0.min_capacity",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"end_time": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"scalable_dimension": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"scalable_target_action": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMaxCapacity: {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+								AtLeastOneOf: []string{
+									"scalable_target_action.0.max_capacity",
+									"scalable_target_action.0.min_capacity",
+								},
 							},
-						},
-						"min_capacity": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-							AtLeastOneOf: []string{
-								"scalable_target_action.0.max_capacity",
-								"scalable_target_action.0.min_capacity",
+							"min_capacity": {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+								AtLeastOneOf: []string{
+									"scalable_target_action.0.max_capacity",
+									"scalable_target_action.0.min_capacity",
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"service_namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// The AWS API normalizes start_time and end_time to UTC. Uses
-			// suppressEquivalentTime to allow any timezone to be used.
-			names.AttrStartTime: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
-			},
-			"timezone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "UTC",
-			},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"service_namespace": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// The AWS API normalizes start_time and end_time to UTC. Uses
+				// suppressEquivalentTime to allow any timezone to be used.
+				names.AttrStartTime: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
+				},
+				"timezone": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "UTC",
+				},
+			}
 		},
 	}
 }
@@ -182,7 +187,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -71,4 +71,5 @@ This data source exports the following attributes in addition to the arguments a
 * `transit_gateway_id` - ID of a transit gateway associated with the VPN connection.
 * `type` - Type of VPN connection. Currently the only supported type is ipsec.1.
 * `vgw_telemetries` - List of objects containing information about the VPN tunnel.
+* `vpn_concentrator_id` - ID of a VPN concentrator associated with the VPN connection.
 * `vpn_gateway_id` - ID of a virtual private gateway associated with the VPN connection.

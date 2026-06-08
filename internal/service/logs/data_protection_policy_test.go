@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -96,9 +97,17 @@ func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, t, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDataProtectionPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

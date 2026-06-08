@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore_test
@@ -9,39 +9,40 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccGatewayTargetImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id")
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
@@ -63,7 +64,7 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -74,24 +75,23 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceGatewayTarget, resourceName),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGatewayTarget, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -110,23 +110,22 @@ func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_primitive()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
@@ -144,7 +143,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -157,7 +156,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfPrimitives()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -170,7 +169,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfObjects()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -183,7 +182,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfArrays()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -196,7 +195,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_mixedNested()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -209,7 +208,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayWithIgnoredKeywords()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -241,27 +240,264 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "https://knowledge-mcp.global.api.aws"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckNoResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "https://docs.mcp.cloudflare.com/mcp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://docs.mcp.cloudflare.com/mcp"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", awstypes.ListingModeDynamic),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DYNAMIC"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "https://knowledge-mcp.global.api.aws", awstypes.ListingModeDefault),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.listing_mode", "DEFAULT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationAPIGateway(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.rest_api_id", "aws_api_gateway_rest_api.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.stage", "aws_api_gateway_stage.test", "stage_name"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.filter_path", "/pets"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.*", "POST"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_override.*", map[string]string{
+						names.AttrName:        "ListPets",
+						names.AttrPath:        "/pets",
+						"method":              "GET",
+						names.AttrDescription: "Retrieves all available pets",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_override.*", map[string]string{
+						names.AttrName:        "RegisterPets",
+						names.AttrPath:        "/pets",
+						"method":              "POST",
+						names.AttrDescription: "Register pets",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationAPIGateway(rName, "2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.rest_api_id", "aws_api_gateway_rest_api.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.stage", "aws_api_gateway_stage.test", "stage_name"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.filter_path", "/pets"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.methods.*", "POST"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_override.*", map[string]string{
+						names.AttrName:        "ListPets2",
+						names.AttrPath:        "/pets",
+						"method":              "GET",
+						names.AttrDescription: "Retrieves all available pets2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_override.*", map[string]string{
+						names.AttrName:        "RegisterPets2",
+						names.AttrPath:        "/pets",
+						"method":              "POST",
+						names.AttrDescription: "Register pets2",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := testAccRandomAgentRuntimeName(t)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_gatewayIAMRole()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.arn", "aws_bedrockagentcore_agent_runtime.test", "agent_runtime_arn"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Gateway IAM Role provider with Lambda target
 			{
-				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -276,9 +512,9 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			},
 			// Step 2: API Key provider with OpenAPI Schema target (creates new resource)
 			{
-				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_apiKey()),
+				Config: testAccGatewayTargetConfig_credentialProviderOpenAPISchema(rName, testAccCredentialProvider_apiKey()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "1"),
@@ -294,9 +530,9 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			},
 			// Step 3: OAuth provider with OpenAPI Schema target (updates credential provider only)
 			{
-				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_oauth()),
+				Config: testAccGatewayTargetConfig_credentialProviderOpenAPISchema(rName, testAccCredentialProvider_oauth()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "1"),
@@ -312,9 +548,9 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			},
 			// Step 4: Gateway IAM Role provider with Smithy Model target (creates new resource due to both changes)
 			{
-				Config: testAccGatewayTargetConfig_credentialProviderSmithy(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_credentialProviderSmithyModel(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -329,9 +565,9 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			},
 			// Step 5: Back to Gateway IAM Role with Lambda target (creates new resource again)
 			{
-				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -347,7 +583,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
@@ -357,34 +593,291 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Invalid: Multiple credential providers
 			{
-				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_multipleProviders()),
+				Config:      testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_multipleProviders()),
 				ExpectError: regexache.MustCompile(`Invalid Attribute Combination|cannot be specified`),
 			},
 			{
-				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_empty()),
+				Config:      testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_empty()),
 				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
 			},
 		},
 	})
 }
 
-func testAccCheckGatewayTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccBedrockAgentCoreGatewayTarget_credentialProviderGatewayIAMRoleSigV4(t *testing.T) {
+	// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html#gateway-target-MCPservers-considerations.
+	acctest.Skip(t, "Requires a running MCP server hosted behind an AWS service that natively supports IAM authentication")
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServerSigV4(rName, `    gateway_iam_role {
+      service = "lambda"
+    }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderMCPServerSigV4(rName, `    gateway_iam_role {
+      service = "lambda"
+      region  = data.aws_region.current.region
+    }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := testAccRandomAgentRuntimeName(t)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_callerIAMCredentials()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.caller_iam_credentials.0.service", "bedrock"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := testAccRandomAgentRuntimeName(t)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.jwt_passthrough.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_metadataConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			// Update metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Remove metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Invalid: restricted header Authorization
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Authorization"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Content-Type
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Content-Type"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Host
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Host"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: X-Amzn- prefix
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Custom"),
+				ExpectError: regexache.MustCompile(`must not begin with \(case-insensitive\)`),
+			},
+			// Invalid: header with special characters
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Invalid Header!"),
+				ExpectError: regexache.MustCompile(`header names must contain only alphanumeric characters`),
+			},
+			// Valid: X-Amzn-Bedrock-AgentCore-Runtime-Custom- prefix is allowed
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Bedrock-AgentCore-Runtime-Custom-MyHeader"),
+			},
+		},
+	})
+}
+
+func testAccCheckGatewayTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_gateway_target" {
@@ -407,14 +900,14 @@ func testAccCheckGatewayTargetDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckGatewayTargetExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
+func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindGatewayTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.Attributes["target_id"])
 		if err != nil {
@@ -427,26 +920,10 @@ func testAccCheckGatewayTargetExists(ctx context.Context, n string, v *bedrockag
 	}
 }
 
-func testAccPreCheckGatewayTargets(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
-
-	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
-		GatewayIdentifier: aws.String("test-guthipm3lw"), // Using a dummy ID for the precheck
-	}
-
-	_, err := conn.ListGatewayTargets(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccGatewayTargetConfig_infra(rName string) string {
+func testAccGatewayTargetConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
@@ -462,6 +939,22 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "lambda:*",
+    "Resource": "*"
+  }
+}
+  EOF
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -486,7 +979,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "lambdatest.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_bedrockagentcore_gateway" "test" {
@@ -501,13 +994,20 @@ resource "aws_bedrockagentcore_gateway" "test" {
     }
   }
 
+  protocol_configuration {
+    mcp {
+      instructions       = "Do something"
+      supported_versions = ["2025-11-25"]
+    }
+  }
+
   protocol_type = "MCP"
 }
 `, rName)
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -546,8 +1046,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName))
 }
 
-func testAccGatewayTargetConfig_credentialProvider(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+func testAccGatewayTargetConfig_credentialProviderLambda(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -579,8 +1079,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
-func testAccGatewayTargetConfig_credentialProviderNonLambda(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+func testAccGatewayTargetConfig_credentialProviderOpenAPISchema(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -626,8 +1126,42 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
-func testAccGatewayTargetConfig_credentialProviderSmithy(rName, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+func testAccGatewayTargetConfig_credentialProviderMCPServerSigV4(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "mcp" {
+  filename      = "test-fixtures/mcp_lambda.zip"
+  function_name = "%[1]s-mcp"
+  role          = aws_iam_role.lambda.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.14"
+}
+
+resource "aws_lambda_function_url" "mcp" {
+  function_name      = aws_lambda_function.mcp.function_name
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = aws_lambda_function_url.mcp.function_url
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
+
+func testAccGatewayTargetConfig_credentialProviderSmithyModel(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -703,7 +1237,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfiguration(rName, schemaContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
@@ -732,6 +1266,41 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, schemaContent))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, endpoint string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = %[2]q
+      }
+    }
+  }
+}
+`, rName, endpoint))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint string, listingMode awstypes.ListingMode) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint     = %[2]q
+        listing_mode = %[3]q
+      }
+    }
+  }
+}
+`, rName, endpoint, listingMode))
 }
 
 func testAccSchema_primitive() string {
@@ -871,10 +1440,6 @@ func testAccSchema_invalidUnsupportedType() string {
 		 `
 }
 
-func testAccCredentialProvider_gatewayIAMRole() string {
-	return `    gateway_iam_role {}`
-}
-
 func testAccCredentialProvider_apiKey() string {
 	return `    api_key {
       provider_arn              = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/example.com"
@@ -884,13 +1449,30 @@ func testAccCredentialProvider_apiKey() string {
     }`
 }
 
+func testAccCredentialProvider_callerIAMCredentials() string {
+	return `    caller_iam_credentials {
+      region  = data.aws_region.current.name
+      service = "bedrock"
+    }`
+}
+
+func testAccCredentialProvider_gatewayIAMRole() string {
+	return `    gateway_iam_role {}`
+}
+
+func testAccCredentialProvider_jwtPassthrough() string {
+	return `    jwt_passthrough {}`
+}
+
 func testAccCredentialProvider_oauth() string {
 	return `    oauth {
-      provider_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
-      scopes       = ["read", "write"]
+      provider_arn       = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
+      scopes             = ["read", "write"]
+	  grant_type         = "AUTHORIZATION_CODE"
+	  default_return_url = "https://example.com/callback"
+
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
       }
     }`
 }
@@ -904,4 +1486,291 @@ func testAccCredentialProvider_multipleProviders() string {
 
 func testAccCredentialProvider_empty() string {
 	return `    # No providers configured`
+}
+
+func testAccGatewayTargetConfig_metadataConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id"]
+    allowed_response_headers = ["x-rate-limit-remaining"]
+    allowed_query_parameters = ["version"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id", "x-request-id"]
+    allowed_response_headers = ["x-rate-limit-remaining", "x-request-id"]
+    allowed_query_parameters = ["version", "format"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers = [%[2]q]
+  }
+}
+`, rName, headerName))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationAPIGateway(rName, toolOverrideSuffix string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "pets" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "pets"
+}
+
+resource "aws_api_gateway_method" "get_pets" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.pets.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "post_pets" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.pets.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "get_pets_200" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.pets.id
+  http_method = aws_api_gateway_method.get_pets.http_method
+  status_code = "200"
+}
+
+resource "aws_api_gateway_method_response" "post_pets_200" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.pets.id
+  http_method = aws_api_gateway_method.post_pets.http_method
+  status_code = "200"
+}
+
+resource "aws_api_gateway_integration" "get_pets" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.pets.id
+  http_method = aws_api_gateway_method.get_pets.http_method
+  type        = "MOCK"
+}
+
+resource "aws_api_gateway_integration" "post_pets" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.pets.id
+  http_method = aws_api_gateway_method.post_pets.http_method
+  type        = "MOCK"
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  depends_on = [
+    aws_api_gateway_integration.get_pets,
+    aws_api_gateway_integration.post_pets,
+  ]
+}
+
+resource "aws_api_gateway_stage" "test" {
+  stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      api_gateway {
+        rest_api_id = aws_api_gateway_rest_api.test.id
+        stage       = aws_api_gateway_stage.test.stage_name
+
+        api_gateway_tool_configuration {
+          tool_filter {
+            filter_path = "/pets"
+            methods     = ["GET", "POST"]
+          }
+
+          tool_override {
+            name        = "ListPets%[2]s"
+            path        = "/pets"
+            method      = "GET"
+            description = "Retrieves all available pets%[2]s"
+          }
+
+          tool_override {
+            name        = "RegisterPets%[2]s"
+            path        = "/pets"
+            method      = "POST"
+            description = "Register pets%[2]s"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, toolOverrideSuffix))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "gateway_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "gateway" {
+  name               = "%[1]s-gateway"
+  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.gateway.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "gateway_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "gateway" {
+  name               = "%[1]s-gateway"
+  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
 }

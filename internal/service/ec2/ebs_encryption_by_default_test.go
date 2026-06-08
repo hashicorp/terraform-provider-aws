@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,16 +35,16 @@ func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_encryption_by_default.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSEncryptionByDefault(ctx, resourceName, false),
+					testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -57,7 +56,7 @@ func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 			{
 				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSEncryptionByDefault(ctx, resourceName, true),
+					testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -65,9 +64,9 @@ func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEncryptionByDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.GetEbsEncryptionByDefaultInput{}
 		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)
@@ -83,7 +82,7 @@ func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled bool) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefault(ctx context.Context, t *testing.T, n string, enabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -94,7 +93,7 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled b
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.GetEbsEncryptionByDefaultInput{}
 		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)

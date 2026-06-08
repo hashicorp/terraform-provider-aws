@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,95 +39,97 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_logs": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogs: {
-							Type:             schema.TypeList,
-							MaxItems:         1,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"log_group": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"include_trust_context": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"kinesis_data_firehose": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delivery_stream": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_logs": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogs: {
+								Type:             schema.TypeList,
+								MaxItems:         1,
+								Optional:         true,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"log_group": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"log_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"s3": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Optional: true,
+							"include_trust_context": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"kinesis_data_firehose": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"delivery_stream": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
 									},
-									"bucket_owner": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true, // Describe API returns this value if not set
-										ValidateFunc: verify.ValidAccountID,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
+								},
+							},
+							"log_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"s3": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"bucket_owner": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true, // Describe API returns this value if not set
+											ValidateFunc: verify.ValidAccountID,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"verifiedaccess_instance_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+				"verifiedaccess_instance_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -165,7 +169,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	vaiID := d.Id()
 	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)
 		d.SetId("")
 		return diags

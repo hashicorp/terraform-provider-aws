@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -14,25 +16,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_glossary", name="Glossary")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("glossaryImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetGlossaryOutput")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newGlossaryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &glossaryResource{}
 	return r, nil
@@ -44,6 +53,7 @@ const (
 
 type glossaryResource struct {
 	framework.ResourceWithModel[glossaryResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *glossaryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -131,7 +141,7 @@ func (r *glossaryResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	out, err := findGlossaryByID(ctx, conn, state.Id.ValueString(), state.DomainIdentifier.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -147,6 +157,9 @@ func (r *glossaryResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.OwningProjectIdentifier = flex.StringToFramework(ctx, out.OwningProjectId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -238,17 +251,6 @@ func (r *glossaryResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *glossaryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 3 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id,OwningProjectIdentifier"`, req.ID))
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("owning_project_identifier"), parts[2])...)
-}
-
 func findGlossaryByID(ctx context.Context, conn *datazone.Client, id string, domain_id string) (*datazone.GetGlossaryOutput, error) {
 	in := &datazone.GetGlossaryInput{
 		Identifier:       aws.String(id),
@@ -259,18 +261,37 @@ func findGlossaryByID(ctx context.Context, conn *datazone.Client, id string, dom
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = glossaryImportID{}
+)
+
+type glossaryImportID struct{}
+
+func (glossaryImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, glossaryID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        glossaryID,
+	}
+
+	return id, result, nil
 }
 
 type glossaryResourceModel struct {

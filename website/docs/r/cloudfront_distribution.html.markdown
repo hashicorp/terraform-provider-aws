@@ -10,7 +10,7 @@ description: |-
 
 Creates an Amazon CloudFront web distribution.
 
-For information about CloudFront distributions, see the [Amazon CloudFront Developer Guide][1]. For specific information about creating CloudFront web distributions, see the [POST Distribution][2] page in the Amazon CloudFront API Reference.
+For information about CloudFront distributions, see the [Amazon CloudFront Developer Guide](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html). For specific information about creating CloudFront web distributions, see the [POST Distribution](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html) page in the Amazon CloudFront API Reference.
 
 ~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed state after creation or modification. During this time, deletes to resources will be blocked. If you need to delete a distribution that is enabled and you do not want to wait, you need to use the `retain_on_delete` flag.
 
@@ -384,13 +384,51 @@ resource "aws_cloudwatch_log_delivery" "example" {
 }
 ```
 
+### With Connection Function and Viewer mTLS
+
+The example below creates a CloudFront distribution with a connection function association and viewer mTLS configuration.
+
+```terraform
+resource "aws_cloudfront_connection_function" "example" {
+  name = "example-connection-function"
+  # ... other configuration ...
+}
+
+resource "aws_cloudfront_trust_store" "example" {
+  name = "example-trust-store"
+  # ... other configuration ...
+}
+
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  connection_function_association {
+    id = aws_cloudfront_connection_function.example.id
+  }
+
+  viewer_mtls_config {
+    mode = "verify"
+
+    trust_store_config {
+      trust_store_id                 = aws_cloudfront_trust_store.example.id
+      advertise_trust_store_ca_names = true
+      ignore_certificate_expiry      = false
+    }
+  }
+
+  # ... other configuration ...
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
+* `cache_tag_config` (Optional) -  [Cache tag configuration](#cache-tag-config-arguments) block for cache tag extraction from origin responses (maximum one). See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html) for more information about cache tags.
 * `comment` (Optional) - Any comments you want to include about the distribution.
+* `connection_function_association` (Optional) - A [connection function association](#connection-function-association-arguments) configuration block (maximum one).
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
@@ -407,6 +445,7 @@ This resource supports the following arguments:
 * `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `viewer_certificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
+* `viewer_mtls_config` (Optional) - The [viewer mTLS configuration](#viewer-mtls-config-arguments) for this distribution (maximum one).
 * `web_acl_id` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
 * `retain_on_delete` (Optional) - Disables the distribution instead of deleting it when destroying the resource through Terraform. If this is set, the distribution needs to be deleted manually afterwards. Default: `false`.
 * `wait_for_deployment` (Optional) - If enabled, the resource will wait for the distribution status to change from `InProgress` to `Deployed`. Setting this to`false` will skip the process. Default: `true`.
@@ -526,9 +565,9 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
-* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`).
-* `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
+* `bucket` (Optional) - Amazon S3 bucket for V1 logging where access logs are stored, for example, `myawslogbucket.s3.amazonaws.com`. V1 logging is enabled when this argument is specified. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
+* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`). This argument applies to both V1 and V2 logging.
+* `prefix` (Optional) - Prefix added to the access log file names for V1 logging, for example, `myprefix/`. This argument is effective only when V1 logging is enabled.
 
 #### Origin Arguments
 
@@ -537,7 +576,7 @@ argument should not be specified.
 * `custom_origin_config` - The [CloudFront custom origin](#custom-origin-config-arguments) configuration information. If an S3 origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 * `domain_name` (Required) - DNS domain name of either the S3 bucket, or web site of your custom origin.
 * `custom_header` (Optional) - One or more sub-resources with `name` and `value` parameters that specify header data that will be sent to the origin (multiples allowed).
-* `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
+* `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control](/docs/providers/aws/r/cloudfront_origin_access_control.html) for this origin.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
@@ -562,12 +601,13 @@ argument should not be specified.
 
 ##### S3 Origin Config Arguments
 
-* `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
+* `origin_access_identity` (Required) - The [CloudFront origin access identity](/docs/providers/aws/r/cloudfront_origin_access_identity.html) to associate with the origin.
 
 ##### VPC Origin Config Arguments
 
 * `origin_keepalive_timeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
 * `origin_read_timeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
+* `owner_account_id` - (Optional) The AWS account ID that owns the VPC origin. Required when referencing a VPC origin from a different AWS account for cross-account VPC origin access.
 * `vpc_origin_id` (Required) - The VPC origin ID.
 
 #### Origin Group Arguments
@@ -590,16 +630,35 @@ The `restrictions` sub-resource takes another single sub-resource named `geo_res
 
 The arguments of `geo_restriction` are:
 
-* `locations` (Required) - [ISO 3166-1-alpha-2 codes][4] for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
+* `locations` (Required) - [ISO 3166-1-alpha-2 codes](http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm) for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
 * `restriction_type` (Required) - Method that you want to use to restrict distribution of your content by country: `none`, `whitelist`, or `blacklist`.
 
 #### Viewer Certificate Arguments
 
-* `acm_certificate_arn` - ARN of the [AWS Certificate Manager][6] certificate that you wish to use with this distribution. Specify this, `cloudfront_default_certificate`, or `iam_certificate_id`.  The ACM certificate must be in  US-EAST-1.
+* `acm_certificate_arn` - ARN of the [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) certificate that you wish to use with this distribution. Specify this, `cloudfront_default_certificate`, or `iam_certificate_id`.  The ACM certificate must be in  US-EAST-1.
 * `cloudfront_default_certificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acm_certificate_arn`, or `iam_certificate_id`.
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
 * `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip`, `sni-only`, or `static-ip`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+
+#### Cache Tag Config Arguments
+
+* `header_name` (Required) - Name of the HTTP header to extract cache tags. The header value must contain comma-separated tag values.
+
+#### Connection Function Association Arguments
+
+* `id` (Required) - Identifier of the connection function to associate with the distribution.
+
+#### Viewer mTLS Config Arguments
+
+* `mode` (Required) - The mode for viewer mTLS. Valid values: `required`, `optional`.
+* `trust_store_config` (Required) - The [trust store configuration](#trust-store-config-arguments) for viewer mTLS (maximum one).
+
+##### Trust Store Config Arguments
+
+* `trust_store_id` (Required) - Identifier of the trust store to use for viewer mTLS.
+* `advertise_trust_store_ca_names` (Optional) - Whether to advertise the trust store CA names to clients. Defaults to `false`.
+* `ignore_certificate_expiry` (Optional) - Whether to ignore certificate expiry for viewer mTLS. Defaults to `false`.
 
 ## Attribute Reference
 
@@ -608,6 +667,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
+* `logging_v1_enabled` - Whether V1 logging is enabled for the distribution.
 * `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs.
@@ -624,17 +684,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_modified_time` - Date and time the distribution was last modified.
 * `in_progress_validation_batches` - Number of invalidation batches currently in progress.
 * `etag` - Current version of the distribution's information. For example: `E2QWRUHAPOMQZL`.
-* `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set][7] to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
-
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
-[4]: http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm
-[5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
-[6]: https://aws.amazon.com/certificate-manager/
-[7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
-[8]: /docs/providers/aws/r/cloudfront_origin_access_control.html
+* `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set](http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html) to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudfront_distribution.distribution
+  identity = {
+    id = "E74FTE3EXAMPLE"
+  }
+}
+
+resource "aws_cloudfront_distribution" "distribution" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) CloudFront distribution ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Distributions using the `id`. For example:
 

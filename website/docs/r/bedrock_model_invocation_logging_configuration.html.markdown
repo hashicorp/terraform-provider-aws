@@ -103,7 +103,7 @@ The `cloudwatch_config` configuration block supports the following arguments:
 
 * `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
 * `log_group_name` - (Required) Log group name.
-* `role_arn` - (Optional) The role ARN.
+* `role_arn` - (Required) The role ARN.
 
 ### `large_data_delivery_s3_config` Block
 

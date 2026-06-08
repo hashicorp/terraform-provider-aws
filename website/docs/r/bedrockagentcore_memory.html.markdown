@@ -37,7 +37,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 }
 
 resource "aws_bedrockagentcore_memory" "example" {
-  name                  = "example-memory"
+  name                  = "example_memory"
   event_expiry_duration = 30
 }
 ```
@@ -50,7 +50,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_bedrockagentcore_memory" "example" {
-  name                      = "example-memory"
+  name                      = "example_memory"
   description               = "Memory for customer service agent"
   event_expiry_duration     = 60
   encryption_key_arn        = aws_kms_key.example.arn
@@ -64,15 +64,40 @@ resource "aws_bedrockagentcore_memory" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the memory.
-* `event_expiry_duration` - (Required) Number of minutes after which memory events expire. Must be a positive integer.
+* `event_expiry_duration` - (Required) Number of days after which memory events expire. Must be a positive integer in the range of 7 to 365.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the memory.
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
+* `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Changing this forces a new resource to be created. See [`indexed_key`](#indexed_key) below.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
+* `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources`](#stream_delivery_resources) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### indexed_key
+
+* `key` - (Required) Metadata key name to index.
+* `type` - (Required) Data type of the indexed key. Valid values are `STRING`, `STRINGLIST`, and `NUMBER`.
+
+### stream_delivery_resources
+
+* `resource` - (Required) List of stream delivery resource configurations. See [`resource`](#resource) below.
+
+### resource
+
+* `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis`](#kinesis) below.
+
+### kinesis
+
+* `data_stream_arn` - (Required) ARN of the Kinesis Data Stream.
+* `content_configuration` - (Required) Content configurations for stream delivery. See [`content_configuration`](#content_configuration) below.
+
+### content_configuration
+
+* `type` - (Required) Type of content to stream. Valid value is `MEMORY_RECORDS`.
+* `level` - (Optional) Level of detail for streamed content. Valid values are `METADATA_ONLY` and `FULL_CONTENT`. Defaults to `METADATA_ONLY`.
 
 ## Attribute Reference
 

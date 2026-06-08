@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -26,19 +27,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_project", name="Project")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("projectImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetProjectOutput")
+// @Testing(importIgnore="skip_deletion_check;project_status")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -55,6 +65,7 @@ const (
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -208,7 +219,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -224,6 +235,9 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+	state.ProjectStatus = fwtypes.StringEnumValue(out.ProjectStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -311,23 +325,11 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *projectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-}
-
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ProjectStatusActive),
-		Refresh:                   statusProject(ctx, conn, domain, identifier),
+		Refresh:                   statusProject(conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
 		ContinuousTargetOccurence: 10,
@@ -345,7 +347,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:       []string{},
-		Refresh:      statusProject(ctx, conn, domain, identifier),
+		Refresh:      statusProject(conn, domain, identifier),
 		Delay:        5 * time.Second,
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
@@ -359,10 +361,10 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProject(conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -391,18 +393,37 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = projectImportID{}
+)
+
+type projectImportID struct{}
+
+func (projectImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, projectID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        projectID,
+	}
+
+	return id, result, nil
 }
 
 type projectResourceModel struct {

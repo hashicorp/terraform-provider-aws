@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -7,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,37 +17,43 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_environment_profile", name="Environment Profile")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("environmentProfileImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentProfileOutput")
+// @Testing(importStateIdAttributes="id;domain_identifier", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newEnvironmentProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &environmentProfileResource{}, nil
 }
 
 const (
 	ResNameEnvironmentProfile = "Environment Profile"
-
-	environmentProfileIDParts = 2
 )
 
 type environmentProfileResource struct {
 	framework.ResourceWithModel[environmentProfileResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *environmentProfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -60,7 +69,7 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 			"aws_account_region": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z]{2}-[a-z]{4,10}-\\d$"), "must match ^[a-z]{2}-[a-z]{4,10}-\\d$"),
+					fwvalidators.AWSRegion(),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -177,7 +186,7 @@ func (r *environmentProfileResource) Read(ctx context.Context, req resource.Read
 	}
 
 	out, err := findEnvironmentProfileByID(ctx, conn, state.Id.ValueString(), state.DomainIdentifier.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -266,20 +275,6 @@ func (r *environmentProfileResource) Delete(ctx context.Context, req resource.De
 	}
 }
 
-func (r *environmentProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, environmentProfileIDParts, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: id,domain_identifier. Got: %q", req.ID),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
-}
-
 func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domainID string) (*datazone.GetEnvironmentProfileOutput, error) {
 	in := &datazone.GetEnvironmentProfileInput{
 		Identifier:       aws.String(id),
@@ -290,18 +285,37 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = environmentProfileImportID{}
+)
+
+type environmentProfileImportID struct{}
+
+func (environmentProfileImportID) Parse(id string) (string, map[string]any, error) {
+	profileID, domainID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <id>%s<domain-identifier>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		names.AttrID:        profileID,
+		"domain_identifier": domainID,
+	}
+
+	return id, result, nil
 }
 
 type environmentProfileResourceModel struct {

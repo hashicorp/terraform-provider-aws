@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -23,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -135,7 +137,7 @@ func (r *securityGroupVPCAssociationResource) Read(ctx context.Context, request 
 
 	output, err := findSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, data.GroupID.ValueString(), data.VPCID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -198,13 +200,13 @@ var _ inttypes.ImportIDParser = securityGroupVPCAssociationImportID{}
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]any, error) {
 	sgID, vpcID, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <security-group-id>"+intflex.ResourceIdSeparator+"<vpc-id>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"security_group_id": sgID,
 		names.AttrVPCID:     vpcID,
 	}

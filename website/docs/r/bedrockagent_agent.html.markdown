@@ -103,7 +103,14 @@ The `guardrail_configuration` configuration block supports the following argumen
 The `memory_configuration` configuration block supports the following arguments:
 
 * `enabled_memory_types` - (Required) The type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
+* `session_summary_configuration` - (Optional) Configuration block for `SESSION_SUMMARY` memory type enabled for the agent. See [`session_summary_configuration` Block](#session_summary_configuration-block) for details.
 * `storage_days` - (Optional) The number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
+
+### `session_summary_configuration` Block
+
+The `session_summary_configuration` configuration block supports the following arguments:
+
+* `max_recent_sessions` - (Optional) Maximum number of recent session summaries to include in the agent's prompt context.
 
 ### `prompt_override_configuration` Block
 

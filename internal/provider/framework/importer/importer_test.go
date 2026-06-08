@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -65,8 +65,4 @@ func importByIdentity(ctx context.Context, f importerFunc, client importer.AWSCl
 	f(ctx, client, request, &identitySpec, importSpec, &response)
 
 	return response
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

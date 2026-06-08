@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -24,6 +24,14 @@ func TestAccLogs_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDeliverySource_basic,
 			acctest.CtDisappears: testAccDeliverySource_disappears,
 			"tags":               testAccDeliverySource_tags,
+		},
+		"S3TableIntegrationSource": {
+			acctest.CtBasic:        testAccS3TableIntegrationSource_basic,
+			acctest.CtDisappears:   testAccS3TableIntegrationSource_disappears,
+			"Identity":             testAccLogsS3TableIntegrationSource_identitySerial,
+			"List_basic":           testAccS3TableIntegrationSource_List_basic,
+			"List_includeResource": testAccS3TableIntegrationSource_List_includeResource,
+			"List_regionOverride":  testAccS3TableIntegrationSource_List_regionOverride,
 		},
 	}
 

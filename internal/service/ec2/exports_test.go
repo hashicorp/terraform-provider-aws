@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceAllowedImagesSettings                         = newAllowedImagesSettingsResource
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
@@ -25,6 +26,7 @@ var (
 	ResourceEBSSnapshotCopy                               = resourceEBSSnapshotCopy
 	ResourceEBSSnapshotImport                             = resourceEBSSnapshotImport
 	ResourceEBSVolume                                     = resourceEBSVolume
+	ResourceEBSVolumeCopy                                 = newEBSVolumeCopyResource
 	ResourceEIP                                           = resourceEIP
 	ResourceEIPAssociation                                = resourceEIPAssociation
 	ResourceEIPDomainName                                 = newEIPDomainNameResource
@@ -50,6 +52,8 @@ var (
 	ResourceKeyPair                                       = resourceKeyPair
 	ResourceLaunchTemplate                                = resourceLaunchTemplate
 	ResourceLocalGatewayRoute                             = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTable                        = newLocalGatewayRouteTableResource
+	ResourceLocalGatewayRouteTableVIFGroupAssociation     = newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource
 	ResourceLocalGatewayRouteTableVPCAssociation          = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                     = resourceMainRouteTableAssociation
 	ResourceManagedPrefixList                             = resourceManagedPrefixList
@@ -59,6 +63,7 @@ var (
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
+	ResourceNetworkInsightsAccessScope                    = newNetworkInsightsAccessScopeResource
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
@@ -69,6 +74,8 @@ var (
 	ResourceRoute                                         = resourceRoute
 	ResourceRouteTable                                    = resourceRouteTable
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
+	ResourceSecondaryNetwork                              = newSecondaryNetworkResource
+	ResourceSecondarySubnet                               = newSecondarySubnetResource
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
@@ -93,6 +100,8 @@ var (
 	ResourceTransitGatewayMulticastGroupSource            = resourceTransitGatewayMulticastGroupSource
 	ResourceTransitGatewayPeeringAttachment               = resourceTransitGatewayPeeringAttachment
 	ResourceTransitGatewayPeeringAttachmentAccepter       = resourceTransitGatewayPeeringAttachmentAccepter
+	ResourceTransitGatewayMeteringPolicy                  = newTransitGatewayMeteringPolicyResource
+	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
@@ -106,6 +115,7 @@ var (
 	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
+	ResourceVPCEncryptionControl                          = newResourceVPCEncryptionControl
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
 	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
@@ -120,6 +130,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -134,12 +145,14 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
@@ -179,6 +192,8 @@ var (
 	FindKeyPairByName                                           = findKeyPairByName
 	FindLaunchTemplateByID                                      = findLaunchTemplateByID
 	FindLocalGatewayRouteByTwoPartKey                           = findLocalGatewayRouteByTwoPartKey
+	FindLocalGatewayRouteTableByID                              = findLocalGatewayRouteTableByID
+	FindLocalGatewayRouteTableVIFGroupAssociationByID           = findLocalGatewayRouteTableVIFGroupAssociationByID
 	FindLocalGatewayRouteTableVPCAssociationByID                = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                           = findMainRouteTableAssociationByID
 	FindManagedPrefixListByID                                   = findManagedPrefixListByID
@@ -188,6 +203,7 @@ var (
 	FindNetworkACLAssociationByID                               = findNetworkACLAssociationByID
 	FindNetworkACLByID                                          = findNetworkACLByID
 	FindNetworkACLEntryByThreePartKey                           = findNetworkACLEntryByThreePartKey
+	FindNetworkInsightsAccessScopeByID                          = findNetworkInsightsAccessScopeByID
 	FindNetworkInsightsAnalysisByID                             = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                 = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                    = findNetworkInterfaceByID
@@ -206,10 +222,14 @@ var (
 	FindRouteServerPropagationByTwoPartKey                      = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                               = findRouteTableAssociationByID
 	FindRouteTableByID                                          = findRouteTableByID
+	FindSecondaryNetworkByID                                    = findSecondaryNetworkByID
+	FindSecondarySubnetByID                                     = findSecondarySubnetByID
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
+	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription
@@ -231,6 +251,8 @@ var (
 	FindTransitGatewayMulticastGroupMemberByThreePartKey        = findTransitGatewayMulticastGroupMemberByThreePartKey
 	FindTransitGatewayMulticastGroupSourceByThreePartKey        = findTransitGatewayMulticastGroupSourceByThreePartKey
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
+	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
+	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
@@ -242,6 +264,7 @@ var (
 	FindVPCBlockPublicAccessExclusionByID                       = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                             = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                               = findVPCDHCPOptionsAssociation
+	FindVPCEncryptionControlByID                                = findVPCEncryptionControlByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID        = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                   = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                  = findVPCEndpointRouteTableAssociationExists
@@ -251,6 +274,7 @@ var (
 	FindVPCEndpointSubnetAssociationExists                      = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                         = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                                = findVPCPeeringConnectionByID
+	FindVPNConcentratorByID                                     = findVPNConcentratorByID
 	FindVPNConnectionByID                                       = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                          = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                          = findVPNGatewayByID
@@ -276,6 +300,7 @@ var (
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList
@@ -301,6 +326,9 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
+	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
+	GuardDutySecurityGroupNameForVPC                            = guardDutySecurityGroupNameForVPC
 )
 
 type (

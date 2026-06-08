@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,19 +15,19 @@ import (
 
 func TestAccSiteVPNGatewayDataSource_unattached(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
 	dataSourceNameByAsn := "data.aws_vpn_gateway.test_by_amazon_side_asn"
 	resourceName := "aws_vpn_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayDataSourceConfig_unattached(rName),
+				Config: testAccVPNGatewayDataSourceConfig_unattached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, names.AttrARN, resourceName, names.AttrARN),
@@ -46,16 +45,16 @@ func TestAccSiteVPNGatewayDataSource_unattached(t *testing.T) {
 
 func TestAccSiteVPNGatewayDataSource_attached(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpn_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayDataSourceConfig_attached(rName),
+				Config: testAccVPNGatewayDataSourceConfig_attached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, "aws_vpn_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attached_vpc_id", "aws_vpc.test", names.AttrID),
@@ -66,7 +65,7 @@ func TestAccSiteVPNGatewayDataSource_attached(t *testing.T) {
 	})
 }
 
-func testAccSiteVPNGatewayDataSourceConfig_unattached(rName string) string {
+func testAccVPNGatewayDataSourceConfig_unattached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -93,7 +92,7 @@ data "aws_vpn_gateway" "test_by_amazon_side_asn" {
 `, rName)
 }
 
-func testAccSiteVPNGatewayDataSourceConfig_attached(rName string) string {
+func testAccVPNGatewayDataSourceConfig_attached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

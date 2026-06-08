@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chimesdkmediapipelines
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,48 +63,50 @@ func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elements": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"elements": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+							},
+							"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
+							"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
+							"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
+							"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
+							"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
+							"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 						},
-						"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
-						"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
-						"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
-						"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
-						"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
-						"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 					},
 				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_access_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
-			names.AttrTags:                  tftags.TagsSchema(),
-			names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_access_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
+				names.AttrTags:                  tftags.TagsSchema(),
+				names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -530,7 +534,7 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 
 	out, err := findMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -634,8 +638,7 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	out, err := conn.GetMediaInsightsPipelineConfiguration(ctx, in)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -644,7 +647,7 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	}
 
 	if out == nil || out.MediaInsightsPipelineConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.MediaInsightsPipelineConfiguration, nil

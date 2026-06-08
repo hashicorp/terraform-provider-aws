@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package emr
 
@@ -21,7 +23,7 @@ import (
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -56,180 +59,182 @@ func resourceCluster() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			instanceFleetConfigSchema := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_type_configs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bid_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-									"bid_price_as_percentage_of_on_demand_price": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										ForceNew: true,
-										Default:  100,
-									},
-									"configurations": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"classification": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrProperties: {
-													Type:     schema.TypeMap,
-													Optional: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"ebs_config": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrIOPS: {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrSize: {
-													Type:     schema.TypeInt,
-													Required: true,
-													ForceNew: true,
-												},
-												names.AttrType: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validEBSVolumeType(),
-												},
-												"volumes_per_instance": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  1,
-												},
-											},
-										},
-										Set: resourceClusterEBSHashConfig,
-									},
-									names.AttrInstanceType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"weighted_capacity": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-							Set: resourceInstanceTypeHashConfig,
-						},
-						"launch_specifications": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"on_demand_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+							"instance_type_configs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bid_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"bid_price_as_percentage_of_on_demand_price": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+											ForceNew: true,
+											Default:  100,
+										},
+										"configurations": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"classification": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrProperties: {
+														Type:     schema.TypeMap,
+														Optional: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"spot_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													ForceNew:         true,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
-												},
-												"block_duration_minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  0,
-												},
-												"timeout_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
-												},
-												"timeout_duration_minutes": {
-													Type:     schema.TypeInt,
-													ForceNew: true,
-													Required: true,
+										"ebs_config": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrIOPS: {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrSize: {
+														Type:     schema.TypeInt,
+														Required: true,
+														ForceNew: true,
+													},
+													names.AttrType: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validEBSVolumeType(),
+													},
+													"volumes_per_instance": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  1,
+													},
 												},
 											},
+											Set: resourceClusterEBSHashConfig,
+										},
+										names.AttrInstanceType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"weighted_capacity": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
 										},
 									},
 								},
+								Set: resourceInstanceTypeHashConfig,
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"provisioned_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"provisioned_spot_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"target_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
-						"target_spot_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
+							"launch_specifications": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"on_demand_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+													},
+												},
+											},
+										},
+										"spot_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														ForceNew:         true,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
+													},
+													"block_duration_minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  0,
+													},
+													"timeout_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
+													},
+													"timeout_duration_minutes": {
+														Type:     schema.TypeInt,
+														ForceNew: true,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"provisioned_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"provisioned_spot_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+							"target_spot_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+						}
 					},
 				}
 			}
@@ -1072,7 +1077,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1203,7 +1208,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	autoTerminationPolicy, err := findAutoTerminationPolicyByClusterID(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("auto_termination_policy", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
@@ -1456,13 +1461,13 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
 	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.Status.State),
 			LastRequest: input,
 		}
@@ -1475,7 +1480,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1486,20 +1491,20 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *emr.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
 		}
 		output, err := findCluster(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1515,7 +1520,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
 		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1528,7 +1533,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1541,7 +1546,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
 		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1554,7 +1559,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1579,7 +1584,7 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1603,7 +1608,7 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1636,7 +1641,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") ||
 		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
 		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1647,7 +1652,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	}
 
 	if output == nil || output.AutoTerminationPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AutoTerminationPolicy, nil
@@ -2144,7 +2149,7 @@ func findCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Clien
 	}
 
 	if instanceGroup.AutoScalingPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return instanceGroup.AutoScalingPolicy, nil

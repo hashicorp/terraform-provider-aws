@@ -55,6 +55,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` – The ID of the route table.
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.
 * `owner_id` - ID of the AWS account that owns the route table.
@@ -80,6 +81,7 @@ For targets:
 * `local_gateway_id` - Local Gateway ID.
 * `nat_gateway_id` - NAT Gateway ID.
 * `network_interface_id` - ID of the elastic network interface (eni) to use.
+* `odb_network_arn` - ARN of the ODB network.
 * `transit_gateway_id` - EC2 Transit Gateway ID.
 * `vpc_endpoint_id` - VPC Endpoint ID.
 * `vpc_peering_connection_id` - VPC Peering ID.

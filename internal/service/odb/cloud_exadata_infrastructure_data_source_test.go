@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	exaInfraResource := "aws_odb_cloud_exadata_infrastructure.test"
 	exaInfraDataSource := "data.aws_odb_cloud_exadata_infrastructure.test"
 	displayNameSuffix := sdkacctest.RandomWithPrefix(exaInfraDataSourceTestEntity.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 
@@ -72,7 +72,7 @@ func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDes
 				continue
 			}
 			_, err := tfodb.FindExaDataInfraForDataSourceByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

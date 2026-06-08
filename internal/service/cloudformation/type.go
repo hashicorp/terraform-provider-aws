@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudformation
 
@@ -13,15 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,108 +37,110 @@ func resourceType() *schema.Resource {
 		DeleteWithoutTimeout: resourceTypeDelete,
 		ReadWithoutTimeout:   resourceTypeRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deprecated_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"documentation_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"is_default_version": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"logging_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrLogGroupName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 512),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
-							),
-						},
-						"log_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deprecated_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"documentation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"is_default_version": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"logging_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
+								),
+							},
+							"log_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"provisioning_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSchema: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"schema_handler_package": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
-			},
-			"type_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(10, 204),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
-				),
-			},
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"visibility": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"provisioning_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSchema: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"schema_handler_package": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
+				},
+				"type_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"type_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(10, 204),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+					),
+				},
+				"version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"visibility": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -146,7 +151,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	typeName := d.Get("type_name").(string)
 	inputRT := cloudformation.RegisterTypeInput{
-		ClientRequestToken:   aws.String(sdkid.UniqueId()),
+		ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 		SchemaHandlerPackage: aws.String(d.Get("schema_handler_package").(string)),
 		TypeName:             aws.String(typeName),
 	}
@@ -204,7 +209,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findTypeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -323,7 +328,7 @@ func findTypeByARN(ctx context.Context, conn *cloudformation.Client, arn string)
 	}
 
 	if status := output.DeprecatedStatus; status == awstypes.DeprecatedStatusDeprecated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			Message:     string(status),
 		}
@@ -345,7 +350,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	output, err := conn.DescribeType(ctx, input)
 
 	if errs.IsA[*awstypes.TypeNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -356,7 +361,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -370,7 +375,7 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	output, err := conn.DescribeTypeRegistration(ctx, input)
 
 	if errs.IsA[*awstypes.CFNRegistryException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -381,17 +386,17 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
+func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTypeRegistrationByToken(ctx, conn, registrationToken)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -407,7 +412,7 @@ func waitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistrationStatusInProgress),
 		Target:  enum.Slice(awstypes.RegistrationStatusComplete),
 		Refresh: statusTypeRegistrationProgress(ctx, conn, registrationToken),

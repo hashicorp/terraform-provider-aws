@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `node_group_configuration` block to support availability zone specification and snapshot restoration for cluster mode enabled replication groups
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_replication_group: Add `node_group_configuration` attribute to expose node group details including availability zones, replica counts, and slot ranges
+```

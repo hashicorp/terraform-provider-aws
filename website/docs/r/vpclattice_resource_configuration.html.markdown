@@ -58,6 +58,36 @@ resource "aws_vpclattice_resource_configuration" "example" {
 }
 ```
 
+### With custom domain
+
+```terraform
+resource "aws_vpclattice_domain_verification" "example" {
+  domain_name = "example.com"
+}
+
+resource "aws_vpclattice_resource_configuration" "example" {
+  name = "Example"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.example.id
+  custom_domain_name          = "custom.example.com"
+  domain_verification_id      = aws_vpclattice_domain_verification.example.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "test.example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+
+  tags = {
+    Environment = "Example"
+  }
+}
+```
+
 ### ARN Example
 
 ```terraform
@@ -88,6 +118,8 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network.
+* `custom_domain_name` - (Optional) Custom domain name for your resource configuration. Additionally, provide a `domain_verification_id` to prove your ownership of a domain.
+* `domain_verification_id` - (Optional) The domain verification ID of your verified custom domain name. If you don't provide an ID, you must configure the DNS settings yourself.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
 * `resource_gateway_identifier` - (Optional) ID of the Resource Gateway used to access the resource. MUST be specified if `resource_configuration_group_id` is not.
@@ -129,6 +161,8 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the resource gateway.
+* `domain_verification_arn` - ARN of the domain verification.
+* `domain_verification_status` - Domain verification status.
 * `id` - ID of the resource gateway.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

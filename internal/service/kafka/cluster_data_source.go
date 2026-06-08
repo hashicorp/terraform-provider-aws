@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -21,155 +23,163 @@ import (
 )
 
 // @SDKDataSource("aws_msk_cluster", name="Cluster")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"broker_node_group_info": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"az_distribution": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"client_subnets": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"broker_node_group_info": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"az_distribution": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"connectivity_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"vpc_connectivity": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"client_authentication": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"sasl": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"iam": {
-																			Type:     schema.TypeBool,
-																			Computed: true,
-																		},
-																		"scram": {
-																			Type:     schema.TypeBool,
-																			Computed: true,
+							"client_subnets": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"connectivity_info": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"vpc_connectivity": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"client_authentication": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"sasl": {
+																	Type:     schema.TypeList,
+																	Computed: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"iam": {
+																				Type:     schema.TypeBool,
+																				Computed: true,
+																			},
+																			"scram": {
+																				Type:     schema.TypeBool,
+																				Computed: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"tls": {
-																Type:     schema.TypeBool,
-																Computed: true,
+																"tls": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"public_access": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:     schema.TypeString,
-													Computed: true,
+										"public_access": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"storage_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ebs_storage_info": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"provisioned_throughput": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Computed: true,
-															},
-															"volume_throughput": {
-																Type:     schema.TypeInt,
-																Computed: true,
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"storage_info": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ebs_storage_info": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"provisioned_throughput": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
+																"volume_throughput": {
+																	Type:     schema.TypeInt,
+																	Computed: true,
+																},
 															},
 														},
 													},
-												},
-												names.AttrVolumeSize: {
-													Type:     schema.TypeInt,
-													Computed: true,
+													names.AttrVolumeSize: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
 												},
 											},
 										},
@@ -179,33 +189,33 @@ func dataSourceCluster() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"cluster_uuid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kafka_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"number_of_broker_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"zookeeper_connect_string": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"zookeeper_connect_string_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"cluster_uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kafka_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"number_of_broker_nodes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"zookeeper_connect_string": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"zookeeper_connect_string_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -213,15 +223,9 @@ func dataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	input := &kafka.ListClustersInput{
-		ClusterNameFilter: aws.String(clusterName),
-	}
-	cluster, err := findCluster(ctx, conn, input, func(v *types.ClusterInfo) bool {
-		return aws.ToString(v.ClusterName) == clusterName
-	})
+	cluster, err := findClusterByName(ctx, conn, clusterName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", clusterName, err)
@@ -258,15 +262,18 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
 
-	if err := d.Set(names.AttrTags, keyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
 
-func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersInput, filter tfslices.Predicate[*types.ClusterInfo]) (*types.ClusterInfo, error) {
-	output, err := findClusters(ctx, conn, input, filter)
+func findClusterByName(ctx context.Context, conn *kafka.Client, name string) (*types.ClusterInfo, error) {
+	input := kafka.ListClustersInput{
+		ClusterNameFilter: aws.String(name),
+	}
+	output, err := findClusters(ctx, conn, &input, func(v *types.ClusterInfo) bool {
+		return aws.ToString(v.ClusterName) == name
+	})
 
 	if err != nil {
 		return nil, err

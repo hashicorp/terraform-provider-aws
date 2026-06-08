@@ -88,6 +88,7 @@ This resource supports the following arguments:
 * `name` - (Required) This is the name of the hosted zone.
 * `comment` - (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.
 * `delegation_set_id` - (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with `vpc` as delegation sets can only be used for public zones.
+* `enable_accelerated_recovery` - (Optional) Boolean to indicate whether to enable accelerated recovery for the hosted zone. Defaults to `false`. Once set, switching to `false` requires explicitly specifying `false` rather than removing the argument.
 * `force_destroy` - (Optional) Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone.
 * `tags` - (Optional) A map of tags to assign to the zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegation_set_id` argument in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
@@ -117,6 +118,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Route53 Zones. For example:
+
+```terraform
+import {
+  to = aws_route53_zone.myzone
+  identity = {
+    zone_id = "Z1D633PJN98FT9"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `zone_id` (String) The Hosted Zone ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
 

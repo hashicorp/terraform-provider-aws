@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -12,11 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,22 +28,22 @@ func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxdatabase finspace.GetKxDatabaseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -64,25 +63,33 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxdatabase finspace.GetKxDatabaseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDatabase(), resourceName),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -95,29 +102,29 @@ func TestAccFinSpaceKxDatabase_description(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxdatabase finspace.GetKxDatabaseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 				),
 			},
 			{
 				Config: testAccKxDatabaseConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 				),
 			},
@@ -132,22 +139,22 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxdatabase finspace.GetKxDatabaseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -155,7 +162,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 			{
 				Config: testAccKxDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -164,7 +171,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 			{
 				Config: testAccKxDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
+					testAccCheckKxDatabaseExists(ctx, t, resourceName, &kxdatabase),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -173,9 +180,9 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKxDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_database" {
@@ -202,7 +209,7 @@ func testAccCheckKxDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *finspace.GetKxDatabaseOutput) resource.TestCheckFunc {
+func testAccCheckKxDatabaseExists(ctx context.Context, t *testing.T, name string, kxdatabase *finspace.GetKxDatabaseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -213,7 +220,7 @@ func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDatabase, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 		resp, err := conn.GetKxDatabase(ctx, &finspace.GetKxDatabaseInput{
 			DatabaseName:  aws.String(rs.Primary.Attributes[names.AttrName]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),

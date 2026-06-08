@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +45,7 @@ func (r *accountSettingResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("BASIC_SCAN_TYPE_VERSION", "REGISTRY_POLICY_SCOPE"),
+					stringvalidator.OneOf("BASIC_SCAN_TYPE_VERSION", "BLOB_MOUNTING", "REGISTRY_POLICY_SCOPE"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -51,7 +54,7 @@ func (r *accountSettingResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrValue: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("AWS_NATIVE", "CLAIR", "V1", "V2"),
+					stringvalidator.OneOf("AWS_NATIVE", "CLAIR", "DISABLED", "ENABLED", "V1", "V2"),
 				},
 			},
 		},
@@ -96,7 +99,7 @@ func (r *accountSettingResource) Read(ctx context.Context, request resource.Read
 	name := data.Name.ValueString()
 	output, err := findAccountSettingByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -166,7 +169,7 @@ func findAccountSettingByName(ctx context.Context, conn *ecr.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

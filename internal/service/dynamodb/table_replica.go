@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dynamodb
 
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,44 +58,46 @@ func resourceTableReplica() *schema.Resource {
 			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: { // direct to replica
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protection_enabled": { // direct to replica
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
-			"global_table_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrKMSKeyARN: { // through main table
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"point_in_time_recovery": { // direct to replica
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
-			"table_class_override": { // through main table
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
-			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: { // direct to replica
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_protection_enabled": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
+				"global_table_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrKMSKeyARN: { // through main table
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"point_in_time_recovery": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
+				"table_class_override": { // through main table
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),         // direct to replica
+				names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+			}
 		},
 	}
 }
@@ -220,7 +225,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	table, err := findTableByName(ctx, conn, tableName, optFn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table (%s) not found, removing replica from state", d.Id())
 		d.SetId("")
 		return diags
@@ -273,7 +278,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	table, err := findTableByName(ctx, conn, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Replica (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

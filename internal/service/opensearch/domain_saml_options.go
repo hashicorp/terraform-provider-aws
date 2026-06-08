@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,72 +43,74 @@ func resourceDomainSAMLOptions() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"saml_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"idp": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"entity_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metadata_content": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringIsNotEmpty,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"saml_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"idp": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"entity_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metadata_content": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
 									},
 								},
 							},
-						},
-						"master_backend_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"master_user_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"roles_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"session_timeout_minutes": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Default:          60,
-							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
-						},
-						"subject_key": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "",
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							"master_backend_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"master_user_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"roles_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"session_timeout_minutes": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Default:          60,
+								ValidateFunc:     validation.IntBetween(1, 1440),
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
+							"subject_key": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "",
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -124,7 +129,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

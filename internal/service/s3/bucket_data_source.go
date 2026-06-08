@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,39 +25,41 @@ func dataSourceBucket() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"bucket_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_regional_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"bucket_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_regional_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -103,7 +107,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		log.Printf("[WARN] Reading S3 Bucket (%s) Website: %s", bucket, err)
 	}
 

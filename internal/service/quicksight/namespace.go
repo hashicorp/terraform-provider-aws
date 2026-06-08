@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package quicksight
 
@@ -20,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -172,7 +174,7 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	out, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -252,8 +254,7 @@ func findNamespace(ctx context.Context, conn *quicksight.Client, input *quicksig
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -262,7 +263,7 @@ func findNamespace(ctx context.Context, conn *quicksight.Client, input *quicksig
 	}
 
 	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil
@@ -305,7 +306,7 @@ func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, awsAccou
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusCreating),
 		Target:     enum.Slice(awstypes.NamespaceStatusCreated),
-		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
+		Refresh:    statusNamespace(conn, awsAccountID, namespace),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -323,7 +324,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
+		Refresh:    statusNamespace(conn, awsAccountID, namespace),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -337,11 +338,11 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 	return nil, err
 }
 
-func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNamespace(conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

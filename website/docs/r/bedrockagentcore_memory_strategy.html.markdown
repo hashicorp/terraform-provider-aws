@@ -13,7 +13,7 @@ Manages an AWS Bedrock AgentCore Memory Strategy. Memory strategies define how t
 **Important Limitations:**
 
 - Each memory can have a maximum of 6 strategies total
-- Only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`) can exist per memory
+- Only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory
 - Multiple `CUSTOM` strategies are allowed (subject to the total limit of 6)
 
 ## Example Usage
@@ -51,6 +51,18 @@ resource "aws_bedrockagentcore_memory_strategy" "user_pref" {
   type        = "USER_PREFERENCE"
   description = "User preference tracking strategy"
   namespaces  = ["preferences"]
+}
+```
+
+### Episodic Strategy
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "episodic" {
+  name        = "episodic-strategy"
+  memory_id   = aws_bedrockagentcore_memory.example.id
+  type        = "EPISODIC"
+  description = "Episodic memory strategy"
+  namespaces  = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
 }
 ```
 
@@ -128,13 +140,40 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_user_pref" {
 }
 ```
 
+### Custom Strategy with Episodic Override
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
+  name                      = "custom-episodic-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Custom episodic processing strategy"
+  namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+
+  configuration {
+    type = "EPISODIC_OVERRIDE"
+
+    consolidation {
+      append_to_prompt = "Consolidate episodic memories into coherent narratives"
+      model_id         = "anthropic.claude-3-sonnet-20240229-v1:0"
+    }
+
+    extraction {
+      append_to_prompt = "Extract key events and episodes from interactions"
+      model_id         = "anthropic.claude-3-haiku-20240307-v1:0"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `name` - (Required) Name of the memory strategy.
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
-* `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`) can exist per memory.
+* `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
 * `namespaces` - (Required) Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
 
 The following arguments are optional:
@@ -147,7 +186,7 @@ The following arguments are optional:
 
 The `configuration` block supports the following:
 
-* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`. Changing this forces a new resource.
+* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
 * `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource.
 * `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
 
@@ -169,7 +208,7 @@ The `extraction` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier of the Memory Strategy.
+* `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
 
 ## Timeouts
 

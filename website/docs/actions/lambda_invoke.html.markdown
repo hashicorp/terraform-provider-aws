@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_lambda_invoke
 
-~> **Note:** `aws_lambda_invoke` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.
 
 For information about AWS Lambda functions, see the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/). For specific information about invoking Lambda functions, see the [Invoke](https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html) page in the AWS Lambda API Reference.
@@ -216,7 +214,8 @@ This action supports the following arguments:
 * `client_context` - (Optional) Up to 3,583 bytes of base64-encoded data about the invoking client to pass to the function in the context object. This is only used for mobile applications and should contain information about the client application and device.
 * `function_name` - (Required) Name, ARN, or partial ARN of the Lambda function to invoke. You can specify a function name (e.g., `my-function`), a qualified function name (e.g., `my-function:PROD`), or a partial ARN (e.g., `123456789012:function:my-function`).
 * `invocation_type` - (Optional) Invocation type. Valid values are `RequestResponse` (default) for synchronous invocation that waits for the function to complete and returns the response, `Event` for asynchronous invocation that returns immediately after the request is accepted, and `DryRun` to validate parameters and verify permissions without actually executing the function.
-* `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Only applies to synchronous invocations (`RequestResponse` invocation type). Defaults to `None`. When set to `Tail`, the last 4 KB of the execution log is included in the response.
+* `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Only applies to synchronous invocations (`RequestResponse` invocation type). Defaults to `None`. When set to `Tail`, the last 4 KB of the execution log is included in the response and output as part of the progress messages.
 * `payload` - (Required) JSON payload to send to the Lambda function. This should be a valid JSON string that represents the event data for your function. The payload size limit is 6 MB for synchronous invocations and 256 KB for asynchronous invocations.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `qualifier` - (Optional) Version or alias of the Lambda function to invoke. If not specified, the `$LATEST` version will be invoked. Can be a version number (e.g., `1`) or an alias (e.g., `PROD`).
+* `tenant_id` - (Optional)  Tenant Id to serve invocations from specified tenant.

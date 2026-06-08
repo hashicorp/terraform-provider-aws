@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_user: Fix `NoSuchEntity` errors when `name` and `tags` arguments are both updated
+```

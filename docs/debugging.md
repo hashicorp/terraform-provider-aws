@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Debugging
 
 This guide covers strategies we have found useful in finding runtime and logic errors in the AWS Provider. We do not cover syntax or compiler errors as these are well addressed by [Go documentation](https://go.dev/ref/spec) and IDEs, such as Visual Studio Code ("VS Code").
@@ -59,7 +62,7 @@ For example, if we're looking at an error in the VPC flow log resource, this is 
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -120,7 +123,7 @@ Of course, not all bugs throw errors. For example, perhaps the bug you are looki
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -193,7 +196,7 @@ For example, if you want to contribute just a failing test, the example below sh
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -229,7 +232,7 @@ There are other types of bugs besides the error thrown in the previous example. 
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -278,10 +281,10 @@ This approach does not work well for complex logic, examining many lines of code
 This example shows using `fmt.Printf()` to output information to the console:
 
 ```go
-func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
     // other code ...
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowLogsWithContext(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 

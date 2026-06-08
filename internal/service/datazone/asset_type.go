@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -15,25 +17,32 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_asset_type", name="Asset Type")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("name")
+// @ImportIDHandler("assetTypeImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetAssetTypeOutput")
+// @Testing(importStateIdAttributes="domain_identifier;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newAssetTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &assetTypeResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
@@ -48,6 +57,7 @@ type assetTypeResource struct {
 	framework.ResourceWithModel[assetTypeResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *assetTypeResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -193,7 +203,7 @@ func (r *assetTypeResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 	out, err := findAssetTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -243,18 +253,6 @@ func (r *assetTypeResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *assetTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "domain_identifier,name"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
-}
-
 func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id string) (*datazone.GetAssetTypeOutput, error) {
 	in := &datazone.GetAssetTypeInput{
 		DomainIdentifier: aws.String(domainId),
@@ -264,8 +262,7 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	out, err := conn.GetAssetType(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -274,10 +271,30 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = assetTypeImportID{}
+)
+
+type assetTypeImportID struct{}
+
+func (assetTypeImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, name, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<name>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrName:      name,
+	}
+
+	return id, result, nil
 }
 
 type assetTypeResourceModel struct {

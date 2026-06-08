@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -15,8 +15,6 @@ import (
 
 func TestAccChatbotSlackWorkspaceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -31,7 +29,7 @@ func TestAccChatbotSlackWorkspaceDataSource_basic(t *testing.T) {
 
 	dataSourceName := "data.aws_chatbot_slack_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

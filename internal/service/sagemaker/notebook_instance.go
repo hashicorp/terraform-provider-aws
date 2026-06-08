@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -16,13 +18,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,110 +50,112 @@ func resourceNotebookInstance() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"additional_code_repositories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 3,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_code_repository": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"direct_internet_access": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.DirectInternetAccessEnabled,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectInternetAccess](),
-			},
-			"instance_metadata_service_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"minimum_instance_metadata_service_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"1", "2"}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_code_repositories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 3,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_code_repository": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"direct_internet_access": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.DirectInternetAccessEnabled,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectInternetAccess](),
+				},
+				"instance_metadata_service_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					MaxItems:         1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"minimum_instance_metadata_service_version": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice([]string{"1", "2"}, false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrInstanceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.InstanceType](),
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"lifecycle_config_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3)$`), ""),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"root_access": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.RootAccessEnabled,
-				ValidateDiagFunc: enum.Validate[awstypes.RootAccess](),
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVolumeSize: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  5,
-			},
+				names.AttrInstanceType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.InstanceType](),
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"lifecycle_config_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3|notebook-al2023-v1)$`), ""),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"root_access": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.RootAccessEnabled,
+					ValidateDiagFunc: enum.Validate[awstypes.RootAccess](),
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVolumeSize: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  5,
+				},
+			}
 		},
 	}
 }
@@ -228,7 +232,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	notebookInstance, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Notebook Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -355,7 +359,7 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 
 	notebook, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -395,8 +399,7 @@ func findNotebookInstanceByName(ctx context.Context, conn *sagemaker.Client, nam
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "RecordNotFound") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -405,7 +408,7 @@ func findNotebookInstanceByName(ctx context.Context, conn *sagemaker.Client, nam
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -445,7 +448,7 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	notebook, err := findNotebookInstanceByName(ctx, conn, id)
 
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 		return err

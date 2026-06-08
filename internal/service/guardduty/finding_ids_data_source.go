@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -12,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +29,7 @@ func newFindingIDsDataSource(context.Context) (datasource.DataSourceWithConfigur
 }
 
 const (
-	DSNameFindingIds = "Finding Ids Data Source"
+	dsNameFindingIds = "Finding Ids Data Source"
 )
 
 type findingIDsDataSource struct {
@@ -65,7 +67,7 @@ func (d *findingIDsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	out, err := findFindingIds(ctx, conn, data.DetectorID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, DSNameFindingIds, data.DetectorID.String(), err),
+			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, dsNameFindingIds, data.DetectorID.String(), err),
 			err.Error(),
 		)
 		return
@@ -92,8 +94,7 @@ func findFindingIds(ctx context.Context, conn *guardduty.Client, id string) ([]s
 
 		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 

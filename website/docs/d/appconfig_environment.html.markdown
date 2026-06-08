@@ -39,6 +39,5 @@ This data source exports the following attributes in addition to the arguments a
 * `monitor` - Set of Amazon CloudWatch alarms to monitor during the deployment process.
     * `alarm_arn` - ARN of the Amazon CloudWatch alarm.
     * `alarm_role_arn` - ARN of an IAM role for AWS AppConfig to monitor.
-* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
-  or `ROLLED_BACK`.
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK` or `ROLLED_BACK`.
 * `tags` - Map of tags for the resource.

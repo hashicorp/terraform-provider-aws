@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,28 +27,30 @@ func dataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"issuer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"issuer_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"issuer_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"session_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"issuer_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"issuer_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"issuer_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"session_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -77,7 +82,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 		role, err = findRoleByName(ctx, conn, roleName)
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 

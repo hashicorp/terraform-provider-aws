@@ -1,15 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
-
-resource "aws_cleanrooms_collaboration" "test" {
-  name                     = var.rName
-  creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
-  creator_display_name     = "Creator"
-  description              = var.rName
-  query_log_status         = "DISABLED"
-}
 
 resource "aws_cleanrooms_membership" "test" {
   collaboration_id = aws_cleanrooms_collaboration.test.id
@@ -19,6 +11,15 @@ resource "aws_cleanrooms_membership" "test" {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
   }
+}
+
+resource "aws_cleanrooms_collaboration" "test" {
+  name                     = var.rName
+  creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
+  creator_display_name     = "Creator"
+  description              = var.rName
+  query_log_status         = "DISABLED"
+  analytics_engine         = "SPARK"
 }
 
 resource "null_resource" "test" {}

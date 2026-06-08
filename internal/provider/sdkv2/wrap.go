@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -12,8 +12,11 @@ import (
 // Implemented by (schema.ResourceData|schema.ResourceDiff).GetOk().
 type getAttributeFunc func(string) (any, bool)
 
+// Implemented by (schema.ResourceData).GetProviderMeta().
+type getProviderMetaFunc func(any) error
+
 // contextFunc augments Context.
-type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, error)
+type contextFunc func(context.Context, getAttributeFunc, getProviderMetaFunc, any) (context.Context, error)
 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -101,7 +104,7 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 
 	return func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
-		ctx, err := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
+		ctx, err := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, nil, meta)
 		if err != nil {
 			return nil, err
 		}

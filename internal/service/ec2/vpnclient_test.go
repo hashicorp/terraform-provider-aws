@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -39,6 +39,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
 			"endpointIpAddressType":        testAccClientVPNEndpoint_endpointIPAddressType,
 			"trafficIpAddressType":         testAccClientVPNEndpoint_trafficIPAddressType,
+			"transitGatewayConfiguration":  testAccClientVPNEndpoint_transitGatewayConfiguration,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {

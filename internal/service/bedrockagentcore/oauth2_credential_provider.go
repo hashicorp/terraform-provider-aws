@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -24,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,6 +44,8 @@ var (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
+// @Tags(identifierAttribute="credential_provider_arn")
+// @Testing(tagsTest=false)
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
 	return r, nil
@@ -158,6 +163,8 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"oauth2_provider_config": schema.ListNestedBlock{
@@ -232,8 +239,8 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 
 func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan, config oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -242,14 +249,14 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 
 	// Get the effective client credentials.
 	clientCredentials, d := plan.clientCredentials(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Write-only attribute are only in Config.
 	fromConfig, d := config.clientCredentials(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -261,13 +268,15 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input bedrockagentcorecontrol.CreateOauth2CredentialProviderInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
+	smerr.AddEnrich(ctx, &response.Diagnostics,
 		fwflex.Expand(ctx, plan, &input,
 			fwflex.WithFieldNameSuffix("Input"),
 		))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateOauth2CredentialProvider(ctx, &input)
 	if err != nil {
@@ -282,7 +291,7 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
+	smerr.AddEnrich(ctx, &response.Diagnostics,
 		fwflex.Flatten(ctx, provider, &plan,
 			fwflex.WithFieldNameSuffix("Output"),
 		))
@@ -290,19 +299,19 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Get the client credentials from State.
 	clientCredentials, d := data.clientCredentials(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -311,8 +320,8 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	out, err := findOAuth2CredentialProviderByName(ctx, conn, name)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -324,21 +333,21 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 	// Stuff the client credentials into Context for AutoFlEx.
 	ctx = oauth2ClientCredentialsCtxKey.NewContext(ctx, clientCredentials)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
+	smerr.AddEnrich(ctx, &response.Diagnostics,
 		fwflex.Flatten(ctx, out, &data,
 			fwflex.WithFieldNameSuffix("Output")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var plan, state, config oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -346,7 +355,7 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -354,14 +363,14 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 	if diff.HasChanges() {
 		// Get the effective client credentials.
 		clientCredentials, d := plan.clientCredentials(ctx)
-		smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Write-only attribute are only in Config.
 		fromConfig, d := config.clientCredentials(ctx)
-		smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -373,7 +382,7 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
 		var input bedrockagentcorecontrol.UpdateOauth2CredentialProviderInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics,
+		smerr.AddEnrich(ctx, &response.Diagnostics,
 			fwflex.Expand(ctx, plan, &input,
 				fwflex.WithFieldNameSuffix("Input")))
 		if response.Diagnostics.HasError() {
@@ -393,7 +402,7 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &response.Diagnostics,
+		smerr.AddEnrich(ctx, &response.Diagnostics,
 			fwflex.Flatten(ctx, got, &plan,
 				fwflex.WithFieldNameSuffix("Output"),
 			))
@@ -402,12 +411,12 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -444,9 +453,8 @@ func findOAuth2CredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	out, err := conn.GetOauth2CredentialProvider(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -455,7 +463,7 @@ func findOAuth2CredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -468,6 +476,8 @@ type oauth2CredentialProviderResourceModel struct {
 	CredentialProviderVendor fwtypes.StringEnum[awstypes.CredentialProviderVendorType]  `tfsdk:"credential_provider_vendor"`
 	Name                     types.String                                               `tfsdk:"name"`
 	OAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigModel] `tfsdk:"oauth2_provider_config"`
+	Tags                     tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                 `tfsdk:"tags_all"`
 }
 
 type oauth2ProviderConfigModel struct {
@@ -508,7 +518,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 	switch t := v.(type) {
 	case awstypes.Oauth2ProviderConfigOutputMemberCustomOauth2ProviderConfig:
 		var model customOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -517,7 +527,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	case awstypes.Oauth2ProviderConfigOutputMemberGithubOauth2ProviderConfig:
 		var model githubOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -526,7 +536,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	case awstypes.Oauth2ProviderConfigOutputMemberGoogleOauth2ProviderConfig:
 		var model googleOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -535,7 +545,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	case awstypes.Oauth2ProviderConfigOutputMemberMicrosoftOauth2ProviderConfig:
 		var model microsoftOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -544,7 +554,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	case awstypes.Oauth2ProviderConfigOutputMemberSalesforceOauth2ProviderConfig:
 		var model salesforceOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -553,7 +563,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	case awstypes.Oauth2ProviderConfigOutputMemberSlackOauth2ProviderConfig:
 		var model slackOAuth2ProviderConfigModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -580,26 +590,26 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 	switch {
 	case !m.CustomOAuth2ProviderConfig.IsNull():
 		data, d := m.CustomOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberCustomOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 	case !m.GithubOAuth2ProviderConfig.IsNull():
 		data, d := m.GithubOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberGithubOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -607,13 +617,13 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 
 	case !m.GoogleOAuth2ProviderConfig.IsNull():
 		data, d := m.GoogleOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberGoogleOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -621,13 +631,13 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 
 	case !m.MicrosoftOAuth2ProviderConfig.IsNull():
 		data, d := m.MicrosoftOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberMicrosoftOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -635,13 +645,13 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 
 	case !m.SalesforceOAuth2ProviderConfig.IsNull():
 		data, d := m.SalesforceOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberSalesforceOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -649,13 +659,13 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 
 	case !m.SlackOAuth2ProviderConfig.IsNull():
 		data, d := m.SlackOAuth2ProviderConfig.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberSlackOauth2ProviderConfig
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -776,7 +786,7 @@ func (m *oauth2DiscoveryModel) Flatten(ctx context.Context, v any) diag.Diagnost
 
 	case awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata:
 		var model oauth2AuthorizationServerMetadataModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -801,12 +811,12 @@ func (m oauth2DiscoveryModel) Expand(ctx context.Context) (any, diag.Diagnostics
 
 	case !m.AuthorizationServerMetadata.IsNull():
 		model, d := m.AuthorizationServerMetadata.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}

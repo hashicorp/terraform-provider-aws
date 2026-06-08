@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,16 +38,16 @@ func testAccEBSDefaultKMSKey_basic(t *testing.T) {
 	resourceName := "aws_ebs_default_kms_key.test"
 	resourceNameKey := "aws_kms_key.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSDefaultKMSKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSDefaultKMSKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSDefaultKMSKey(ctx, resourceName),
+					testAccCheckEBSDefaultKMSKey(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, names.AttrARN),
 				),
 			},
@@ -61,14 +60,14 @@ func testAccEBSDefaultKMSKey_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		arn, err := testAccEBSManagedDefaultKey(ctx)
+		arn, err := testAccEBSManagedDefaultKey(ctx, t)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.GetEbsDefaultKmsKeyIdInput{}
 		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
@@ -85,7 +84,7 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckEBSDefaultKMSKey(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -96,12 +95,12 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("No ID is set")
 		}
 
-		arn, err := testAccEBSManagedDefaultKey(ctx)
+		arn, err := testAccEBSManagedDefaultKey(ctx, t)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.GetEbsDefaultKmsKeyIdInput{}
 		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
@@ -119,8 +118,8 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 }
 
 // testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
-func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+func testAccEBSManagedDefaultKey(ctx context.Context, t *testing.T) (*arn.ARN, error) {
+	conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 	alias, err := tfkms.FindAliasByName(ctx, conn, "alias/aws/ebs")
 	if err != nil {

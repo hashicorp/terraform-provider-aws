@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add `encryption_support` argument
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway: Add `encryption_support` attribute
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,11 +19,11 @@ import (
 func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.SecurityGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -33,7 +32,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "default VPC security group"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
@@ -71,10 +70,10 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.SecurityGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,7 +82,7 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),

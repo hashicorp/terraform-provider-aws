@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -19,52 +21,54 @@ func dataSourceBootstrapBrokers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBootstrapBrokersRead,
 
-		Schema: map[string]*schema.Schema{
-			"bootstrap_brokers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bootstrap_brokers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

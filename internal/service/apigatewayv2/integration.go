@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigatewayv2
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,146 +41,148 @@ func resourceIntegration() *schema.Resource {
 			StateContext: resourceIntegrationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrConnectionID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ConnectionTypeInternet,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
-			},
-			"content_handling_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ContentHandlingStrategy](),
-			},
-			"credentials_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"integration_method": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validHTTPMethod(),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Default HTTP method for Lambda integration is POST.
-					if v := d.Get("integration_type").(string); (v == string(awstypes.IntegrationTypeAws) || v == string(awstypes.IntegrationTypeAwsProxy)) && old == "POST" && new == "" {
-						return true
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrConnectionID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ConnectionTypeInternet,
+					ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
+				},
+				"content_handling_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ContentHandlingStrategy](),
+				},
+				"credentials_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"integration_method": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validHTTPMethod(),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Default HTTP method for Lambda integration is POST.
+						if v := d.Get("integration_type").(string); (v == string(awstypes.IntegrationTypeAws) || v == string(awstypes.IntegrationTypeAwsProxy)) && old == "POST" && new == "" {
+							return true
+						}
 
-					return false
+						return false
+					},
 				},
-			},
-			"integration_response_selection_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"integration_subtype": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"integration_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
-			},
-			"integration_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"passthrough_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PassthroughBehaviorWhenNoMatch,
-				ValidateDiagFunc: enum.Validate[awstypes.PassthroughBehavior](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Not set for HTTP APIs.
-					if old == "" && new == string(awstypes.PassthroughBehaviorWhenNoMatch) {
-						return true
-					}
-					return false
+				"integration_response_selection_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"payload_format_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1.0",
-				ValidateFunc: validation.StringInSlice([]string{
-					"1.0",
-					"2.0",
-				}, false),
-			},
-			"request_parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				// Length between [1-512].
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"request_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				// Length between [0-32768].
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"response_parameters": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mappings": {
-							Type:     schema.TypeMap,
-							Required: true,
-							// Length between [1-512].
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Required: true,
+				"integration_subtype": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"integration_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
+				},
+				"integration_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"passthrough_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PassthroughBehaviorWhenNoMatch,
+					ValidateDiagFunc: enum.Validate[awstypes.PassthroughBehavior](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Not set for HTTP APIs.
+						if old == "" && new == string(awstypes.PassthroughBehaviorWhenNoMatch) {
+							return true
+						}
+						return false
+					},
+				},
+				"payload_format_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "1.0",
+					ValidateFunc: validation.StringInSlice([]string{
+						"1.0",
+						"2.0",
+					}, false),
+				},
+				"request_parameters": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					// Length between [1-512].
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"request_templates": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					// Length between [0-32768].
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"response_parameters": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"mappings": {
+								Type:     schema.TypeMap,
+								Required: true,
+								// Length between [1-512].
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"template_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"timeout_milliseconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"tls_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"server_name_to_verify": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"template_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"timeout_milliseconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"tls_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"server_name_to_verify": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -273,7 +277,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findIntegrationByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -491,8 +495,7 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -501,7 +504,7 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -522,8 +525,7 @@ func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *api
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 

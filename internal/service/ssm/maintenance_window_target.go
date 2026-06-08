@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,58 +42,60 @@ func resourceMaintenanceWindowTarget() *schema.Resource {
 		UpdateWithoutTimeout: resourceMaintenanceWindowTargetUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTargetDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
-			},
-			"owner_information": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"targets": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
-								validation.StringLenBetween(1, 163),
-							),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 128),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
+				},
+				"owner_information": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"targets": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
+									validation.StringLenBetween(1, 163),
+								),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowResourceType](),
-			},
-			"window_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrResourceType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowResourceType](),
+				},
+				"window_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -136,7 +140,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 	windowID := d.Get("window_id").(string)
 	target, err := findMaintenanceWindowTargetByTwoPartKey(ctx, conn, windowID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -243,8 +247,7 @@ func findMaintenanceWindowTargets(ctx context.Context, conn *ssm.Client, input *
 
 		if errs.IsA[*awstypes.DoesNotExistException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -266,7 +269,7 @@ func (maintenanceWindowTargetImportID) Create(d *schema.ResourceData) string {
 	return d.Id()
 }
 
-func (maintenanceWindowTargetImportID) Parse(id string) (string, map[string]string, error) {
+func (maintenanceWindowTargetImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 {
 		return id, nil, fmt.Errorf("maintenance_window_target id must be of the form <window_id>/<target_id>")
@@ -275,7 +278,7 @@ func (maintenanceWindowTargetImportID) Parse(id string) (string, map[string]stri
 	windowID := parts[0]
 	targetID := parts[1]
 
-	result := map[string]string{
+	result := map[string]any{
 		"window_id": windowID,
 	}
 	return targetID, result, nil

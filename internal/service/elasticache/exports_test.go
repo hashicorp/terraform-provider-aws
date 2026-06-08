@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -29,6 +29,7 @@ var (
 	ParameterChanges                     = parameterChanges
 	ParameterHash                        = parameterHash
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
+	WaitCacheClusterAvailable            = waitCacheClusterAvailable
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
 	DeleteCacheCluster                                = deleteCacheCluster
@@ -46,6 +47,8 @@ var (
 	ValidMemcachedVersionString                       = validMemcachedVersionString
 	ValidRedisVersionString                           = validRedisVersionString
 	ValidValkeyVersionString                          = validValkeyVersionString
+
+	ValidReplicationGroupAuthToken = validReplicationGroupAuthToken
 )
 
 type (

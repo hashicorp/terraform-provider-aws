@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -11,14 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // resourceNotFoundExceptionResourceIDEquals returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ResourceNotFoundException
 //   - ResourceNotFoundException.ResourceId equals resourceID
 func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) bool {
-	if err, ok := errs.As[*awstypes.ResourceNotFoundException](err); ok && aws.ToString(err.ResourceId) == resourceID {
+	if err, ok := errors.AsType[*awstypes.ResourceNotFoundException](err); ok && aws.ToString(err.ResourceId) == resourceID {
 		return true
 	}
 
@@ -30,7 +29,7 @@ func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) boo
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Message contains message
 func validationExceptionMessageContains(err error, reason awstypes.ValidationExceptionReason, message string) bool {
-	if err, ok := errs.As[*awstypes.ValidationException](err); ok && err.Reason == reason {
+	if err, ok := errors.AsType[*awstypes.ValidationException](err); ok && err.Reason == reason {
 		return strings.Contains(aws.ToString(err.Message), message)
 	}
 
@@ -42,7 +41,7 @@ func validationExceptionMessageContains(err error, reason awstypes.ValidationExc
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Fields.Message contains message
 func validationExceptionFieldsMessageContains(err error, reason awstypes.ValidationExceptionReason, message string) bool {
-	if err, ok := errs.As[*awstypes.ValidationException](err); ok && err.Reason == reason && slices.ContainsFunc(err.Fields, func(v awstypes.ValidationExceptionField) bool {
+	if err, ok := errors.AsType[*awstypes.ValidationException](err); ok && err.Reason == reason && slices.ContainsFunc(err.Fields, func(v awstypes.ValidationExceptionField) bool {
 		return strings.Contains(aws.ToString(v.Message), message)
 	}) {
 		return true

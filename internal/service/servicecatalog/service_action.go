@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -11,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -40,56 +42,58 @@ func resourceServiceAction() *schema.Resource {
 			Delete: schema.DefaultTimeout(ServiceActionDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"assume_role": { // ServiceActionDefinitionKeyAssumeRole
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: { // ServiceActionDefinitionKeyName
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrParameters: { // ServiceActionDefinitionKeyParameters
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     validation.StringIsJSON,
-							DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ServiceActionDefinitionTypeSsmAutomation,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ServiceActionDefinitionType](),
-						},
-						names.AttrVersion: { // ServiceActionDefinitionKeyVersion
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"assume_role": { // ServiceActionDefinitionKeyAssumeRole
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: { // ServiceActionDefinitionKeyName
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrParameters: { // ServiceActionDefinitionKeyParameters
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateFunc:     validation.StringIsJSON,
+								DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ServiceActionDefinitionTypeSsmAutomation,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ServiceActionDefinitionType](),
+							},
+							names.AttrVersion: { // ServiceActionDefinitionKeyVersion
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -99,7 +103,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreateServiceActionInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Definition:       expandServiceActionDefinition(d.Get("definition").([]any)[0].(map[string]any)),
 		DefinitionType:   awstypes.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),

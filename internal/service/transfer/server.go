@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -16,7 +18,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -53,6 +55,15 @@ func resourceServer() *schema.Resource {
 
 				return false
 			}),
+			// When ip_address_type is DUALSTACK, address_allocation_ids cannot be specified.
+			func(ctx context.Context, d *schema.ResourceDiff, i any) error {
+				if v, ok := d.GetOk(names.AttrIPAddressType); ok && v.(string) == string(awstypes.IpAddressTypeDualstack) {
+					if v, ok := d.GetOk("endpoint_details.0.address_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
+						return fmt.Errorf("cannot specify address_allocation_ids when ip_address_type is DUALSTACK")
+					}
+				}
+				return nil
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -157,6 +168,12 @@ func resourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"logging_role": {
 				Type:         schema.TypeString,
@@ -380,6 +397,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
@@ -475,7 +496,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findServerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -530,6 +551,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
 	} else {
@@ -702,6 +724,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			input.IdentityProviderDetails = identityProviderDetails
+		}
+
+		if d.HasChanges(names.AttrIPAddressType) {
+			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
+			offlineUpdate = true
 		}
 
 		if d.HasChange("logging_role") {
@@ -904,8 +931,7 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -914,17 +940,17 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	}
 
 	if output == nil || output.Server == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Server, nil
 }
 
-func statusServer(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServer(conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -940,7 +966,7 @@ func waitServerCreated(ctx context.Context, conn *transfer.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting),
 		Target:  enum.Slice(awstypes.StateOnline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -960,7 +986,7 @@ func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateOffline, awstypes.StateOnline, awstypes.StateStarting, awstypes.StateStopping, awstypes.StateStartFailed, awstypes.StateStopFailed),
 		Target:  []string{},
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -977,7 +1003,7 @@ func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOffline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOnline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -994,7 +1020,7 @@ func waitServerStopped(ctx context.Context, conn *transfer.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOnline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOffline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1261,6 +1287,7 @@ const (
 	securityPolicyNameRestricted_2020_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
 	securityPolicyNameRestricted_2024_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
 	securityPolicyNameSSHAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
+	securityPolicyNameAS2Restricted_2025_07     securityPolicyName = "TransferSecurityPolicy-AS2Restricted-2025-07"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1282,5 +1309,6 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
 		securityPolicyNameSSHAuditCompliant_2025_02,
+		securityPolicyNameAS2Restricted_2025_07,
 	}
 }

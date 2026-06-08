@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -13,14 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,59 +48,61 @@ func resourceMultiplex() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multiplex_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transport_stream_bitrate": {
-							Type:             schema.TypeInt,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
-						},
-						"transport_stream_reserved_bitrate": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"transport_stream_id": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"maximum_video_buffer_delay_milliseconds": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"multiplex_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"transport_stream_bitrate": {
+								Type:             schema.TypeInt,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
+							},
+							"transport_stream_reserved_bitrate": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"transport_stream_id": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"maximum_video_buffer_delay_milliseconds": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"start_multiplex": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"start_multiplex": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -114,7 +117,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateMultiplexInput{
-		RequestId:         aws.String(id.UniqueId()),
+		RequestId:         aws.String(create.UniqueId(ctx)),
 		Name:              aws.String(d.Get(names.AttrName).(string)),
 		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		Tags:              getTagsIn(ctx),
@@ -155,7 +158,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	out, err := findMultiplexByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Multiplex (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -236,7 +239,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	out, err := findMultiplexByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -274,7 +277,7 @@ func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.MultiplexStateCreating),
 		Target:                    enum.Slice(types.MultiplexStateIdle),
-		Refresh:                   statusMultiplex(ctx, conn, id),
+		Refresh:                   statusMultiplex(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -293,7 +296,7 @@ func waitMultiplexUpdated(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.MultiplexStateIdle),
-		Refresh:                   statusMultiplex(ctx, conn, id),
+		Refresh:                   statusMultiplex(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -312,7 +315,7 @@ func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateDeleting),
 		Target:  enum.Slice(types.MultiplexStateDeleted),
-		Refresh: statusMultiplex(ctx, conn, id),
+		Refresh: statusMultiplex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -328,7 +331,7 @@ func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStarting),
 		Target:  enum.Slice(types.MultiplexStateRunning),
-		Refresh: statusMultiplex(ctx, conn, id),
+		Refresh: statusMultiplex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -344,7 +347,7 @@ func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStopping),
 		Target:  enum.Slice(types.MultiplexStateIdle),
-		Refresh: statusMultiplex(ctx, conn, id),
+		Refresh: statusMultiplex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -356,10 +359,10 @@ func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string
 	return nil, err
 }
 
-func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMultiplex(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findMultiplexByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -380,8 +383,7 @@ func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -389,7 +391,7 @@ func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

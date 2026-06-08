@@ -321,7 +321,7 @@ The following arguments are optional:
 * `image_pull_policy` - (Optional) Image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
 * `name` - (Optional) Name of the container. If the name isn't specified, the default name "Default" is used. Each container in a pod must have a unique name.
 * `resources` - (Optional) Type and amount of resources to assign to a container. The supported resources include `memory`, `cpu`, and `nvidia.com/gpu`.
-* `security_context` - (Optional) Security context for a job.
+* `security_context` - (Optional) Security context for a job. See [`security_context`](#security_context) below.
 * `volume_mounts` - (Optional) Volume mounts for the container.
 
 #### `image_pull_secret`
@@ -350,6 +350,15 @@ The following arguments are optional:
 
 * `secret_name` - (Required) Name of the secret. The name must be allowed as a DNS subdomain name.
 * `optional` - (Optional) Whether the secret or the secret's keys must be defined.
+
+##### security_context
+
+* `allow_privilege_escalation` - (Optional) Whether or not a container or a Kubernetes pod is allowed to gain more privileges than its parent process. The default value is `false`.
+* `privileged` - (Optional) When this parameter is `true`, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is `false`.
+* `read_only_root_filesystem` - (Optional) When this parameter is `true`, the container is given read-only access to its root file system. The default value is `false`.
+* `run_as_group` - (Optional) When this parameter is specified, the container is run as the specified group ID (gid). If this parameter isn't specified, the default is the group that's specified in the image metadata.
+* `run_as_non_root` - (Optional) When this parameter is specified, the container is run as a user with a uid other than 0. If this parameter isn't specified, so such rule is enforced.
+* `run_as_user` - (Optional) When this parameter is specified, the container is run as the specified user ID (uid). If this parameter isn't specified, the default is the user that's specified in the image metadata.
 
 ### `retry_strategy`
 

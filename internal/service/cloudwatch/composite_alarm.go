@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudwatch
 
@@ -16,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,83 +41,85 @@ func resourceCompositeAlarm() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"actions_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"actions_suppressor": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarm": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"extension_period": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"wait_period": {
-							Type:     schema.TypeInt,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"actions_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+					ForceNew: true,
+				},
+				"actions_suppressor": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"extension_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"wait_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"alarm_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"alarm_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"alarm_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"alarm_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"alarm_rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 10240),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"insufficient_data_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_description": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			"ok_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"alarm_rule": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 10240),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"insufficient_data_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"ok_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -152,7 +158,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 		}
 
 		if err != nil {
@@ -160,7 +166,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -169,8 +175,8 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 
 	alarm, err := findCompositeAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Composite Alarm %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -212,7 +218,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -248,7 +254,7 @@ func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-uuid"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -20,9 +19,9 @@ import (
 
 func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	uuid, err := uuid.GenerateUUID()
-	developerProviderName := sdkacctest.RandString(10)
+	developerProviderName := acctest.RandString(t, 10)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	if err != nil {
@@ -30,7 +29,7 @@ func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *tes
 		t.Fail()
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)

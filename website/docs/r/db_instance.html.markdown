@@ -518,6 +518,7 @@ in a Route 53 Alias record).
 * `status` - The RDS instance status.
 * `storage_encrypted` - Whether the DB instance is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `username` - The master username for the database.
 
 On Oracle and Microsoft SQL instances the following is exported additionally:

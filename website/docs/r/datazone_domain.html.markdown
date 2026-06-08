@@ -172,6 +172,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Domain.
 * `id` - ID of the Domain.
 * `portal_url` - URL of the data portal for the Domain.
+* `root_domain_unit_id` - ID of the root domain unit.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -182,6 +183,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_domain.example
+  identity = {
+    id = "domain-id-12345678"
+  }
+}
+
+resource "aws_datazone_domain" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the DataZone domain.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Domain using the `domain_id`. For example:
 

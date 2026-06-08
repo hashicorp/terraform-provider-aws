@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -169,7 +169,7 @@ func TestRegionalSingleton(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := regionalSingletonSchema
@@ -357,7 +357,7 @@ func TestGlobalSingleton(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := globalSingletonSchema

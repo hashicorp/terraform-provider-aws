@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -7,10 +7,12 @@ package flex
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -60,6 +62,26 @@ type awsMapOfMapOfStringPointer struct {
 
 type awsMapOfStringPointer struct {
 	FieldInner map[string]*string
+}
+
+type awsMapOfInt struct {
+	Field1 map[string]int
+}
+
+type tfSingleMapField struct {
+	Field1 types.Map `tfsdk:"field1"`
+}
+
+type awsMapOfStringPointerField struct {
+	Field1 map[string]*string
+}
+
+type tfMapStringPointerBlockElement struct {
+	MapBlockKey types.String `tfsdk:"map_block_key"`
+}
+
+type tfMapStringPointerBlock struct {
+	Field1 fwtypes.ListNestedObjectValueOf[tfMapStringPointerBlockElement] `tfsdk:"field1"`
 }
 
 type tfMapBlockList struct {
@@ -191,9 +213,16 @@ func TestExpandMaps(t *testing.T) {
 				},
 			},
 		},
+		"map of string to incompatible target": {
+			Source: &tfSingleMapField{
+				Field1: types.MapValueMust(types.StringType, map[string]attr.Value{"a": types.StringValue("b")}),
+			},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandMapBlock(t *testing.T) {
@@ -213,7 +242,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block key list": {
 			Source: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -242,7 +271,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block key set": {
 			Source: &tfMapBlockSet{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -329,7 +358,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block enum key": {
 			Source: &tfMapBlockListEnumKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementEnumKey](ctx, []tfMapBlockElementEnumKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementEnumKey{
 					{
 						MapBlockKey: fwtypes.StringEnumValue(testEnumList),
 						Attr1:       types.StringValue("a"),
@@ -359,7 +388,7 @@ func TestExpandMapBlock(t *testing.T) {
 
 		"map block list no key": {
 			Source: &tfMapBlockListNoKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementNoKey](ctx, []tfMapBlockElementNoKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementNoKey{
 					{
 						Attr1: types.StringValue("a"),
 						Attr2: types.StringValue("b"),
@@ -374,7 +403,7 @@ func TestExpandMapBlock(t *testing.T) {
 			ExpectedDiags: diagAF[tfMapBlockElementNoKey](diagExpandingNoMapBlockKey),
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenMaps(t *testing.T) {
@@ -460,9 +489,35 @@ func TestFlattenMaps(t *testing.T) {
 				}),
 			},
 		},
+		"nil map of map of string": {
+			Source:     &awsMapOfMapOfString{},
+			Target:     &tfMapOfMapOfString{},
+			WantTarget: &tfMapOfMapOfString{Field1: fwtypes.NewMapValueOfNull[fwtypes.MapValueOf[types.String]](ctx)},
+		},
+		"nil map of map of string pointer": {
+			Source:     &awsMapOfMapOfStringPointer{},
+			Target:     &tfMapOfMapOfString{},
+			WantTarget: &tfMapOfMapOfString{Field1: fwtypes.NewMapValueOfNull[fwtypes.MapValueOf[types.String]](ctx)},
+		},
+		"incompatible map value type": {
+			Source:     &awsMapOfInt{Field1: map[string]int{"a": 1}},
+			Target:     &tfMapOfMapOfString{},
+			WantTarget: &tfMapOfMapOfString{},
+			WantDiff:   true,
+		},
+		// Previously caused a panic when structMapToObjectList attempted
+		// to call flattenStruct on a dereferenced *string value.
+		"map of string pointer to list nested object": {
+			Source: &awsMapOfStringPointerField{
+				Field1: map[string]*string{"key1": aws.String("val1")},
+			},
+			Target:        &tfMapStringPointerBlock{},
+			WantTarget:    &tfMapStringPointerBlock{},
+			ExpectedDiags: diag.Diagnostics{DiagFlatteningIncompatibleTypes(reflect.TypeFor[map[string]*string](), reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfMapStringPointerBlockElement]]())},
+		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenMapBlock(t *testing.T) {
@@ -491,7 +546,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockList{},
 			WantTarget: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -511,7 +566,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockSet{},
 			WantTarget: &tfMapBlockSet{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -540,7 +595,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockList{},
 			WantTarget: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -580,7 +635,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockListEnumKey{},
 			WantTarget: &tfMapBlockListEnumKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementEnumKey](ctx, []tfMapBlockElementEnumKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementEnumKey{
 					{
 						MapBlockKey: fwtypes.StringEnumValue(testEnumList),
 						Attr1:       types.StringValue("a"),
@@ -603,5 +658,5 @@ func TestFlattenMapBlock(t *testing.T) {
 			ExpectedDiags: diagAF[tfMapBlockElementNoKey](diagFlatteningNoMapBlockKey),
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }

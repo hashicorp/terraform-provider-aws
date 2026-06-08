@@ -1,12 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,6 +44,8 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 				names.AttrSubnetID:     "sn-12345678",
 			},
 			expected: map[string]any{
+				//lintignore:AWSAT003,AWSAT005
+				"log_destination":  "arn:aws:logs:us-east-1:123456789012:log-group:log-group-name",
 				names.AttrSubnetID: "sn-12345678",
 			},
 		},
@@ -49,7 +55,12 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), tt.rawState, nil)
+			client := mockClient{
+				region:    "us-east-1", //lintignore:AWSAT003
+				accountID: acctest.Ct12Digit,
+			}
+
+			result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), tt.rawState, client)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -58,4 +69,69 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestFlowLogStateUpgradeV0_complexState simulates state as decoded from a JSON state file.
+// This is to ensure nothing in a complex state prevents state upgrading.
+func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
+	t.Parallel()
+
+	stateJSON := `{
+		"arn": "arn:aws:ec2:us-east-1:123456789012:vpc-flow-log/fl-12345678",
+		"deliver_cross_account_role": "",
+		"destination_options": [],
+		"eni_id": "eni-12345678",
+		"iam_role_arn": "arn:aws:iam::123456789012:role/flowlogs",
+		"id": "fl-12345678",
+		"log_destination": "arn:aws:logs:us-east-1:123456789012:log-group:/my/log-group",
+		"log_destination_type": "cloud-watch-logs",
+		"log_format": "${version} ${account-id}",
+		"log_group_name": "/my/log-group",
+		"max_aggregation_interval": 600,
+		"subnet_id": null,
+		"tags": {},
+		"tags_all": {},
+		"traffic_type": "ALL",
+		"transit_gateway_attachment_id": null,
+		"transit_gateway_id": null,
+		"vpc_id": null
+	}` //lintignore:AWSAT003,AWSAT005
+
+	var rawState map[string]any
+	if err := json.Unmarshal([]byte(stateJSON), &rawState); err != nil {
+		t.Fatalf("failed to unmarshal state JSON: %v", err)
+	}
+
+	client := mockClient{
+		region:    "us-east-1", //lintignore:AWSAT003
+		accountID: acctest.Ct12Digit,
+	}
+
+	result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), rawState, client)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, ok := result[names.AttrLogGroupName]; ok {
+		t.Errorf("expected log_group_name to be removed, but it is still present")
+	}
+	//lintignore:AWSAT003,AWSAT005
+	if result["log_destination"] != "arn:aws:logs:us-east-1:123456789012:log-group:/my/log-group" {
+		t.Errorf("expected log_destination to be preserved, got: %v", result["log_destination"])
+	}
+}
+
+type mockClient struct {
+	region    string
+	accountID string
+}
+
+func (m mockClient) RegionalARN(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: names.PartitionForRegion(m.region).ID(),
+		Service:   service,
+		Region:    m.region,
+		AccountID: m.accountID,
+		Resource:  resource,
+	}.String()
 }

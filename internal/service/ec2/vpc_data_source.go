@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -32,90 +34,92 @@ func dataSourceVPC() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cidr_block_associations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrCIDRBlock: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cidr_block_associations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrCIDRBlock: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"default": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"default": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -172,19 +176,19 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)

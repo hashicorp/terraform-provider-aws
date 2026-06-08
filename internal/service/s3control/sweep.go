@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -274,7 +274,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		for _, v := range page.AccessPoints {
 			r := resourceMultiRegionAccessPoint()
 			d := r.Data(nil)
-			d.SetId(MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(v.Name)))
+			d.SetId(multiRegionAccessPointCreateResourceID(accountID, aws.ToString(v.Name)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -372,7 +372,7 @@ func sweepStorageLensConfigurations(region string) error {
 
 			r := resourceStorageLensConfiguration()
 			d := r.Data(nil)
-			d.SetId(StorageLensConfigurationCreateResourceID(accountID, configID))
+			d.SetId(storageLensConfigurationCreateResourceID(accountID, configID))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

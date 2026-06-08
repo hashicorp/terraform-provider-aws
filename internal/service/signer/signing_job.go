@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package signer
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,175 +36,177 @@ func resourceSigningJob() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"completed_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"completed_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestination: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"ignore_signing_job_failure": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"job_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_invoker": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"profile_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"profile_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"requested_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"revocation_record": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"reason": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_by": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"ignore_signing_job_failure": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"job_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"job_invoker": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"job_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"profile_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"profile_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"requested_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"revocation_record": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_by": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrVersion: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrVersion: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"signature_expires_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signed_object": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Computed: true,
+				"signature_expires_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signed_object": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -244,7 +248,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findSigningJobByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -302,17 +306,17 @@ func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusSigningJob(ctx context.Context, conn *signer.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSigningJob(conn *signer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSigningJobByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -328,14 +332,14 @@ func waitSigningJobSucceeded(ctx context.Context, conn *signer.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.SigningStatusInProgress),
 		Target:  enum.Slice(types.SigningStatusSucceeded),
-		Refresh: statusSigningJob(ctx, conn, id),
+		Refresh: statusSigningJob(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*signer.DescribeSigningJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

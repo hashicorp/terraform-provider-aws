@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +52,7 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 		CheckDestroy:             autonomousVMClusterDSTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterDSTestEntity.avmcBasic(),
+				Config: autonomousVMClusterDSTestEntity.avmcBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(avmcResource, names.AttrID, avmcDataSource, names.AttrID),
 				),
@@ -71,7 +71,7 @@ func (autonomousVMClusterDSTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx
 			}
 
 			_, err := tfodb.FindCloudAutonomousVmClusterByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -96,11 +96,11 @@ func (autonomousVMClusterDSTest) testAccPreCheck(ctx context.Context, t *testing
 	}
 }
 
-func (autonomousVMClusterDSTest) avmcBasic() string {
+func (autonomousVMClusterDSTest) avmcBasic(t *testing.T) string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
 	odbNetRes := autonomousVMClusterDSTestEntity.oracleDBNetwork(odbNetworkDisplayName)

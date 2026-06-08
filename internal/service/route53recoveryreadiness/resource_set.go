@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53recoveryreadiness
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,84 +42,86 @@ func resourceResourceSet() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_set_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"component_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"dns_target_resource": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDomainName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hosted_zone_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_set_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"target_resource": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"nlb_resource": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrARN: {
-																Type:     schema.TypeString,
-																Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_set_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"component_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"dns_target_resource": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDomainName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hosted_zone_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_set_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"target_resource": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"nlb_resource": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrARN: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"r53_resource": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrDomainName: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"record_set_id": {
-																Type:     schema.TypeString,
-																Optional: true,
+													"r53_resource": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrDomainName: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"record_set_id": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
@@ -127,23 +131,23 @@ func resourceResourceSet() *schema.Resource {
 									},
 								},
 							},
-						},
-						"readiness_scopes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"readiness_scopes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						names.AttrResourceARN: {
-							Type:     schema.TypeString,
-							Optional: true,
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -180,7 +184,7 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findResourceSetByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Readiness Resource Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -241,7 +245,7 @@ func resourceResourceSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err := findResourceSetByName(ctx, conn, d.Id())
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			return tfresource.NonRetryableError(err)
@@ -264,8 +268,7 @@ func findResourceSetByName(ctx context.Context, conn *route53recoveryreadiness.C
 	output, err := conn.GetResourceSet(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -273,7 +276,7 @@ func findResourceSetByName(ctx context.Context, conn *route53recoveryreadiness.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

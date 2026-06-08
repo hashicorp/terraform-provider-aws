@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicequotas
 
@@ -10,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,91 +27,93 @@ func dataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceQuotaRead,
 
-		Schema: map[string]*schema.Schema{
-			"adjustable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"global_quota": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"quota_code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"quota_code", "quota_name"},
-			},
-			"quota_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"quota_code", "quota_name"},
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_metric": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_dimensions": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"class": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"service": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"adjustable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"global_quota": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"quota_code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"quota_code", "quota_name"},
+				},
+				"quota_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"quota_code", "quota_name"},
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_metric": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_dimensions": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"class": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"resource": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"service": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrMetricName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_statistic_recommendation": {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_statistic_recommendation": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
+				names.AttrValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -158,7 +162,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	default:
@@ -198,8 +202,7 @@ func findDefaultServiceQuotas(ctx context.Context, conn *servicequotas.Client, i
 
 		if errs.IsA[*awstypes.NoSuchResourceException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

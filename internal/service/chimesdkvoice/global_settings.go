@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chimesdkvoice
 
@@ -38,20 +40,22 @@ func ResourceGlobalSettings() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"voice_connector": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cdr_bucket": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"voice_connector": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cdr_bucket": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -73,14 +77,13 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
-			return tfresource.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		return nil
 	})
 
-	var ere *tfresource.EmptyResultError
-	if !d.IsNewResource() && errors.As(err, &ere) {
+	if !d.IsNewResource() && errors.Is(err, tfresource.ErrEmptyResult) {
 		log.Printf("[WARN] ChimeSDKVoice GlobalSettings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

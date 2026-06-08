@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -12,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -41,76 +43,78 @@ func resourceProvisioningArtifact() *schema.Resource {
 			Delete: schema.DefaultTimeout(ProvisioningArtifactDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"active": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disable_template_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"guidance": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ProvisioningArtifactGuidanceDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"template_physical_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"template_url",
-					"template_physical_id",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"template_url",
-					"template_physical_id",
+				"active": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
-			},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disable_template_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"guidance": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ProvisioningArtifactGuidanceDefault,
+					ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"template_physical_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"template_url",
+						"template_physical_id",
+					},
+				},
+				"template_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"template_url",
+						"template_physical_id",
+					},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+				},
+			}
 		},
 	}
 }
@@ -128,7 +132,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	parameters[names.AttrType] = d.Get(names.AttrType)
 
 	input := &servicecatalog.CreateProvisioningArtifactInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Parameters:       expandProvisioningArtifactParameters(parameters),
 		ProductId:        aws.String(d.Get("product_id").(string)),
 	}

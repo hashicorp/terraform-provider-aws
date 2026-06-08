@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -46,7 +46,7 @@ func TestExpandArgs_nilAndPointers(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandArgs_shapeCompatibility(t *testing.T) {
@@ -77,7 +77,7 @@ func TestExpandArgs_shapeCompatibility(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenArgs_nilAndPointers(t *testing.T) {
@@ -114,7 +114,7 @@ func TestFlattenArgs_nilAndPointers(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenArgs_shapeCompatibility(t *testing.T) {
@@ -145,5 +145,5 @@ func TestFlattenArgs_shapeCompatibility(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }

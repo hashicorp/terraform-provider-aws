@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -12,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,136 +70,138 @@ func resourceClassifier() *schema.Resource {
 			},
 		),
 
-		Schema: map[string]*schema.Schema{
-			"csv_classifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier", "json_classifier", "xml_classifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_single_column": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"contains_header": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CsvHeaderOption](),
-						},
-						"custom_datatype_configured": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"custom_datatypes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"BINARY",
-									"BOOLEAN",
-									"DATE",
-									"DECIMAL",
-									"DOUBLE",
-									"FLOAT",
-									"INT",
-									"LONG",
-									"SHORT",
-									"STRING",
-									"TIMESTAMP",
-								}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"csv_classifier": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"grok_classifier", "json_classifier", "xml_classifier"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_single_column": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"contains_header": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CsvHeaderOption](),
+							},
+							"custom_datatype_configured": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"custom_datatypes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringInSlice([]string{
+										"BINARY",
+										"BOOLEAN",
+										"DATE",
+										"DECIMAL",
+										"DOUBLE",
+										"FLOAT",
+										"INT",
+										"LONG",
+										"SHORT",
+										"STRING",
+										"TIMESTAMP",
+									}, false),
+								},
+							},
+							"delimiter": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"disable_value_trimming": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrHeader: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"quote_symbol": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"serde": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CsvSerdeOption](),
 							},
 						},
-						"delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"disable_value_trimming": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrHeader: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"quote_symbol": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"serde": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CsvSerdeOption](),
+					},
+				},
+				"grok_classifier": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"csv_classifier", "json_classifier", "xml_classifier"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"classification": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"custom_patterns": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 16000),
+							},
+							"grok_pattern": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
 						},
 					},
 				},
-			},
-			"grok_classifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"csv_classifier", "json_classifier", "xml_classifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"classification": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"custom_patterns": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 16000),
-						},
-						"grok_pattern": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
+				"json_classifier": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"csv_classifier", "grok_classifier", "xml_classifier"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"json_path": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"json_classifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"csv_classifier", "grok_classifier", "xml_classifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"json_path": {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"xml_classifier": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"csv_classifier", "grok_classifier", "json_classifier"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"classification": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"row_tag": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"xml_classifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"csv_classifier", "grok_classifier", "json_classifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"classification": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"row_tag": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			}
 		},
 	}
 }
@@ -245,7 +249,7 @@ func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	classifier, err := findClassifierByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -348,8 +352,7 @@ func findClassifierByName(ctx context.Context, conn *glue.Client, name string) (
 	output, err := conn.GetClassifier(ctx, input)
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -358,7 +361,7 @@ func findClassifierByName(ctx context.Context, conn *glue.Client, name string) (
 	}
 
 	if output == nil || output.Classifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Classifier, nil

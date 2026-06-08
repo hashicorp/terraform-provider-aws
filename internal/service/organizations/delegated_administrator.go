@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,59 +33,63 @@ import (
 // @IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")
 // @IdAttrFormat("{account_id}/{service_principal}")
 // @ImportIDHandler("delegatedAdministratorImportID")
+// Alternate account not working
 // @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
 // @Testing(serialize=true)
 // @Testing(useAlternateAccount=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.5.0")
 func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delegation_enabled_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"joined_method": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"joined_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delegation_enabled_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"joined_method": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"joined_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_principal": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -119,7 +126,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 
 	delegatedAccount, err := findDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Delegated Administrator %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -218,11 +225,11 @@ func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
 	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
 }
 
-func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			names.AttrAccountID: parts[0],
 			"service_principal": parts[1],
 		}

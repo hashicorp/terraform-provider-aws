@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,35 +8,34 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSFastSnapshotRestore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ebs_fast_snapshot_restore.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
+					testAccCheckEBSFastSnapshotRestoreExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 				),
 			},
@@ -52,24 +51,32 @@ func TestAccEC2EBSFastSnapshotRestore_basic(t *testing.T) {
 func TestAccEC2EBSFastSnapshotRestore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ebs_fast_snapshot_restore.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSFastSnapshotRestore, resourceName),
+					testAccCheckEBSFastSnapshotRestoreExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEBSFastSnapshotRestore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -78,33 +85,41 @@ func TestAccEC2EBSFastSnapshotRestore_disappears(t *testing.T) {
 func TestAccEC2EBSFastSnapshotRestore_disappearsSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ebs_fast_snapshot_restore.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSFastSnapshotRestoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshot(), snapshotResourceName),
+					testAccCheckEBSFastSnapshotRestoreExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSSnapshot(), snapshotResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(snapshotResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(snapshotResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ebs_fast_snapshot_restore" {
@@ -113,7 +128,7 @@ func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -128,14 +143,14 @@ func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
 

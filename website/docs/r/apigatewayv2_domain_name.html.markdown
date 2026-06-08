@@ -64,6 +64,7 @@ This resource supports the following arguments:
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name.
+* `routing_mode` - (Optional) Mode to route traffic for the domain name. Valid values: `API_MAPPING_ONLY`, `ROUTING_RULE_ONLY`, `ROUTING_RULE_THEN_API_MAPPING`.
 * `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `domain_name_configuration`

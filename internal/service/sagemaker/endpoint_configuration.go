@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,8 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,560 +45,594 @@ func resourceEndpointConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"async_inference_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_concurrent_invocations_per_instance": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 1000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"async_inference_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_concurrent_invocations_per_instance": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 1000),
+										},
 									},
 								},
 							},
-						},
-						"output_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"notification_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"error_topic": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"include_inference_response_in": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Schema{
-														Type:             schema.TypeString,
-														ValidateDiagFunc: enum.Validate[awstypes.AsyncNotificationTopicTypes](),
+							"output_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"notification_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"error_topic": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
 													},
-												},
-												"success_topic": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: verify.ValidARN,
+													"include_inference_response_in": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[awstypes.AsyncNotificationTopicTypes](),
+														},
+													},
+													"success_topic": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									"s3_failure_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-									"s3_output_path": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"data_capture_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capture_content_type_header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"csv_content_types": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 10,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"s3_failure_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
-												validation.StringLenBetween(1, 256),
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
 											),
 										},
-										Optional: true,
-										ForceNew: true,
-									},
-									"json_content_types": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 10,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"s3_output_path": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
-												validation.StringLenBetween(1, 256),
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
 											),
 										},
-										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
-						},
-						"capture_options": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 2,
-							MinItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capture_mode": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CaptureMode](),
-									},
-								},
-							},
-						},
-						"destination_s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							),
-						},
-						"enable_capture": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"initial_sampling_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validPrefix,
-			},
-			"production_variants": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accelerator_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
-						},
-						"container_startup_health_check_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(60, 3600),
-						},
-						"core_dump_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
+				"data_capture_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capture_content_type_header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"csv_content_types": {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 10,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
+													validation.StringLenBetween(1, 256),
+												),
+											},
+											Optional: true,
+											ForceNew: true,
+										},
+										"json_content_types": {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 10,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
+													validation.StringLenBetween(1, 256),
+												),
+											},
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"enable_ssm_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"inference_ami_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
-						},
-						"initial_instance_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"initial_variant_weight": {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.FloatAtLeast(0),
-							Default:      1,
-						},
-						names.AttrInstanceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
-						},
-						"model_data_download_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(60, 3600),
-						},
-						"model_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"routing_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"routing_strategy": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+							"capture_options": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 2,
+								MinItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capture_mode": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CaptureMode](),
+										},
 									},
 								},
 							},
-						},
-						"serverless_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_concurrency": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 200),
-									},
-									"memory_size_in_mb": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
-									},
-									"provisioned_concurrency": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 200),
-									},
-								},
+							"destination_s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									validation.StringLenBetween(1, 512),
+								),
 							},
-						},
-						"managed_instance_scaling": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"min_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
-									},
-								},
+							"enable_capture": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
 							},
-						},
-						"variant_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"volume_size_in_gb": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 512),
+							"initial_sampling_percentage": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"shadow_production_variants": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accelerator_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
-						},
-						"container_startup_health_check_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(60, 3600),
-						},
-						"core_dump_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validPrefix,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"production_variants": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
+							},
+							"container_startup_health_check_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(60, 3600),
+							},
+							"core_dump_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
+											),
+										},
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"enable_ssm_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"inference_ami_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
-						},
-						"initial_instance_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"initial_variant_weight": {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.FloatAtLeast(0),
-							Default:      1,
-						},
-						names.AttrInstanceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
-						},
-						"model_data_download_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(60, 3600),
-						},
-						"model_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"routing_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"routing_strategy": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+							"enable_ssm_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"inference_ami_version": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
+							},
+							"initial_instance_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"initial_variant_weight": {
+								Type:         schema.TypeFloat,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.FloatAtLeast(0),
+								Default:      1,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// Suppress diff when model_name is empty (Inference Components)
+									// AWS returns nil but schema has default of 1 (there for backwards compatibility)
+									if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+										parts := strings.Split(k, ".")
+										if len(parts) >= 2 {
+											prefix := strings.Join(parts[:len(parts)-1], ".")
+											modelName := d.Get(prefix + ".model_name").(string)
+											return modelName == ""
+										}
+									}
+									return false
+								},
+							},
+							names.AttrInstanceType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
+							},
+							"model_data_download_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(60, 3600),
+							},
+							"model_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"routing_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"routing_strategy": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+										},
 									},
 								},
 							},
-						},
-						"serverless_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_concurrency": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 200),
-									},
-									"memory_size_in_mb": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
-									},
-									"provisioned_concurrency": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 200),
-									},
-								},
-							},
-						},
-						"managed_instance_scaling": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"min_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+							"serverless_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_concurrency": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 200),
+										},
+										"memory_size_in_mb": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
+										},
+										"provisioned_concurrency": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 200),
+										},
 									},
 								},
 							},
-						},
-						"variant_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"volume_size_in_gb": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 512),
+							"managed_instance_scaling": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_instance_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"min_instance_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+										},
+									},
+								},
+							},
+							"variant_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"volume_size_in_gb": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 512),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"shadow_production_variants": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
+							},
+							"container_startup_health_check_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(60, 3600),
+							},
+							"core_dump_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
+											),
+										},
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"enable_ssm_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"inference_ami_version": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
+							},
+							"initial_instance_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"initial_variant_weight": {
+								Type:         schema.TypeFloat,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.FloatAtLeast(0),
+								Default:      1,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// Suppress diff when model_name is empty (Inference Components)
+									// AWS returns nil but schema has default of 1 (there for backwards compatibility)
+									if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+										parts := strings.Split(k, ".")
+										if len(parts) >= 2 {
+											prefix := strings.Join(parts[:len(parts)-1], ".")
+											modelName := d.Get(prefix + ".model_name").(string)
+											return modelName == ""
+										}
+									}
+									return false
+								},
+							},
+							names.AttrInstanceType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
+							},
+							"model_data_download_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(60, 3600),
+							},
+							"model_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"routing_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"routing_strategy": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+										},
+									},
+								},
+							},
+							"serverless_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_concurrency": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 200),
+										},
+										"memory_size_in_mb": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
+										},
+										"provisioned_concurrency": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 200),
+										},
+									},
+								},
+							},
+							"managed_instance_scaling": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_instance_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"min_instance_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+										},
+									},
+								},
+							},
+							"variant_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"volume_size_in_gb": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 512),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: validateDataCaptureConfigCustomDiff,
@@ -671,12 +708,16 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]any)),
 		Tags:               getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
@@ -711,7 +752,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -724,6 +765,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
@@ -784,8 +826,7 @@ func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -794,7 +835,7 @@ func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -806,8 +847,25 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]any)
 
-		l := awstypes.ProductionVariant{
-			ModelName: aws.String(data["model_name"].(string)),
+		l := awstypes.ProductionVariant{}
+
+		// Traditional endpoint: set ModelName
+		// IC endpoint: omit ModelName
+		// Special traditional/IC handling
+		if v, ok := data["model_name"].(string); ok && v != "" {
+			l.ModelName = aws.String(v)
+
+			// Traditional endpoint: set InitialVariantWeight
+			// IC endpoint: must not be set but pre-existing default value of 1
+			if v, ok := data["initial_variant_weight"].(float64); ok {
+				l.InitialVariantWeight = aws.Float32(float32(v))
+			}
+
+			// Traditional endpoint: set EnableSSMAccess
+			// IC endpoints: must not be set
+			if v, ok := data["enable_ssm_access"].(bool); ok {
+				l.EnableSSMAccess = aws.Bool(v)
+			}
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -833,11 +891,7 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 		if v, ok := data["variant_name"].(string); ok && v != "" {
 			l.VariantName = aws.String(v)
 		} else {
-			l.VariantName = aws.String(id.UniqueId())
-		}
-
-		if v, ok := data["initial_variant_weight"].(float64); ok {
-			l.InitialVariantWeight = aws.Float32(float32(v))
+			l.VariantName = aws.String(sdkid.UniqueId())
 		}
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
@@ -854,10 +908,6 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 
 		if v, ok := data["core_dump_config"].([]any); ok && len(v) > 0 {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
-		}
-
-		if v, ok := data["enable_ssm_access"].(bool); ok {
-			l.EnableSSMAccess = aws.Bool(v)
 		}
 
 		if v, ok := data["managed_instance_scaling"].([]any); ok && len(v) > 0 {
@@ -879,12 +929,25 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 	for _, i := range list {
 		l := map[string]any{
-			"accelerator_type":       i.AcceleratorType,
-			names.AttrInstanceType:   i.InstanceType,
-			"inference_ami_version":  i.InferenceAmiVersion,
-			"initial_variant_weight": aws.ToFloat32(i.InitialVariantWeight),
-			"model_name":             aws.ToString(i.ModelName),
-			"variant_name":           aws.ToString(i.VariantName),
+			"accelerator_type":      i.AcceleratorType,
+			names.AttrInstanceType:  i.InstanceType,
+			"inference_ami_version": i.InferenceAmiVersion,
+			"variant_name":          aws.ToString(i.VariantName),
+		}
+
+		// Traditional endpoints have model_name set
+		// Inference Component endpoints do not have model_name set
+		// Special handling
+		if i.ModelName != nil && aws.ToString(i.ModelName) != "" {
+			l["model_name"] = aws.ToString(i.ModelName)
+
+			if i.InitialVariantWeight != nil {
+				l["initial_variant_weight"] = aws.ToFloat32(i.InitialVariantWeight)
+			}
+
+			if i.EnableSSMAccess != nil {
+				l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
+			}
 		}
 
 		if i.InitialInstanceCount != nil {
@@ -913,10 +976,6 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 		if i.CoreDumpConfig != nil {
 			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
-		}
-
-		if i.EnableSSMAccess != nil {
-			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
 		}
 
 		if i.ManagedInstanceScaling != nil {

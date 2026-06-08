@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix inability to configure `logging_config.include_cookies` argument while keeping V1 logging disabled
+```
+
+```release-note:bug
+resource/aws_cloudfront_distribution: Change `logging_config.bucket` argument from `Required` to `Optional`
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `logging_v1_enabled` attribute
+```

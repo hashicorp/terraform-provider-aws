@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -14,12 +14,13 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,7 +77,7 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	resource.ParallelTest(t, resource.TestCase{
@@ -283,9 +284,17 @@ func TestAccODBCloudExadataInfrastructureResource_disappears(t *testing.T) {
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudExadataInfrastructure, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudExadataInfrastructure, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -300,7 +309,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExaDataInfraDestroyed(ctx 
 				continue
 			}
 			_, err := tfodb.FindExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

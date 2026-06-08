@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,50 +34,52 @@ func resourceEIPAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allocation_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"allow_reassociation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					names.AttrInstanceID,
-					names.AttrNetworkInterfaceID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allocation_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					names.AttrInstanceID,
-					names.AttrNetworkInterfaceID,
+				"allow_reassociation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"private_ip_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						names.AttrInstanceID,
+						names.AttrNetworkInterfaceID,
+					},
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						names.AttrInstanceID,
+						names.AttrNetworkInterfaceID,
+					},
+				},
+				"private_ip_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"public_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -122,7 +127,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 
@@ -152,7 +157,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 	address, err := findEIPByAssociationID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

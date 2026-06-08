@@ -33,6 +33,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `routing_policy_label` - (Optional) The routing policy label to apply to the Direct Connect Gateway attachment for traffic routing decisions. Maximum length of 256 characters. Changing this value will force recreation of the resource.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

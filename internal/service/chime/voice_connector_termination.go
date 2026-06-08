@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chime
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -34,45 +36,47 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"calling_regions": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(2, 2),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"calling_regions": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(2, 2),
+					},
 				},
-			},
-			"cidr_allow_list": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDRNetwork(27, 32),
+				"cidr_allow_list": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.IsCIDRNetwork(27, 32),
+					},
 				},
-			},
-			"cps_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"default_phone_number": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
-			},
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"cps_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"default_phone_number": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
+				},
+				"disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -125,7 +129,7 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 		return findVoiceConnectorTerminationByID(ctx, conn, d.Id())
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -209,10 +213,6 @@ func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.Reso
 }
 
 func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.Termination, error) {
-	in := &chimesdkvoice.GetVoiceConnectorInput{
-		VoiceConnectorId: aws.String(id),
-	}
-
 	input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(id),
 	}
@@ -220,13 +220,12 @@ func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.
 	resp, err := conn.GetVoiceConnectorTermination(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
 	if resp == nil || resp.Termination == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

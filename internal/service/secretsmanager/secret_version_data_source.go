@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package secretsmanager
 
@@ -21,44 +23,51 @@ func dataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"secret_binary": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"secret_string": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"version_stage": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  secretVersionStageCurrent,
-			},
-			"version_stages": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "arn is deprecated. Use secret_arn instead.",
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secret_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"secret_binary": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"secret_string": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"version_stage": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  secretVersionStageCurrent,
+				},
+				"version_stages": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -93,6 +102,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(id)
 	d.Set(names.AttrARN, output.ARN)
 	d.Set(names.AttrCreatedDate, aws.String(output.CreatedDate.Format(time.RFC3339)))
+	d.Set("secret_arn", output.ARN)
 	d.Set("secret_id", secretID)
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,115 +52,121 @@ func resourceDefaultSubnet() *schema.Resource {
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
 		//   - enable_lni_at_device_index is Computed-only
+		//   - ipv4_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv4_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - ipv6_cidr_block is Optional/Computed as it's automatically assigned if ipv6_native = true
+		//   - ipv6_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv6_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
 		//   - vpc_id is Computed-only
 		// and additions:
 		//   - existing_default_subnet Computed-only, set in resourceDefaultSubnetCreate
 		//   - force_destroy Optional
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"map_customer_owned_ip_on_launch"},
-			},
-			"enable_dns64": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_lni_at_device_index": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"enable_resource_name_dns_aaaa_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_resource_name_dns_a_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"existing_default_subnet": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_native": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"map_customer_owned_ip_on_launch": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
-			},
-			"map_public_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_hostname_type_on_launch": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_ipv6_address_on_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"map_customer_owned_ip_on_launch"},
+				},
+				"enable_dns64": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_lni_at_device_index": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"enable_resource_name_dns_aaaa_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_resource_name_dns_a_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"existing_default_subnet": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				"ipv6_cidr_block_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_native": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"map_customer_owned_ip_on_launch": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					RequiredWith: []string{"customer_owned_ipv4_pool", names.AttrOutpostARN},
+				},
+				"map_public_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_hostname_type_on_launch": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -184,7 +192,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[INFO] Found existing EC2 Default Subnet (%s)", availabilityZone)
 		d.SetId(aws.ToString(subnet.SubnetId))
 		d.Set("existing_default_subnet", true)
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		input := &ec2.CreateDefaultSubnetInput{
 			AvailabilityZone: aws.String(availabilityZone),
 		}
