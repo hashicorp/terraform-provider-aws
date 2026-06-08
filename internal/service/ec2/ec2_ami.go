@@ -125,7 +125,7 @@ func resourceAMI() *schema.Resource {
 								Optional: true,
 								ForceNew: true,
 							},
-							"outpost_arn": {
+							names.AttrOutpostARN: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ForceNew:     true,
@@ -661,7 +661,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]any) awstypes
 		apiObject.Ebs.VolumeType = awstypes.VolumeType(v)
 	}
 
-	if v, ok := tfMap["outpost_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOutpostARN].(string); ok && v != "" {
 		apiObject.Ebs.OutpostArn = aws.String(v)
 	}
 
@@ -726,7 +726,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject awstypes.BlockDevic
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
-		tfMap["outpost_arn"] = aws.ToString(v)
+		tfMap[names.AttrOutpostARN] = aws.ToString(v)
 	}
 
 	return tfMap

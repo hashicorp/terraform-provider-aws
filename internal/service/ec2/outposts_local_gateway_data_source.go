@@ -39,7 +39,7 @@ func dataSourceLocalGateway() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrFilter: customFiltersSchema(),
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -96,7 +96,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.ToString(localGateway.LocalGatewayId))
-	d.Set("outpost_arn", localGateway.OutpostArn)
+	d.Set(names.AttrOutpostARN, localGateway.OutpostArn)
 	d.Set(names.AttrOwnerID, localGateway.OwnerId)
 	d.Set(names.AttrState, localGateway.State)
 

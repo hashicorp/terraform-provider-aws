@@ -1,6 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_cleanrooms_membership" "test" {
+  region = var.region
+
+  collaboration_id = aws_cleanrooms_collaboration.test.id
+  query_log_status = "DISABLED"
+}
+
 resource "aws_cleanrooms_collaboration" "test" {
   region = var.region
 
@@ -10,13 +17,6 @@ resource "aws_cleanrooms_collaboration" "test" {
   description              = var.rName
   query_log_status         = "DISABLED"
   analytics_engine         = "SPARK"
-}
-
-resource "aws_cleanrooms_membership" "test" {
-  region = var.region
-
-  collaboration_id = aws_cleanrooms_collaboration.test.id
-  query_log_status = "DISABLED"
 }
 
 variable "rName" {

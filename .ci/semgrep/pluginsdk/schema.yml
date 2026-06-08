@@ -31,33 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/lakeformation
-        - /internal/service/lambda
-        - /internal/service/lexmodels
-        - /internal/service/licensemanager
-        - /internal/service/lightsail
-        - /internal/service/location
-        - /internal/service/logs
-        - /internal/service/macie2
-        - /internal/service/mediaconvert
-        - /internal/service/medialive
-        - /internal/service/mediapackage
-        - /internal/service/mediastore
-        - /internal/service/memorydb
-        - /internal/service/mq
-        - /internal/service/mwaa
-        - /internal/service/neptune
-        - /internal/service/networkfirewall
-        - /internal/service/networkmanager
-        - /internal/service/oam
-        - /internal/service/opensearch
-        - /internal/service/opensearchserverless
-        - /internal/service/organizations
-        - /internal/service/outposts
-        - /internal/service/pinpoint
-        - /internal/service/pricing
-        - /internal/service/qldb
-        - /internal/service/quicksight
         - /internal/service/ram
         - /internal/service/rbin
         - /internal/service/rds
@@ -106,3 +79,10 @@ rules:
         - /internal/service/wafregional
         - /internal/service/workspaces
         - /internal/service/xray
+
+  - id: use-schema-map
+    languages: [go]
+    message: Use .SchemaMap() instead of .Schema to access a schema.Resource's schema map
+    pattern: $FUNC().Schema
+    fix: $FUNC().SchemaMap()
+    severity: WARNING

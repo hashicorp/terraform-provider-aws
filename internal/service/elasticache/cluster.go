@@ -102,7 +102,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"outpost_arn": {
+							names.AttrOutpostARN: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -955,7 +955,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
 			names.AttrPort:             aws.ToInt32(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.ToString(node.CustomerAvailabilityZone),
-			"outpost_arn":              aws.ToString(node.CustomerOutpostArn),
+			names.AttrOutpostARN:       aws.ToString(node.CustomerOutpostArn),
 		})
 	}
 

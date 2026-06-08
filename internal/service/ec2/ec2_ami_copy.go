@@ -102,7 +102,7 @@ func resourceAMICopy() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
-							"outpost_arn": {
+							names.AttrOutpostARN: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},

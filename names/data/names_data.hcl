@@ -4304,6 +4304,30 @@ service "inspector2" {
   brand                    = "AWS"
 }
 
+service "interconnect" {
+  sdk {
+    id            = "Interconnect"
+    arn_namespace = "interconnect"
+  }
+
+  names {
+    provider_name_upper = "Interconnect"
+    human_friendly      = "Interconnect"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_interconnect_"
+  }
+
+  provider_package_correct = "interconnect"
+  doc_prefix               = ["interconnect_"]
+  brand                    = "AWS"
+}
+
 service "iot1clickdevices" {
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-devices"

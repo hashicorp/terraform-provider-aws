@@ -148,7 +148,7 @@ func dataSourceHost() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -227,7 +227,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
 	}
 	d.Set("member_of_service_linked_resource_group", host.MemberOfServiceLinkedResourceGroup)
-	d.Set("outpost_arn", host.OutpostArn)
+	d.Set(names.AttrOutpostARN, host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 	if host.ReleaseTime != nil {
 		d.Set("release_time", aws.ToTime(host.ReleaseTime).Format(time.RFC3339))
