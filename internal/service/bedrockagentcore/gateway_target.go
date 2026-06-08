@@ -750,6 +750,14 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 														),
 													},
 												},
+												"listing_mode": schema.StringAttribute{
+													Optional:   true,
+													Computed:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ListingMode](),
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
+												},
 											},
 										},
 									},
@@ -889,10 +897,16 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	targetID := aws.ToString(out.TargetId)
-	data.TargetID = fwflex.StringValueToFramework(ctx, targetID)
 
-	if _, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	target, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, target, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -958,8 +972,7 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err = waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts))
-		if err != nil {
+		if _, err := waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 			return
 		}
@@ -2194,7 +2207,8 @@ type s3ConfigurationModel struct {
 }
 
 type mcpServerTargetConfigurationModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
+	Endpoint    types.String                             `tfsdk:"endpoint"`
+	ListingMode fwtypes.StringEnum[awstypes.ListingMode] `tfsdk:"listing_mode"`
 }
 
 type apiSchemaConfigurationModel struct {

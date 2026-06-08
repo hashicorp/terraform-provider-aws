@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newHostsDataSource,
+			TypeName: "aws_ec2_hosts",
+			Name:     "Hosts",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newServiceLinkVirtualInterfaceDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
@@ -157,6 +163,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ec2_instance_metadata_defaults",
 			Name:     "Instance Metadata Defaults",
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newLocalGatewayRouteTableResource,
+			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "local_gateway_route_table_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource,
+			TypeName: "aws_ec2_local_gateway_route_table_virtual_interface_group_association",
+			Name:     "Local Gateway Route Table Virtual Interface Group Association",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newNetworkInsightsAccessScopeResource,

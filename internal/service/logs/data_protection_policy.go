@@ -37,14 +37,16 @@ func resourceDataProtectionPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrLogGroupName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupName,
-			},
-			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrLogGroupName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogGroupName,
+				},
+				"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 	}
 }

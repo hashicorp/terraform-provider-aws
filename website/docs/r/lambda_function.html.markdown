@@ -581,7 +581,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_durable_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   memory_size   = 512
   timeout       = 30
 

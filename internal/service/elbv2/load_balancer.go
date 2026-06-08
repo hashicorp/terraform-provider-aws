@@ -70,336 +70,338 @@ func resourceLoadBalancer() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("access_logs.0.enabled").(bool)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_logs": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("access_logs.0.enabled").(bool)
+								},
 							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("access_logs.0.enabled").(bool)
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_keep_alive": {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				Default:          3600,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"connection_logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("connection_logs.0.enabled").(bool)
-							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("connection_logs.0.enabled").(bool)
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("access_logs.0.enabled").(bool)
+								},
 							},
 						},
 					},
 				},
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"desync_mitigation_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          httpDesyncMitigationModeDefensive,
-				ValidateFunc:     validation.StringInSlice(httpDesyncMitigationMode_Values(), false),
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_record_client_routing_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          dnsRecordClientRoutingPolicyAnyAvailabilityZone,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
-				ValidateFunc:     validation.StringInSlice(dnsRecordClientRoutingPolicy_Values(), false),
-			},
-			"drop_invalid_header_fields": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_cross_zone_load_balancing": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBType(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_deletion_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_http2": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          true,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_prefix_for_ipv6_source_nat": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EnablePrefixForIpv6SourceNatEnum](),
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
-			},
-			"enable_tls_version_and_cipher_suite_headers": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_waf_fail_open": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_xff_client_port": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"enable_zonal_shift": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
-			},
-			"enforce_security_group_inbound_rules_on_private_link_traffic": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum](),
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
-			},
-			"health_check_logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("health_check_logs.0.enabled").(bool)
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"client_keep_alive": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Default:          3600,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"connection_logs": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("connection_logs.0.enabled").(bool)
+								},
 							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("health_check_logs.0.enabled").(bool)
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("connection_logs.0.enabled").(bool)
+								},
 							},
 						},
 					},
 				},
-			},
-			"idle_timeout": {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				Default:          60,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Computed:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			"ipam_pools": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4_ipam_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
+				"customer_owned_ipv4_pool": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"desync_mitigation_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          httpDesyncMitigationModeDefensive,
+					ValidateFunc:     validation.StringInSlice(httpDesyncMitigationMode_Values(), false),
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_record_client_routing_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          dnsRecordClientRoutingPolicyAnyAvailabilityZone,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+					ValidateFunc:     validation.StringInSlice(dnsRecordClientRoutingPolicy_Values(), false),
+				},
+				"drop_invalid_header_fields": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_cross_zone_load_balancing": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBType(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_deletion_protection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_http2": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          true,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_prefix_for_ipv6_source_nat": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EnablePrefixForIpv6SourceNatEnum](),
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				},
+				"enable_tls_version_and_cipher_suite_headers": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_waf_fail_open": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_xff_client_port": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"enable_zonal_shift": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
+				},
+				"enforce_security_group_inbound_rules_on_private_link_traffic": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum](),
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				},
+				"health_check_logs": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("health_check_logs.0.enabled").(bool)
+								},
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return !d.Get("health_check_logs.0.enabled").(bool)
+								},
+							},
 						},
 					},
 				},
-			},
-			"load_balancer_type": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Default:          awstypes.LoadBalancerTypeEnumApplication,
-				ValidateDiagFunc: enum.Validate[awstypes.LoadBalancerTypeEnum](),
-			},
-			"minimum_load_balancer_capacity": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_units": {
-							Type:     schema.TypeInt,
-							Required: true,
+				"idle_timeout": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Default:          60,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"internal": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Computed:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				"ipam_pools": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv4_ipam_pool_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validNamePrefix,
-			},
-			"preserve_host_header": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-			},
-			"secondary_ips_auto_assigned_per_subnet": {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
-				ValidateFunc:     validation.IntBetween(0, 7),
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"subnet_mapping": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ipv6_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv6Address,
-						},
-						"outpost_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ipv4_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv4Address,
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Required: true,
+				"load_balancer_type": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Default:          awstypes.LoadBalancerTypeEnumApplication,
+					ValidateDiagFunc: enum.Validate[awstypes.LoadBalancerTypeEnum](),
+				},
+				"minimum_load_balancer_capacity": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_units": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-				ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
-			},
-			names.AttrSubnets: {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Computed:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"xff_header_processing_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          httpXFFHeaderProcessingModeAppend,
-				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
-				ValidateFunc:     validation.StringInSlice(httpXFFHeaderProcessingMode_Values(), false),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validNamePrefix,
+				},
+				"preserve_host_header": {
+					Type:             schema.TypeBool,
+					Optional:         true,
+					Default:          false,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+				},
+				"secondary_ips_auto_assigned_per_subnet": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+					ValidateFunc:     validation.IntBetween(0, 7),
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"subnet_mapping": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ipv6_address": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv6Address,
+							},
+							"outpost_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ipv4_address": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+					ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
+				},
+				names.AttrSubnets: {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Computed:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"xff_header_processing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          httpXFFHeaderProcessingModeAppend,
+					DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+					ValidateFunc:     validation.StringInSlice(httpXFFHeaderProcessingMode_Values(), false),
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

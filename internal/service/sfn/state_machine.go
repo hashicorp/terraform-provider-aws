@@ -549,7 +549,7 @@ func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.
 }
 
 func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
-	for k, attr := range resourceStateMachine().Schema {
+	for k, attr := range resourceStateMachine().SchemaMap() {
 		if attr.ForceNew {
 			continue
 		}
