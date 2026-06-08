@@ -78,7 +78,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionUpdate),
 					},
 				},
 			},
