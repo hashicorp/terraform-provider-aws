@@ -56,285 +56,287 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				Default:      "true",
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AZMode](),
-			},
-			"cache_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outpost_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					Default:      "true",
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"az_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AZMode](),
+				},
+				"cache_nodes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrOutpostARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(val any) string {
-					// ElastiCache normalizes cluster ids to lowercase,
-					// so we have to do this too or else we can end up
-					// with non-converging diffs.
-					return strings.ToLower(val.(string))
+				"cluster_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			"configuration_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ip_discovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				MaxItems: 2,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"destination_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
-						},
-						"log_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
-						},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(val any) string {
+						// ElastiCache normalizes cluster ids to lowercase,
+						// so we have to do this too or else we can end up
+						// with non-converging diffs.
+						return strings.ToLower(val.(string))
 					},
-				},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					// ElastiCache always changes the maintenance
-					// to lowercase
-					return strings.ToLower(val.(string))
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"network_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"outpost_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				RequiredWith:     []string{"preferred_outpost_arn"},
-				ValidateDiagFunc: enum.Validate[awstypes.OutpostMode](),
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
-						return true
-					}
-					return false
-				},
-			},
-			"preferred_availability_zones": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"preferred_outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"replication_group_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"replication_group_id", names.AttrEngine},
-				ValidateFunc: validateReplicationGroupID,
-				ConflictsWith: []string{
-					"az_mode",
-					names.AttrEngineVersion,
-					"maintenance_window",
-					"node_type",
-					"notification_topic_arn",
-					"num_cache_nodes",
-					names.AttrParameterGroupName,
-					names.AttrPort,
-					names.AttrSecurityGroupIDs,
-					"snapshot_arns",
-					"snapshot_name",
-					"snapshot_retention_limit",
-					"snapshot_window",
-					"subnet_group_name",
-				},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"snapshot_arns": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						verify.ValidARN,
-						validation.StringDoesNotContainAny(","),
+						validation.StringLenBetween(1, 50),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+						validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 					),
 				},
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"snapshot_retention_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			"snapshot_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"configuration_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
+					ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ip_discovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					MaxItems: 2,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"destination_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
+							},
+							"log_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
+						},
+					},
+				},
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						// ElastiCache always changes the maintenance
+						// to lowercase
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_topic_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"num_cache_nodes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"outpost_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					RequiredWith:     []string{"preferred_outpost_arn"},
+					ValidateDiagFunc: enum.Validate[awstypes.OutpostMode](),
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress default memcached/redis ports when not defined
+						if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
+							return true
+						}
+						return false
+					},
+				},
+				"preferred_availability_zones": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"preferred_outpost_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"replication_group_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"replication_group_id", names.AttrEngine},
+					ValidateFunc: validateReplicationGroupID,
+					ConflictsWith: []string{
+						"az_mode",
+						names.AttrEngineVersion,
+						"maintenance_window",
+						"node_type",
+						"notification_topic_arn",
+						"num_cache_nodes",
+						names.AttrParameterGroupName,
+						names.AttrPort,
+						names.AttrSecurityGroupIDs,
+						"snapshot_arns",
+						"snapshot_name",
+						"snapshot_retention_limit",
+						"snapshot_window",
+						"subnet_group_name",
+					},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"snapshot_arns": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							verify.ValidARN,
+							validation.StringDoesNotContainAny(","),
+						),
+					},
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"snapshot_retention_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				"snapshot_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -953,7 +955,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
 			names.AttrPort:             aws.ToInt32(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.ToString(node.CustomerAvailabilityZone),
-			"outpost_arn":              aws.ToString(node.CustomerOutpostArn),
+			names.AttrOutpostARN:       aws.ToString(node.CustomerOutpostArn),
 		})
 	}
 

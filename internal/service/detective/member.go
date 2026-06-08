@@ -39,58 +39,60 @@ func ResourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"administrator_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disable_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"disabled_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email_address": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"graph_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"invited_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMessage: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_usage_in_bytes": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"administrator_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disable_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"disabled_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"email_address": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"graph_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"invited_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMessage: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_usage_in_bytes": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -44,67 +44,69 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"netmask_length"},
-				ValidateFunc: validation.Any(
-					verify.ValidIPv4CIDRNetworkAddress,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"disallowed_cidrs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					ConflictsWith: []string{"netmask_length"},
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
-						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 128),
+						verify.ValidIPv6CIDRNetworkAddress,
 					),
 				},
-			},
-			"ipam_pool_allocation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"disallowed_cidrs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidIPv4CIDRNetworkAddress,
+							// Follow the numbers used for netmask_length
+							validation.IsCIDRNetwork(0, 128),
+						),
+					},
+				},
+				"ipam_pool_allocation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(0, 128),
+					ConflictsWith: []string{"cidr"},
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
