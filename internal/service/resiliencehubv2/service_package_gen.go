@@ -111,6 +111,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newResourceUserJourney,
+			TypeName: "aws_resiliencehubv2_user_journey",
+			Name:     "User Journey",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 

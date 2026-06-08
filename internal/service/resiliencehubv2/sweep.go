@@ -25,7 +25,10 @@ func RegisterSweepers() {
 		"aws_resiliencehubv2_service_function",
 		"aws_resiliencehubv2_assertion",
 	)
-	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
+	awsv2.Register("aws_resiliencehubv2_user_journey", sweepUserJourneys)
+	awsv2.Register("aws_resiliencehubv2_system", sweepSystems,
+		"aws_resiliencehubv2_user_journey",
+	)
 	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies,
 		"aws_resiliencehubv2_service",
 	)
@@ -188,6 +191,39 @@ func sweepAssertions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(a.AssertionId)),
 					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
 					framework.NewAttribute("assertion_id", aws.ToString(a.AssertionId)),
+				))
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepUserJourneys(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResilienceHubV2Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	systems := resiliencehubv2.NewListSystemsPaginator(conn, &resiliencehubv2.ListSystemsInput{})
+	for systems.HasMorePages() {
+		page, err := systems.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, sys := range page.SystemSummaries {
+			listUserJourneysInput := resiliencehubv2.ListUserJourneysInput{
+				SystemArn: sys.SystemArn,
+			}
+			output, err := conn.ListUserJourneys(ctx, &listUserJourneysInput)
+			if err != nil {
+				continue
+			}
+			for _, uj := range output.UserJourneySummaries {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceUserJourney, client,
+					framework.NewAttribute(names.AttrID, aws.ToString(sys.SystemArn)+","+aws.ToString(uj.UserJourneyId)),
+					framework.NewAttribute("system_arn", aws.ToString(sys.SystemArn)),
+					framework.NewAttribute("user_journey_id", aws.ToString(uj.UserJourneyId)),
 				))
 			}
 		}
