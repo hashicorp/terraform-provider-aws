@@ -87,6 +87,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newResourceServiceFunction,
+			TypeName: "aws_resiliencehubv2_service_function",
+			Name:     "Service Function",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourceSystem,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",

@@ -18,8 +18,10 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_resiliencehubv2_input_source", sweepInputSources)
+	awsv2.Register("aws_resiliencehubv2_service_function", sweepServiceFunctions)
 	awsv2.Register("aws_resiliencehubv2_service", sweepServices,
 		"aws_resiliencehubv2_input_source",
+		"aws_resiliencehubv2_service_function",
 	)
 	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
 	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies,
@@ -118,6 +120,39 @@ func sweepInputSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(is.InputSourceId)),
 					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
 					framework.NewAttribute("input_source_id", aws.ToString(is.InputSourceId)),
+				))
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepServiceFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResilienceHubV2Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	services := resiliencehubv2.NewListServicesPaginator(conn, &resiliencehubv2.ListServicesInput{})
+	for services.HasMorePages() {
+		page, err := services.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, svc := range page.ServiceSummaries {
+			listServiceFunctionsInput := resiliencehubv2.ListServiceFunctionsInput{
+				ServiceArn: svc.ServiceArn,
+			}
+			output, err := conn.ListServiceFunctions(ctx, &listServiceFunctionsInput)
+			if err != nil {
+				continue
+			}
+			for _, sf := range output.ServiceFunctions {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceServiceFunction, client,
+					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(sf.ServiceFunctionId)),
+					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
+					framework.NewAttribute("service_function_id", aws.ToString(sf.ServiceFunctionId)),
 				))
 			}
 		}
