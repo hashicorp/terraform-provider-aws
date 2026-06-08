@@ -24,33 +24,33 @@ func dataSourceImage() *schema.Resource {
 		ReadWithoutTimeout: dataSourceImageRead,
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrDescription: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"image_id": {
-  				Type:     schema.TypeString,
-  				Required: true,
-  			},
-  			names.AttrName: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"operating_system_type": {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"required_tenancy": {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			names.AttrState: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"operating_system_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"required_tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
+		},
 	}
 }
 

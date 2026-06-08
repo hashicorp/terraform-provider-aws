@@ -23,22 +23,22 @@ func dataSourceAuthPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAuthPolicyRead,
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrPolicy: {
-  				Type:     schema.TypeString,
-  				Optional: true,
-  			},
-  			"resource_identifier": {
-  				Type:         schema.TypeString,
-  				Required:     true,
-  				ValidateFunc: verify.ValidARN,
-  			},
-  			names.AttrState: {
-  				Type:     schema.TypeString,
-  				Optional: true,
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"resource_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
+		},
 	}
 }
 

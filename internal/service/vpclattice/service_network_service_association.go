@@ -48,55 +48,55 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrARN: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"created_by": {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"custom_domain_name": {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"dns_entry": {
-  				Type:     schema.TypeList,
-  				Computed: true,
-  				Elem: &schema.Resource{
-  					Schema: map[string]*schema.Schema{
-  						names.AttrDomainName: {
-  							Type:     schema.TypeString,
-  							Computed: true,
-  						},
-  						names.AttrHostedZoneID: {
-  							Type:     schema.TypeString,
-  							Computed: true,
-  						},
-  					},
-  				},
-  			},
-  			"service_identifier": {
-  				Type:             schema.TypeString,
-  				Required:         true,
-  				ForceNew:         true,
-  				DiffSuppressFunc: suppressEquivalentIDOrARN,
-  			},
-  			"service_network_identifier": {
-  				Type:             schema.TypeString,
-  				Required:         true,
-  				ForceNew:         true,
-  				DiffSuppressFunc: suppressEquivalentIDOrARN,
-  			},
-  			names.AttrStatus: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			names.AttrTags:    tftags.TagsSchema(),
-  			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_entry": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrHostedZoneID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"service_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"service_network_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
+		},
 	}
 }
 

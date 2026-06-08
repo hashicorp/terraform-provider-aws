@@ -38,19 +38,19 @@ func resourceRegexPatternSet() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrName: {
-  				Type:     schema.TypeString,
-  				Required: true,
-  				ForceNew: true,
-  			},
-  			"regex_pattern_strings": {
-  				Type:     schema.TypeSet,
-  				Optional: true,
-  				Elem:     &schema.Schema{Type: schema.TypeString},
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"regex_pattern_strings": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
+		},
 	}
 }
 

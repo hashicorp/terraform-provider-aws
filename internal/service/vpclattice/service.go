@@ -50,58 +50,58 @@ func resourceService() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrARN: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			"auth_type": {
-  				Type:             schema.TypeString,
-  				Optional:         true,
-  				Computed:         true,
-  				ValidateDiagFunc: enum.Validate[types.AuthType](),
-  			},
-  			names.AttrCertificateARN: {
-  				Type:         schema.TypeString,
-  				Optional:     true,
-  				ValidateFunc: verify.ValidARN,
-  			},
-  			"custom_domain_name": {
-  				Type:         schema.TypeString,
-  				Optional:     true,
-  				ForceNew:     true,
-  				ValidateFunc: validation.StringLenBetween(3, 255),
-  			},
-  			"dns_entry": {
-  				Type:     schema.TypeList,
-  				Computed: true,
-  				Elem: &schema.Resource{
-  					Schema: map[string]*schema.Schema{
-  						names.AttrDomainName: {
-  							Type:     schema.TypeString,
-  							Computed: true,
-  						},
-  						names.AttrHostedZoneID: {
-  							Type:     schema.TypeString,
-  							Computed: true,
-  						},
-  					},
-  				},
-  			},
-  			names.AttrName: {
-  				Type:         schema.TypeString,
-  				Required:     true,
-  				ForceNew:     true,
-  				ValidateFunc: validation.StringLenBetween(3, 40),
-  			},
-  			names.AttrStatus: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			names.AttrTags:    tftags.TagsSchema(),
-  			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.AuthType](),
+				},
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"custom_domain_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 255),
+				},
+				"dns_entry": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrHostedZoneID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 40),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
+		},
 	}
 }
 

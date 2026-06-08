@@ -45,19 +45,19 @@ func resourceAuthPolicy() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-  			"resource_identifier": {
-  				Type:         schema.TypeString,
-  				Required:     true,
-  				ValidateFunc: verify.ValidARN,
-  			},
-  			names.AttrState: {
-  				Type:     schema.TypeString,
-  				Optional: true,
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"resource_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
+		},
 	}
 }
 

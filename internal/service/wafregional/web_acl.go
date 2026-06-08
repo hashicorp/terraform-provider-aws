@@ -41,129 +41,129 @@ func resourceWebACL() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrARN: {
-  				Type:     schema.TypeString,
-  				Computed: true,
-  			},
-  			names.AttrDefaultAction: {
-  				Type:     schema.TypeList,
-  				Required: true,
-  				MaxItems: 1,
-  				Elem: &schema.Resource{
-  					Schema: map[string]*schema.Schema{
-  						names.AttrType: {
-  							Type:             schema.TypeString,
-  							Required:         true,
-  							ValidateDiagFunc: enum.Validate[awstypes.WafActionType](),
-  						},
-  					},
-  				},
-  			},
-  			names.AttrLoggingConfiguration: {
-  				Type:     schema.TypeList,
-  				Optional: true,
-  				MaxItems: 1,
-  				Elem: &schema.Resource{
-  					Schema: map[string]*schema.Schema{
-  						"log_destination": {
-  							Type:         schema.TypeString,
-  							Required:     true,
-  							ValidateFunc: verify.ValidARN,
-  						},
-  						"redacted_fields": {
-  							Type:     schema.TypeList,
-  							Optional: true,
-  							MaxItems: 1,
-  							Elem: &schema.Resource{
-  								Schema: map[string]*schema.Schema{
-  									"field_to_match": {
-  										Type:     schema.TypeSet,
-  										Required: true,
-  										Elem: &schema.Resource{
-  											Schema: map[string]*schema.Schema{
-  												"data": {
-  													Type:     schema.TypeString,
-  													Optional: true,
-  												},
-  												names.AttrType: {
-  													Type:             schema.TypeString,
-  													Required:         true,
-  													ValidateDiagFunc: enum.Validate[awstypes.MatchFieldType](),
-  												},
-  											},
-  										},
-  									},
-  								},
-  							},
-  						},
-  					},
-  				},
-  			},
-  			names.AttrMetricName: {
-  				Type:     schema.TypeString,
-  				Required: true,
-  				ForceNew: true,
-  			},
-  			names.AttrName: {
-  				Type:     schema.TypeString,
-  				Required: true,
-  				ForceNew: true,
-  			},
-  			names.AttrRule: {
-  				Type:     schema.TypeSet,
-  				Optional: true,
-  				Elem: &schema.Resource{
-  					Schema: map[string]*schema.Schema{
-  						names.AttrAction: {
-  							Type:     schema.TypeList,
-  							Optional: true,
-  							MaxItems: 1,
-  							Elem: &schema.Resource{
-  								Schema: map[string]*schema.Schema{
-  									names.AttrType: {
-  										Type:             schema.TypeString,
-  										Required:         true,
-  										ValidateDiagFunc: enum.Validate[awstypes.WafActionType](),
-  									},
-  								},
-  							},
-  						},
-  						"override_action": {
-  							Type:     schema.TypeList,
-  							Optional: true,
-  							MaxItems: 1,
-  							Elem: &schema.Resource{
-  								Schema: map[string]*schema.Schema{
-  									names.AttrType: {
-  										Type:             schema.TypeString,
-  										Required:         true,
-  										ValidateDiagFunc: enum.Validate[awstypes.WafOverrideActionType](),
-  									},
-  								},
-  							},
-  						},
-  						names.AttrPriority: {
-  							Type:     schema.TypeInt,
-  							Required: true,
-  						},
-  						names.AttrType: {
-  							Type:             schema.TypeString,
-  							Optional:         true,
-  							Default:          awstypes.WafRuleTypeRegular,
-  							ValidateDiagFunc: enum.Validate[awstypes.WafRuleType](),
-  						},
-  						"rule_id": {
-  							Type:     schema.TypeString,
-  							Required: true,
-  						},
-  					},
-  				},
-  			},
-  			names.AttrTags:    tftags.TagsSchema(),
-  			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.WafActionType](),
+							},
+						},
+					},
+				},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_destination": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"redacted_fields": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"field_to_match": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"data": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.MatchFieldType](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrMetricName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.WafActionType](),
+										},
+									},
+								},
+							},
+							"override_action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.WafOverrideActionType](),
+										},
+									},
+								},
+							},
+							names.AttrPriority: {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.WafRuleTypeRegular,
+								ValidateDiagFunc: enum.Validate[awstypes.WafRuleType](),
+							},
+							"rule_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
+		},
 	}
 }
 

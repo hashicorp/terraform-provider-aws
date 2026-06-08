@@ -39,16 +39,16 @@ func resourceResourcePolicy() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-  			names.AttrResourceARN: {
-  				Type:         schema.TypeString,
-  				Required:     true,
-  				ForceNew:     true,
-  				ValidateFunc: verify.ValidARN,
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
+		},
 	}
 }
 

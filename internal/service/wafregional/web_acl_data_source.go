@@ -26,13 +26,13 @@ func dataSourceWebACL() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWebACLRead,
 
 		SchemaFunc: func() map[string]*schema.Schema {
-  	return map[string]*schema.Schema{
-  			names.AttrName: {
-  				Type:     schema.TypeString,
-  				Required: true,
-  			},
-  		}
-  },
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
+		},
 	}
 }
 
