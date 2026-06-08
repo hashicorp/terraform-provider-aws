@@ -50,57 +50,64 @@ func resourceSecretVersion() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecretVersionUpdate,
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"has_secret_string_wo": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"secret_binary": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"secret_string", "secret_string_wo"},
-				ValidateFunc:  verify.ValidBase64String,
-			},
-			"secret_string": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"secret_binary", "secret_string_wo"},
-			},
-			"secret_string_wo": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				WriteOnly:     true,
-				Sensitive:     true,
-				ConflictsWith: []string{"secret_binary", "secret_string"},
-				RequiredWith:  []string{"secret_string_wo_version"},
-			},
-			"secret_string_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"secret_string_wo"},
-			},
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_stages": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "arn is deprecated. Use secret_arn instead.",
+				},
+				"has_secret_string_wo": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"secret_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"secret_binary": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					Sensitive:     true,
+					ConflictsWith: []string{"secret_string", "secret_string_wo"},
+					ValidateFunc:  verify.ValidBase64String,
+				},
+				"secret_string": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ConflictsWith: []string{"secret_binary", "secret_string_wo"},
+				},
+				"secret_string_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ConflictsWith: []string{"secret_binary", "secret_string"},
+					RequiredWith:  []string{"secret_string_wo_version"},
+				},
+				"secret_string_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"secret_string_wo"},
+				},
+				"version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_stages": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 
 		CustomizeDiff: secretVersionForceNewCustomDiff,
@@ -216,6 +223,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		d.Set(names.AttrARN, arn)
+		d.Set("secret_arn", arn)
 		d.Set("secret_binary", nil)
 		d.Set("secret_string", nil)
 		d.Set("version_id", versionEntry.VersionId)
@@ -236,6 +244,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_arn", output.ARN)
 	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)

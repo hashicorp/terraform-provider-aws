@@ -138,9 +138,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -826,6 +826,11 @@ swissshepherd-count: ## [CI] Run Swiss Shepherd checks
 	@echo "make: Count of all Swiss Shepherd checks..."
 	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
 
+swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
+	@echo "make: Refreshing Swiss Shepherd schemas..."
+	@echo "make: This will take a while..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
+
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -1268,6 +1273,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-unlinked \
 	swissshepherd \
 	swissshepherd-count \
+	swissshepherd-refresh \
 	t \
 	test \
 	test-compile \

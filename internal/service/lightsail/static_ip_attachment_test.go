@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -80,6 +81,14 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 					staticIpDestroy,
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_lightsail_static_ip_attachment.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_lightsail_static_ip_attachment.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

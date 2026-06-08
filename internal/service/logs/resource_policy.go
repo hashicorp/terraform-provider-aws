@@ -48,35 +48,37 @@ func resourceResourcePolicy() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"policy_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ConflictsWith: []string{
-					names.AttrResourceARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"policy_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ConflictsWith: []string{
+						names.AttrResourceARN,
+					},
+					ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
 				},
-				ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
-			},
-			"policy_scope": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				ConflictsWith: []string{
-					"policy_name",
+				"policy_scope": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
-			},
-			"revision_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					ConflictsWith: []string{
+						"policy_name",
+					},
+					ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
+				},
+				"revision_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -58,53 +58,55 @@ func resourceConfiguration() *schema.Resource {
 			},
 		),
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
-			},
-			"data": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				DiffSuppressFunc:      suppressXMLEquivalentConfig,
-				DiffSuppressOnRefresh: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"engine_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
+				},
+				"data": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					DiffSuppressFunc:      suppressXMLEquivalentConfig,
+					DiffSuppressOnRefresh: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"engine_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"latest_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

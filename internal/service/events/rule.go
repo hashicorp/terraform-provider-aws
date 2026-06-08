@@ -55,94 +55,96 @@ func resourceRule() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-				StateFunc: func(v any) string {
-					json, _ := ruleEventPatternJSONDecoder(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_enabled": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "is_enabled is deprecated. Use state instead.",
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					rawPlan := d.GetRawPlan()
-					rawIsEnabled := rawPlan.GetAttr("is_enabled")
-					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
-				ConflictsWith: []string{
-					names.AttrState,
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusNameOrARN,
+					Default:      DefaultEventBusName,
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrScheduleExpression: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.RuleState](),
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					if oldValue != "" && newValue == "" {
-						return true
-					}
-					return false
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+					StateFunc: func(v any) string {
+						json, _ := ruleEventPatternJSONDecoder(v.(string))
+						return json
+					},
 				},
-				ConflictsWith: []string{
-					"is_enabled",
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"is_enabled": {
+					Type:       schema.TypeBool,
+					Optional:   true,
+					Deprecated: "is_enabled is deprecated. Use state instead.",
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						rawPlan := d.GetRawPlan()
+						rawIsEnabled := rawPlan.GetAttr("is_enabled")
+						return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+					},
+					ConflictsWith: []string{
+						names.AttrState,
+					},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrScheduleExpression: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.RuleState](),
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						if oldValue != "" && newValue == "" {
+							return true
+						}
+						return false
+					},
+					ConflictsWith: []string{
+						"is_enabled",
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

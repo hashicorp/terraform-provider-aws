@@ -42,108 +42,110 @@ func resourceEventDestination() *schema.Resource {
 			StateContext: resourceEventDestinationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_destination": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"kinesis_destination", "sns_destination"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.@-]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
-							),
-						},
-						"dimension_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
-							),
-						},
-						"value_source": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DimensionValueSource](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudwatch_destination": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"kinesis_destination", "sns_destination"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.@-]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
+								),
+							},
+							"dimension_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+								),
+							},
+							"value_source": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DimensionValueSource](),
+							},
 						},
 					},
 				},
-			},
-			"configuration_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"kinesis_destination": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ForceNew:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrStreamARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
+				"configuration_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"matching_types": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
-				),
-			},
-			"sns_destination": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"cloudwatch_destination", "kinesis_destination"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"kinesis_destination": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ForceNew:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrStreamARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+				"matching_types": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+					),
+				},
+				"sns_destination": {
+					Type:          schema.TypeList,
+					MaxItems:      1,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"cloudwatch_destination", "kinesis_destination"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

@@ -32,21 +32,23 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrTags:   tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrTags:   tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

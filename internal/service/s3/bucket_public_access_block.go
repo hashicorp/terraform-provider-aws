@@ -33,36 +33,38 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
 
-		Schema: map[string]*schema.Schema{
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

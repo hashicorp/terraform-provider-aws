@@ -10,3 +10,7 @@ import (
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	errCodeValidationException = "ValidationException"
+)

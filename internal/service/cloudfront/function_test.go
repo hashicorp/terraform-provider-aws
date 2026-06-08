@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -42,6 +43,8 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "runtime", "cloudfront-js-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -74,6 +77,14 @@ func TestAccCloudFrontFunction_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -684,4 +695,108 @@ function handler(event) {
 EOT
 }
 `, rName))
+}
+
+func TestAccCloudFrontFunction_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf cloudfront.DescribeFunctionOutput
+	resourceName := "aws_cloudfront_function.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
+			},
+			{
+				Config: testAccFunctionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccFunctionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-2.0"
+  comment = "test"
+  publish = true
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccFunctionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-2.0"
+  comment = "test"
+  publish = true
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -44,206 +44,208 @@ func resourceJob() *schema.Resource {
 
 		CustomizeDiff: resourceJobCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"command": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  jobCommandNameApacheSparkETL,
-						},
-						"python_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
-						},
-						"runtime": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
-						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"command": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  jobCommandNameApacheSparkETL,
+							},
+							"python_version": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+							},
+							"runtime": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+							},
+							"script_location": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"connections": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"default_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"execution_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
-			},
-			"execution_property": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_concurrent_runs": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1,
-							ValidateFunc: validation.IntAtLeast(1),
+				"connections": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"default_arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"execution_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
+				},
+				"execution_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_concurrent_runs": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"job_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
-			},
-			"job_run_queuing_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:          schema.TypeFloat,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"number_of_workers", "worker_type"},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_retries": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 10),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"non_overridable_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"notification_property": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"notify_delay_after": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
+				"glue_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"job_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
+				},
+				"job_run_queuing_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:          schema.TypeFloat,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"number_of_workers", "worker_type"},
+				},
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"max_retries": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 10),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"non_overridable_arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"notification_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"notify_delay_after": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.IntAtLeast(1),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_control_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
-						},
-						"auth_token": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"branch": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"folder": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"last_commit_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrOwner: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"provider": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
-						},
-						"repository": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"number_of_workers": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrMaxCapacity},
+					ValidateFunc:  validation.IntAtLeast(1),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"security_configuration": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"source_control_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
+							},
+							"auth_token": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"branch": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"folder": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"last_commit_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrOwner: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"provider": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
+							},
+							"repository": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTimeout: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"worker_type": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrMaxCapacity},
+					ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
+				},
+			}
 		},
 	}
 }

@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -57,6 +58,7 @@ type collectionGroupResourceModel struct {
 	CapacityLimits  fwtypes.ListNestedObjectValueOf[capacityLimitsModel] `tfsdk:"capacity_limits"`
 	CreatedDate     timetypes.RFC3339                                    `tfsdk:"created_date"`
 	Description     types.String                                         `tfsdk:"description"`
+	Generation      fwtypes.StringEnum[awstypes.ServerlessGeneration]    `tfsdk:"generation"`
 	ID              types.String                                         `tfsdk:"id"`
 	Name            types.String                                         `tfsdk:"name"`
 	StandbyReplicas fwtypes.StringEnum[awstypes.StandbyReplicas]         `tfsdk:"standby_replicas"`
@@ -91,6 +93,16 @@ func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaR
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
+			"generation": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.ServerlessGeneration](),
+				Description: "Generation of the collection group.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Description: "Name of the collection group.",
@@ -115,6 +127,26 @@ func (r *collectionGroupResource) Schema(ctx context.Context, _ resource.SchemaR
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+	}
+}
+
+func (r *collectionGroupResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data collectionGroupResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Generation.IsNull() || data.Generation.IsUnknown() || data.StandbyReplicas.IsNull() || data.StandbyReplicas.IsUnknown() {
+		return
+	}
+
+	if data.Generation.ValueEnum() == awstypes.ServerlessGenerationNextgen && data.StandbyReplicas.ValueEnum() != awstypes.StandbyReplicasEnabled {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("standby_replicas"),
+			"Invalid Attribute Combination",
+			"`standby_replicas` must be `ENABLED` when `generation` is `NEXTGEN`.",
+		)
 	}
 }
 

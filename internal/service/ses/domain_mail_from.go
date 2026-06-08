@@ -34,22 +34,24 @@ func resourceDomainMailFrom() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
-				ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
+					ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
