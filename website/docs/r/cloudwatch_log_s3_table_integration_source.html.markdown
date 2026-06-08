@@ -59,9 +59,11 @@ resource "aws_cloudwatch_log_s3_table_integration_source" "example" {
 
 This resource supports the following arguments:
 
-* `data_source` - (Required, Forces new resource) Data source to associate with the S3 Table Integration. See below.
+* `data_source` - (Required, Forces new resource) Data source to associate with the S3 Table Integration. See [`data_source` Block](#data_source-block) below.
 * `integration_arn` - (Required, Forces new resource) ARN of the `aws_observabilityadmin_s3_table_integration` to associate the data source with.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `data_source` Block
 
 The `data_source` block supports the following arguments:
 
@@ -72,7 +74,7 @@ The `data_source` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - unique identifier for the association between the data source and S3 Table Integration.
+* `id` - Unique identifier for the association between the data source and S3 Table Integration.
 
 ## Timeouts
 
