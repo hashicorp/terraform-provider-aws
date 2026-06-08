@@ -49,6 +49,7 @@ const (
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &phoneNumberResource{}
 

@@ -33,6 +33,7 @@ import (
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &optOutListResource{}
 
