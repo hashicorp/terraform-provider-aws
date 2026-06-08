@@ -53,6 +53,11 @@ func dataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"paths": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						names.AttrStatus: {
 							Type:       schema.TypeString,
 							Computed:   true,

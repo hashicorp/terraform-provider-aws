@@ -111,6 +111,11 @@ func resourceAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
 			},
+			"paths": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"role_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -252,6 +257,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.ToTime(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, account.Name)
+	d.Set("paths", account.Paths)
 	d.Set("parent_id", parentAccountID)
 	d.Set(names.AttrStatus, account.Status)
 	d.Set(names.AttrState, account.State)

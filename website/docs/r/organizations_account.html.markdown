@@ -48,6 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - AWS account ID.
 * `joined_method` - Method by which the account joined the organization.
 * `joined_timestamp` - Date the account became a part of the organization.
+* `paths` - Paths in the organization where the account exists.
 * `state` - State of the account in the organization.
 * `status` - (**Deprecated** use `state` instead) Status of the account in the organization.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

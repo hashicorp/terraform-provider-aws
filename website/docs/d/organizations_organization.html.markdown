@@ -96,6 +96,7 @@ If the account is the master account or a delegated administrator for the organi
     * `joined_method` - Method by which the account joined the organization.
     * `joined_timestamp` - Date the account became a part of the organization.
     * `name` - Name of the account.
+    * `paths` - Paths in Organization where account exists.
     * `state` - State of the account.
     * `status` - (**Deprecated** use `state` instead) Status of the account.
 * `aws_service_access_principals` - A list of AWS service principal names that have integration enabled with your organization. Organization must have `feature_set` set to `ALL`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
@@ -107,6 +108,7 @@ If the account is the master account or a delegated administrator for the organi
     * `joined_method` - Method by which the account joined the organization.
     * `joined_timestamp` - Date the account became a part of the organization.
     * `name` - Name of the account.
+    * `paths` - Paths in Organization where account exists.
     * `state` - State of the account.
     * `status` - (**Deprecated** use `state` instead) Status of the account.
 * `roots` - List of organization roots. All elements have these attributes:

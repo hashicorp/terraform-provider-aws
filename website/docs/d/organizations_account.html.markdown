@@ -36,5 +36,6 @@ This data source exports the following attributes in addition to the arguments a
 * `joined_timestamp` - Date the account became a part of the organization.
 * `name` - Friendly name for the member account.
 * `parent_id` - Parent Organizational Unit ID or Root ID for the account.
+* `paths` - Paths in the organization where the account exists.
 * `state` - State of the account in the organization.
 * `tags` - Map of tags for the resource.
