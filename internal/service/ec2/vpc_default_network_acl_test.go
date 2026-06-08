@@ -318,7 +318,7 @@ func TestAccVPCDefaultNetworkACL_tagBasedAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Smoke test: Expect failure when tags are not set
 			{
-				Config:      testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(rName, policy),
+				Config:      testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(policy),
 				ExpectError: regexache.MustCompile(`is not authorized to perform: ec2:DeleteNetworkAclEntry`),
 			},
 			{
@@ -575,7 +575,7 @@ resource "aws_default_network_acl" "test" {
 `, rName)
 }
 
-func testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(rName, policy string) string {
+func testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(policy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAssumeRolePolicy(policy),
 		`
