@@ -31,15 +31,6 @@ rules:
     severity: WARNING
     paths:
       exclude:
-        - /internal/service/oam
-        - /internal/service/opensearch
-        - /internal/service/opensearchserverless
-        - /internal/service/organizations
-        - /internal/service/outposts
-        - /internal/service/pinpoint
-        - /internal/service/pricing
-        - /internal/service/qldb
-        - /internal/service/quicksight
         - /internal/service/ram
         - /internal/service/rbin
         - /internal/service/rds
