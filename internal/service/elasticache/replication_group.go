@@ -902,8 +902,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awstypes.ReplicationGroup, c *awstypes.CacheCluster) error {
 	if c.PendingModifiedValues != nil {
-		if c.PendingModifiedValues.CacheNodeType != nil {
-			d.Set("node_type", c.PendingModifiedValues.CacheNodeType)
+		nodeType := aws.ToString(c.PendingModifiedValues.CacheNodeType)
+		if nodeType != "" {
+			d.Set("node_type", nodeType)
 		}
 
 		if c.PendingModifiedValues.EngineVersion != nil {
@@ -920,7 +921,8 @@ func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awst
 		}
 
 		if c.PendingModifiedValues.TransitEncryptionEnabled != nil {
-			d.Set("transit_encryption_enabled", c.PendingModifiedValues.TransitEncryptionEnabled)
+			transitEncryptionEnabled := aws.ToBool(c.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
 		}
 
 		if c.PendingModifiedValues.TransitEncryptionMode != "" {
@@ -943,7 +945,8 @@ func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awst
 		}
 
 		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
-			d.Set("transit_encryption_enabled", rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
 		}
 
 		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
