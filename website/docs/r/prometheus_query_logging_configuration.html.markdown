@@ -64,6 +64,13 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Query Logging Configuration using the workspace ID. For example:
@@ -75,10 +82,3 @@ import {
 }
 ```
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `5m`)
-- `update` - (Default `5m`)
-- `delete` - (Default `5m`)
