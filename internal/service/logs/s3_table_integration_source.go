@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -155,7 +156,7 @@ func (r *s3TableIntegrationSourceResource) Read(ctx context.Context, request res
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -189,6 +190,12 @@ func (r *s3TableIntegrationSourceResource) Delete(ctx context.Context, request r
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Logs S3 Table Integration (%s) Data Source Association (%s) delete", integrationARN, id), err.Error())
 		return
 	}
+}
+
+func (r *s3TableIntegrationSourceResource) flatten(ctx context.Context, s3TableIntegrationSource *awstypes.S3TableIntegrationSource, data *s3TableIntegrationSourceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, s3TableIntegrationSource, data)...)
+	return diags
 }
 
 const s3TableIntegrationSourceImportIDSeparator = intflex.ResourceIdSeparator
