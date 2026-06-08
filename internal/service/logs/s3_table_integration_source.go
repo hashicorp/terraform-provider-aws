@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -242,7 +243,7 @@ func listS3TableIntegrationSources(ctx context.Context, conn *cloudwatchlogs.Cli
 func findS3TableIntegrationSource(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, filter tfslices.Predicate[awstypes.S3TableIntegrationSource]) (*awstypes.S3TableIntegrationSource, error) {
 	var output []awstypes.S3TableIntegrationSource
 	for v, err := range listS3TableIntegrationSources(ctx, conn, input, filter) {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Integration not found") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeValidationException, "Integration not found") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
