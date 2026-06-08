@@ -70,6 +70,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, t, resourceName),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action -- Versioning is a sub-resource of the bucket; "disappearing" it suspends versioning, so the plan is an update, not a create.
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketVersioning(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,7 +79,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -179,6 +180,43 @@ func TestAccS3BucketVersioning_MFADelete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketVersioning_MFADelete_statusDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_versioning.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketVersioningConfig_statusAndMFADelete(rName, tfs3.BucketVersioningStatusDisabled, string(types.MFADeleteDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -882,6 +920,22 @@ resource "aws_s3_bucket_versioning" "test" {
 
 data "aws_caller_identity" "current" {}
 `, rName)
+}
+
+func testAccBucketVersioningConfig_statusAndMFADelete(rName, status, mfaDelete string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    mfa_delete = %[3]q
+    status     = %[2]q
+  }
+}
+`, rName, status, mfaDelete)
 }
 
 func testAccBucketVersioningConfig_directoryBucket(rName, status string) string {

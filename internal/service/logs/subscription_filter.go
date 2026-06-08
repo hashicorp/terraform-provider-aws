@@ -50,54 +50,56 @@ func resourceSubscriptionFilter() *schema.Resource {
 		UpdateWithoutTimeout: resourceSubscriptionFilterPut,
 		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
 
-		Schema: map[string]*schema.Schema{
-			"apply_on_transformed_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"distribution": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DistributionByLogStream,
-				ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
-			},
-			"emit_system_fields": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"apply_on_transformed_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"filter_pattern": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrLogGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				names.AttrDestinationARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"distribution": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DistributionByLogStream,
+					ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
+				},
+				"emit_system_fields": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+					},
+				},
+				"filter_pattern": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrLogGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

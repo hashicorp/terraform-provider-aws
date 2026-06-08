@@ -20,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_function", name="Function")
+// @Tags(identifierAttribute="arn")
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -86,6 +88,8 @@ func resourceFunction() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
 	}
@@ -107,6 +111,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("key_value_store_associations"); ok {
 		input.FunctionConfig.KeyValueStoreAssociations = expandKeyValueStoreAssociations(v.(*schema.Set).List())
+	}
+
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	output, err := conn.CreateFunction(ctx, input)

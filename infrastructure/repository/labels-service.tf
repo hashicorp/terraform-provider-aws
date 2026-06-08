@@ -163,6 +163,7 @@ variable "service_labels" {
     "imagebuilder",
     "inspector",
     "inspector2",
+    "interconnect",
     "internetmonitor",
     "invoicing",
     "iot",

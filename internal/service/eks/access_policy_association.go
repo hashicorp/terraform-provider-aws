@@ -47,57 +47,59 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_scope": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"namespaces": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_scope": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"namespaces": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
+							names.AttrType: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"associated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"principal_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"associated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				"modified_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"principal_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

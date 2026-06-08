@@ -677,7 +677,7 @@ func stackHasActualChanges(ctx context.Context, d *schema.ResourceDiff, meta any
 		return false
 	}
 
-	for k, attr := range resourceStack().Schema {
+	for k, attr := range resourceStack().SchemaMap() {
 		if attr.ForceNew {
 			continue
 		}

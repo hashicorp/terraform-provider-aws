@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,7 +37,7 @@ type accountCustomizationsResource struct {
 	framework.WithImportByIdentity
 }
 
-func (r *accountCustomizationsResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *accountCustomizationsResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	accountColorType := fwtypes.StringEnumType[awstypes.AccountColor]()
 
 	resp.Schema = schema.Schema{
@@ -54,11 +55,15 @@ func (r *accountCustomizationsResource) Schema(_ context.Context, _ resource.Sch
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
+				Default:     setdefault.StaticValue(fwtypes.NewSetValueOfEmpty[types.String](ctx).SetValue),
 			},
 			"visible_services": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
+				Default:     setdefault.StaticValue(fwtypes.NewSetValueOfEmpty[types.String](ctx).SetValue),
 			},
 		},
 	}
@@ -73,19 +78,10 @@ func (r *accountCustomizationsResource) Create(ctx context.Context, req resource
 
 	conn := r.Meta().UXCClient(ctx)
 
-	prior := plan
-
 	input := uxc.UpdateAccountCustomizationsInput{}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-	// nil means "no change" in the API; use empty slice to explicitly clear any pre-existing restrictions.
-	if input.VisibleRegions == nil {
-		input.VisibleRegions = []string{}
-	}
-	if input.VisibleServices == nil {
-		input.VisibleServices = []string{}
 	}
 
 	output, err := conn.UpdateAccountCustomizations(ctx, &input)
@@ -95,7 +91,6 @@ func (r *accountCustomizationsResource) Create(ctx context.Context, req resource
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
-	normalizeAccountCustomizationsModel(ctx, &plan, &prior)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -106,8 +101,6 @@ func (r *accountCustomizationsResource) Read(ctx context.Context, req resource.R
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	prior := state
 
 	conn := r.Meta().UXCClient(ctx)
 
@@ -123,7 +116,7 @@ func (r *accountCustomizationsResource) Read(ctx context.Context, req resource.R
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
-	normalizeAccountCustomizationsModel(ctx, &state, &prior)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -134,20 +127,12 @@ func (r *accountCustomizationsResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	prior := plan
-
 	conn := r.Meta().UXCClient(ctx)
 
 	input := uxc.UpdateAccountCustomizationsInput{}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-	if input.VisibleRegions == nil {
-		input.VisibleRegions = []string{}
-	}
-	if input.VisibleServices == nil {
-		input.VisibleServices = []string{}
 	}
 
 	output, err := conn.UpdateAccountCustomizations(ctx, &input)
@@ -157,7 +142,6 @@ func (r *accountCustomizationsResource) Update(ctx context.Context, req resource
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
-	normalizeAccountCustomizationsModel(ctx, &plan, &prior)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -197,28 +181,7 @@ func (r *accountCustomizationsResource) ImportState(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	normalizeAccountCustomizationsModel(ctx, &state, nil)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-// normalizeAccountCustomizationsModel maps empty API sets to null so that unconfigured
-// optional attributes don't drift against a config that omits them.
-// prior holds the values from the plan (Create/Update) or prior state (Read); a nil prior
-// means no prior context is available (ImportState), in which case all empty sets are normalized.
-// When the prior value for an attribute is an explicit empty set, the empty set is preserved
-// so that a user-configured `visible_regions = []` or `visible_services = []` does not cause
-// a permanent plan diff.
-func normalizeAccountCustomizationsModel(ctx context.Context, m *accountCustomizationsResourceModel, prior *accountCustomizationsResourceModel) {
-	if prior == nil || prior.VisibleRegions.IsNull() {
-		if !m.VisibleRegions.IsNull() && len(m.VisibleRegions.Elements()) == 0 {
-			m.VisibleRegions = fwtypes.NewSetValueOfNull[types.String](ctx)
-		}
-	}
-	if prior == nil || prior.VisibleServices.IsNull() {
-		if !m.VisibleServices.IsNull() && len(m.VisibleServices.Elements()) == 0 {
-			m.VisibleServices = fwtypes.NewSetValueOfNull[types.String](ctx)
-		}
-	}
 }
 
 func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetAccountCustomizationsOutput, error) {
@@ -235,7 +198,9 @@ func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetA
 }
 
 type accountCustomizationsResourceModel struct {
-	AccountColor    fwtypes.StringEnum[awstypes.AccountColor] `tfsdk:"account_color"`
-	VisibleRegions  fwtypes.SetOfString                       `tfsdk:"visible_regions"`
-	VisibleServices fwtypes.SetOfString                       `tfsdk:"visible_services"`
+	AccountColor fwtypes.StringEnum[awstypes.AccountColor] `tfsdk:"account_color"`
+	// TODO: `legacy` mode is used here for the behavior. It is not a legacy resource.
+	// Needs a new mode that flattens to an empty collection instead of null.
+	VisibleRegions  fwtypes.SetOfString `tfsdk:"visible_regions" autoflex:",legacy"`
+	VisibleServices fwtypes.SetOfString `tfsdk:"visible_services" autoflex:",legacy"`
 }

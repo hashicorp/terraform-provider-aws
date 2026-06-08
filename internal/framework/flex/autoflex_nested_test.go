@@ -881,6 +881,47 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
+func TestFlattenNestedObjectOmitEmpty(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	type awsInner struct {
+		Field1 *string
+		Field2 *int64
+	}
+	type awsOuter struct {
+		Inner *awsInner
+	}
+
+	type tfInner struct {
+		Field1 types.String `tfsdk:"field1"`
+		Field2 types.Int64  `tfsdk:"field2"`
+	}
+	type tfOuter struct {
+		Inner fwtypes.ObjectValueOf[tfInner] `tfsdk:"inner" autoflex:",omitempty"`
+	}
+
+	testCases := autoFlexTestCases{
+		"all zero fields returns null": {
+			Source:     &awsOuter{Inner: &awsInner{}},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfNull[tfInner](ctx)},
+		},
+		"non-zero field returns value": {
+			Source:     &awsOuter{Inner: &awsInner{Field1: aws.String("hello")}},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfMust(ctx, &tfInner{Field1: types.StringValue("hello"), Field2: types.Int64Null()})},
+		},
+		"nil pointer returns null": {
+			Source:     &awsOuter{Inner: nil},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfNull[tfInner](ctx)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
 func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 	t.Parallel()
 

@@ -46,12 +46,14 @@ func resourceImageBlockPublicAccess() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrState: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrState: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
+				},
+			}
 		},
 	}
 }

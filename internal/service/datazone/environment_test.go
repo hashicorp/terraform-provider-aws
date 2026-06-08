@@ -38,6 +38,7 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 		"userParameters_Inherited":   testAccDataZoneEnvironment_userParameters_Inherited,
 		"userParameters_Override":    testAccDataZoneEnvironment_userParameters_Override,
 		"glossaryTerms":              testAccDataZoneEnvironment_glossaryTerms,
+		"identity":                   testAccDataZoneEnvironment_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

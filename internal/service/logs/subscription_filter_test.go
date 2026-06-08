@@ -787,14 +787,13 @@ resource "aws_lambda_permission" "test" {
 }
 
 func testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase_initProviders() string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "destination" {
   provider = awsalternate
 }
 
-data "aws_caller_identity" "source" {
-}
-`))
+data "aws_caller_identity" "source" {}
+`)
 }
 
 func testAccSubscriptionFilterConfig_kinesisDataFirehoseCrossAccountBase(rName string) string {
