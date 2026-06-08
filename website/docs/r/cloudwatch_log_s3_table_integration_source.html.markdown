@@ -74,6 +74,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - unique identifier for the association between the data source and S3 Table Integration.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

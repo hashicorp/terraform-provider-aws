@@ -5,14 +5,17 @@ package logs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"iter"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -44,6 +47,8 @@ import (
 func newS3TableIntegrationSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &s3TableIntegrationSourceResource{}
 
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
@@ -51,6 +56,7 @@ type s3TableIntegrationSourceResource struct {
 	framework.ResourceWithModel[s3TableIntegrationSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByIdentity
+	framework.WithTimeouts
 }
 
 func (r *s3TableIntegrationSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -93,6 +99,9 @@ func (r *s3TableIntegrationSourceResource) Schema(ctx context.Context, request r
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -163,7 +172,7 @@ func (r *s3TableIntegrationSourceResource) Delete(ctx context.Context, request r
 
 	conn := r.Meta().LogsClient(ctx)
 
-	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	integrationARN, id := fwflex.StringValueFromFramework(ctx, data.IntegrationARN), fwflex.StringValueFromFramework(ctx, data.ID)
 	input := cloudwatchlogs.DisassociateSourceFromS3TableIntegrationInput{
 		Identifier: aws.String(id),
 	}
@@ -173,6 +182,11 @@ func (r *s3TableIntegrationSourceResource) Delete(ctx context.Context, request r
 	}
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs S3 Table Integration Data Source Association (%s)", id), err.Error())
+		return
+	}
+
+	if _, err := waitS3TableIntegrationDeleted(ctx, conn, integrationARN, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Logs S3 Table Integration (%s) Data Source Association (%s) delete", integrationARN, id), err.Error())
 		return
 	}
 }
@@ -259,11 +273,45 @@ func findS3TableIntegrationSource(ctx context.Context, conn *cloudwatchlogs.Clie
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func statusS3TableIntegrationSource(conn *cloudwatchlogs.Client, integrationARN, identifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findS3TableIntegrationSourceByTwoPartKey(ctx, conn, integrationARN, identifier)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitS3TableIntegrationDeleted(ctx context.Context, conn *cloudwatchlogs.Client, integrationARN, identifier string, timeout time.Duration) (*awstypes.S3TableIntegrationSource, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"DELETING"}, // Undocumented status value observed in API responses.
+		Target:  []string{},
+		Refresh: statusS3TableIntegrationSource(conn, integrationARN, identifier),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.S3TableIntegrationSource); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		return output, err
+	}
+
+	return nil, err
+}
+
 type s3TableIntegrationSourceResourceModel struct {
 	framework.WithRegionModel
 	DataSource     fwtypes.ListNestedObjectValueOf[dataSourceModel] `tfsdk:"data_source"`
 	ID             types.String                                     `tfsdk:"id"`
 	IntegrationARN fwtypes.ARN                                      `tfsdk:"integration_arn"`
+	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
 type dataSourceModel struct {
