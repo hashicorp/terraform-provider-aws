@@ -17,7 +17,10 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_resiliencehubv2_service", sweepServices)
+	awsv2.Register("aws_resiliencehubv2_input_source", sweepInputSources)
+	awsv2.Register("aws_resiliencehubv2_service", sweepServices,
+		"aws_resiliencehubv2_input_source",
+	)
 	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
 	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies,
 		"aws_resiliencehubv2_service",
@@ -84,6 +87,39 @@ func sweepSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSystem, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(system.SystemArn)),
 			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepInputSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResilienceHubV2Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	services := resiliencehubv2.NewListServicesPaginator(conn, &resiliencehubv2.ListServicesInput{})
+	for services.HasMorePages() {
+		page, err := services.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, svc := range page.ServiceSummaries {
+			listInputSourcesInput := resiliencehubv2.ListInputSourcesInput{
+				ServiceArn: svc.ServiceArn,
+			}
+			output, err := conn.ListInputSources(ctx, &listInputSourcesInput)
+			if err != nil {
+				continue
+			}
+			for _, is := range output.InputSourceSummaries {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInputSource, client,
+					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(is.InputSourceId)),
+					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
+					framework.NewAttribute("input_source_id", aws.ToString(is.InputSourceId)),
+				))
+			}
 		}
 	}
 

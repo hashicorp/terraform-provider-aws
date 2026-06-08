@@ -55,6 +55,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceInputSource,
+			TypeName: "aws_resiliencehubv2_input_source",
+			Name:     "Input Source",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourcePolicy,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
