@@ -379,6 +379,38 @@ func TestAccWAFV2WebACLRule_sizeConstraintStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_rateBasedStatementScopeDownAndNotStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_rateBasedStatementScopeDownAndNotStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string", "basic"),
+					resource.TestCheckResourceAttrPair(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.1.not_statement.0.statement.0.ip_set_reference_statement.0.arn", "aws_wafv2_ip_set.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_rateBasedStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2296,6 +2328,99 @@ resource "aws_wafv2_web_acl" "test" {
       cloudwatch_metrics_enabled = false
       metric_name                = "test-rule"
       sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_rateBasedStatementScopeDownAndNotStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name               = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {
+      custom_response {
+        response_code = 429
+      }
+    }
+  }
+
+  statement {
+    rate_based_statement {
+      limit                 = 2000
+      evaluation_window_sec = 300
+      aggregate_key_type    = "IP"
+
+      scope_down_statement {
+        and_statement {
+          statement {
+            not_statement {
+              statement {
+                byte_match_statement {
+                  search_string         = "basic"
+                  positional_constraint = "STARTS_WITH"
+
+                  field_to_match {
+                    single_header {
+                      name = "authorization"
+                    }
+                  }
+
+                  text_transformation {
+                    priority = 0
+                    type     = "LOWERCASE"
+                  }
+                }
+              }
+            }
+          }
+          statement {
+            not_statement {
+              statement {
+                ip_set_reference_statement {
+                  arn = aws_wafv2_ip_set.test.arn
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
