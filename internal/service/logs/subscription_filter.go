@@ -153,7 +153,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 				return true, err
 			}
 
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Make sure you have given CloudWatch Logs permission to assume the provided role") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
 				return true, err
 			}
 
