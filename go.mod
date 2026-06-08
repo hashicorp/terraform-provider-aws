@@ -183,7 +183,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.6
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.7
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.14.4
