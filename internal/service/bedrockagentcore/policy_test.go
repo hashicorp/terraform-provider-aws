@@ -6,12 +6,9 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -26,29 +23,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	policyEngineIDEnvVar = "BEDROCK_AGENTCORE_POLICY_ENGINE_ID"
-)
-
 func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bedrockagentcorecontrol.GetPolicyOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, "tfacc"), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
-	policyEngineID := os.Getenv(policyEngineIDEnvVar)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckPolicy(ctx, t, policyEngineID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, policyEngineID),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -78,22 +69,20 @@ func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bedrockagentcorecontrol.GetPolicyOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, "tfacc"), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
-	policyEngineID := os.Getenv(policyEngineIDEnvVar)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckPolicy(ctx, t, policyEngineID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, policyEngineID),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicy, resourceName),
@@ -115,22 +104,20 @@ func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bedrockagentcorecontrol.GetPolicyOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, "tfacc"), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
-	policyEngineID := os.Getenv(policyEngineIDEnvVar)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckPolicy(ctx, t, policyEngineID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_description(rName, policyEngineID, "initial description"),
+				Config: testAccPolicyConfig_description(rName, "initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -139,7 +126,7 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccPolicyConfig_description(rName, policyEngineID, "updated description"),
+				Config: testAccPolicyConfig_description(rName, "updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -159,10 +146,8 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bedrockagentcorecontrol.GetPolicyOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, "tfacc"), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
-	policyEngineID := os.Getenv(policyEngineIDEnvVar)
-
 	stmt1 := "permit(principal, action, resource is AgentCore::Gateway);"
 	stmt2 := "forbid(principal, action, resource is AgentCore::Gateway);"
 
@@ -170,14 +155,13 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckPolicy(ctx, t, policyEngineID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_cedarStatement(rName, policyEngineID, stmt1),
+				Config: testAccPolicyConfig_cedarStatement(rName, stmt1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -186,7 +170,7 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccPolicyConfig_cedarStatement(rName, policyEngineID, stmt2),
+				Config: testAccPolicyConfig_cedarStatement(rName, stmt2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -201,27 +185,6 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccPreCheckPolicy(ctx context.Context, t *testing.T, policyEngineID string) {
-	if policyEngineID == "" {
-		t.Skipf("skipping acceptance testing: %s must be set", policyEngineIDEnvVar)
-	}
-
-	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-	input := bedrockagentcorecontrol.ListPoliciesInput{
-		PolicyEngineId: aws.String(policyEngineID),
-	}
-
-	_, err := conn.ListPolicies(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -279,11 +242,11 @@ func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func testAccPolicyConfig_basic(rName, policyEngineID string) string {
+func testAccPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_policy" "test" {
   name             = %[1]q
-  policy_engine_id = %[2]q
+  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
   validation_mode  = "IGNORE_ALL_FINDINGS"
 
   definition {
@@ -292,31 +255,39 @@ resource "aws_bedrockagentcore_policy" "test" {
     }
   }
 }
-`, rName, policyEngineID)
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
-func testAccPolicyConfig_cedarStatement(rName, policyEngineID, statement string) string {
+func testAccPolicyConfig_cedarStatement(rName, statement string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_policy" "test" {
   name             = %[1]q
-  policy_engine_id = %[2]q
+  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
   validation_mode  = "IGNORE_ALL_FINDINGS"
 
   definition {
     cedar {
-      statement = %[3]q
+      statement = %[2]q
     }
   }
 }
-`, rName, policyEngineID, statement)
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+`, rName, statement)
 }
 
-func testAccPolicyConfig_description(rName, policyEngineID, description string) string {
+func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_policy" "test" {
   name             = %[1]q
-  policy_engine_id = %[2]q
-  description      = %[3]q
+  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
+  description      = %[2]q
   validation_mode  = "IGNORE_ALL_FINDINGS"
 
   definition {
@@ -325,5 +296,9 @@ resource "aws_bedrockagentcore_policy" "test" {
     }
   }
 }
-`, rName, policyEngineID, description)
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+`, rName, description)
 }

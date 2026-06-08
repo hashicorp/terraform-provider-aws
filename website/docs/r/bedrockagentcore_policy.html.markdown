@@ -60,12 +60,8 @@ The `cedar` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `created_at` - Timestamp when the Policy was created.
 * `policy_arn` - ARN of the Policy.
 * `policy_id` - Identifier of the Policy.
-* `status` - Current lifecycle status of the Policy.
-* `status_reasons` - Reasons accompanying the current status, if any.
-* `updated_at` - Timestamp when the Policy was last updated.
 
 ## Timeouts
 

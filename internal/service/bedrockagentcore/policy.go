@@ -18,14 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -62,13 +60,6 @@ type policyResource struct {
 func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -97,24 +88,6 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 			"policy_id": framework.IDAttribute(),
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.PolicyStatus](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"status_reasons": schema.ListAttribute{
-				CustomType: fwtypes.ListOfStringType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			"validation_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.PolicyValidationMode](),
 				Optional:   true,
@@ -176,6 +149,7 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	out, err := conn.CreatePolicy(ctx, &input)
@@ -186,20 +160,16 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 
 	policyEngineID, policyID := aws.ToString(out.PolicyEngineId), aws.ToString(out.PolicyId)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	waited, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts))
+	policy, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
+		// Taint the resource.
 		response.State.SetAttribute(ctx, path.Root("policy_engine_id"), policyEngineID)
 		response.State.SetAttribute(ctx, path.Root("policy_id"), policyID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, policyID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waited, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, policy, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -254,32 +224,16 @@ func (r *policyResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	if diff.HasChanges() {
 		policyEngineID, policyID := fwflex.StringValueFromFramework(ctx, plan.PolicyEngineID), fwflex.StringValueFromFramework(ctx, plan.PolicyID)
-		input := bedrockagentcorecontrol.UpdatePolicyInput{
-			PolicyEngineId: aws.String(policyEngineID),
-			PolicyId:       aws.String(policyID),
-		}
-
-		// UpdatePolicy requires at least one of Definition / Description, and
-		// always re-applies ValidationMode against the new (or current) Definition.
-		// To keep server-side validation aligned with the configured validation_mode
-		// across single-attribute changes, always send the planned Definition and
-		// ValidationMode.
-		definition, dd := plan.Definition.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, dd)
+		var input bedrockagentcorecontrol.UpdatePolicyInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("Description")))
 		if response.Diagnostics.HasError() {
 			return
 		}
-		expanded, dd := definition.Expand(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, dd)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.Definition = expanded.(awstypes.PolicyDefinition)
-		input.ValidationMode = plan.ValidationMode.ValueEnum()
 
 		if !plan.Description.Equal(state.Description) {
-			input.Description = &awstypes.UpdatedDescription{
-				OptionalValue: plan.Description.ValueStringPointer(),
+			input.Description = &awstypes.UpdatedDescription{}
+			if !plan.Description.IsNull() {
+				input.Description.OptionalValue = plan.Description.ValueStringPointer()
 			}
 		}
 
@@ -445,16 +399,12 @@ func findPolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 
 type policyResourceModel struct {
 	framework.WithRegionModel
-	CreatedAt      timetypes.RFC3339                                      `tfsdk:"created_at"`
 	Definition     fwtypes.ListNestedObjectValueOf[policyDefinitionModel] `tfsdk:"definition"`
 	Description    types.String                                           `tfsdk:"description"`
 	Name           types.String                                           `tfsdk:"name"`
 	PolicyARN      types.String                                           `tfsdk:"policy_arn"`
 	PolicyEngineID types.String                                           `tfsdk:"policy_engine_id"`
 	PolicyID       types.String                                           `tfsdk:"policy_id"`
-	Status         fwtypes.StringEnum[awstypes.PolicyStatus]              `tfsdk:"status"`
-	StatusReasons  fwtypes.ListOfString                                   `tfsdk:"status_reasons"`
-	UpdatedAt      timetypes.RFC3339                                      `tfsdk:"updated_at"`
 	ValidationMode fwtypes.StringEnum[awstypes.PolicyValidationMode]      `tfsdk:"validation_mode"`
 	Timeouts       timeouts.Value                                         `tfsdk:"timeouts"`
 }
@@ -470,18 +420,19 @@ var (
 
 func (m policyDefinitionModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	cedar, d := m.Cedar.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &diags, d)
-	if diags.HasError() {
-		return nil, diags
-	}
+	switch {
+	case !m.Cedar.IsNull():
+		data, d := m.Cedar.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
 
-	var r awstypes.PolicyDefinitionMemberCedar
-	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, cedar, &r.Value))
-	if diags.HasError() {
-		return nil, diags
+		var r awstypes.PolicyDefinitionMemberCedar
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		return &r, diags
 	}
-	return &r, diags
+	return nil, diags
 }
 
 func (m *policyDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
