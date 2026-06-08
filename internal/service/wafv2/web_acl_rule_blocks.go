@@ -926,14 +926,31 @@ var scopeDownLeafStatementBlockSingle = tfsync.OnceValueCtx(func(ctx context.Con
 	}
 })
 
-// scopeDownAndStatementBlock is AND statement for scope_down_statement using leaf-only nested blocks.
+// scopeDownAndNestedStatementBlock provides statement blocks for inside and_statement:
+// leaf statements plus not_statement (one level deep), avoiding type cycles.
+var scopeDownAndNestedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks["not_statement"] = scopeDownNotStatementBlock(ctx)
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementNestedModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: blocks,
+		},
+		Description: "Nested statements for AND logical operation within scope_down_statement.",
+	}
+})
+
+// scopeDownAndStatementBlock is AND statement for scope_down_statement supporting leaf and not_statement.
 var scopeDownAndStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownLeafStatementBlockNoMinMax(ctx),
+				"statement": scopeDownAndNestedStatementBlock(ctx),
 			},
 		},
 		Description: "Logical AND statement.",
