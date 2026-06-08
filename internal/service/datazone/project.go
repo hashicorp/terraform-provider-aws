@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -413,9 +412,9 @@ var (
 type projectImportID struct{}
 
 func (projectImportID) Parse(id string) (string, map[string]any, error) {
-	domainID, projectID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	domainID, projectID, found := strings.Cut(id, ":")
 	if !found {
-		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, ":")
 	}
 
 	result := map[string]any{
