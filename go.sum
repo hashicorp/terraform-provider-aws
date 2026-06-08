@@ -63,8 +63,8 @@ github.com/aws/aws-sdk-go-v2/service/appfabric v1.17.2 h1:yI29uP70LADOH5Gtvx//yd
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.17.2/go.mod h1:AuwKrHpLlDHybUeRK84KXj7O5/p8xoqae8RZOPxDfDw=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.52.0 h1:4WAlBxLnXpLSoybdQ159eTWKmYpFmgXX2Dy81OAH1GQ=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.52.0/go.mod h1:GN2gzVta0yufVx0zwdYM7D5p8PRxazyHq5E8VRwSvcs=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.38.0 h1:YJN+lCbGh4u3ck3lqhhkF3SjAc+yvF06f1CIvzin8IY=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.38.0/go.mod h1:XpUl3rHHu0pfsHIsej6pZlGflFhBdp9u/Lmj4RYSeH0=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.38.1 h1:Y2gMor9P/wgtbHzUMFiIMxGmDK756aCpDQPDZmueRf0=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.38.1/go.mod h1:XpUl3rHHu0pfsHIsej6pZlGflFhBdp9u/Lmj4RYSeH0=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.42.1 h1:XomwiNuV9HRRxUU9jYr32s1VqZ9BI9mhbDrLYe14688=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.42.1/go.mod h1:Ryi2YNPF6Cz41ES+iY+um/td9BSOGXumSyzdgQdreDE=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.35.4 h1:jCeTBiBJp1QElL1kqPndTp0rAiymiB+PAPDmd+lHt8s=
