@@ -212,7 +212,7 @@ func resourcePolicy() *schema.Resource {
 				"resource_tag_logical_operator": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
+					Default:          string(awstypes.ResourceTagLogicalOperatorAnd),
 					ValidateDiagFunc: enum.Validate[awstypes.ResourceTagLogicalOperator](),
 				},
 				"resource_type_list": {
@@ -501,8 +501,9 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
-			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 		}
+
+		apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 	}
 
 	tfMap := d.Get("security_service_policy_data").([]any)[0].(map[string]any)
