@@ -264,7 +264,7 @@ func listS3TableIntegrationSources(ctx context.Context, conn *cloudwatchlogs.Cli
 func findS3TableIntegrationSource(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, filter tfslices.Predicate[awstypes.S3TableIntegrationSource]) (*awstypes.S3TableIntegrationSource, error) {
 	var output []awstypes.S3TableIntegrationSource
 	for v, err := range listS3TableIntegrationSources(ctx, conn, input, filter) {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeValidationException, "Integration not found") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeValidationException, "Integration not found") || tfawserr.ErrMessageContains(err, errCodeValidationException, "Invalid integration ARN") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
