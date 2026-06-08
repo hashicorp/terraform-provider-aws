@@ -924,7 +924,7 @@ data "aws_organizations_organization" "current" {
   provider = awsalternate
 }
 
-resource "aws_cloudwatch_log_destination_policy" "firehose_destionation_policy" {
+resource "aws_cloudwatch_log_destination_policy" "firehose_destination_policy" {
   provider = awsalternate
 
   destination_name = aws_cloudwatch_log_destination.firehose.name
