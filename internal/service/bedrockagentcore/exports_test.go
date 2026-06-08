@@ -35,7 +35,7 @@ var (
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 	FindOnlineEvaluationConfigByID       = findOnlineEvaluationConfigByID
-        FindPolicyByTwoPartKey               = findPolicyByTwoPartKey
+	FindPolicyByTwoPartKey               = findPolicyByTwoPartKey
 	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID
