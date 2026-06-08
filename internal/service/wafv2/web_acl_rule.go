@@ -1637,11 +1637,13 @@ type webACLRuleRuleActionOverrideModel struct {
 	ActionToUse fwtypes.ListNestedObjectValueOf[webACLRuleActionModel] `tfsdk:"action_to_use"`
 }
 
-// webACLRuleScopeDownLeafModel contains only leaf statements (no managed_rule_group, rate_based,
-// or rule_group_reference) to break the type cycle: ScopeDown -> AndStatement -> StatementLevel0
-// -> ManagedRuleGroup -> ScopeDown. The type system's AttributeTypes walks struct fields
-// recursively, so a cycle causes infinite recursion.
-type webACLRuleScopeDownLeafModel struct {
+// Level-based scope_down statement models — mirrors the pattern in web_acl_rule_statement_models_gen.go.
+// Level 0: leaf statements only. Level 1: leaf + and/not/or at level 0.
+// webACLRuleScopeDownStatementModel (the top level) references and/not/or at level 1.
+// Each level only references the level below it, so the type graph is acyclic.
+
+// webACLRuleScopeDownStatementLevel0Model contains only leaf statements; no logical operators.
+type webACLRuleScopeDownStatementLevel0Model struct {
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
@@ -1654,36 +1656,57 @@ type webACLRuleScopeDownLeafModel struct {
 	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 }
 
-// webACLRuleScopeDownAndStatementNestedModel is the statement type used inside and_statement.
-// It supports leaf statements plus not_statement (one level of nesting) without causing type cycles.
-type webACLRuleScopeDownAndStatementNestedModel struct {
-	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementModel]             `tfsdk:"not_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+// webACLRuleScopeDownAndStatementLevel0Model wraps level-0 statements for an AND operation.
+type webACLRuleScopeDownAndStatementLevel0Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel0Model] `tfsdk:"statement"`
 }
 
-// webACLRuleScopeDownAndStatementModel uses leaf statements plus not_statement to break type cycles.
-type webACLRuleScopeDownAndStatementModel struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementNestedModel] `tfsdk:"statement"`
+// webACLRuleScopeDownNotStatementLevel0Model wraps a single level-0 statement for a NOT operation.
+type webACLRuleScopeDownNotStatementLevel0Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel0Model] `tfsdk:"statement"`
 }
 
-// webACLRuleScopeDownNotStatementModel uses leaf-only nested statements to break type cycles.
-type webACLRuleScopeDownNotStatementModel struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownLeafModel] `tfsdk:"statement"`
+// webACLRuleScopeDownOrStatementLevel0Model wraps level-0 statements for an OR operation.
+type webACLRuleScopeDownOrStatementLevel0Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel0Model] `tfsdk:"statement"`
 }
 
-// webACLRuleScopeDownOrStatementModel uses leaf-only nested statements to break type cycles.
-type webACLRuleScopeDownOrStatementModel struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownLeafModel] `tfsdk:"statement"`
+// webACLRuleScopeDownStatementLevel1Model contains leaf statements plus and/not/or at level 0.
+type webACLRuleScopeDownStatementLevel1Model struct {
+	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel0Model]        `tfsdk:"and_statement"`
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]        `tfsdk:"not_statement"`
+	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel0Model]         `tfsdk:"or_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]            `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                  `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                 `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                 `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                  `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]            `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]                `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel]  `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]                `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                  `tfsdk:"asn_match_statement"`
 }
+
+// webACLRuleScopeDownAndStatementLevel1Model wraps level-1 statements for an AND operation.
+type webACLRuleScopeDownAndStatementLevel1Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1Model] `tfsdk:"statement"`
+}
+
+// webACLRuleScopeDownNotStatementLevel1Model wraps a single level-1 statement for a NOT operation.
+type webACLRuleScopeDownNotStatementLevel1Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1Model] `tfsdk:"statement"`
+}
+
+// webACLRuleScopeDownOrStatementLevel1Model wraps level-1 statements for an OR operation.
+type webACLRuleScopeDownOrStatementLevel1Model struct {
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1Model] `tfsdk:"statement"`
+}
+
+// Type aliases so the rest of the code (flattenScopeDownStatement, Expand, etc.) keeps working unchanged.
+type webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model
+type webACLRuleScopeDownNotStatementModel = webACLRuleScopeDownNotStatementLevel1Model
+type webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model
 
 type webACLRuleScopeDownStatementModel struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementModel]             `tfsdk:"and_statement"`
