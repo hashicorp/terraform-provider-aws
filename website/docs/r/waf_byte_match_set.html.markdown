@@ -38,7 +38,6 @@ This resource supports the following arguments:
   with ASCII characters) that you want to search for in web requests,
   the location in requests that you want to search, and other settings.
 
-### Nested blocks
 
 ### `byte_match_tuples`
 

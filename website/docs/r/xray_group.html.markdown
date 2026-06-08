@@ -34,7 +34,6 @@ This resource supports the following arguments:
 * `insights_configuration` - (Optional) Configuration options for enabling insights.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested fields
 
 #### `insights_configuration`
 

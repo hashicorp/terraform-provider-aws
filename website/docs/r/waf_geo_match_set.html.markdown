@@ -35,8 +35,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the GeoMatchSet.
 * `geo_match_constraint` - (Optional) The GeoMatchConstraint objects which contain the country that you want AWS WAF to search for.
 
-### Nested Blocks
-
 ### `geo_match_constraint`
 
 #### Arguments

@@ -263,7 +263,6 @@ for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 
-### Nested fields
 
 #### `metric_query`
 

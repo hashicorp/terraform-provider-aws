@@ -261,8 +261,6 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 
-### Nested Fields
-
 #### `log_delivery_configuration`
 
 * `s3_configuration` - (Required) Configuration for S3 bucket log delivery.

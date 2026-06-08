@@ -86,8 +86,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.
 
-### Nested Fields
-
 #### `replica`
 
 * `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
