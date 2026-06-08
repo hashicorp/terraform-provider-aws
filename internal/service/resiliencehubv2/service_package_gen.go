@@ -32,6 +32,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newServiceDataSource,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSystemDataSource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
