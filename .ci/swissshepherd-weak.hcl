@@ -169,8 +169,8 @@ type "action" {
 
   section "title"      { required = true }
   section "example"    { required = true }
-  section "arguments"  { required = true }
   section "dependency_management" { }
+  section "arguments"  { required = true }
   section "attributes" { forbidden = true }
   section "timeouts"   { forbidden = true }
   section "import"     { forbidden = true }
