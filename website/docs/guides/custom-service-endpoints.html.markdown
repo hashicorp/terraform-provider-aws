@@ -211,6 +211,7 @@ provider "aws" {
 |EC2 Image Builder|`imagebuilder`|`AWS_ENDPOINT_URL_IMAGEBUILDER`|`imagebuilder`|
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
+|Interconnect|`interconnect`|`AWS_ENDPOINT_URL_INTERCONNECT`|`interconnect`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|

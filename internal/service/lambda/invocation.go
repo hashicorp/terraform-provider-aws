@@ -63,48 +63,50 @@ func resourceInvocation() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"input": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"lifecycle_scope": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          lifecycleScopeCreateOnly,
-				ValidateDiagFunc: enum.Validate[lifecycleScope](),
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  FunctionVersionLatest,
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"terraform_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "tf",
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"input": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"lifecycle_scope": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          lifecycleScopeCreateOnly,
+					ValidateDiagFunc: enum.Validate[lifecycleScope](),
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  FunctionVersionLatest,
+				},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tenant_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"terraform_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "tf",
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

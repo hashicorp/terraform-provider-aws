@@ -49,132 +49,61 @@ func resourceReplicator() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"current_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"kafka_cluster": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amazon_msk_cluster": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"msk_cluster_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrVPCConfig: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"security_groups_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									names.AttrSubnetIDs: {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"log_delivery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"replicator_log_delivery": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCloudWatchLogs: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"log_group": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
+				"current_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"kafka_cluster": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amazon_msk_cluster": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"msk_cluster_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
-									"firehose": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"delivery_stream": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
+								},
+							},
+							names.AttrVPCConfig: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"security_groups_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
 											},
 										},
-									},
-									"s3": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrBucket: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												names.AttrPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
+										names.AttrSubnetIDs: {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
 											},
 										},
 									},
@@ -183,156 +112,229 @@ func resourceReplicator() *schema.Resource {
 						},
 					},
 				},
-			},
-			"replication_info_list": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"target_compression_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"target_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"topic_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"copy_access_control_lists_for_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"copy_topic_configurations": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"detect_and_copy_new_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"starting_position": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+				"log_delivery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"replicator_log_delivery": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCloudWatchLogs: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"log_group": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"topic_name_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+										"firehose": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delivery_stream": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"topics_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"s3": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrBucket: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													names.AttrPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
 										},
-									},
-									"topics_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"consumer_group_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"consumer_groups_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"consumer_groups_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"detect_and_copy_new_consumer_groups": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"synchronise_consumer_group_offsets": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"replicator_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"service_execution_role_arn": {
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
-				Required:     true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"replication_info_list": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_kafka_cluster_alias": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"source_kafka_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"target_compression_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"target_kafka_cluster_alias": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_kafka_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"topic_replication": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"copy_access_control_lists_for_topics": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"copy_topic_configurations": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"detect_and_copy_new_topics": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"starting_position": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+													},
+												},
+											},
+										},
+										"topic_name_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+													},
+												},
+											},
+										},
+										"topics_to_exclude": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"topics_to_replicate": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"consumer_group_replication": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"consumer_groups_to_exclude": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"consumer_groups_to_replicate": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"detect_and_copy_new_consumer_groups": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"synchronise_consumer_group_offsets": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"replicator_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"service_execution_role_arn": {
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+					Required:     true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 		CustomizeDiff: customdiff.Sequence(
 			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {

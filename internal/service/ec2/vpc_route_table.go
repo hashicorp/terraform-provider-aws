@@ -826,6 +826,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap["egress_only_gateway_id"] = aws.ToString(v)
 	}
 
+	// VPC Endpoint ID is returned in Gateway ID field.
 	if v := apiObject.GatewayId; v != nil {
 		if strings.HasPrefix(aws.ToString(v), "vpce-") {
 			tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
@@ -846,7 +847,9 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
+	// ODB Network ARN is also returned in Gateway ID field.
 	if v := apiObject.OdbNetworkArn; v != nil {
+		tfMap["gateway_id"] = nil
 		tfMap["odb_network_arn"] = aws.ToString(v)
 	}
 
