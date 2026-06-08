@@ -285,7 +285,7 @@ func TestAccVPCDefaultNetworkACL_tagBasedAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	policy := fmt.Sprintf(`
 {
@@ -307,7 +307,7 @@ func TestAccVPCDefaultNetworkACL_tagBasedAuth(t *testing.T) {
   ]
 }`, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAssumeRoleARN(t)
@@ -324,7 +324,7 @@ func TestAccVPCDefaultNetworkACL_tagBasedAuth(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tagBasedAuth(rName, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
