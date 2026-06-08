@@ -23,7 +23,7 @@ resource "aws_db_instance_automated_backups_replication" "default" {
 }
 ```
 
-## Encrypting the automated backup with KMS
+### Encrypting the automated backup with KMS
 
 ```terraform
 resource "aws_db_instance_automated_backups_replication" "default" {

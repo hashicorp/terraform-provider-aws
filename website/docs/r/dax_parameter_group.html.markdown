@@ -37,7 +37,7 @@ This resource supports the following arguments:
 * `description` - (Optional, ForceNew) A description of the parameter group.
 * `parameters` - (Optional) The parameters of the parameter group.
 
-## parameters
+### parameters
 
 `parameters` supports the following:
 
