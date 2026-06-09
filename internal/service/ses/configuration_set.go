@@ -40,60 +40,62 @@ func resourceConfigurationSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delivery_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tls_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.TlsPolicyOptional,
-							ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delivery_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tls_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.TlsPolicyOptional,
+								ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
+							},
 						},
 					},
 				},
-			},
-			"last_fresh_start": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"reputation_metrics_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"sending_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"tracking_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_redirect_domain": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+				"last_fresh_start": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"reputation_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"sending_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"tracking_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_redirect_domain": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

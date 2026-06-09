@@ -1,13 +1,27 @@
 ## 6.50.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
+* **New List Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New List Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
+* **New Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_observabilityadmin_s3_table_integration` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
+
 ENHANCEMENTS:
 
+* provider: Add Linux s390x support ([#48272](https://github.com/hashicorp/terraform-provider-aws/issues/48272))
 * resource/aws_bedrockagentcore_agent_runtime: Add `AGUI` as a valid value for `protocol_configuration.server_protocol` ([#47906](https://github.com/hashicorp/terraform-provider-aws/issues/47906))
 * resource/aws_bedrockagentcore_gateway: Add `policy_engine_configuration` configuration block ([#47818](https://github.com/hashicorp/terraform-provider-aws/issues/47818))
 * resource/aws_bedrockagentcore_gateway_target: Add `listing_mode` argument to the `target_configuration.mcp.mcp_server` configuration block ([#48225](https://github.com/hashicorp/terraform-provider-aws/issues/48225))
+* resource/aws_bedrockagentcore_memory: Add `indexed_key` and `stream_delivery_resources` arguments ([#48240](https://github.com/hashicorp/terraform-provider-aws/issues/48240))
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_log_subscription_filter: Retry `ValidationException: Make sure you have given CloudWatch Logs permission to assume the provided role` IAM eventual consistency errors on Create and Update ([#48255](https://github.com/hashicorp/terraform-provider-aws/issues/48255))
+* resource/aws_datazone_project: Fix import separator to match the expected format. ([#48271](https://github.com/hashicorp/terraform-provider-aws/issues/48271))
 * resource/aws_default_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 * resource/aws_ecs_express_gateway_service: Fix "inconsistent result after apply" error for `network_configuration[0].security_groups` when using `network_configuration`. `ec2:DescribeSecurityGroups` IAM permission is newly required. ([#47944](https://github.com/hashicorp/terraform-provider-aws/issues/47944))
 * resource/aws_ecs_express_gateway_service: Fix `Resource Already Exists` error when recreating a service after deletion ([#48098](https://github.com/hashicorp/terraform-provider-aws/issues/48098))
