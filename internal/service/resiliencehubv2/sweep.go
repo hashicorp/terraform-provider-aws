@@ -18,6 +18,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies)
+	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
 }
 
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -35,6 +36,28 @@ func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		for _, policy := range page.PolicySummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePolicy, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(policy.PolicyArn)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResilienceHubV2Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	pages := resiliencehubv2.NewListSystemsPaginator(conn, &resiliencehubv2.ListSystemsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, system := range page.SystemSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSystem, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(system.SystemArn)),
 			))
 		}
 	}
