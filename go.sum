@@ -481,8 +481,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.71.5 h1:sS08pq42o+zTTacHH2bILn
 github.com/aws/aws-sdk-go-v2/service/s3control v1.71.5/go.mod h1:dCGIfoT6n2eToJDHoP380259fiV2AuqujN+YYZHemxo=
 github.com/aws/aws-sdk-go-v2/service/s3files v1.1.1 h1:F7tDq8LUkRLRs9R8lEl4faU8IgIGWqog9oFrqSlz3Jc=
 github.com/aws/aws-sdk-go-v2/service/s3files v1.1.1/go.mod h1:nR8b1Rq1fp6Jze+BzuDTd06Fi98P/kYLMNDMivNINnQ=
-github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.1 h1:ClKOAYZxCvc6zHn524UcrDnEbL2XPn1wlsUWDEzP4sc=
-github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.1/go.mod h1:S/VGb9HHw6JE20LkOGzK08/zpUf+4xsLx+jSvZZ2Yc8=
+github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.2 h1:k8pb8onAQF3VsGNH1Am+3yEqMuIArxxXL0YAck7AXpE=
+github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.2/go.mod h1:OIZ3IxQ71VxFu8pGdPziP3HU/leYLrIboL33F+YJ9DI=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.5 h1:FwrmUgq1YQPZc4lUGPqzHE29a8zRYYHCn/5kF/lFkLQ=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.5/go.mod h1:VyVho2vqKZzwW18svgroOz9/NzERW0pOxD+EBhRRggg=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.5 h1:ep1J3OW+4jRr65i3n98c0s4jgz31B6DoBSE5CsQqQbM=
