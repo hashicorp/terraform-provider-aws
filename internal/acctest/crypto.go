@@ -403,6 +403,7 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 }
 
 // TLSRSAX509SelfSignedClientCertificatePEM generates a x509 certificate PEM string with client authentication extended key usage.
+// This is suitable for use with CloudFront Origin mTLS configuration.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_pem = "%[1]s"
 func TLSRSAX509SelfSignedClientCertificatePEM(t *testing.T, keyPem, commonName string) string {
