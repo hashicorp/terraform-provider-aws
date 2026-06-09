@@ -1279,6 +1279,10 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 		if diags.HasError() {
 			return diags
 		}
+
+		// Tags are not handled by AutoFlex.
+		model.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, t.Value.Tags))
+
 		m.ManagedVPCResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
