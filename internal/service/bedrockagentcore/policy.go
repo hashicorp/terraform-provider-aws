@@ -32,16 +32,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagentcore_policy", name="Policy")
+// @IdentityAttribute("policy_engine_id")
+// @IdentityAttribute("policy_id")
+// @ImportIDHandler(policyImportID)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetPolicyOutput")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc="testAccPolicyImportStateIDFunc")
+// @Testing(importStateIdAttribute="policy_id")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 func newPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &policyResource{}
 
@@ -55,6 +65,7 @@ func newPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error
 type policyResource struct {
 	framework.ResourceWithModel[policyResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -288,18 +299,6 @@ func (r *policyResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-func (r *policyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, ",")
-
-	if len(parts) != 2 {
-		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "policy_engine_id,policy_id"`, request.ID))
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("policy_engine_id"), parts[0]))
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("policy_id"), parts[1]))
-}
-
 func waitPolicyCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, policyEngineID, policyID string, timeout time.Duration) (*bedrockagentcorecontrol.GetPolicyOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PolicyStatusCreating),
@@ -395,6 +394,30 @@ func findPolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = policyImportID{}
+)
+
+type policyImportID struct{}
+
+func (policyImportID) Parse(id string) (string, map[string]any, error) {
+	const (
+		policyIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(id, policyIDParts, true)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"policy_engine_id": parts[0],
+		"policy_id":        parts[1],
+	}
+
+	return id, result, nil
 }
 
 type policyResourceModel struct {

@@ -17,7 +17,7 @@ Manages an AWS Bedrock AgentCore Policy. A Policy attaches Cedar authorization r
 ```terraform
 resource "aws_bedrockagentcore_policy" "example" {
   name             = "example_policy"
-  policy_engine_id = "ExamplePolicyEngine-abc1234567"
+  policy_engine_id = aws_bedrockagentcore_policy_engine.example.policy_engine_id
   description      = "Allow read access to example resources"
 
   definition {
@@ -73,17 +73,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Policy using the `policy_engine_id` and `policy_id` separated by a comma. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_policy.example
-  id = "ExamplePolicyEngine-abc1234567,Policy-0123456789"
+  identity = {
+    policy_engine_id = "PolicyEngine_i2fo6-dyqwrzl954"
+    policy_id        = "policy_ar2c3-o_rospxr2j"
+  }
+}
+
+resource "aws_bedrockagentcore_policy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Policy using the `policy_engine_id` and `policy_id` separated by a comma. For example:
+### Identity Schema
+
+#### Required
+
+- `policy_engine_id` (String) ID of the policy engine.
+- `policy_id` (String) ID of the policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Policies using the `policy_engine_id` and `policy_id` separated by a comma. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_policy.example
+  id = "PolicyEngine_i2fo6-dyqwrzl954,policy_ar2c3-o_rospxr2j"
+}
+```
+
+Using `terraform import`, import Bedrock AgentCore Policies using the `policy_engine_id` and `policy_id` separated by a comma. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_policy.example ExamplePolicyEngine-abc1234567,Policy-0123456789
+% terraform import aws_bedrockagentcore_policy.example PolicyEngine_i2fo6-dyqwrzl954,policy_ar2c3-o_rospxr2j
 ```

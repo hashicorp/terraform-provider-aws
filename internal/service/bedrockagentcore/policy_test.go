@@ -54,14 +54,6 @@ func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 				},
 			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccPolicyImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: "policy_id",
-				ImportStateVerifyIgnore:              []string{"validation_mode"},
-			},
 		},
 	})
 }
@@ -233,13 +225,7 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *be
 }
 
 func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["policy_engine_id"], rs.Primary.Attributes["policy_id"]), nil
-	}
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "policy_engine_id", "policy_id")
 }
 
 func testAccPolicyConfig_basic(rName string) string {

@@ -143,6 +143,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_bedrockagentcore_policy",
 			Name:     "Policy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      policyImportID{},
+			},
 		},
 		{
 			Factory:  newPolicyEngineResource,
