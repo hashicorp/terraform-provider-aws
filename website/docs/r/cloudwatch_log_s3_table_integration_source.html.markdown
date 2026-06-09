@@ -67,14 +67,14 @@ This resource supports the following arguments:
 
 The `data_source` block supports the following arguments:
 
-* `name` - (Required, Forces new resource) Name of the data source.
-* `type` - (Required, Forces new resource) Type of the data source.
+* `name` - (Required, Forces new resource) Name of the data source. Use `"*"` to match all sources.
+* `type` - (Required, Forces new resource) Type of the data source. Use `"*"` to match all types.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the association between the data source and S3 Table Integration.
+* `id` - Unique identifier (UUID) for the association between the data source and S3 Table Integration. To find this value for an existing association created outside Terraform, run `aws logs list-sources-for-s3-table-integration --integration-arn <ARN>` and use the `Identifier` field from the response.
 
 ## Timeouts
 
