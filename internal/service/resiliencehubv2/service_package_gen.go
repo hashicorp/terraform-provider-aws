@@ -98,6 +98,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newResourceServiceFunction,
+			TypeName: "aws_resiliencehubv2_service_function",
+			Name:     "Service Function",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("service_function_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      serviceFunctionImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
 			Factory:  newResourceSystem,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
@@ -144,6 +159,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newResourceServiceFunctionAsListResource,
+			TypeName: "aws_resiliencehubv2_service_function",
+			Name:     "Service Function",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("service_function_id", true),
+			}),
 		},
 		{
 			Factory:  newResourceSystemAsListResource,
