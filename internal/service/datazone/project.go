@@ -47,6 +47,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetProjectOutput")
 // @Testing(importIgnore="skip_deletion_check;project_status")
 // @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdFunc="testAccProjectImportStateIdFunc")
 // @Testing(preIdentityVersion="v6.47.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}

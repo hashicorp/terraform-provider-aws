@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,7 +67,7 @@ func TestAccDataZoneProject_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "domain_identifier", names.AttrID),
+				ImportStateIdFunc:                    testAccProjectImportStateIdFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -87,7 +86,7 @@ func TestAccDataZoneProject_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "domain_identifier", names.AttrID),
+				ImportStateIdFunc: testAccProjectImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -165,7 +164,7 @@ func TestAccDataZoneProject_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "domain_identifier", names.AttrID),
+				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccProjectImportStateIdFunc),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -185,7 +184,7 @@ func TestAccDataZoneProject_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "domain_identifier", names.AttrID),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccProjectImportStateIdFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
