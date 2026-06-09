@@ -16,6 +16,7 @@ var (
 	ResourceResourcePolicy           = newResourcePolicyResource
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
+	ResourcePolicy                   = newPolicyResource
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
 	ResourceHarness                  = newHarnessResource
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
@@ -34,6 +35,7 @@ var (
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 	FindOnlineEvaluationConfigByID       = findOnlineEvaluationConfigByID
+	FindPolicyByTwoPartKey               = findPolicyByTwoPartKey
 	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID

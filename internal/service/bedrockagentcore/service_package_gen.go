@@ -139,6 +139,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newPolicyResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      policyImportID{},
+			},
+		},
+		{
 			Factory:  newPolicyEngineResource,
 			TypeName: "aws_bedrockagentcore_policy_engine",
 			Name:     "Policy Engine",
@@ -197,6 +211,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
+		},
+		{
+			Factory:  newPolicyResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
 		},
 		{
 			Factory:  newPolicyEngineResourceAsListResource,
