@@ -4731,26 +4731,26 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, engine)
 }
 
-func testAccReplicationGroupConfig_Valkey_durability(rName string, durability string) string {
+func testAccReplicationGroupConfig_Valkey_durability(rName, durability string) string {
 	return fmt.Sprintf(`
-  resource "aws_elasticache_replication_group" "test" {
-    replication_group_id       = %[1]q
-    description                = "test description"
-    node_type                  = "cache.r6g.large"
-    multi_az_enabled           = "true"
-    port                       = 6379
-    apply_immediately          = true
-    maintenance_window         = "tue:06:30-tue:07:30"
-    snapshot_window            = "01:00-02:00"
-    engine                     = "valkey"
-    engine_version             = "9.0"
-    cluster_mode               = "enabled"
-    num_node_groups            = 2
-    replicas_per_node_group    = 1
-    automatic_failover_enabled = true
-    durability                 = %[2]q
-  }
-  `, rName, durability)
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.r6g.large"
+  multi_az_enabled           = "true"
+  port                       = 6379
+  apply_immediately          = true
+  maintenance_window         = "tue:06:30-tue:07:30"
+  snapshot_window            = "01:00-02:00"
+  engine                     = "valkey"
+  engine_version             = "9.0"
+  cluster_mode               = "enabled"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  automatic_failover_enabled = true
+  durability                 = %[2]q
+}
+`, rName, durability)
 }
 
 func testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName string, engine string, engineVersion string, numNodeGroups int) string {
