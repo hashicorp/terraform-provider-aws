@@ -3,8 +3,9 @@ subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_openid_connect_provider_client_id"
 description: |-
-  Manages an AWS IAM (Identity & Access Management) Open ID Connect Provider Client ID.
+  Manages an AWS IAM (Identity & Access Management) Open ID Connect Provider Client ID list.
 ---
+
 <!---
 Documentation guidelines:
 - Begin resource descriptions with "Manages..."
@@ -18,14 +19,20 @@ Documentation guidelines:
 
 # Resource: aws_iam_openid_connect_provider_client_id
 
-Manages an AWS IAM (Identity & Access Management) Open ID Connect Provider Client ID.
+Manages an AWS IAM (Identity & Access Management) Open ID Connect Provider Client ID list.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
+resource "aws_iam_openid_connect_provider" "example" {
+  url = "https://accounts.google.com"
+}
+
 resource "aws_iam_openid_connect_provider_client_id" "example" {
+  openid_connect_provider_arn = aws_iam_openid_connect_provider.example.arn
+  client_id = "266362248691-342342xasdasdasda-apps.googleusercontent.com"
 }
 ```
 
@@ -33,26 +40,21 @@ resource "aws_iam_openid_connect_provider_client_id" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
+- `openid_connect_provider_arn` - (Required) ARN of the IAM OpenID Connect provider.
 
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Brief description of the optional argument.
+- `client_id` - (Required) Client ID to add to the provider's list.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Open ID Connect Provider Client ID.
-* `example_attribute` - Brief description of the attribute.
+This resource exports no additional attributes.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+- `create` - (Default `60m`)
+- `update` - (Default `180m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
@@ -76,6 +78,7 @@ resource "aws_iam_openid_connect_provider_client_id" "example" {
 ### Identity Schema
 
 #### Required
+
 <!---
 Required attributes here:
 > ARN Identity:
@@ -86,13 +89,15 @@ Required attributes here:
 --->
 
 #### Optional
+
 <!---
 Optional attributes here:
 > ARN Identity: no optional attributes.
 > Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
 --->
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `example_id_arg`. For example:
 
