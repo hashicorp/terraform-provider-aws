@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,7 +81,7 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 
 			var data policyResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
