@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_memorydb_multi_region_cluster: Fix delete of multiple `aws_memorydb_cluster` where all of those are part of same `aws_memorydb_multi_region_cluster`. Earlier it used to error out due to race condition.
+```
