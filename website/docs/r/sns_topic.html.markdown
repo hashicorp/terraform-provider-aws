@@ -18,7 +18,7 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
-## Example with Delivery Policy
+### Example with Delivery Policy
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -45,7 +45,7 @@ EOF
 }
 ```
 
-## Example with Server-side encryption (SSE)
+### Example with Server-side encryption (SSE)
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -54,7 +54,7 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
-## Example with First-In-First-Out (FIFO)
+### Example with First-In-First-Out (FIFO)
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {

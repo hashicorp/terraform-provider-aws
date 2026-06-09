@@ -48,7 +48,7 @@ resource "aws_fis_experiment_template" "example" {
 }
 ```
 
-## Example Usage with Report Configuration
+### Example Usage with Report Configuration
 
 ```terraform
 data "aws_partition" "current" {}
