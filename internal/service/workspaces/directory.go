@@ -43,277 +43,279 @@ func resourceDirectory() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_config": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"service_account_secret_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_based_auth_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_authority_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.CertificateBasedAuthStatusEnum](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_config": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"service_account_secret_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"customer_user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				ForceNew: true,
-				Optional: true,
-			},
-			"directory_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"iam_role_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_group_ids": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Optional: true,
-			},
-			"registration_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"saml_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"relay_state_parameter_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "RelayState",
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.SamlStatusEnumDisabled,
-							ValidateDiagFunc: enum.Validate[types.SamlStatusEnum](),
-						},
-						"user_access_url": {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_based_auth_properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"certificate_authority_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.CertificateBasedAuthStatusEnum](),
+							},
 						},
 					},
 				},
-			},
-			"self_service_permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"change_compute_type": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"increase_volume_size": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"rebuild_workspace": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"restart_workspace": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"switch_running_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+				"customer_user_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+					ForceNew: true,
+					Optional: true,
+				},
+				"directory_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_ip_addresses": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"iam_role_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ip_group_ids": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+					Optional: true,
+				},
+				"registration_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"saml_properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"relay_state_parameter_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  "RelayState",
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.SamlStatusEnumDisabled,
+								ValidateDiagFunc: enum.Validate[types.SamlStatusEnum](),
+							},
+							"user_access_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tenancy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.Tenancy](),
-			},
-			"user_identity_type": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ForceNew:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.UserIdentityType](),
-			},
-			"workspace_access_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_type_android": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_chromeos": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_ios": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_linux": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_osx": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_web": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_windows": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
-						},
-						"device_type_zeroclient": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+				"self_service_permissions": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"change_compute_type": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"increase_volume_size": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"rebuild_workspace": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"restart_workspace": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"switch_running_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"workspace_creation_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_security_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"default_ou": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"enable_internet_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"enable_maintenance_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"user_enabled_as_local_administrator": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tenancy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.Tenancy](),
+				},
+				"user_identity_type": {
+					Type:             schema.TypeString,
+					Computed:         true,
+					ForceNew:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.UserIdentityType](),
+				},
+				"workspace_access_properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"device_type_android": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_chromeos": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_ios": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_linux": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_osx": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_web": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_windows": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
+							"device_type_zeroclient": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AccessPropertyValue](),
+							},
 						},
 					},
 				},
-			},
-			"workspace_directory_description": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"workspace_directory_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"workspace_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_type": {
-				Type:             schema.TypeString,
-				Default:          types.WorkspaceTypePersonal,
-				ForceNew:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
-			},
+				"workspace_creation_properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_security_group_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"default_ou": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"enable_internet_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"enable_maintenance_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"user_enabled_as_local_administrator": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+				},
+				"workspace_directory_description": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"workspace_directory_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"workspace_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workspace_type": {
+					Type:             schema.TypeString,
+					Default:          types.WorkspaceTypePersonal,
+					ForceNew:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
+				},
+			}
 		},
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 			config := diff.GetRawConfig()
