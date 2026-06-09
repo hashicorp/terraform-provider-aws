@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -80,8 +81,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
 					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
 					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
-						"key1": "value1",
-						"key2": "value2",
+						acctest.CtKey1: acctest.CtValue1,
+						acctest.CtKey2: acctest.CtValue2,
 					})),
 					VPCIdentifier: types.StringValue("vpc1"),
 				}),
@@ -91,7 +92,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 				Value: awstypes.ManagedVpcResource{
 					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
 					SubnetIds:             []string{"sn1", "sn2"},
-					Tags:                  map[string]string{"key1": "value1", "key2": "value2"},
+					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
 					VpcIdentifier:         aws.String("vpc1"),
 				},
 			},
@@ -194,7 +195,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 				Value: awstypes.ManagedVpcResource{
 					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
 					SubnetIds:             []string{"sn1", "sn2"},
-					Tags:                  map[string]string{"key1": "value1", "key2": "value2"},
+					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
 					VpcIdentifier:         aws.String("vpc1"),
 				},
 			},
@@ -205,8 +206,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
 					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
 					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
-						"key1": "value1",
-						"key2": "value2",
+						acctest.CtKey1: acctest.CtValue1,
+						acctest.CtKey2: acctest.CtValue2,
 					})),
 					VPCIdentifier: types.StringValue("vpc1"),
 				}),
