@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.60.5
-	github.com/aws/aws-sdk-go-v2/service/appsync v1.54.3
+	github.com/aws/aws-sdk-go-v2/service/appsync v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/athena v1.58.3
