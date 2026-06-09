@@ -2261,7 +2261,6 @@ check "schema_docs" {
     "resource/aws_waf_web_acl",
     "resource/aws_waf_xss_match_set",
     "resource/aws_wafregional_byte_match_set",
-    "resource/aws_wafregional_geo_match_set",
     "resource/aws_wafregional_ipset",
     "resource/aws_wafregional_rate_based_rule",
     "resource/aws_wafregional_regex_match_set",
