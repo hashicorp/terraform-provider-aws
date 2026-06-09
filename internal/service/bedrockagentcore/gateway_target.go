@@ -1314,6 +1314,10 @@ func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics
 		if diags.HasError() {
 			return nil, diags
 		}
+
+		// Tags are not handled by AutoFlex.
+		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, data.Tags)
+
 		return &r, diags
 
 	case !m.SelfManagedLatticeResource.IsNull():

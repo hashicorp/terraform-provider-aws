@@ -23,6 +23,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 	ignoreExportedOpts := cmpopts.IgnoreUnexported(
 		awstypes.PrivateEndpointMemberManagedVpcResource{},
 		awstypes.ManagedVpcResource{},
+		awstypes.PrivateEndpointMemberSelfManagedLatticeResource{},
+		awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
 	)
 	testCases := map[string]struct {
 		model    privateEndpointModel
@@ -91,19 +93,43 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 				},
 			},
 		},
+		"Simple SelfManagedLatticeResource": {
+			model: privateEndpointModel{
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManagedLatticeResourceModel{
+					ResourceConfigurationIdentifier: types.StringValue("rc1"),
+				}),
+			},
+			expected: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rc1",
+				},
+			},
+		},
 	}
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var got awstypes.PrivateEndpointMemberManagedVpcResource
-			diags := fwflex.Expand(ctx, testCase.model, &got)
-			if diags.HasError() {
-				t.Fatalf("unexpected error: %s", diags[0].Summary())
-			}
-			if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			switch testCase.expected.(type) {
+			case *awstypes.PrivateEndpointMemberManagedVpcResource:
+				var got awstypes.PrivateEndpointMemberManagedVpcResource
+				diags := fwflex.Expand(ctx, testCase.model, &got)
+				if diags.HasError() {
+					t.Fatalf("unexpected error: %s", diags[0].Summary())
+				}
+				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			case *awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
+				var got awstypes.PrivateEndpointMemberSelfManagedLatticeResource
+				diags := fwflex.Expand(ctx, testCase.model, &got)
+				if diags.HasError() {
+					t.Fatalf("unexpected error: %s", diags[0].Summary())
+				}
+				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
 			}
 		})
 	}
