@@ -105,6 +105,8 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 	var v bedrockagentcorecontrol.GetPolicyOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
+	desc1 := "initial description"
+	desc2 := "updated description"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -116,16 +118,29 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_description(rName, "initial description"),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable(desc1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial description")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(desc1)),
 				},
 			},
 			{
-				Config: testAccPolicyConfig_description(rName, "updated description"),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable(desc2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -135,7 +150,7 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(desc2)),
 				},
 			},
 		},
@@ -160,16 +175,29 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_cedarStatement(rName, stmt1),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/statement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"statement":     config.StringVariable(stmt1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey("cedar").AtSliceIndex(0).AtMapKey("statement"), knownvalue.StringExact(stmt1)),
 				},
 			},
 			{
-				Config: testAccPolicyConfig_cedarStatement(rName, stmt2),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/statement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"statement":     config.StringVariable(stmt2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -233,45 +261,4 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *be
 
 func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "policy_engine_id", "policy_id")
-}
-
-func testAccPolicyConfig_cedarStatement(rName, statement string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_policy" "test" {
-  name             = %[1]q
-  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
-  validation_mode  = "IGNORE_ALL_FINDINGS"
-
-  definition {
-    cedar {
-      statement = %[2]q
-    }
-  }
-}
-
-resource "aws_bedrockagentcore_policy_engine" "test" {
-  name = %[1]q
-}
-`, rName, statement)
-}
-
-func testAccPolicyConfig_description(rName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_policy" "test" {
-  name             = %[1]q
-  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
-  description      = %[2]q
-  validation_mode  = "IGNORE_ALL_FINDINGS"
-
-  definition {
-    cedar {
-      statement = "permit(principal, action, resource is AgentCore::Gateway);"
-    }
-  }
-}
-
-resource "aws_bedrockagentcore_policy_engine" "test" {
-  name = %[1]q
-}
-`, rName, description)
 }
