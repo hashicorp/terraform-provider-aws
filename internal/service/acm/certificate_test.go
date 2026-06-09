@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccACMCertificate_emailValidation(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_emailValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -80,7 +80,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_dnsValidation(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_dnsValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -128,7 +128,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_root(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -171,7 +171,7 @@ func TestAccACMCertificate_root(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_validationOptions(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_validationOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -213,7 +213,7 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
+func TestAccACMCertificate_Private_renewable(t *testing.T) {
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
@@ -341,7 +341,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) {
+func TestAccACMCertificate_Private_noRenewalPermission(t *testing.T) {
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
@@ -461,7 +461,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testing.T) {
+func TestAccACMCertificate_Private_pendingRenewalGoDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -536,7 +536,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *testing.T) {
+func TestAccACMCertificate_Private_pendingRenewalRFC3339Duration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -611,7 +611,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) {
+func TestAccACMCertificate_Private_addEarlyRenewalPast(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -700,7 +700,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *testing.T) {
+func TestAccACMCertificate_Private_addEarlyRenewalPastIneligible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -753,7 +753,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T) {
+func TestAccACMCertificate_Private_addEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -839,7 +839,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testing.T) {
+func TestAccACMCertificate_Private_updateEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -911,7 +911,7 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 	})
 }
 
-func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
+func TestAccACMCertificate_Private_removeEarlyRenewal(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain(t)
@@ -982,9 +982,9 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 	})
 }
 
-// TestAccACMCertificate_Root_trailingPeriod updated in 3.0 to account for domain_name plan-time validation
+// TestAccACMCertificate_AmazonIssued_Root_trailingPeriod updated in 3.0 to account for domain_name plan-time validation
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
-func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_Root_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
@@ -1003,7 +1003,7 @@ func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_rootAndWildcardSan(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1051,7 +1051,7 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_SubjectAlternativeNames_emptyString(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -1070,7 +1070,7 @@ func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_San_single(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_San_single(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1162,7 +1162,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_San_multiple(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_San_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1217,7 +1217,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_San_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -1266,7 +1266,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_San_matches_domain(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_San_matches_domain(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1315,7 +1315,7 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_wildcard(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_wildcard(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1358,7 +1358,7 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_wildcardAndRootSan(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1406,7 +1406,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_keyAlgorithm(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1449,7 +1449,7 @@ func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_disableCTLogging(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_disableCTLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1493,7 +1493,7 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_disableReenableCTLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1598,7 +1598,7 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
+func TestAccACMCertificate_Imported_PrivateKeyWo(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
@@ -1967,7 +1967,7 @@ func TestAccACMCertificate_Imported_ReimportWithTags(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_optionExport(t *testing.T) {
+func TestAccACMCertificate_AmazonIssued_optionExport(t *testing.T) {
 	// Issuing an exportable ACM Certificate is expensive.
 	// Skip the test by default and only run if the environment variable is set.
 	acctest.SkipIfEnvVarNotSet(t, "ACM_TEST_CERTIFICATE_EXPORT")
