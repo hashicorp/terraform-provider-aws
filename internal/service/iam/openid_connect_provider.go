@@ -78,9 +78,9 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	input := &iam.CreateOpenIDConnectProviderInput{		
-		Tags:         getTagsIn(ctx),
-		Url:          aws.String(d.Get(names.AttrURL).(string)),
+	input := &iam.CreateOpenIDConnectProviderInput{
+		Tags: getTagsIn(ctx),
+		Url:  aws.String(d.Get(names.AttrURL).(string)),
 	}
 
 	if v, ok := d.GetOk("client_id_list"); ok {
