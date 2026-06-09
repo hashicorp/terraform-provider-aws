@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -39,7 +40,10 @@ func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -74,7 +78,10 @@ func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicy, resourceName),
@@ -226,26 +233,6 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *be
 
 func testAccPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "policy_engine_id", "policy_id")
-}
-
-func testAccPolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_policy" "test" {
-  name             = %[1]q
-  policy_engine_id = aws_bedrockagentcore_policy_engine.test.policy_engine_id
-  validation_mode  = "IGNORE_ALL_FINDINGS"
-
-  definition {
-    cedar {
-      statement = "permit(principal, action, resource is AgentCore::Gateway);"
-    }
-  }
-}
-
-resource "aws_bedrockagentcore_policy_engine" "test" {
-  name = %[1]q
-}
-`, rName)
 }
 
 func testAccPolicyConfig_cedarStatement(rName, statement string) string {

@@ -213,6 +213,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
 		},
 		{
+			Factory:  newPolicyResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
+		},
+		{
 			Factory:  newPolicyEngineResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_policy_engine",
 			Name:     "Policy Engine",

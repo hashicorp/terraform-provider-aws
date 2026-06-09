@@ -204,7 +204,7 @@ func (r *policyResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -249,14 +249,8 @@ func (r *policyResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		waited, err := waitPolicyUpdated(ctx, conn, policyEngineID, policyID, r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
+		if _, err := waitPolicyUpdated(ctx, conn, policyEngineID, policyID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, policyID)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waited, &plan))
-		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -292,6 +286,12 @@ func (r *policyResource) Delete(ctx context.Context, request resource.DeleteRequ
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, policyID)
 		return
 	}
+}
+
+func (r *policyResource) flatten(ctx context.Context, policy any, data *policyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, policy, data)...)
+	return diags
 }
 
 func waitPolicyCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, policyEngineID, policyID string, timeout time.Duration) (*bedrockagentcorecontrol.GetPolicyOutput, error) {
