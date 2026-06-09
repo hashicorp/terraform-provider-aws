@@ -74,7 +74,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name for the configuration.
 * `s3_destination` - (Required) Amazon S3 configuration details for the sync.
 
-## s3_destination
+### s3_destination
 
 `s3_destination` supports the following:
 
@@ -86,7 +86,7 @@ This resource supports the following arguments:
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
 
-## destination_data_sharing
+### destination_data_sharing
 
 `destination_data_sharing` supports the following:
 

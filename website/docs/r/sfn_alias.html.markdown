@@ -60,6 +60,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) identifying your state machine alias.
 * `creation_date` - The date the state machine alias was created.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

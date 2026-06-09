@@ -20,7 +20,7 @@ resource "aws_xray_encryption_config" "example" {
 }
 ```
 
-## Example Usage with KMS Key
+### Example Usage with KMS Key
 
 ```terraform
 data "aws_caller_identity" "current" {}
