@@ -57,6 +57,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceInputSource,
+			TypeName: "aws_resiliencehubv2_input_source",
+			Name:     "Input Source",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("input_source_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      inputSourceImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
 			Factory:  newResourcePolicy,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
@@ -100,6 +115,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newResourceInputSourceAsListResource,
+			TypeName: "aws_resiliencehubv2_input_source",
+			Name:     "Input Source",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("input_source_id", true),
+			}),
+		},
 		{
 			Factory:  newResourcePolicyAsListResource,
 			TypeName: "aws_resiliencehubv2_policy",
