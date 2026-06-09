@@ -1273,6 +1273,8 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch t := v.(type) {
 	case awstypes.PrivateEndpointMemberManagedVpcResource:
 		var model managedVPCResourceModel
+		model.Tags = tftags.NewMapValueNull() // Tags are not handled by AutoFlex.
+
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
@@ -1281,7 +1283,7 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 
 	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
 		var model selfManagedLatticeResourceModel
-		smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
