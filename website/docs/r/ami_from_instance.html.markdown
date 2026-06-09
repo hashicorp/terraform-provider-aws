@@ -66,4 +66,3 @@ configuration.
 * `create` - (Default `40m`)
 * `update` - (Default `40m`)
 * `delete` - (Default `90m`)
-
