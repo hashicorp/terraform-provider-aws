@@ -790,6 +790,11 @@ func TestAccCloudFrontDistribution_Origin_originMtlsConfig(t *testing.T) {
 			},
 			{
 				Config: testAccDistributionConfig_originMtlsConfig(t, rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
