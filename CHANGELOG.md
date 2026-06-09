@@ -2,9 +2,11 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_bedrockagentcore_policy` ([#47971](https://github.com/hashicorp/terraform-provider-aws/issues/47971))
 * **New List Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
 * **New List Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
 * **New List Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_bedrockagentcore_policy` ([#47971](https://github.com/hashicorp/terraform-provider-aws/issues/47971))
 * **New Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
 * **New Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
 * **New Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
