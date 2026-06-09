@@ -1830,7 +1830,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
-func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
+func TestAccACMCertificate_Imported_ReimportWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	privateKeyPEM1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -1862,6 +1862,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
 				},
 			},
 			{
