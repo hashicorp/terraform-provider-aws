@@ -34,3 +34,30 @@ rules:
           metavariable: $FN
           regex: ^resource\w+Read$
     severity: WARNING
+
+  - id: no-empty-id-check-after-flatten
+    languages: [go]
+    message: Do not check for empty ID after calling a flatten function in a List Resource. The flatten function does not clear the ID.
+    paths:
+      include:
+        - "/internal/service"
+      exclude:
+        - "/internal/service/dynamodb/table_list.go"
+        - "/internal/service/ecs/task_definition_list.go"
+        - "/internal/service/kms/alias_list.go"
+        - "/internal/service/kms/key_list.go"
+        - "/internal/service/lambda/permission_list.go"
+        - "/internal/service/route53/zone_list.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $DIAGS := $FN(...)
+              if $DIAGS.HasError() || $RD.Id() == "" { ... }
+          - pattern: |
+              $DIAGS := $FN(...)
+              ...
+              if $RD.Id() == "" { ... }
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^resource\w+Flatten$
+    severity: WARNING
