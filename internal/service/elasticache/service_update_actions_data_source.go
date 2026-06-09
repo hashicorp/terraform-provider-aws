@@ -35,6 +35,9 @@ type serviceUpdateActionsDataSource struct {
 func (d *serviceUpdateActionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"replication_group_id": schema.StringAttribute{
+				Optional: true,
+			},
 			"update_actions": framework.DataSourceComputedListOfObjectAttribute[updateActionModel](ctx),
 		},
 	}
@@ -50,29 +53,46 @@ func (d *serviceUpdateActionsDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var input elasticache.DescribeUpdateActionsInput
-	updateActions, err := findServiceUpdateActions(ctx, conn, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, "xxx")
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, updateActions, &data.UpdateActions), smerr.ID, "xxx")
+	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.ReplicationGroupIds = flex.StringSliceValueFromFramework(ctx, data.ReplicationGroupID)
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, "xxx")
+	updateActions, err := findServiceUpdateActions(ctx, conn, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err)
+		return
+	}
+
+	if len(updateActions) == 0 {
+		v, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []updateActionModel{})
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.UpdateActions = v
+	} else {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, updateActions, &data.UpdateActions))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type serviceUpdateActionsDataSourceModel struct {
 	framework.WithRegionModel
-	UpdateActions fwtypes.ListNestedObjectValueOf[updateActionModel] `tfsdk:"update_actions"`
+	ReplicationGroupID types.String                                       `tfsdk:"replication_group_id" autoflex:"-"`
+	UpdateActions      fwtypes.ListNestedObjectValueOf[updateActionModel] `tfsdk:"update_actions" autoflex:"-"`
 }
 
 type updateActionModel struct {
 	CacheClusterID      types.String `tfsdk:"cache_cluster_id"`
 	Engine              types.String `tfsdk:"engine"`
 	EstimatedUpdateTime types.String `tfsdk:"estimated_update_time"`
+	ReplicationGroupID  types.String `tfsdk:"replication_group_id"`
 	ServiceUpdateName   types.String `tfsdk:"service_update_name"`
 }
 
