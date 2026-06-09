@@ -39,3 +39,9 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
+
+type (
+	ManagedVPCResourceModel         = managedVPCResourceModel
+	PrivateEndpointModel            = privateEndpointModel
+	SelfManagedLatticeResourceModel = selfManagedLatticeResourceModel
+)

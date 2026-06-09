@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package bedrockagentcore
+package bedrockagentcore_test
 
 import (
 	"testing"
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -28,12 +29,12 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 		awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
 	)
 	testCases := map[string]struct {
-		model    privateEndpointModel
+		model    tfbedrockagentcore.PrivateEndpointModel
 		expected awstypes.PrivateEndpoint
 	}{
 		"Simple ManagedVPCResource": {
-			model: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringNull(),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
@@ -41,7 +42,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 					Tags:                  tftags.NewMapValueNull(),
 					VPCIdentifier:         types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
 				Value: awstypes.ManagedVpcResource{
@@ -52,8 +53,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 			},
 		},
 		"Full ManagedVPCResource no tags": {
-			model: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringValue("rd1"),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
@@ -61,7 +62,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 					Tags:                  tftags.NewMapValueNull(),
 					VPCIdentifier:         types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
 				Value: awstypes.ManagedVpcResource{
@@ -74,8 +75,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 			},
 		},
 		"ManagedVPCResource tags": {
-			model: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringNull(),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
@@ -86,7 +87,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 					})),
 					VPCIdentifier: types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
 				Value: awstypes.ManagedVpcResource{
@@ -98,9 +99,9 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T
 			},
 		},
 		"Simple SelfManagedLatticeResource": {
-			model: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[managedVPCResourceModel](ctx),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManagedLatticeResourceModel{
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
 					ResourceConfigurationIdentifier: types.StringValue("rc1"),
 				}),
 			},
@@ -146,7 +147,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 	ctx := t.Context()
 	testCases := map[string]struct {
 		apiObject awstypes.PrivateEndpoint
-		expected  privateEndpointModel
+		expected  tfbedrockagentcore.PrivateEndpointModel
 	}{
 		"Simple ManagedVPCResource": {
 			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
@@ -156,8 +157,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					VpcIdentifier:         aws.String("vpc1"),
 				},
 			},
-			expected: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringNull(),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
@@ -165,7 +166,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					Tags:                  tftags.NewMapValueNull(),
 					VPCIdentifier:         types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 		},
 		"Full ManagedVPCResource no tags": {
@@ -178,8 +179,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					VpcIdentifier:         aws.String("vpc1"),
 				},
 			},
-			expected: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringValue("rd1"),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
@@ -187,7 +188,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					Tags:                  tftags.NewMapValueNull(),
 					VPCIdentifier:         types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 		},
 		"ManagedVPCResource tags": {
@@ -199,8 +200,8 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					VpcIdentifier:         aws.String("vpc1"),
 				},
 			},
-			expected: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &managedVPCResourceModel{
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
 					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
 					RoutingDomain:         types.StringNull(),
 					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
@@ -211,7 +212,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					})),
 					VPCIdentifier: types.StringValue("vpc1"),
 				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[selfManagedLatticeResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
 			},
 		},
 		"Simple SelfManagedLatticeResource": {
@@ -220,9 +221,9 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 					Value: "rc1",
 				},
 			},
-			expected: privateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[managedVPCResourceModel](ctx),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManagedLatticeResourceModel{
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
 					ResourceConfigurationIdentifier: types.StringValue("rc1"),
 				}),
 			},
@@ -233,7 +234,7 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var got privateEndpointModel
+			var got tfbedrockagentcore.PrivateEndpointModel
 			diags := fwflex.Flatten(ctx, testCase.apiObject, &got)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %s", diags[0].Summary())
