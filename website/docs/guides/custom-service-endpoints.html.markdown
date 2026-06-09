@@ -286,6 +286,7 @@ provider "aws" {
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|
 |Rekognition|`rekognition`|`AWS_ENDPOINT_URL_REKOGNITION`|`rekognition`|
 |Resilience Hub|`resiliencehub`|`AWS_ENDPOINT_URL_RESILIENCEHUB`|`resiliencehub`|
+|Resilience Hub V2|`resiliencehubv2`|`AWS_ENDPOINT_URL_RESILIENCEHUBV2`|`resiliencehubv2`|
 |Resource Explorer|`resourceexplorer2`|`AWS_ENDPOINT_URL_RESOURCE_EXPLORER_2`|`resource_explorer_2`|
 |Resource Groups|`resourcegroups`|`AWS_ENDPOINT_URL_RESOURCE_GROUPS`|`resource_groups`|
 |Resource Groups Tagging|`resourcegroupstaggingapi`(or `resourcegroupstagging`)|`AWS_ENDPOINT_URL_RESOURCE_GROUPS_TAGGING_API`|`resource_groups_tagging_api`|
