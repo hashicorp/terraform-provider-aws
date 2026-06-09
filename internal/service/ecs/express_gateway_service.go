@@ -678,8 +678,11 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 		clusterName = "default"
 	}
 
-	_, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName.ValueString(), clusterName)
+	svc, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName.ValueString(), clusterName)
 	if err == nil {
+		if aws.ToString(svc.Status) == serviceStatusInactive {
+			return nil
+		}
 		return fmt.Errorf("Express Gateway Service %s already exists in cluster %s", serviceName.ValueString(), clusterName)
 	}
 	if retry.NotFound(err) {

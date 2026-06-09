@@ -25,82 +25,84 @@ func dataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,
 
-		Schema: map[string]*schema.Schema{
-			"exclude_compliant_resources": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"include_compliance_details": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"resource_arn_list": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"tag_filter"},
-			},
-			"resource_type_filters": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				MaxItems:      100,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"resource_arn_list"},
-			},
-			"tag_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 20,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"exclude_compliant_resources": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"include_compliance_details": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"resource_arn_list": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"tag_filter"},
+				},
+				"resource_type_filters": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					MaxItems:      100,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"resource_arn_list"},
+				},
+				"tag_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 20,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"resource_tag_mapping_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrResourceARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"compliance_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"compliance_status": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"keys_with_noncompliant_values": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"non_compliant_keys": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"resource_tag_mapping_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"compliance_details": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"compliance_status": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"keys_with_noncompliant_values": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"non_compliant_keys": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
 						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
-			},
+			}
 		},
 	}
 }

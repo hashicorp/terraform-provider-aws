@@ -25,50 +25,52 @@ func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_override": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"customer_override_valid_till": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_for_new_launches": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"latest_valid_till"},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"latest_valid_till": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"default_for_new_launches"},
-			},
-			"thumbprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"valid_from": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"valid_till": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_override": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"customer_override_valid_till": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_for_new_launches": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"latest_valid_till"},
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"latest_valid_till": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"default_for_new_launches"},
+				},
+				"thumbprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"valid_from": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"valid_till": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

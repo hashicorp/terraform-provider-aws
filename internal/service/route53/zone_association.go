@@ -41,28 +41,30 @@ func resourceZoneAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceZoneAssociationRead,
 		DeleteWithoutTimeout: resourceZoneAssociationDelete,
 
-		Schema: map[string]*schema.Schema{
-			"owning_account": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_region": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"owning_account": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpc_region": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

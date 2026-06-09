@@ -23,18 +23,20 @@ func dataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				StateFunc: func(v any) string {
-					return strings.TrimSuffix(v.(string), ".")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					StateFunc: func(v any) string {
+						return strings.TrimSuffix(v.(string), ".")
+					},
+				},
+			}
 		},
 	}
 }
