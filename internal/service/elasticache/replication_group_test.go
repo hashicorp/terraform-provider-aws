@@ -180,12 +180,12 @@ func TestAccElastiCacheReplicationGroup_Valkey_durability(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_Valkey_durability(rName, "sync"),
+				Config: testAccReplicationGroupConfig_Valkey_durability(rName, string(awstypes.DurabilitySync)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "durability", "sync"),
+					resource.TestCheckResourceAttr(resourceName, "durability", string(awstypes.DurabilitySync)),
 				),
 			},
 			{
@@ -193,6 +193,18 @@ func TestAccElastiCacheReplicationGroup_Valkey_durability(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_Valkey_durability(rName, string(awstypes.DurabilityAsync)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "durability", string(awstypes.DurabilityAsync)),
+				),
 			},
 		},
 	})
