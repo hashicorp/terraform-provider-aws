@@ -9,27 +9,15 @@ resource "aws_route" "test" {
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 variable "rName" {

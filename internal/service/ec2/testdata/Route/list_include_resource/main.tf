@@ -21,12 +21,6 @@ resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number

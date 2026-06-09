@@ -27,7 +27,6 @@ func TestAccVPCRoute_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_route.test[0]"
 	resourceName2 := "aws_route.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	routeTableID := tfstatecheck.StateValue()
 	destination1 := tfstatecheck.StateValue()
@@ -45,9 +44,6 @@ func TestAccVPCRoute_List_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Route/list_basic"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					routeTableID.GetStateValue("aws_route_table.test", tfjsonpath.New(names.AttrID)),
 					destination1.GetStateValue(resourceName1, tfjsonpath.New("destination_cidr_block")),
@@ -58,9 +54,6 @@ func TestAccVPCRoute_List_basic(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Route/list_basic"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
@@ -254,7 +247,6 @@ func TestAccVPCRoute_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route.test[0]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	routeTableID := tfstatecheck.StateValue()
@@ -273,7 +265,6 @@ func TestAccVPCRoute_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Route/list_include_resource"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -287,7 +278,6 @@ func TestAccVPCRoute_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Route/list_include_resource"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{

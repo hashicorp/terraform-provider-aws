@@ -15,18 +15,8 @@ resource "aws_route_table" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
