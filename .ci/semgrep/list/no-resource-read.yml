@@ -9,7 +9,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/ec2/vpc_route_table_list.go"
         - "/internal/service/ec2/vpc_security_group_list.go"
         - "/internal/service/iam/role_policy_list.go"
         - "/internal/service/lambda/layer_version_list.go"
