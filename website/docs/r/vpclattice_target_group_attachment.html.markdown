@@ -48,4 +48,3 @@ This resource exports no additional attributes.
 
 * `create` - (Default `30m`)
 * `delete` - (Default `30m`)
-

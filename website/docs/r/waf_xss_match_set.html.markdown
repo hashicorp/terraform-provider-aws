@@ -41,7 +41,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `xss_match_tuples` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
 
-
 ### `xss_match_tuples`
 
 * `field_to_match` - (Required) Specifies where in a web request to look for cross-site scripting attacks.
