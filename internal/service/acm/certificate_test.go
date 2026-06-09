@@ -158,6 +158,9 @@ func TestAccACMCertificate_root(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -196,6 +199,9 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1032,6 +1038,9 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1101,6 +1110,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact(domain),
 						knownvalue.StringExact(sanDomain),
@@ -1141,6 +1151,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact(domain),
 						knownvalue.StringExact(sanDomainUpdated),
@@ -1193,6 +1204,9 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1239,6 +1253,9 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1285,6 +1302,9 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1325,6 +1345,9 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1370,6 +1393,9 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1410,6 +1436,9 @@ func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 					resource.TestCheckResourceAttr(resourceName, "key_algorithm", string(types.KeyAlgorithmEcPrime256v1)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1451,6 +1480,9 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceDisabled)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1497,6 +1529,9 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceEnabled)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1522,6 +1557,9 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceDisabled)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1547,6 +1585,9 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceEnabled)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1584,6 +1625,9 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
 					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+				},
 			},
 			{
 				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
@@ -1593,6 +1637,9 @@ func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
 					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+				},
 			},
 		},
 	})
@@ -1897,6 +1944,7 @@ func TestAccACMCertificate_Imported_ReimportWithTags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
 				},
 			},
 			{
@@ -1953,6 +2001,9 @@ func TestAccACMCertificate_optionExport(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeAmazonIssued)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
