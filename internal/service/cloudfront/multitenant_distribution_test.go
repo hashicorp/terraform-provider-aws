@@ -274,74 +274,78 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_originMtlsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	certificateResourceName := "aws_acm_certificate.test"
+	certificateResourceName2 := "aws_acm_certificate.test2"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46045
 func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-<<<<<<< HEAD
-=======
-func TestAccCloudFrontMultiTenantDistribution_originMtlsConfig(t *testing.T) {
-  ctx := acctest.Context(t)
-  var distribution awstypes.Distribution
-  resourceName := "aws_cloudfront_multitenant_distribution.test"
-  certificateResourceName := "aws_acm_certificate.test"
-  certificateResourceName2 := "aws_acm_certificate.test2"
-  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-  acctest.ParallelTest(ctx, t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-    ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
-    Steps: []resource.TestStep{
-      {
-        Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 0),
-        Check: resource.ComposeTestCheckFunc(
-          testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-          resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-          resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
-          resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
-          resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName, names.AttrARN),
-        ),
-      },
-      {
-        ResourceName:            resourceName,
-        ImportState:             true,
-        ImportStateVerify:       true,
-        ImportStateVerifyIgnore: []string{"etag"},
-      },
-      {
-        Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 1),
-        Check: resource.ComposeTestCheckFunc(
-          testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-          resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-          resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
-          resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
-          resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName2, names.AttrARN),
-        ),
-      },
-    },
-  })
-}
-
-	certificateResourceName := "aws_acm_certificate.test"
-	certificateResourceName2 := "aws_acm_certificate.test2"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
->>>>>>> a71be536dc5 (Added update steps to the test cases)
-
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-<<<<<<< HEAD
 				Config: testAccMultiTenantDistributionConfig_originOrder(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
-=======
-				Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 0),
-        Config: testAccMultiTenantDistributionConfig_originOrder(false),
->>>>>>> a71be536dc5 (Added update steps to the test cases)
 				),
-          resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_originOrder(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
 				),
 			},
