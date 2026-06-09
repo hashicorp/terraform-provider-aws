@@ -11,6 +11,7 @@ var (
 	ResourceService         = newResourceService
 	ResourceServiceFunction = newResourceServiceFunction
 	ResourceSystem          = newResourceSystem
+	ResourceUserJourney     = newResourceUserJourney
 
 	FindAssertionByID       = findAssertionByID
 	FindInputSourceByID     = findInputSourceByID
@@ -18,4 +19,5 @@ var (
 	FindServiceByARN        = findServiceByARN
 	FindServiceFunctionByID = findServiceFunctionByID
 	FindSystemByARN         = findSystemByARN
+	FindUserJourneyByID     = findUserJourneyByID
 )
