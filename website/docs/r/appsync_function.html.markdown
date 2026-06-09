@@ -72,7 +72,7 @@ EOF
 }
 ```
 
-## Example Usage With Code
+### Example Usage With Code
 
 ```terraform
 resource "aws_appsync_function" "example" {
