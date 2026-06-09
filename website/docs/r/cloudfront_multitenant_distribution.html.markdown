@@ -186,7 +186,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 ### Origin mTLS Config
 
-* `client_certificate_arn` - (Required) ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Web Client Authentication (OID 1.3.6.1.5.5.7.3.2).
+* `client_certificate_arn` - (Required) ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Client Authentication.
 
 ### Origin Shield
 
