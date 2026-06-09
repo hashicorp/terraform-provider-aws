@@ -1273,15 +1273,21 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch t := v.(type) {
 	case awstypes.PrivateEndpointMemberManagedVpcResource:
 		var model managedVPCResourceModel
+		model.Tags = tftags.NewMapValueNull() // Tags are not handled by AutoFlex.
+
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
+
+		// Tags are not handled by AutoFlex.
+		model.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, t.Value.Tags))
+
 		m.ManagedVPCResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
 		var model selfManagedLatticeResourceModel
-		smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -1312,6 +1318,10 @@ func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics
 		if diags.HasError() {
 			return nil, diags
 		}
+
+		// Tags are not handled by AutoFlex.
+		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, data.Tags)
+
 		return &r, diags
 
 	case !m.SelfManagedLatticeResource.IsNull():

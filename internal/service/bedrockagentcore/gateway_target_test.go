@@ -876,6 +876,7 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T) {
+	acctest.Skip(t, "Requires a running MCP server in a VPC")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -913,6 +914,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_privateEndpointSelfManagedLattice(t *testing.T) {
+	acctest.Skip(t, "Requires a running MCP server in a VPC")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -941,6 +943,7 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointSelfManagedLattice(t *t
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *testing.T) {
+	acctest.Skip(t, "Requires a running MCP server in a VPC")
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
