@@ -29,16 +29,6 @@ rules:
       	return $SCHEMA
       }
     severity: WARNING
-    paths:
-      exclude:
-        - /internal/service/timestreamwrite
-        - /internal/service/transcribe
-        - /internal/service/transfer
-        - /internal/service/vpclattice
-        - /internal/service/waf
-        - /internal/service/wafregional
-        - /internal/service/workspaces
-        - /internal/service/xray
 
   - id: use-schema-map
     languages: [go]
