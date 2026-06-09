@@ -18,10 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1667,10 +1669,19 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyNoChain(t, "1.2.3.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_authority_arn"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_body"), knownvalue.StringRegexp(regexache.MustCompile(`.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificateChain), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.StringExact("1.2.3.4")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPrivateKey), knownvalue.StringRegexp(regexache.MustCompile(`.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(types.CertificateStatusIssued)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("1.2.3.4"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
