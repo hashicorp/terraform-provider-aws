@@ -4,10 +4,20 @@
 resource "aws_route_table" "test" {
   count  = var.resource_count
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "${var.rName}-${count.index}"
+  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "resource_count" {
