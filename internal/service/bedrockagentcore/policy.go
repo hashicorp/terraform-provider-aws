@@ -52,6 +52,7 @@ import (
 // @Testing(importStateIdFunc="testAccPolicyImportStateIDFunc")
 // @Testing(importStateIdAttribute="policy_id")
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(importIgnore="validation_mode")
 func newPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &policyResource{}
 
@@ -102,10 +103,6 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 			"validation_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.PolicyValidationMode](),
 				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -171,8 +168,7 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 
 	policyEngineID, policyID := aws.ToString(out.PolicyEngineId), aws.ToString(out.PolicyId)
 
-	policy, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts))
-	if err != nil {
+	if _, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		// Taint the resource.
 		response.State.SetAttribute(ctx, path.Root("policy_engine_id"), policyEngineID)
 		response.State.SetAttribute(ctx, path.Root("policy_id"), policyID)
@@ -180,10 +176,9 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, policy, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// Set values for unknowns.
+	data.PolicyARN = fwflex.StringToFramework(ctx, out.PolicyArn)
+	data.PolicyID = fwflex.StringValueToFramework(ctx, policyID)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
