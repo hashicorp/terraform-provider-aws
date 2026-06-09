@@ -45,7 +45,6 @@ The following attributes that are available in standard CloudFront distributions
 - `trusted_signers` in cache behaviors - Use `trusted_key_groups` instead
 - Cache behavior TTL settings (`default_ttl`, `max_ttl`, `min_ttl`) - Use cache policies instead
 
-
 ```terraform
 resource "aws_cloudfront_multitenant_distribution" "example" {
   comment = "Multi-tenant distribution for my application"

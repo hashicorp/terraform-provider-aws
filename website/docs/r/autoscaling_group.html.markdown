@@ -75,6 +75,7 @@ If ASG creation takes more than a few minutes, this could indicate one of a
 number of configuration problems. See the [AWS Docs on Load Balancer
 Troubleshooting](https://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/elb-troubleshooting.html)
 for more information.
+
 ## Example Usage
 
 ```terraform

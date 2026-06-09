@@ -58,6 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 This resource also exports a full set of attributes corresponding to the arguments of the
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
