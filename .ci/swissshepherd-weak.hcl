@@ -1568,7 +1568,6 @@ check "schema_docs" {
     "resource/aws_key_pair",
     "resource/aws_keyspaces_keyspace",
     "resource/aws_keyspaces_table",
-    "resource/aws_kinesis_account_settings",
     "resource/aws_kinesis_analytics_application",
     "resource/aws_kinesis_firehose_delivery_stream",
     "resource/aws_kinesis_resource_policy",
