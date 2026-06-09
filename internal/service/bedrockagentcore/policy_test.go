@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -26,7 +25,6 @@ import (
 
 func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetPolicyOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
 
@@ -45,7 +43,7 @@ func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -64,7 +62,6 @@ func TestAccBedrockAgentCorePolicy_basic(t *testing.T) {
 
 func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetPolicyOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
 
@@ -83,7 +80,7 @@ func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,7 +99,6 @@ func TestAccBedrockAgentCorePolicy_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetPolicyOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
 	desc1 := "initial description"
@@ -124,7 +120,7 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 					"description":   config.StringVariable(desc1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -142,7 +138,7 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 					"description":   config.StringVariable(desc2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -159,7 +155,6 @@ func TestAccBedrockAgentCorePolicy_description(t *testing.T) {
 
 func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetPolicyOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_policy.test"
 	stmt1 := "permit(principal, action, resource is AgentCore::Gateway);"
@@ -181,7 +176,7 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 					"statement":     config.StringVariable(stmt1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -199,7 +194,7 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 					"statement":     config.StringVariable(stmt2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -239,7 +234,7 @@ func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestC
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -248,14 +243,9 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *be
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy_engine_id"], rs.Primary.Attributes["policy_id"])
-		if err != nil {
-			return err
-		}
+		_, err := tfbedrockagentcore.FindPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy_engine_id"], rs.Primary.Attributes["policy_id"])
 
-		*v = *resp
-
-		return nil
+		return err
 	}
 }
 

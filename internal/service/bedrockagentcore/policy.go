@@ -47,7 +47,6 @@ import (
 // @IdentityAttribute("policy_engine_id")
 // @IdentityAttribute("policy_id")
 // @ImportIDHandler(policyImportID)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetPolicyOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc="testAccPolicyImportStateIDFunc")
 // @Testing(importStateIdAttribute="policy_id")

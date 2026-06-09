@@ -8,7 +8,6 @@ package bedrockagentcore_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -24,7 +23,6 @@ import (
 func TestAccBedrockAgentCorePolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetPolicyOutput
 	resourceName := "aws_bedrockagentcore_policy.test"
 	rName := randomWithPrefixAndUnderscore(t)
 
@@ -44,7 +42,7 @@ func TestAccBedrockAgentCorePolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
