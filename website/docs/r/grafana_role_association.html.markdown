@@ -69,4 +69,3 @@ This resource exports no additional attributes.
 
 * `create` - (Default `10m`)
 * `delete` - (Default `10m`)
-

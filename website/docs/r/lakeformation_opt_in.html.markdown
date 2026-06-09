@@ -104,4 +104,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `column_names` - List of column names for the table. At least one of ColumnNames or ColumnWildcard is required.
 * `column_wildcard` - Wildcard specified by a ColumnWildcard object. At least one of ColumnNames or ColumnWildcard is required.
-

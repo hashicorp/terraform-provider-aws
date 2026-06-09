@@ -58,4 +58,3 @@ This resource exports no additional attributes.
 
 * `update` - (Default `60m`)
 * `delete` - (Default `60m`)
-
