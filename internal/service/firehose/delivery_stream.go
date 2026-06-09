@@ -1572,7 +1572,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	// standard partition, strip the fields and retry.
 	if partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationConfiguration != nil &&
 		(tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationConfiguration") ||
-			tfawserr.ErrCodeEquals(err, errCodeInvalidArgumentException)) {
+			tfawserr.ErrMessageContains(err, errCodeInvalidArgumentException, "S3 File Extension parameters")) {
 		input.ExtendedS3DestinationConfiguration.CustomTimeZone = nil
 		input.ExtendedS3DestinationConfiguration.FileExtension = nil
 		_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
@@ -1783,7 +1783,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		// standard partition, strip the fields and retry.
 		if partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationUpdate != nil &&
 			(tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationUpdate") ||
-				tfawserr.ErrCodeEquals(err, errCodeInvalidArgumentException)) {
+				tfawserr.ErrMessageContains(err, errCodeInvalidArgumentException, "S3 File Extension parameters")) {
 			input.ExtendedS3DestinationUpdate.CustomTimeZone = nil
 			input.ExtendedS3DestinationUpdate.FileExtension = nil
 			_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
