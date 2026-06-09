@@ -98,7 +98,6 @@ func resourceCertificate() *schema.Resource {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					ForceNew:      true,
 					ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
 					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
@@ -227,7 +226,6 @@ func resourceCertificate() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Computed: true,
-					ForceNew: true,
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
@@ -342,6 +340,38 @@ func resourceCertificate() *schema.Resource {
 					// Trigger a diff
 					if err := diff.SetNewComputed("pending_renewal"); err != nil {
 						return err
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				switch diff.Get(names.AttrType).(string) {
+				case string(types.CertificateTypeImported):
+					// Domain and Subject Alternative Names are derived from the certificate body for imported certificates
+					if diff.HasChange("certificate_body") {
+						if err := diff.SetNewComputed(names.AttrDomainName); err != nil {
+							return err
+						}
+						if err := diff.SetNewComputed("subject_alternative_names"); err != nil {
+							return err
+						}
+					}
+
+				default:
+					if diff.HasChange(names.AttrDomainName) {
+						if err := diff.ForceNew(names.AttrDomainName); err != nil {
+							return err
+						}
+					}
+					if diff.HasChange("subject_alternative_names") {
+						if err := diff.ForceNew("subject_alternative_names"); err != nil {
+							return err
+						}
 					}
 				}
 
@@ -501,7 +531,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("renewal_summary", nil)
 	}
 	d.Set(names.AttrStatus, certificate.Status)
-	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
+	if err := d.Set("subject_alternative_names", certificate.SubjectAlternativeNames); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting subject_alternative_names: %s", err)
+	}
 	d.Set(names.AttrType, certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))

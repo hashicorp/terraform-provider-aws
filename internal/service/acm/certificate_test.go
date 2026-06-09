@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -56,8 +57,6 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.export", string(types.CertificateExportDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypeAmazonIssued)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
@@ -66,6 +65,11 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(domain),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1063,6 +1067,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	sanDomainUpdated := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var v types.CertificateDetail
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1087,17 +1092,60 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
-					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(domain),
+						knownvalue.StringExact(sanDomain),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomainUpdated), types.ValidationMethodDns),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						names.AttrDomainName:   domain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						names.AttrDomainName:   sanDomainUpdated,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact(domain),
+							knownvalue.StringExact(sanDomainUpdated),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(domain),
+						knownvalue.StringExact(sanDomainUpdated),
+					})),
+				},
 			},
 		},
 	})
@@ -1565,6 +1613,10 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	withoutChainDomain := acctest.RandomDomainName(t)
 	var v1, v2, v3 types.CertificateDetail
 
+	arnNoChange := statecheck.CompareValue(compare.ValuesSame())
+	certificateBodyExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+	privateKeyExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
@@ -1575,30 +1627,113 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("acm", regexache.MustCompile("certificate/.+$"))),
+					arnNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_authority_arn"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_body"), knownvalue.StringExact(certificate)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificateChain), knownvalue.StringExact(caCertificate)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.StringExact(commonName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_validation_options"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("early_renewal_duration"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_algorithm"), tfknownvalue.StringExact(types.KeyAlgorithmRsa2048)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"certificate_transparency_logging_preference": tfknownvalue.StringExact(types.CertificateTransparencyLoggingPreferenceDisabled),
+							"export": tfknownvalue.StringExact(types.CertificateExportDisabled),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPrivateKey), knownvalue.StringExact(key)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_key_wo"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_key_wo_version"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("renewal_eligibility"), tfknownvalue.StringExact(types.RenewalEligibilityIneligible)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("renewal_summary"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(types.CertificateStatusIssued)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(commonName),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_emails"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_method"), tfknownvalue.StringExact("NONE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_option"), knownvalue.SetSizeExact(0)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 			{
 				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
-					testAccCheckCertificateNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrDomainName)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("subject_alternative_names")),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					arnNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_body"), knownvalue.StringExact(newCertificate)),
+					certificateBodyExpectChange.AddStateValue(resourceName, tfjsonpath.New("certificate_body")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificateChain), knownvalue.StringExact(newCaCertificate)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.StringExact(commonName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPrivateKey), knownvalue.StringExact(key)),
+					privateKeyExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrPrivateKey)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(types.CertificateStatusIssued)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(commonName),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 			{
 				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
-					testAccCheckCertificateNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, withoutChainDomain),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrDomainName)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("subject_alternative_names")),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					arnNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					certificateBodyExpectChange.AddStateValue(resourceName, tfjsonpath.New("certificate_body")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificateChain), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.StringExact(withoutChainDomain)),
+					privateKeyExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrPrivateKey)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(types.CertificateStatusIssued)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subject_alternative_names"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(withoutChainDomain),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
