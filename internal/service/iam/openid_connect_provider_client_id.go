@@ -8,7 +8,6 @@ package iam
 import (
 	"context"
 	"slices"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -35,13 +34,7 @@ import (
 // @IdentityAttribute("openid_connect_provider_arn")
 // @IdentityAttribute("client_id")
 func newOpenIDConnectProviderClientIDResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &openIDConnectProviderClientIDResource{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
-	return r, nil
+	return &openIDConnectProviderClientIDResource{}, nil
 }
 
 const (
