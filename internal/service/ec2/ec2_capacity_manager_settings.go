@@ -16,13 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ec2_capacity_manager_settings", name="Capacity Manager Settings")
-// @SingletonIdentity
+// @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
@@ -41,6 +42,7 @@ func (r *capacityManagerSettingsResource) Schema(ctx context.Context, request re
 			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			"organizations_access": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -83,6 +85,9 @@ func (r *capacityManagerSettingsResource) Create(ctx context.Context, request re
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
+
+	// Set values for unknowns.
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -178,6 +183,7 @@ func updateCapacityManagerSettings(ctx context.Context, conn *ec2.Client, data *
 
 type capacityManagerSettingsResourceModel struct {
 	framework.WithRegionModel
-	Enabled             types.Bool `tfsdk:"enabled"`
-	OrganizationsAccess types.Bool `tfsdk:"organizations_access"`
+	Enabled             types.Bool   `tfsdk:"enabled"`
+	ID                  types.String `tfsdk:"id"`
+	OrganizationsAccess types.Bool   `tfsdk:"organizations_access"`
 }

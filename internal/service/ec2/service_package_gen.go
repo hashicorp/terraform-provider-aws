@@ -148,7 +148,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ec2_capacity_manager_settings",
 			Name:     "Capacity Manager Settings",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingletonIdentity(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
