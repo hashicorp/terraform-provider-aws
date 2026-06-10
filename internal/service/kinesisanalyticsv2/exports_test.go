@@ -5,8 +5,9 @@ package kinesisanalyticsv2
 
 // Exports for use in tests only.
 var (
-	ResourceApplication         = resourceApplication
-	ResourceApplicationSnapshot = resourceApplicationSnapshot
+	ResourceApplication                         = resourceApplication
+	ResourceApplicationSnapshot                 = resourceApplicationSnapshot
+	ResourceApplicationMaintenanceConfiguration = resourceApplicationMaintenanceConfiguration
 
 	FindApplicationDetailByName     = findApplicationDetailByName
 	FindSnapshotDetailsByTwoPartKey = findSnapshotDetailsByTwoPartKey
