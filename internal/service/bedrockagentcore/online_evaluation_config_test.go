@@ -31,6 +31,8 @@ func init() {
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
+		// aws_xray_trace_segment_destination not correctly configured:
+		"X-Ray Delivery Destination is supported with CloudWatch",
 		"log groups do not exist",
 	)
 }
