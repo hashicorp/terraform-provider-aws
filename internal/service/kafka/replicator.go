@@ -31,17 +31,17 @@ import (
 
 // @SDKResource("aws_msk_replicator", name="Replicator")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.49.0")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeReplicatorOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceReplicator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicatorCreate,
 		ReadWithoutTimeout:   resourceReplicatorRead,
 		UpdateWithoutTimeout: resourceReplicatorUpdate,
 		DeleteWithoutTimeout: resourceReplicatorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
