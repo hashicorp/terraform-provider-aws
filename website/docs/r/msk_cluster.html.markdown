@@ -229,6 +229,7 @@ This resource supports the following arguments:
 
 ### broker_node_group_info connectivity_info Argument Reference
 
+* `network_type` - (Optional) Network type of the cluster. Valid values are: `IPV4` or `DUAL`. Default value: `IPV4`. Only updating from `IPV4` to `DUAL` is allowed.
 * `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
 * `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
 
@@ -382,7 +383,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_msk_cluster.example
   identity = {
-    "arn" = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+    arn = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
   }
 }
 

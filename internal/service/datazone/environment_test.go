@@ -38,6 +38,7 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 		"userParameters_Inherited":   testAccDataZoneEnvironment_userParameters_Inherited,
 		"userParameters_Override":    testAccDataZoneEnvironment_userParameters_Override,
 		"glossaryTerms":              testAccDataZoneEnvironment_glossaryTerms,
+		"identity":                   testAccDataZoneEnvironment_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -115,6 +116,14 @@ func testAccDataZoneEnvironment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

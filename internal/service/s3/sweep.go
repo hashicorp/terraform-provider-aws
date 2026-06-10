@@ -31,6 +31,7 @@ func RegisterSweepers() {
 		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",
 		"aws_s3control_multi_region_access_point",
+		"aws_s3files_file_system",
 	)
 
 	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)

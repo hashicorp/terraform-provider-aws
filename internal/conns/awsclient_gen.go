@@ -87,6 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -133,6 +134,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -219,6 +221,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rum"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3files"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -601,6 +604,10 @@ func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
 	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
+func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
+	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
+}
+
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {
 	return errs.Must(client[*devopsguru.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
@@ -779,6 +786,10 @@ func (c *AWSClient) InspectorClient(ctx context.Context) *inspector.Client {
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
 	return errs.Must(client[*inspector2.Client](ctx, c, names.Inspector2, make(map[string]any)))
+}
+
+func (c *AWSClient) InterconnectClient(ctx context.Context) *interconnect.Client {
+	return errs.Must(client[*interconnect.Client](ctx, c, names.Interconnect, make(map[string]any)))
 }
 
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {
@@ -1119,6 +1130,10 @@ func (c *AWSClient) S3Client(ctx context.Context) *s3.Client {
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control.Client {
 	return errs.Must(client[*s3control.Client](ctx, c, names.S3Control, make(map[string]any)))
+}
+
+func (c *AWSClient) S3FilesClient(ctx context.Context) *s3files.Client {
+	return errs.Must(client[*s3files.Client](ctx, c, names.S3Files, make(map[string]any)))
 }
 
 func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {

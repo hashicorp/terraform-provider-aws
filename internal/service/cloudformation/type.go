@@ -37,108 +37,110 @@ func resourceType() *schema.Resource {
 		DeleteWithoutTimeout: resourceTypeDelete,
 		ReadWithoutTimeout:   resourceTypeRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deprecated_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"documentation_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"is_default_version": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"logging_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrLogGroupName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 512),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
-							),
-						},
-						"log_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deprecated_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"documentation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"is_default_version": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"logging_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
+								),
+							},
+							"log_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"provisioning_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSchema: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"schema_handler_package": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
-			},
-			"type_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(10, 204),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
-				),
-			},
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"visibility": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"provisioning_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSchema: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"schema_handler_package": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
+				},
+				"type_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"type_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(10, 204),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+					),
+				},
+				"version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"visibility": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

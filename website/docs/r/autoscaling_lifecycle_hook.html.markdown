@@ -74,17 +74,45 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_autoscaling_lifecycle_hook.test-lifecycle-hook
-  id = "asg-name/lifecycle-hook-name"
+  to = aws_autoscaling_lifecycle_hook.example
+  identity = {
+    autoscaling_group_name = "example-asg"
+    name                   = "example-hook"
+  }
+}
+
+resource "aws_autoscaling_lifecycle_hook" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
+### Identity Schema
+
+#### Required
+
+* `autoscaling_group_name` (String) Name of the Auto Scaling group.
+* `name` (String) Name of the lifecycle hook.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Lifecycle Hooks using `autoscaling_group_name` and `name` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_lifecycle_hook.example
+  id = "example-asg/example-hook"
+}
+```
+
+Using `terraform import`, import AutoScaling Lifecycle Hooks using `autoscaling_group_name` and `name` separated by a forward slash (`/`). For example:
 
 ```console
-% terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
+% terraform import aws_autoscaling_lifecycle_hook.example example-asg/example-hook
 ```

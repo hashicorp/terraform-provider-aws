@@ -182,21 +182,21 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
-* `owner` - (Optional) Owner of the table.
 * `open_table_format_input` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input) below.
+* `owner` - (Optional) Owner of the table.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 * `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
 * `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retention` - (Optional) Retention time for this table.
 * `storage_descriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
 * `table_type` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
+* `view_definition` - (Optional) A structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
-* `view_definition` - (Optional) A structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition) below.
 
 ### open_table_format_input
 

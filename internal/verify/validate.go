@@ -5,6 +5,7 @@ package verify
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -176,19 +177,19 @@ func ValidCIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
+func ValidIAMPolicyJSON(v any, k string) (ws []string, errs []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
 	value = strings.TrimSpace(value)
 	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
+		errs = append(errs, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if first := value[:1]; first != "{" {
 		switch first {
 		case " ", "\t", "\r", "\n":
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
 		case `"`:
 			// There are some common mistakes that lead to strings appearing
 			// here instead of objects, so we'll try some heuristics to
@@ -204,27 +205,27 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 					hint = " (have you double-encoded your JSON data?)"
 				}
 			}
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
 		case `[`:
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
 		default:
 			// Generic error for if we didn't find something more specific to say.
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
-		if syntaxErr, ok := errs.As[*json.SyntaxError](err); ok {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
+		if syntaxErr, ok := errors.AsType[*json.SyntaxError](err); ok {
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
 		} else {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
+			errs = append(errs, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
 		}
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %w", k, err))
+		errs = append(errs, fmt.Errorf("%q contains duplicate JSON keys: %w", k, err))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
@@ -568,4 +569,19 @@ func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFu
 
 		return diags
 	}
+}
+
+func WarnStringIsNotEmpty(v any, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch s := v.(type) {
+	case string:
+		if s == "" {
+			diags = append(diags, errs.NewInvalidValueAttributeWillBeError(path, "Value must not be an empty string"))
+		}
+	default:
+		diags = append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
+	}
+
+	return diags
 }

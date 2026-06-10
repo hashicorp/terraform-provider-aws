@@ -1,0 +1,23 @@
+```release-note:new-data-source
+aws_glue_catalog
+```
+
+```release-note:new-resource
+aws_glue_catalog
+```
+
+```release-note:new-list-resource
+aws_glue_catalog
+```
+
+```release-note:new-resource
+aws_redshift_namespace_registration
+```
+
+```release-note:enhancement
+data-source/aws_glue_connection: Add `authentication_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_glue_connection: Add `authentication_configuration` argument
+```

@@ -69,7 +69,7 @@ func sweepAddons(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 				for _, v := range page.Addons {
 					r := resourceAddon()
 					d := r.Data(nil)
-					d.SetId(AddonCreateResourceID(clusterName, v))
+					d.SetId(addonCreateResourceID(clusterName, v))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -155,7 +155,7 @@ func sweepFargateProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep
 				for _, v := range page.FargateProfileNames {
 					r := resourceFargateProfile()
 					d := r.Data(nil)
-					d.SetId(FargateProfileCreateResourceID(clusterName, v))
+					d.SetId(fargateProfileCreateResourceID(clusterName, v))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -205,7 +205,7 @@ func sweepIdentityProvidersConfig(ctx context.Context, client *conns.AWSClient) 
 				for _, v := range page.IdentityProviderConfigs {
 					r := resourceIdentityProviderConfig()
 					d := r.Data(nil)
-					d.SetId(IdentityProviderConfigCreateResourceID(clusterName, aws.ToString(v.Name)))
+					d.SetId(identityProviderConfigCreateResourceID(clusterName, aws.ToString(v.Name)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -255,7 +255,7 @@ func sweepNodeGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 				for _, v := range page.Nodegroups {
 					r := resourceNodeGroup()
 					d := r.Data(nil)
-					d.SetId(NodeGroupCreateResourceID(clusterName, v))
+					d.SetId(nodeGroupCreateResourceID(clusterName, v))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

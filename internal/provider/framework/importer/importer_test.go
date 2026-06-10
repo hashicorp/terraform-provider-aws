@@ -66,7 +66,3 @@ func importByIdentity(ctx context.Context, f importerFunc, client importer.AWSCl
 
 	return response
 }
-
-func ptr[T any](v T) *T {
-	return &v
-}

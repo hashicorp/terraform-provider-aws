@@ -108,7 +108,7 @@ This resource supports the following arguments:
 
 * `certificate_transparency_logging_preference` (Optional) - Certificate transparency logging preference. Valid values: `enabled`, `disabled`.
 * `primary_domain_name` (Optional) - Primary domain name for the certificate.
-* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `domain`.
+* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `self-hosted`.
 
 #### Parameter Arguments
 
@@ -124,6 +124,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current status of the distribution tenant.
 * `etag` - Current version of the distribution tenant.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

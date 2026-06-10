@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -82,6 +83,14 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceStorageLensConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_storage_lens_configuration.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_storage_lens_configuration.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -182,6 +191,19 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.format", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.prefix", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.prefix_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.buckets.#", "2"),
@@ -230,6 +252,27 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "Parquet"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.format", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.prefix_delimiter", "/"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "1"),
@@ -483,7 +526,27 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         output_schema_version = "V_1"
         prefix                = "p1"
       }
+
+      storage_lens_table_destination {
+        enabled = false
+      }
     }
+
+    expanded_prefixes_data_export {
+      s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "CSV"
+        output_schema_version = "V_1"
+        prefix                = "p1"
+      }
+
+      storage_lens_table_destination {
+        enabled = false
+      }
+    }
+
+    prefix_delimiter = ","
 
     exclude {
       buckets = [aws_s3_bucket.test[1].arn, aws_s3_bucket.test[2].arn]
@@ -535,7 +598,38 @@ resource "aws_s3control_storage_lens_configuration" "test" {
           sse_s3 {}
         }
       }
+
+      storage_lens_table_destination {
+        enabled = true
+
+        encryption {
+          sse_s3 {}
+        }
+      }
     }
+
+    expanded_prefixes_data_export {
+      s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "Parquet"
+        output_schema_version = "V_1"
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+
+      storage_lens_table_destination {
+        enabled = true
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+    }
+
+    prefix_delimiter = "/"
 
     include {
       buckets = [aws_s3_bucket.test[1].arn]

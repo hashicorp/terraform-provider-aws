@@ -28,6 +28,11 @@ import (
 )
 
 // @SDKResource("aws_config_organization_custom_policy_rule", name="Organization Custom Policy Rule")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationCustomPolicyRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomPolicyRuleCreate,
@@ -35,109 +40,107 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceOrganizationCustomPolicyRuleUpdate,
 		DeleteWithoutTimeout: resourceOrganizationCustomPolicyRuleDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"debug_log_delivery_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"excluded_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+				"debug_log_delivery_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
-			"input_parameters": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringIsJSON,
-				),
-			},
-			"maximum_execution_frequency": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"policy_runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"policy_text": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10000),
-			},
-			"resource_id_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 768),
-			},
-			"resource_types_scope": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Schema{
+				names.AttrDescription: {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 256),
 				},
-			},
-			"tag_key_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"tag_value_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"trigger_types": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 3,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerTypeNoSN](),
+				"excluded_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
+				"input_parameters": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringIsJSON,
+					),
+				},
+				"maximum_execution_frequency": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"policy_runtime": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"policy_text": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 10000),
+				},
+				"resource_id_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 768),
+				},
+				"resource_types_scope": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(0, 256),
+					},
+				},
+				"tag_key_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"tag_value_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"trigger_types": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 3,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerTypeNoSN](),
+					},
+				},
+			}
 		},
 	}
 }
@@ -147,7 +150,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
 			OrganizationConfigRuleTriggerTypes: flex.ExpandStringyValueSet[types.OrganizationConfigRuleTriggerTypeNoSN](d.Get("trigger_types").(*schema.Set)),
@@ -193,7 +196,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutOrganizationConfigRule(ctx, input)
+		return conn.PutOrganizationConfigRule(ctx, &input)
 	})
 
 	if err != nil {
@@ -255,7 +258,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
 			OrganizationConfigRuleTriggerTypes: flex.ExpandStringyValueSet[types.OrganizationConfigRuleTriggerTypeNoSN](d.Get("trigger_types").(*schema.Set)),
@@ -300,7 +303,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(ctx, input)
+	_, err := conn.PutOrganizationConfigRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ConfigService Organization Custom Policy Rule (%s): %s", d.Id(), err)
@@ -317,14 +320,15 @@ func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Policy Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Policy Rule: %s", d.Id())
+	input := configservice.DeleteOrganizationConfigRuleInput{
+		OrganizationConfigRuleName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-			OrganizationConfigRuleName: aws.String(d.Id()),
-		})
+		return conn.DeleteOrganizationConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -357,10 +361,14 @@ func findOrganizationCustomPolicyRuleByName(ctx context.Context, conn *configser
 }
 
 func findOrganizationCustomRulePolicyByName(ctx context.Context, conn *configservice.Client, name string) (*string, error) {
-	input := &configservice.GetOrganizationCustomRulePolicyInput{
+	input := configservice.GetOrganizationCustomRulePolicyInput{
 		OrganizationConfigRuleName: aws.String(name),
 	}
 
+	return findOrganizationCustomRulePolicy(ctx, conn, &input)
+}
+
+func findOrganizationCustomRulePolicy(ctx context.Context, conn *configservice.Client, input *configservice.GetOrganizationCustomRulePolicyInput) (*string, error) {
 	output, err := conn.GetOrganizationCustomRulePolicy(ctx, input)
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {

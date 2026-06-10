@@ -1,0 +1,35 @@
+```release-note:enhancement
+resource/aws_eks_access_entry: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_access_policy_association: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_addon: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_capability: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_fargate_profile: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_identity_provider_config: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_identity_provider_config: Add `identity_provider_config_name` attribute
+```
+
+```release-note:enhancement
+resource/aws_eks_node_group: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_eks_pod_identity_association: Add Resource Identity support
+```

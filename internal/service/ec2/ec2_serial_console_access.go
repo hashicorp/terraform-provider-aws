@@ -35,12 +35,14 @@ func resourceSerialConsoleAccess() *schema.Resource {
 		UpdateWithoutTimeout: resourceSerialConsoleAccessUpdate,
 		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

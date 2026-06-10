@@ -25,6 +25,29 @@ type (
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+
+	HyperParameterTrainingJobDefinitionModel   = hyperParameterTrainingJobDefinitionModel
+	HyperParameterAlgorithmSpecificationModel  = algorithmSpecificationModel
+	HyperParameterMetricDefinitionModel        = hyperParameterTuningMetricDefinitionModel
+	CheckpointConfigModel                      = checkpointConfigModel
+	ParameterRangesModel                       = parameterRangesModel
+	HyperParameterInputDataConfigModel         = inputDataConfigModel
+	HyperParameterDataSourceModel              = hyperParameterTuningDataSourceModel
+	HyperParameterFileSystemDataSourceModel    = hyperParameterTuningFileSystemDataSourceModel
+	HyperParameterHubAccessConfigModel         = hyperParameterTuningHubAccessConfigModel
+	HyperParameterModelAccessConfigModel       = hyperParameterTuningModelAccessConfigModel
+	HyperParameterS3DataSourceModel            = s3DataSourceModel
+	HyperParameterShuffleConfigModel           = hyperParameterTuningShuffleConfigModel
+	HyperParameterOutputDataConfigModel        = hyperParameterTuningOutputDataConfigModel
+	HyperParameterTrainingResourceConfigModel  = trainingResourceConfigModel
+	HyperParameterTuningResourceConfigModel    = hyperParameterTuningResourceConfigModel
+	HyperParameterInstanceConfigModel          = hyperParameterTuningInstanceConfigModel
+	HyperParameterInstanceGroupModel           = hyperParameterTuningInstanceGroupModel
+	HyperParameterInstancePlacementConfigModel = hyperParameterTuningInstancePlacementConfigModel
+	RetryStrategyModel                         = retryStrategyModel
+	HyperParameterStoppingConditionModel       = hyperParameterTuningStoppingConditionModel
+	TuningObjectiveModel                       = tuningObjectiveModel
+	HyperParameterTuningJobVPCConfigModel      = hyperParameterTuningJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -43,6 +66,7 @@ var (
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
+	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
@@ -77,6 +101,7 @@ var (
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
@@ -121,6 +146,8 @@ var (
 	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
 	NormalizeStoppingCondition         = normalizeStoppingCondition
 	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
+
+	RestoreTrainingJobDefinitionNoFlattenFields = restoreTrainingJobDefinitionNoFlattenFields
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

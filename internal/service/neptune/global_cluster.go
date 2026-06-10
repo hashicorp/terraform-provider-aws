@@ -52,72 +52,74 @@ func resourceGlobalCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
-				ValidateFunc: validation.StringInSlice(engine_Values(), false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"global_cluster_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validGlobalCusterIdentifier,
-			},
-			"global_cluster_members": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"db_cluster_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_writer": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
+					ValidateFunc: validation.StringInSlice(engine_Values(), false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"global_cluster_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validGlobalCusterIdentifier,
+				},
+				"global_cluster_members": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"db_cluster_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"is_writer": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"global_cluster_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_db_cluster_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -296,7 +298,12 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *neptune.Client
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
+	// Aurora PostgreSQL:
+	// "ModifyGlobalCluster doesn't support minor version upgrades for Aurora global databases."
+	//
+	// Aurora MySQL:
+	// "Amazon RDS can't perform minor version upgrades through ModifyGlobalCluster for this database engine."
+	if tfawserr.ErrMessageContainsAny(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades", "can't perform minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of Neptune Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -322,7 +329,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *neptune.C
 			if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 				return false, err
 			}
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
+			if tfawserr.ErrMessageContainsAny(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades", "can't perform minor version upgrades") {
 				return false, err // NOT retryable, indicates minor upgrade or wrong order
 			}
 			return err != nil, err
