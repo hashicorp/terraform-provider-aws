@@ -52,15 +52,15 @@ type openIDConnectProviderClientIDResource struct {
 func (r *openIDConnectProviderClientIDResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrClientID: schema.StringAttribute{
-				Required: true,
+			"openid_connect_provider_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"openid_connect_provider_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
+			names.AttrClientID: schema.StringAttribute{
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
