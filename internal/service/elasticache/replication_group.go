@@ -122,6 +122,13 @@ func resourceReplicationGroup() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
+				"durability": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Durability](),
+				},
 				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -549,6 +556,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("durability"); ok {
+		input.Durability = awstypes.Durability(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
@@ -806,6 +817,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("cluster_mode", rgp.ClusterMode)
+	d.Set("durability", rgp.Durability)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", rgp.DataTiering == awstypes.DataTieringStatusEnabled)
