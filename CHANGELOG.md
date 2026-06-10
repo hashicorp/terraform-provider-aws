@@ -1,5 +1,9 @@
 ## 6.51.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
+
 ## 6.50.0 (June 10, 2026)
 
 NOTES:
