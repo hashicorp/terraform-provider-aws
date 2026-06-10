@@ -524,9 +524,30 @@ func secretVersionForceNewCustomDiff(ctx context.Context, rd *schema.ResourceDif
 type rawDiffer interface {
 	GetRawState() cty.Value
 	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
 	ForceNew(key string) error
+	HasChange(key string) bool
 }
 
+// secretVersionForceNewCustomDiffInner determines when to force resource
+// replacement vs. allow in-place update based on changes between
+// `secret_string`, `secret_string_wo`, and `secret_string_wo_version`.
+//
+// CustomizeDiff is invoked twice for a typical update with unknowns: once
+// during plan (with whatever values the config provides, including unknowns)
+// and again during apply expansion (after upstream values become known). The
+// ForceNew decision _must_ be the same on both invocations or Terraform Core
+// reports "Provider produced inconsistent final plan" with the planned action
+// changing between Update and DeleteThenCreate (issue #47907).
+//
+// To keep both invocations consistent we:
+//  1. ForceNew proactively at plan time when a relevant config attribute is
+//     unknown (we cannot know if the value differs from state, so assume it
+//     does). At apply expansion the value will be known and either differs
+//     (ForceNew via the value-comparison path) or matches (handled by 2).
+//  2. At apply expansion, detect a previously-planned recreation by checking
+//     whether the planned `id` is unknown. If so, ForceNew again even when
+//     the resolved config value happens to match state.
 func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, meta any) error {
 	rawState := diff.GetRawState()
 	if rawState.IsNull() {
@@ -538,6 +559,16 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		return nil
 	}
 
+	// At apply expansion, a non-null `RawPlan` reflects what plan decided.
+	// If the planned `id` is unknown then plan required recreation; we must
+	// force replacement again here even if the resolved config matches state.
+	plannedRecreation := false
+	if rawPlan := diff.GetRawPlan(); !rawPlan.IsNull() {
+		if planID := rawPlan.GetAttr(names.AttrID); !planID.IsKnown() {
+			plannedRecreation = true
+		}
+	}
+
 	stateStringValue := rawState.GetAttr("secret_string")
 	hasStateString := stateStringValue.IsKnown() && !stateStringValue.IsNull()
 	if hasStateString {
@@ -546,7 +577,17 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 
 	if hasStateString {
 		configStringValue := rawConfig.GetAttr("secret_string")
-		hasConfigString := configStringValue.IsKnown() && !configStringValue.IsNull()
+
+		// Issue #47907: If the configured `secret_string` is unknown at plan
+		// time, ForceNew proactively to keep plan and apply decisions
+		// consistent. Without this, plan would show Update but apply
+		// expansion (after the value resolves and differs) would require
+		// recreation, raising "Provider produced inconsistent final plan".
+		if !configStringValue.IsKnown() {
+			return forceNewIfChanged(diff, "secret_string")
+		}
+
+		hasConfigString := !configStringValue.IsNull()
 		if hasConfigString {
 			hasConfigString = configStringValue.AsString() != ""
 		}
@@ -554,24 +595,32 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		if hasConfigString {
 			stateString := stateStringValue.AsString()
 			configString := configStringValue.AsString()
-			if stateString != configString {
-				if err := diff.ForceNew("secret_string"); err != nil {
-					return err
-				}
+			if stateString != configString || plannedRecreation {
+				return forceNewIfChanged(diff, "secret_string")
 			}
 			return nil
 		}
 
 		configStringWOValue := rawConfig.GetAttr("secret_string_wo")
-		hasStateStringWO := configStringWOValue.IsKnown() && !configStringWOValue.IsNull()
-		if hasStateStringWO {
+
+		// `secret_string_wo` may also be unknown at plan time when its value
+		// references a not-yet-resolved upstream attribute.
+		if !configStringWOValue.IsKnown() {
+			if err := forceNewIfChanged(diff, "secret_string"); err != nil {
+				return err
+			}
+			return forceNewIfChanged(diff, "secret_string_wo")
+		}
+
+		hasConfigStringWO := !configStringWOValue.IsNull()
+		if hasConfigStringWO {
 			stateString := stateStringValue.AsString()
 			configString := configStringWOValue.AsString()
-			if stateString != configString {
-				if err := diff.ForceNew("secret_string"); err != nil {
+			if stateString != configString || plannedRecreation {
+				if err := forceNewIfChanged(diff, "secret_string"); err != nil {
 					return err
 				}
-				if err := diff.ForceNew("secret_string_wo"); err != nil {
+				if err := forceNewIfChanged(diff, "secret_string_wo"); err != nil {
 					return err
 				}
 			}
@@ -584,29 +633,41 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 
 	if hasStateStringWoVersion {
 		configStringWoVersionValue := rawConfig.GetAttr("secret_string_wo_version")
+
+		// Issue #47907: If the configured `secret_string_wo_version` is
+		// unknown at plan time, ForceNew proactively for consistency.
 		if !configStringWoVersionValue.IsKnown() {
-			return nil
+			return forceNewIfChanged(diff, "secret_string_wo_version")
 		}
 
 		if !configStringWoVersionValue.IsNull() {
-			if configStringWoVersionValue.Equals(stateStringWoVersionValue).False() {
-				if err := diff.ForceNew("secret_string_wo_version"); err != nil {
-					return err
-				}
+			if configStringWoVersionValue.Equals(stateStringWoVersionValue).False() || plannedRecreation {
+				return forceNewIfChanged(diff, "secret_string_wo_version")
 			}
 			return nil
 		}
 
+		// Switching from `secret_string_wo` to `secret_string` always requires
+		// recreation; treat unknown `secret_string` the same as a known value.
 		configStringValue := rawConfig.GetAttr("secret_string")
 		if !configStringValue.IsKnown() {
-			return nil
+			return forceNewIfChanged(diff, "secret_string")
 		}
 		if !configStringValue.IsNull() {
-			if err := diff.ForceNew("secret_string"); err != nil {
-				return err
-			}
+			return forceNewIfChanged(diff, "secret_string")
 		}
 	}
 
 	return nil
+}
+
+// forceNewIfChanged calls ForceNew on the given key only when the underlying
+// diff records a change for it. This avoids the "ForceNew: No changes for X"
+// error from the SDK when, at apply expansion, a previously-unknown value
+// happens to resolve to the same value already in state.
+func forceNewIfChanged(diff rawDiffer, key string) error {
+	if !diff.HasChange(key) {
+		return nil
+	}
+	return diff.ForceNew(key)
 }
