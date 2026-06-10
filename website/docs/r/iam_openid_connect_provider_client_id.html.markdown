@@ -42,9 +42,9 @@ resource "aws_iam_openid_connect_provider_client_id" "example" {
 
 The following arguments are required:
 
-- `openid_connect_provider_arn` - (Required) ARN of the IAM OpenID Connect provider.
-
 - `client_id` - (Required) Client ID to add to the provider's list.
+
+- `openid_connect_provider_arn` - (Required) ARN of the IAM OpenID Connect provider.
 
 ## Attribute Reference
 
