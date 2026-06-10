@@ -39,7 +39,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_sagemaker_servicecatalog_portfolio_status.example
+  to       = aws_sagemaker_servicecatalog_portfolio_status.example
   identity = {}
 }
 
