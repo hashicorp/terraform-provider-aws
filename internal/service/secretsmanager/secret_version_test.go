@@ -634,12 +634,7 @@ func TestAccSecretsManagerSecretVersion_UpdateForcesReplacement_string(t *testin
 }
 
 // TestAccSecretsManagerSecretVersion_unknownSecretString reproduces issue
-// #47907: when `secret_string` references an upstream resource being created
-// (or replaced) in the same apply, its value is unknown at plan time. Prior
-// to the fix, the plan reported "Update" but the apply expansion (after the
-// upstream value resolved and differed from state) flipped the planned
-// action to "DeleteThenCreate", causing Terraform Core to raise
-// "Provider produced inconsistent final plan".
+// https://github.com/hashicorp/terraform-provider-aws/issues/47907
 func TestAccSecretsManagerSecretVersion_unknownSecretString(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
@@ -682,10 +677,8 @@ func TestAccSecretsManagerSecretVersion_unknownSecretString(t *testing.T) {
 }
 
 // TestAccSecretsManagerSecretVersion_unknownSecretStringWriteOnlyVersion
-// reproduces the rotation scenario reported in the comments on issue #47907:
-// using `secret_string_wo` with a `secret_string_wo_version` that is unknown
-// at plan time (e.g., derived from an upstream value being computed) raised
-// the same "Provider produced inconsistent final plan" error before the fix.
+// reproduces the rotation scenario reported in the comments on issue
+// https://github.com/hashicorp/terraform-provider-aws/issues/47907
 func TestAccSecretsManagerSecretVersion_unknownSecretStringWriteOnlyVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput

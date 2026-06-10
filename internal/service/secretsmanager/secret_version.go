@@ -159,11 +159,6 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	// Wait for the new version to be visible. Staging-label propagation is
-	// handled in resourceSecretVersionRead via tfresource.RetryWhenNewResourceNotFound,
-	// gated on d.IsNewResource(), which matches the conventional eventual-
-	// consistency idiom used elsewhere in the provider (see, e.g.,
-	// resourceUserRead in the iam package).
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
@@ -217,8 +212,6 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("secret_id", secretID)
 
 	if hasWriteOnly {
-		// Use the canonical eventual-consistency idiom (see iam.resourceUserRead):
-		// retry on NotFound only while d.IsNewResource() is true. We also
 		// synthesize a NotFoundError when staging labels have not yet
 		// propagated for a freshly-created version, ensuring state is
 		// populated with a non-empty `version_stages`.
@@ -257,8 +250,6 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 
-	// See note above re: eventual consistency. Same idiom for the
-	// non-write-only path.
 	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
 		o, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 		if err != nil {
