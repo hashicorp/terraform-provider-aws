@@ -166,7 +166,7 @@ func findOpenIDConnectProviderClientID(ctx context.Context, conn *iam.Client, pr
 }
 
 type openIDConnectProviderClientIDResourceModel struct {
-	ClientID                 types.String `tfsdk:names.AttrClientID`
+	ClientID                 types.String `tfsdk:"client_id"`
 	OpenIDConnectProviderARN fwtypes.ARN  `tfsdk:"openid_connect_provider_arn"`
 }
 

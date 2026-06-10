@@ -47,7 +47,7 @@ func TestAccIAMOpenIDConnectProviderClientID_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderClientIDConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderClientIDExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "client_id", "sts.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClientID, "sts.amazonaws.com"),
 					resource.TestCheckResourceAttrPair(resourceName, "openid_connect_provider_arn", providerResourceName, names.AttrARN),
 				),
 			},
@@ -105,7 +105,7 @@ func testAccCheckOpenIDConnectProviderClientIDDestroy(ctx context.Context, t *te
 			}
 
 			providerARN := rs.Primary.Attributes["openid_connect_provider_arn"]
-			clientID := rs.Primary.Attributes["client_id"]
+			clientID := rs.Primary.Attributes[names.AttrClientID]
 
 			err := tfiam.FindOpenIDConnectProviderClientID(ctx, conn, providerARN, clientID)
 			if retry.NotFound(err) {
@@ -130,7 +130,7 @@ func testAccCheckOpenIDConnectProviderClientIDExists(ctx context.Context, t *tes
 		}
 
 		providerARN := rs.Primary.Attributes["openid_connect_provider_arn"]
-		clientID := rs.Primary.Attributes["client_id"]
+		clientID := rs.Primary.Attributes[names.AttrClientID]
 
 		if providerARN == "" || clientID == "" {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameOpenIDConnectProviderClientID, name, errors.New("openid_connect_provider_arn or client_id not set"))
