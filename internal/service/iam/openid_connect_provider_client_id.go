@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,18 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -192,31 +187,4 @@ func (openIDConnectProviderClientIDImportID) Parse(id string) (string, map[strin
 	}
 
 	return id, result, nil
-}
-
-func sweepOpenIDConnectProviderClientIDs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.IAMClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	out, err := conn.ListOpenIDConnectProviders(ctx, &iam.ListOpenIDConnectProvidersInput{})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, provider := range out.OpenIDConnectProviderList {
-		arn := aws.ToString(provider.Arn)
-		providerOut, err := findOpenIDConnectProviderByARN(ctx, conn, arn)
-		if err != nil {
-			continue
-		}
-
-		for _, clientID := range providerOut.ClientIDList {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newOpenIDConnectProviderClientIDResource, client,
-				sweepfw.NewAttribute("openid_connect_provider_arn", arn),
-				sweepfw.NewAttribute(names.AttrClientID, clientID),
-			))
-		}
-	}
-
-	return sweepResources, nil
 }

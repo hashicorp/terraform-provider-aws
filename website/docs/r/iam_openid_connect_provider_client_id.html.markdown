@@ -33,8 +33,8 @@ resource "aws_iam_openid_connect_provider" "example" {
 }
 
 resource "aws_iam_openid_connect_provider_client_id" "example" {
+  client_id                   = "266362248691-342342xasdasdasda-apps.googleusercontent.com"
   openid_connect_provider_arn = aws_iam_openid_connect_provider.example.arn
-  client_id = "266362248691-342342xasdasdasda-apps.googleusercontent.com"
 }
 ```
 
@@ -59,7 +59,7 @@ import {
   to = aws_iam_openid_connect_provider_client_id.example
   identity = {
     openid_connect_provider_arn = "arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io"
-    client_id = "266362248691-342342xasdasdasda-apps.googleusercontent.com"
+    client_id                   = "266362248691-342342xasdasdasda-apps.googleusercontent.com"
   }
 }
 
@@ -80,12 +80,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_iam_openid_connect_provider_client_id.example
-  id = "openid_connect_provider_client_id-id-12345678" ??????????
+  id = "arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io|266362248691-342342xasdasdasda-apps.googleusercontent.com"
 }
 ```
 
 Using `terraform import`, import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_iam_openid_connect_provider_client_id.example openid_connect_provider_client_id-id-12345678 ???????
+% terraform import aws_iam_openid_connect_provider_client_id.example arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io|266362248691-342342xasdasdasda-apps.googleusercontent.com
 ```
