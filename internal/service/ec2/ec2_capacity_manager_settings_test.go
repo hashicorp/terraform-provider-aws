@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -156,7 +156,7 @@ func testAccEC2CapacityManagerSettings_invalidConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCapacityManagerSettingsConfig_organizationsAccess(false, true),
-				ExpectError: regexp.MustCompile(`organizations_access cannot be true when enabled is false`),
+				ExpectError: regexache.MustCompile(`organizations_access cannot be true when enabled is false`),
 			},
 		},
 	})
