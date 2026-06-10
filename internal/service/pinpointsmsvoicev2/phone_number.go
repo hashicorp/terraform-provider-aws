@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -99,6 +99,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			},
 			"monthly_leasing_price": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"number_capabilities": schema.SetAttribute{
 				CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.NumberCapability]](ctx),
@@ -118,7 +121,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"opt_out_list_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("Default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"phone_number": schema.StringAttribute{
 				Computed: true,
@@ -138,6 +143,10 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"two_way_channel_arn": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
@@ -151,6 +160,10 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"two_way_channel_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
@@ -160,7 +173,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"two_way_channel_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Bool{
 					boolvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
