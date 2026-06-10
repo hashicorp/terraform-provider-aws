@@ -51,6 +51,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckPool")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.PoolInformation")
+// @Testing(importIgnore="iso_country_code", plannableImportAction="Replace")
 // @Testing(generator=false)
 func newPoolResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &poolResource{}
