@@ -1,6 +1,8 @@
 ---
 applyTo: "internal/service/**/*_test.go"
 ---
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
 # Test Helpers, Data Source Tests, List Resource Tests, Unit Tests
 
