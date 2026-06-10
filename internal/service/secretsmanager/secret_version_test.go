@@ -542,16 +542,22 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
-				// Because resource Delete leaves a secret version with a single stage ("AWSCURRENT"), the resource is still there.
-				// ExpectNonEmptyPlan: true,
+				// Unlike most resources, the Delete function for
+				// aws_secretsmanager_secret_version does not actually delete
+				// the underlying AWS resource: AWS does not permit removing
+				// the AWSCURRENT staging label, so when no other staging
+				// labels are set the version remains in place. As a result,
+				// post-refresh the resource is still present and consistent
+				// with config, so the planned action is NoOp rather than
+				// Create.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionNoop),
 					},
 				},
 			},
