@@ -4,3 +4,4 @@ resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with len
 
 ```release-note:enhancement
 resource/aws_msk_replicator: Add Resource Identity support
+```
