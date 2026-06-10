@@ -686,14 +686,6 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `user_name_attribute_field` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `40m`)
-* `delete` - (Default `40m`)
-* `update` - (Default `40m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -726,6 +718,14 @@ A `text_document_statistics` block supports the following attributes:
 
 * `indexed_text_bytes` - The total size, in bytes, of the indexed documents.
 * `indexed_text_documents_count` - The number of text documents indexed.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
+* `update` - (Default `40m`)
 
 ## Import
 
