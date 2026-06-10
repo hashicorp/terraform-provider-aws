@@ -53,10 +53,6 @@ func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, err
 	return r, nil
 }
 
-const (
-	ResNameRegistry = "Registry"
-)
-
 type registryResource struct {
 	framework.ResourceWithModel[registryResourceModel]
 	framework.WithTimeouts
@@ -98,18 +94,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			"registry_arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"registry_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"registry_arn": framework.ARNAttributeComputedOnly(),
+			"registry_id":  framework.IDAttribute(),
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryStatus](),
 				Computed:   true,
