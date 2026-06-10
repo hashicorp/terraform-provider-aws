@@ -72,6 +72,7 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 				if result.Diagnostics.HasError() {
 					return
 				}
+				flattenRegistryApproval(output, &data)
 
 				result.DisplayName = aws.ToString(item.Name)
 			})
