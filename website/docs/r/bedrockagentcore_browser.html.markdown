@@ -94,7 +94,10 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `browser_signing` - (Optional) Browser signing configuration that enables cryptographic agent identification using HTTP message signatures. See [`browser_signing`](#browser_signing) below.
+* `certificates` - (Optional) Certificates to install in the browser. See [`certificates`](#certificates) below.
 * `description` - (Optional) Description of the browser.
+* `enterprise_policies` - (Optional) Enterprise policy files to apply to the browser. See [`enterprise_policies`](#enterprise_policies) below.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the browser assumes for execution.
 * `recording` - (Optional) Recording configuration for browser sessions. See [`recording`](#recording) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -126,6 +129,51 @@ The `s3_location` object supports the following:
 
 * `bucket` - (Required) Name of the S3 bucket where recordings are stored.
 * `prefix` - (Required) S3 key prefix for recording files.
+
+### `browser_signing`
+
+The `browser_signing` object supports the following:
+
+* `enabled` - (Required) Whether browser signing is enabled. When enabled, the browser cryptographically signs HTTP requests to identify itself as an AI agent to bot control vendors.
+
+### `enterprise_policies`
+
+The `enterprise_policies` block supports the following:
+
+* `location` - (Required) Location of the enterprise policy file. See [`location`](#location) below.
+* `type` - (Optional) Type of browser enterprise policy. Valid values: `MANAGED`, `RECOMMENDED`.
+
+### `location`
+
+The `location` object supports the following:
+
+* `s3` - (Required) S3 location of the enterprise policy file. See [`s3`](#s3) below.
+
+### `s3`
+
+The `s3` object supports the following:
+
+* `bucket` - (Required) Name of the S3 bucket.
+* `prefix` - (Required) Prefix for objects in the S3 bucket.
+* `version_id` - (Optional) Version ID of the S3 object. If not specified, the latest version is used.
+
+### `certificates`
+
+The `certificates` block supports the following:
+
+* `location` - (Required) Location from which to retrieve the certificate. See [`certificates.location`](#certificateslocation) below.
+
+### `certificates.location`
+
+The certificate `location` object supports the following:
+
+* `secrets_manager` - (Required) AWS Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager) below.
+
+### `secrets_manager`
+
+The `secrets_manager` object supports the following:
+
+* `secret_arn` - (Required) ARN of the AWS Secrets Manager secret containing the certificate.
 
 ## Attribute Reference
 
