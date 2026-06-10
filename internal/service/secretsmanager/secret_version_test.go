@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -75,6 +76,17 @@ func (d *mockRawDiffer) HasChange(key string) bool {
 	}
 	return !stateVal.Equals(configVal).True()
 }
+
+// The following methods round out the sdkv2.ResourceDiffer interface but are
+// not exercised by secretVersionForceNewCustomDiffInner; they return zero
+// values to satisfy the interface contract.
+func (d *mockRawDiffer) Get(string) any              { return nil }
+func (d *mockRawDiffer) GetChange(string) (any, any) { return nil, nil }
+func (d *mockRawDiffer) GetOk(string) (any, bool)    { return nil, false }
+func (d *mockRawDiffer) HasChanges(keys ...string) bool {
+	return slices.ContainsFunc(keys, d.HasChange)
+}
+func (d *mockRawDiffer) Id() string { return "" }
 
 func secretVersionValuesObjectState(values map[string]cty.Value) cty.Value {
 	allValues := map[string]cty.Value{

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -548,14 +549,6 @@ func secretVersionForceNewCustomDiff(ctx context.Context, rd *schema.ResourceDif
 	return secretVersionForceNewCustomDiffInner(ctx, rd, meta)
 }
 
-type rawDiffer interface {
-	GetRawState() cty.Value
-	GetRawConfig() cty.Value
-	GetRawPlan() cty.Value
-	ForceNew(key string) error
-	HasChange(key string) bool
-}
-
 // secretVersionForceNewCustomDiffInner determines when to force resource
 // replacement vs. allow in-place update based on changes between
 // `secret_string`, `secret_string_wo`, and `secret_string_wo_version`.
@@ -575,7 +568,7 @@ type rawDiffer interface {
 //  2. At apply expansion, detect a previously-planned recreation by checking
 //     whether the planned `id` is unknown. If so, ForceNew again even when
 //     the resolved config value happens to match state.
-func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, meta any) error {
+func secretVersionForceNewCustomDiffInner(ctx context.Context, diff sdkv2.ResourceForceNewDiffer, meta any) error {
 	rawState := diff.GetRawState()
 	if rawState.IsNull() {
 		return nil
@@ -611,7 +604,7 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		// expansion (after the value resolves and differs) would require
 		// recreation, raising "Provider produced inconsistent final plan".
 		if !configStringValue.IsKnown() {
-			return forceNewIfChanged(diff, "secret_string")
+			return sdkv2.ForceNewIfChanged(diff, "secret_string")
 		}
 
 		hasConfigString := !configStringValue.IsNull()
@@ -623,7 +616,7 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 			stateString := stateStringValue.AsString()
 			configString := configStringValue.AsString()
 			if stateString != configString || plannedRecreation {
-				return forceNewIfChanged(diff, "secret_string")
+				return sdkv2.ForceNewIfChanged(diff, "secret_string")
 			}
 			return nil
 		}
@@ -633,10 +626,10 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		// `secret_string_wo` may also be unknown at plan time when its value
 		// references a not-yet-resolved upstream attribute.
 		if !configStringWOValue.IsKnown() {
-			if err := forceNewIfChanged(diff, "secret_string"); err != nil {
+			if err := sdkv2.ForceNewIfChanged(diff, "secret_string"); err != nil {
 				return err
 			}
-			return forceNewIfChanged(diff, "secret_string_wo")
+			return sdkv2.ForceNewIfChanged(diff, "secret_string_wo")
 		}
 
 		hasConfigStringWO := !configStringWOValue.IsNull()
@@ -644,10 +637,10 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 			stateString := stateStringValue.AsString()
 			configString := configStringWOValue.AsString()
 			if stateString != configString || plannedRecreation {
-				if err := forceNewIfChanged(diff, "secret_string"); err != nil {
+				if err := sdkv2.ForceNewIfChanged(diff, "secret_string"); err != nil {
 					return err
 				}
-				if err := forceNewIfChanged(diff, "secret_string_wo"); err != nil {
+				if err := sdkv2.ForceNewIfChanged(diff, "secret_string_wo"); err != nil {
 					return err
 				}
 			}
@@ -664,12 +657,12 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		// Issue #47907: If the configured `secret_string_wo_version` is
 		// unknown at plan time, ForceNew proactively for consistency.
 		if !configStringWoVersionValue.IsKnown() {
-			return forceNewIfChanged(diff, "secret_string_wo_version")
+			return sdkv2.ForceNewIfChanged(diff, "secret_string_wo_version")
 		}
 
 		if !configStringWoVersionValue.IsNull() {
 			if configStringWoVersionValue.Equals(stateStringWoVersionValue).False() || plannedRecreation {
-				return forceNewIfChanged(diff, "secret_string_wo_version")
+				return sdkv2.ForceNewIfChanged(diff, "secret_string_wo_version")
 			}
 			return nil
 		}
@@ -678,23 +671,12 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff rawDiffer, m
 		// recreation; treat unknown `secret_string` the same as a known value.
 		configStringValue := rawConfig.GetAttr("secret_string")
 		if !configStringValue.IsKnown() {
-			return forceNewIfChanged(diff, "secret_string")
+			return sdkv2.ForceNewIfChanged(diff, "secret_string")
 		}
 		if !configStringValue.IsNull() {
-			return forceNewIfChanged(diff, "secret_string")
+			return sdkv2.ForceNewIfChanged(diff, "secret_string")
 		}
 	}
 
 	return nil
-}
-
-// forceNewIfChanged calls ForceNew on the given key only when the underlying
-// diff records a change for it. This avoids the "ForceNew: No changes for X"
-// error from the SDK when, at apply expansion, a previously-unknown value
-// happens to resolve to the same value already in state.
-func forceNewIfChanged(diff rawDiffer, key string) error {
-	if !diff.HasChange(key) {
-		return nil
-	}
-	return diff.ForceNew(key)
 }
