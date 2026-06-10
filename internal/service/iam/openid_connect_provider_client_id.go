@@ -7,7 +7,9 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -20,12 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,6 +37,8 @@ import (
 // @FrameworkResource("aws_iam_openid_connect_provider_client_id", name="Open ID Connect Provider Client ID")
 // @IdentityAttribute("openid_connect_provider_arn")
 // @IdentityAttribute("client_id")
+// @ImportIDHandler("openIDConnectProviderClientIDImportID")
+// @Testing(hasNoPreExistingResource=true)
 func newOpenIDConnectProviderClientIDResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &openIDConnectProviderClientIDResource{}, nil
 }
@@ -166,6 +172,26 @@ func findOpenIDConnectProviderClientID(ctx context.Context, conn *iam.Client, pr
 type openIDConnectProviderClientIDResourceModel struct {
 	ClientID                 types.String `tfsdk:"client_id"`
 	OpenIDConnectProviderARN fwtypes.ARN  `tfsdk:"openid_connect_provider_arn"`
+}
+
+var (
+	_ inttypes.ImportIDParser = openIDConnectProviderClientIDImportID{}
+)
+
+type openIDConnectProviderClientIDImportID struct{}
+
+func (openIDConnectProviderClientIDImportID) Parse(id string) (string, map[string]any, error) {
+	providerARN, clientID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("import ID %q should be in the format <provider-arn>%s<client-id>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"openid_connect_provider_arn": providerARN,
+		"client_id":                   clientID,
+	}
+
+	return id, result, nil
 }
 
 func sweepOpenIDConnectProviderClientIDs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
