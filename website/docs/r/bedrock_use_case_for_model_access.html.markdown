@@ -60,6 +60,12 @@ import {
 resource "aws_bedrock_use_case_for_model_access" "example" {}
 ```
 
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Bedrock Use Case For Model Access resources using the AWS account ID. For example:
 
 ```terraform
