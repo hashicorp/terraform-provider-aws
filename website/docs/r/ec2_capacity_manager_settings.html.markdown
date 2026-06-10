@@ -12,7 +12,7 @@ Manages [EC2 Capacity Manager](https://docs.aws.amazon.com/AWSEC2/latest/UserGui
 
 Capacity Manager can be enabled in only one Region per account (the home Region), where it aggregates capacity data from all Regions. After enabling, initial data ingestion may take several hours to complete.
 
-~> Destroying this resource disables EC2 Capacity Manager, which also disables Organizations access.
+~> **Note:** Destroying this resource disables EC2 Capacity Manager, which also disables Organizations access.
 
 ## Example Usage
 
@@ -61,7 +61,7 @@ resource "aws_ec2_capacity_manager_settings" "example" {
 
 This resource supports the following arguments:
 
-* `enabled` - (Required) Whether EC2 Capacity Manager is enabled for the account in the current Region.
+* `enabled` - (Required) Whether to enable EC2 Capacity Manager for the account in the configured Region.
 * `organizations_access` - (Optional) Whether to enable cross-account data aggregation for AWS Organizations. Requires `enabled` to be `true`. Can only be enabled from the Organizations management account or a delegated administrator account. Defaults to `false`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 

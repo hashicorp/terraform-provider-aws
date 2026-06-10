@@ -50,6 +50,7 @@ func testAccEC2CapacityManagerSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.Region()),
 				),
 			},
 			{

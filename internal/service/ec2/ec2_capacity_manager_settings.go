@@ -133,10 +133,12 @@ func (r *capacityManagerSettingsResource) Update(ctx context.Context, request re
 		input := ec2.UpdateCapacityManagerOrganizationsAccessInput{
 			OrganizationsAccess: new.OrganizationsAccess.ValueBoolPointer(),
 		}
-		if _, err := conn.UpdateCapacityManagerOrganizationsAccess(ctx, &input); err != nil {
+		output, err := conn.UpdateCapacityManagerOrganizationsAccess(ctx, &input)
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err)
 			return
 		}
+		new.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 	} else if !new.Enabled.Equal(old.Enabled) {
 		if err := updateCapacityManagerSettings(ctx, conn, &new); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err)
