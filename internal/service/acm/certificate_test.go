@@ -1625,6 +1625,12 @@ func TestAccACMCertificate_Imported_PrivateKeyWo(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
 					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("pending_renewal")),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
 				},
@@ -1637,6 +1643,12 @@ func TestAccACMCertificate_Imported_PrivateKeyWo(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
 					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(types.CertificateTypeImported)),
 				},
@@ -1680,6 +1692,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("pending_renewal")),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1732,6 +1745,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrDomainName)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("subject_alternative_names")),
 					},
 				},
@@ -1766,6 +1780,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrDomainName)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("subject_alternative_names")),
 					},
 				},

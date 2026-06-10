@@ -326,6 +326,14 @@ func resourceCertificate() *schema.Resource {
 					return nil
 				}
 
+				switch diff.Get(names.AttrType).(string) {
+				case string(types.CertificateTypeImported):
+					// Pending renewal is never true for imported certificates
+					if err := diff.SetNew("pending_renewal", false); err != nil {
+						return err
+					}
+				}
+
 				if diff.HasChange("early_renewal_duration") {
 					if duration := diff.Get("early_renewal_duration").(string); duration == "" {
 						if err := diff.SetNew("pending_renewal", false); err != nil {
