@@ -9,7 +9,7 @@ description: |-
 
 Terraform resource for maintaining exclusive management of resource record sets defined in an AWS Route53 hosted zone.
 
-!> This resource takes exclusive ownership over resource record sets defined in a hosted zone. This includes removal of record sets which are not explicitly configured. To prevent persistent drift, ensure any `aws_route53_record` resources managed alongside this resource have an equivalent `resource_record_set` argument.
+!> This resource takes exclusive ownership over resource record sets defined in a hosted zone, or over records matching a particular `name` if set. This includes removal of matching records which are not explicitly configured. To prevent persistent drift, ensure any `aws_route53_record` resources managed alongside this resource have an equivalent `resource_record_set` argument, or are outside the configured `name` scope.
 
 ~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured resource record sets. It __will not__ delete the configured record sets from the hosted zone.
 
@@ -43,6 +43,35 @@ resource "aws_route53_records_exclusive" "test" {
 }
 ```
 
+Or to instead manage all records for a particular DNS name within the zone:
+
+```terraform
+resource "aws_route53_records_exclusive" "subdomain2" {
+  zone_id = aws_route53_zone.example.zone_id
+  name    = "subdomain2.example.com"
+
+  resource_record_set {
+    name = "subdomain2.example.com"
+    type = "A"
+    ttl  = 300
+
+    resource_records {
+      value = "192.0.2.10"
+    }
+  }
+
+  resource_record_set {
+    name = "subdomain2.example.com"
+    type = "MX"
+    ttl  = 300
+
+    resource_records {
+      value = "10 mail.example.com."
+    }
+  }
+}
+```
+
 ### Disallow Record Sets
 
 To automatically remove any configured record sets, omit a `resource_record_set` block.
@@ -63,6 +92,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `name` - (Optional) DNS name whose resource record sets are exclusively managed. When omitted, all non-default record sets in the hosted zone are managed.
 * `resource_record_set` - (Optional) A list of all resource record sets associated with the hosted zone.
 See [`resource_record_set`](#resource_record_set) below.
 
@@ -70,9 +100,9 @@ See [`resource_record_set`](#resource_record_set) below.
 
 The following arguments are required:
 
-* `name` - (Required) Name of the record.
 * `type` - (Required) Record type.
 Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV`, `TXT`, `TLSA`, `SSHFP`, `SVCB`, and `HTTPS`.
+* `name` - (Required) Name of the record. When the top-level `name` argument is configured, this argument must match the top-level `name`.
 
 The following arguments are optional:
 
@@ -177,4 +207,19 @@ Using `terraform import`, import Route 53 Records Exclusive using the `zone_id`.
 
 ```console
 % terraform import aws_route53_records_exclusive.example ABCD1234
+```
+
+To import a scoped Route 53 Records Exclusive resource, use the `zone_id,name` format. For example:
+
+```terraform
+import {
+  to = aws_route53_records_exclusive.example
+  id = "ABCD1234,app.example.com"
+}
+```
+
+Using `terraform import`, import a scoped Route 53 Records Exclusive resource using the `zone_id,name` format. For example:
+
+```console
+% terraform import aws_route53_records_exclusive.example ABCD1234,app.example.com
 ```
