@@ -177,13 +177,13 @@ The following arguments are optional:
 
 ### rule
 
-* `destination` - (Required) Configuration block for the destination where logs will be centralized. See [`destination`](#destination) below.
+* `destination` - (Required) Configuration block for the destination where telemetry will be centralized. See [`destination`](#destination) below.
 * `source` - (Required) Configuration block for the source of logs to be centralized. See [`source`](#source) below.
 
 ### destination
 
-* `account` - (Required) AWS account ID where logs will be centralized.
-* `region` - (Required) AWS region where logs will be centralized.
+* `account` - (Required) AWS account ID where telemetry will be centralized.
+* `region` - (Required) AWS region where telemetry will be centralized.
 * `destination_logs_configuration` - (Optional) Configuration block for destination logs settings. See [`destination_logs_configuration`](#destination_logs_configuration) below.
 * `destination_metrics_configuration` - (Optional) Configuration block for destination metrics settings. See [`destination_metrics_configuration`](#destination_metrics_configuration) below.
 
@@ -210,15 +210,15 @@ The following arguments are optional:
 
 #### destination_metrics_configuration
 
-* `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`backup_configuration`](#destination_metrics_configuration-backup_configuration) below.
+* `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`destination_metrics_backup_configuration`](#destination_metrics_backup_configuration) below.
 
-##### backup_configuration
+##### destination_metrics_backup_configuration
 
 * `region` - (Required) AWS region for metrics backup destination.
 
 ### source
 
-* `regions` - (Required) Set of AWS regions from which to centralize logs. Must contain at least one region.
+* `regions` - (Required) Set of AWS regions from which to centralize telemetry. Must contain at least one region.
 * `scope` - (Required) Scope defining which resources to include. Use organization ID format: `OrganizationId = 'o-example123456'`.
 * `source_logs_configuration` - (Optional) Configuration block for source logs settings. See [`source_logs_configuration`](#source_logs_configuration) below.
 * `source_metrics_configuration` - (Optional) Configuration block for source metrics settings. See [`source_metrics_configuration`](#source_metrics_configuration) below.
