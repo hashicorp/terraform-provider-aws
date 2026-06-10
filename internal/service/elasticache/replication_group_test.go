@@ -4749,7 +4749,7 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
   node_type                  = "cache.r6g.large"
-  multi_az_enabled           = "true"
+  multi_az_enabled           = true
   port                       = 6379
   apply_immediately          = true
   maintenance_window         = "tue:06:30-tue:07:30"
