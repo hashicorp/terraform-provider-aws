@@ -9,12 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -102,18 +102,18 @@ func (r *capacityManagerSettingsResource) Read(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	output, err := findCapacityManagerAttributes(ctx, conn)
-	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
+	switch {
+	case retry.NotFound(err):
+		// Capacity Manager reports an error when it is disabled.
+		data.Enabled = types.BoolValue(false)
+		data.OrganizationsAccess = types.BoolValue(false)
+	case err != nil:
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
+	default:
+		data.Enabled = types.BoolValue(output.CapacityManagerStatus == awstypes.CapacityManagerStatusEnabled)
+		data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 	}
-
-	data.Enabled = types.BoolValue(output.CapacityManagerStatus == awstypes.CapacityManagerStatusEnabled)
-	data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -154,7 +154,7 @@ func (r *capacityManagerSettingsResource) Delete(ctx context.Context, request re
 
 	// Removing the resource disables EC2 Capacity Manager.
 	var input ec2.DisableCapacityManagerInput
-	if _, err := conn.DisableCapacityManager(ctx, &input); err != nil {
+	if _, err := conn.DisableCapacityManager(ctx, &input); err != nil && !tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled) {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
@@ -174,10 +174,15 @@ func updateCapacityManagerSettings(ctx context.Context, conn *ec2.Client, data *
 	} else {
 		var input ec2.DisableCapacityManagerInput
 		output, err := conn.DisableCapacityManager(ctx, &input)
-		if err != nil {
+		switch {
+		case tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled):
+			// Already disabled.
+			data.OrganizationsAccess = types.BoolValue(false)
+		case err != nil:
 			return err
+		default:
+			data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 		}
-		data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 	}
 
 	return nil

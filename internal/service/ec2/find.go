@@ -106,6 +106,13 @@ func findCapacityManagerAttributes(ctx context.Context, conn *ec2.Client) (*ec2.
 	var input ec2.GetCapacityManagerAttributesInput
 	output, err := conn.GetCapacityManagerAttributes(ctx, &input)
 
+	// Capacity Manager returns an error, not a disabled status, when it isn't enabled.
+	if tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}

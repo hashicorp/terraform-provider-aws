@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -190,6 +191,11 @@ func testAccCheckCapacityManagerSettingsDisabled(ctx context.Context, t *testing
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindCapacityManagerAttributes(ctx, conn)
+
+		if retry.NotFound(err) {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
