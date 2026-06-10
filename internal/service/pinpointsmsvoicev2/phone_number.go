@@ -77,6 +77,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			"force_disassociate": schema.BoolAttribute{
+				Optional: true,
+			},
 			names.AttrID: framework.IDAttribute(),
 			"iso_country_code": schema.StringAttribute{
 				Required: true,
@@ -361,6 +364,28 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
+	// When force_disassociate is set, clear any pool association
+	// before releasing. AWS rejects a release on an associated phone
+	// number, so disassociation must precede release.
+	if data.ForceDisassociate.ValueBool() {
+		phone, err := findPhoneNumberByID(ctx, conn, data.PhoneNumberID.ValueString())
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("describing End User Messaging SMS Phone Number (%s) to clear pool association", data.PhoneNumberID.ValueString()), err.Error())
+
+			return
+		}
+		if phone.PoolId != nil {
+			if err := disassociateOriginationIdentities(ctx, conn, aws.ToString(phone.PoolId), phone.IsoCountryCode, aws.ToString(phone.PhoneNumberArn)); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("disassociating End User Messaging SMS Phone Number (%s) from pool (%s)", data.PhoneNumberID.ValueString(), aws.ToString(phone.PoolId)), err.Error())
+
+				return
+			}
+		}
+	}
+
 	_, err := tfresource.RetryWhen(ctx, poolDisassociationTimeout,
 		func(ctx context.Context) (*pinpointsmsvoicev2.ReleasePhoneNumberOutput, error) {
 			return conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
@@ -374,6 +399,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 			return false, err
 		},
 	)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -394,6 +420,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 type phoneNumberResourceModel struct {
 	framework.WithRegionModel
 	DeletionProtectionEnabled types.Bool                                         `tfsdk:"deletion_protection_enabled"`
+	ForceDisassociate         types.Bool                                         `tfsdk:"force_disassociate"`
 	ISOCountryCode            types.String                                       `tfsdk:"iso_country_code"`
 	MessageType               fwtypes.StringEnum[awstypes.MessageType]           `tfsdk:"message_type"`
 	MonthlyLeasingPrice       types.String                                       `tfsdk:"monthly_leasing_price"`

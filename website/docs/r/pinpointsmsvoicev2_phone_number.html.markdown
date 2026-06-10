@@ -29,6 +29,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 This resource supports the following arguments:
 
 * `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
+* `force_disassociate` - (Optional) Whether to disassociate the phone number from any pool it is associated with before destroying it. Defaults to `false`.
 * `iso_country_code` - (Required) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) Type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
 * `number_capabilities` - (Required) Whether the origination identity can be used for text messages, voice calls or both. Valid values are `SMS` and `VOICE`.
