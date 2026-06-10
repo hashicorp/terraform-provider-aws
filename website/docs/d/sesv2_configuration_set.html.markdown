@@ -42,6 +42,12 @@ This data source exports the following attributes in addition to the arguments a
     * `sending_enabled` - Specifies whether email sending is enabled.
 * `suppression_options` - An object that contains information about the suppression list preferences for your account.
     * `suppressed_reasons` - A list that contains the reasons that email addresses are automatically added to the suppression list for your account.
+    * `suppression_scope` - Suppression scope for the configuration set.
+    * `validation_options` - Block for condition threshold settings for suppression validation
+        * `condition_threshold` - Block for condition threshold settings for suppression validation.
+            * `condition_threshold_enabled` - Indicates whether Auto Validation is enabled for suppression.
+            * `overall_confidence_threshold` - Block for overall confidence threshold used to determine suppression decisions.
+                * `confidence_verdict_threshold` - Confidence level threshold for suppression decisions.
 * `tags` - Key-value map of resource tags for the container recipe.
 * `tracking_options` - An object that defines the open and click tracking options for emails that you send using the configuration set.
     * `custom_redirect_domain` - The domain to use for tracking open and click events.
