@@ -12,6 +12,7 @@ resource "aws_pinpointsmsvoicev2_pool" "test" {
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   region = var.region
 
+  force_disassociate  = true
   iso_country_code    = "US"
   message_type        = "TRANSACTIONAL"
   number_type         = "SIMULATOR"
