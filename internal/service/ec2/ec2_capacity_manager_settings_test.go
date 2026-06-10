@@ -49,6 +49,7 @@ func testAccEC2CapacityManagerSettings_basic(t *testing.T) {
 					testAccCheckCapacityManagerSettingsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
 				),
 			},
 			{
@@ -75,6 +76,7 @@ func testAccEC2CapacityManagerSettings_update(t *testing.T) {
 			{
 				Config: testAccCapacityManagerSettingsConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityManagerSettingsDisabled(ctx, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
 				),
@@ -94,6 +96,7 @@ func testAccEC2CapacityManagerSettings_update(t *testing.T) {
 			{
 				Config: testAccCapacityManagerSettingsConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityManagerSettingsDisabled(ctx, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -181,7 +184,7 @@ func testAccCheckCapacityManagerSettingsExists(ctx context.Context, t *testing.T
 	}
 }
 
-func testAccCheckCapacityManagerSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCapacityManagerSettingsDisabled(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
@@ -196,6 +199,10 @@ func testAccCheckCapacityManagerSettingsDestroy(ctx context.Context, t *testing.
 
 		return nil
 	}
+}
+
+func testAccCheckCapacityManagerSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckCapacityManagerSettingsDisabled(ctx, t)
 }
 
 func testAccCapacityManagerSettingsConfig_basic(enabled bool) string {
