@@ -35,29 +35,31 @@ func resourceTableItem() *schema.Resource {
 		UpdateWithoutTimeout: resourceTableItemUpdate,
 		DeleteWithoutTimeout: resourceTableItemDelete,
 
-		Schema: map[string]*schema.Schema{
-			"hash_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"item": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validateTableItem,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			names.AttrTableName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"hash_key": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"item": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          validateTableItem,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+				},
+				"range_key": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				names.AttrTableName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

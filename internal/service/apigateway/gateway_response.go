@@ -48,31 +48,33 @@ func resourceGatewayResponse() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"response_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_templates": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStatusCode: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"response_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_templates": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStatusCode: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

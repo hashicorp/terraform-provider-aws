@@ -1483,6 +1483,13 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccRestAPIConfig_policySetByBody(rName, "Deny"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Deny"`)),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

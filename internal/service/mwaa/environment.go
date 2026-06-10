@@ -54,257 +54,259 @@ func resourceEnvironment() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"airflow_configuration_options": {
-				Type:      schema.TypeMap,
-				Optional:  true,
-				Sensitive: true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
-			},
-			"airflow_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"database_vpc_endpoint_service": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dag_s3_path": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"endpoint_management": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EndpointManagement](),
-			},
-			"environment_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrKMSKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				ForceNew:     true,
-			},
-			"last_updated": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCreatedAt: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"error": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"error_code": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"error_message": {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"airflow_configuration_options": {
+					Type:      schema.TypeMap,
+					Optional:  true,
+					Sensitive: true,
+					Elem:      &schema.Schema{Type: schema.TypeString},
+				},
+				"airflow_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_vpc_endpoint_service": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dag_s3_path": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"endpoint_management": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointManagement](),
+				},
+				"environment_class": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrKMSKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					ForceNew:     true,
+				},
+				"last_updated": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCreatedAt: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"error": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"error_code": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"error_message": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrLoggingConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dag_processing_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem:     environmentModuleLoggingConfigurationSchema(),
-						},
-						"scheduler_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem:     environmentModuleLoggingConfigurationSchema(),
-						},
-						"task_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem:     environmentModuleLoggingConfigurationSchema(),
-						},
-						"webserver_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem:     environmentModuleLoggingConfigurationSchema(),
-						},
-						"worker_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem:     environmentModuleLoggingConfigurationSchema(),
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"max_webservers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 5),
-			},
-			"max_workers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"min_webservers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 5),
-			},
-			"min_workers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrNetworkConfiguration: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							MinItems: 2,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dag_processing_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem:     environmentModuleLoggingConfigurationSchema(),
+							},
+							"scheduler_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem:     environmentModuleLoggingConfigurationSchema(),
+							},
+							"task_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem:     environmentModuleLoggingConfigurationSchema(),
+							},
+							"webserver_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem:     environmentModuleLoggingConfigurationSchema(),
+							},
+							"worker_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem:     environmentModuleLoggingConfigurationSchema(),
+							},
 						},
 					},
 				},
-			},
-			"plugins_s3_object_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"plugins_s3_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"requirements_s3_object_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"requirements_s3_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"schedulers": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrServiceRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_bucket_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"startup_script_s3_object_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"startup_script_s3_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"webserver_access_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.WebserverAccessMode](),
-			},
-			"webserver_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"webserver_vpc_endpoint_service": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_window_start": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"worker_replacement_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.WorkerReplacementStrategy](),
-			},
+				"max_webservers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 5),
+				},
+				"max_workers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"min_webservers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 5),
+				},
+				"min_workers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrNetworkConfiguration: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								MinItems: 2,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"plugins_s3_object_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"plugins_s3_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"requirements_s3_object_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"requirements_s3_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"schedulers": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrServiceRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_bucket_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"startup_script_s3_object_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"startup_script_s3_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"webserver_access_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.WebserverAccessMode](),
+				},
+				"webserver_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"webserver_vpc_endpoint_service": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_window_start": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"worker_replacement_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.WorkerReplacementStrategy](),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -652,22 +654,24 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cloud_watch_log_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"log_level": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LoggingLevel](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cloud_watch_log_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"log_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LoggingLevel](),
+				},
+			}
 		},
 	}
 }

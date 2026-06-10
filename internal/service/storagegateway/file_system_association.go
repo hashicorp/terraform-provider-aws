@@ -48,67 +48,69 @@ func resourceFileSystemAssociation() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_destination_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				Default:      "",
-			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{0}),
-								validation.IntBetween(300, 2592000),
-							),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_destination_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					Default:      "",
+				},
+				"cache_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_stale_timeout_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  0,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{0}),
+									validation.IntBetween(300, 2592000),
+								),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
-					validation.StringLenBetween(1, 1024),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
-					validation.StringLenBetween(1, 1024),
-				),
-			},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
+						validation.StringLenBetween(1, 1024),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrUsername: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
+						validation.StringLenBetween(1, 1024),
+					),
+				},
+			}
 		},
 	}
 }

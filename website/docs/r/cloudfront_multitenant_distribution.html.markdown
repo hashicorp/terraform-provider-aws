@@ -16,7 +16,9 @@ For information about CloudFront multi-tenant distributions, see the [Amazon Clo
 
 ~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed state after creation or modification. During this time, deletes to resources will be blocked. If you need to delete a distribution that is enabled and you do not want to wait, you need to use the `retain_on_delete` flag.
 
-## Multi-tenant Distribution Limitations
+## Example Usage
+
+### Multi-tenant Distribution Limitations
 
 Multi-tenant distributions have the following limitations compared to standard CloudFront distributions:
 
@@ -26,7 +28,7 @@ Multi-tenant distributions have the following limitations compared to standard C
 - **WAF Integration**: Only supports WAF v2 web ACLs
 - **Certificate Management**: Must use ACM certificates (IAM certificates not supported)
 
-### Unsupported Attributes
+#### Unsupported Attributes
 
 The following attributes that are available in standard CloudFront distributions are **not supported** for multi-tenant distributions:
 
@@ -42,8 +44,6 @@ The following attributes that are available in standard CloudFront distributions
 - `staging` mode
 - `trusted_signers` in cache behaviors - Use `trusted_key_groups` instead
 - Cache behavior TTL settings (`default_ttl`, `max_ttl`, `min_ttl`) - Use cache policies instead
-
-## Example Usage
 
 ```terraform
 resource "aws_cloudfront_multitenant_distribution" "example" {

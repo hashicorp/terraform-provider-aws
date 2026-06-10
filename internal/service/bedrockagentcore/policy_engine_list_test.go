@@ -4,7 +4,6 @@
 package bedrockagentcore_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -28,8 +27,7 @@ func TestAccBedrockAgentCorePolicyEngine_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_bedrockagentcore_policy_engine.test[0]"
 	resourceName2 := "aws_bedrockagentcore_policy_engine.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	peName := strings.ReplaceAll(rName, "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -55,10 +53,10 @@ func TestAccBedrockAgentCorePolicyEngine_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_1")),
 				},
 			},
 
@@ -72,11 +70,11 @@ func TestAccBedrockAgentCorePolicyEngine_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_policy_engine.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(peName+"_0")),
+					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"_0")),
 					tfquerycheck.ExpectNoResourceObject("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_policy_engine.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(peName+"_1")),
+					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"_1")),
 					tfquerycheck.ExpectNoResourceObject("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -88,8 +86,7 @@ func TestAccBedrockAgentCorePolicyEngine_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_bedrockagentcore_policy_engine.test[0]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	peName := strings.ReplaceAll(rName, "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -117,7 +114,7 @@ func TestAccBedrockAgentCorePolicyEngine_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
 				},
 			},
 
@@ -134,11 +131,11 @@ func TestAccBedrockAgentCorePolicyEngine_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_policy_engine.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(peName+"_0")),
+					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"_0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_policy_engine.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("encryption_key_arn"), knownvalue.Null()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_engine_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`policy-engine/.+`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_engine_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -160,8 +157,7 @@ func TestAccBedrockAgentCorePolicyEngine_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_bedrockagentcore_policy_engine.test[0]"
 	resourceName2 := "aws_bedrockagentcore_policy_engine.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	peName := strings.ReplaceAll(rName, "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -189,10 +185,10 @@ func TestAccBedrockAgentCorePolicyEngine_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(peName+"_1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_1")),
 				},
 			},
 

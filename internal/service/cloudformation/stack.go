@@ -55,86 +55,88 @@ func resourceStack() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					},
+				},
+				"disable_rollback": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrIAMRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"notification_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"on_failure": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OnFailure](),
 				},
-			},
-			"disable_rollback": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrIAMRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"notification_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"on_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OnFailure](),
-			},
-			"outputs": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"policy_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"outputs": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"policy_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidStringIsJSONOrYAML,
-				StateFunc: func(v any) string {
-					template, _ := verify.NormalizeJSONOrYAMLString(v)
-					return template
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"timeout_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
+				"policy_body": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"policy_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_body": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidStringIsJSONOrYAML,
+					StateFunc: func(v any) string {
+						template, _ := verify.NormalizeJSONOrYAMLString(v)
+						return template
+					},
+				},
+				"template_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"timeout_in_minutes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -675,7 +677,7 @@ func stackHasActualChanges(ctx context.Context, d *schema.ResourceDiff, meta any
 		return false
 	}
 
-	for k, attr := range resourceStack().Schema {
+	for k, attr := range resourceStack().SchemaMap() {
 		if attr.ForceNew {
 			continue
 		}

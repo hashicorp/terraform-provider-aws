@@ -39,28 +39,30 @@ func resourceIdentityNotificationTopic() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"include_original_headers": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"notification_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-			},
-			names.AttrTopicARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"include_original_headers": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"notification_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+				},
+				names.AttrTopicARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

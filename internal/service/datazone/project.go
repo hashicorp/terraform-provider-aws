@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -37,10 +36,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_project", name="Project")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("projectImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetProjectOutput")
+// @Testing(importIgnore="skip_deletion_check;project_status")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdFunc="testAccProjectImportStateIdFunc")
+// @Testing(preIdentityVersion="v6.47.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -57,6 +65,7 @@ const (
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -227,6 +236,9 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	state.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+	state.ProjectStatus = fwtypes.StringEnumValue(out.ProjectStatus)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -313,18 +325,6 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *projectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-}
-
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -404,6 +404,26 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = projectImportID{}
+)
+
+type projectImportID struct{}
+
+func (projectImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, projectID, found := strings.Cut(id, ":")
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, ":")
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        projectID,
+	}
+
+	return id, result, nil
 }
 
 type projectResourceModel struct {

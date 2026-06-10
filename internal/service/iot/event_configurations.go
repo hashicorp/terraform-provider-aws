@@ -36,13 +36,15 @@ func resourceEventConfigurations() *schema.Resource {
 		UpdateWithoutTimeout: resourceEventConfigurationsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"event_configurations": {
-				Type:             schema.TypeMap,
-				Required:         true,
-				Elem:             &schema.Schema{Type: schema.TypeBool},
-				ValidateDiagFunc: verify.MapKeysAre(enum.Validate[awstypes.EventType]()),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"event_configurations": {
+					Type:             schema.TypeMap,
+					Required:         true,
+					Elem:             &schema.Schema{Type: schema.TypeBool},
+					ValidateDiagFunc: verify.MapKeysAre(enum.Validate[awstypes.EventType]()),
+				},
+			}
 		},
 	}
 }

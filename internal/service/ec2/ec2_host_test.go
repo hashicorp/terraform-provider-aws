@@ -39,7 +39,7 @@ func TestAccEC2Host_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c8g.large"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -218,7 +218,7 @@ func TestAccEC2Host_outpost(t *testing.T) {
 				Config: testAccHostConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, t, resourceName, &host),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{

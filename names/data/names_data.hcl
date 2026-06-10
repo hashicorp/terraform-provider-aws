@@ -4304,6 +4304,30 @@ service "inspector2" {
   brand                    = "AWS"
 }
 
+service "interconnect" {
+  sdk {
+    id            = "Interconnect"
+    arn_namespace = "interconnect"
+  }
+
+  names {
+    provider_name_upper = "Interconnect"
+    human_friendly      = "Interconnect"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_interconnect_"
+  }
+
+  provider_package_correct = "interconnect"
+  doc_prefix               = ["interconnect_"]
+  brand                    = "AWS"
+}
+
 service "iot1clickdevices" {
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-devices"
@@ -4811,7 +4835,7 @@ service "kinesis" {
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
   brand                    = "AWS"
 }
 
@@ -7201,7 +7225,6 @@ service "resourceexplorer2" {
     human_friendly      = "Resource Explorer"
   }
 
-
   endpoint_info {
     endpoint_api_call = "ListIndexes"
   }
@@ -8917,7 +8940,6 @@ service "transfer" {
     provider_name_upper = "Transfer"
     human_friendly      = "Transfer Family"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListConnectors"
