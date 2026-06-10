@@ -78,7 +78,7 @@ func (d *mockRawDiffer) HasChange(key string) bool {
 
 func secretVersionValuesObjectState(values map[string]cty.Value) cty.Value {
 	allValues := map[string]cty.Value{
-		names.AttrID:               cty.StringVal("arn:aws:secretsmanager:us-east-1:123456789012:secret:test|version-id"),
+		names.AttrID:               cty.StringVal("arn:aws:secretsmanager:us-east-1:123456789012:secret:test|version-id"), //lintignore:AWSAT003,AWSAT005
 		"secret_binary":            cty.StringVal(""),
 		"secret_string":            cty.StringVal(""),
 		"secret_string_wo":         cty.NullVal(cty.String),
