@@ -529,7 +529,6 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 	} else {
 		d.Set("options", nil)
 	}
-	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
 		if err := d.Set("renewal_summary", []any{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
@@ -545,6 +544,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrType, certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
+
+	// Value of `pending_renewal` depends on several other attribute values
+	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 
 	return diags
 }
