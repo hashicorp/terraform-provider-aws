@@ -355,51 +355,13 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
-// TLSRSAX509SelfSignedCertificatePEM generates a x509 certificate PEM string.
+// TLSRSAX509SelfSignedCertificatePEM generates a x509 certificate PEM string with server authentication extended key usage.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
 func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string) string {
 	t.Helper()
 
-	keyBlock, _ := pem.Decode([]byte(keyPem))
-
-	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	certificate := &x509.Certificate{
-		BasicConstraintsValid: true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(hoursForCertificateValidity * time.Hour),
-		NotBefore:             time.Now(),
-		SerialNumber:          serialNumber,
-		Subject: pkix.Name{
-			CommonName:   commonName,
-			Organization: []string{"ACME Examples, Inc"},
-		},
-	}
-
-	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, certificate, &key.PublicKey, key)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	certificateBlock := &pem.Block{
-		Bytes: certificateBytes,
-		Type:  PEMBlockTypeCertificate,
-	}
-
-	return string(pem.EncodeToMemory(certificateBlock))
+	return tlsRSAX509SelfSignedCertificatePEM(t, keyPem, commonName, x509.ExtKeyUsageServerAuth)
 }
 
 // TLSRSAX509SelfSignedClientCertificatePEM generates a x509 certificate PEM string with client authentication extended key usage.
@@ -408,6 +370,12 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 func TLSRSAX509SelfSignedClientCertificatePEM(t *testing.T, keyPem, commonName string) string {
 	t.Helper()
 
+	return tlsRSAX509SelfSignedCertificatePEM(t, keyPem, commonName, x509.ExtKeyUsageClientAuth)
+}
+
+func tlsRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string, extKeyUsage x509.ExtKeyUsage) string {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -424,7 +392,7 @@ func TLSRSAX509SelfSignedClientCertificatePEM(t *testing.T, keyPem, commonName s
 
 	certificate := &x509.Certificate{
 		BasicConstraintsValid: true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		ExtKeyUsage:           []x509.ExtKeyUsage{extKeyUsage},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		NotAfter:              time.Now().Add(hoursForCertificateValidity * time.Hour),
 		NotBefore:             time.Now(),
