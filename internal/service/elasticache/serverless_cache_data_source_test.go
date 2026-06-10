@@ -98,6 +98,7 @@ func TestAccElastiCacheServerlessCacheDataSource_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.port", resourceName, "endpoint.0.port"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "reader_endpoint.address", resourceName, "reader_endpoint.0.address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "reader_endpoint.port", resourceName, "reader_endpoint.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 				),
 			},
 		},

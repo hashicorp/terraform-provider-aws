@@ -780,6 +780,62 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_networkType(rName, "ipv4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_networkType(rName, "dual_stack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualStack)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_networkType(rName, "ipv6"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv6)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckServerlessCacheExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServerlessCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1196,4 +1252,49 @@ resource "aws_elasticache_serverless_cache" "test" {
 %[2]s
 }
 `, rName, tags)
+}
+
+func testAccServerlessCacheConfig_networkType(rName, networkType string) string {
+	if networkType == "ipv6" {
+		return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+			ConfigSubnetsIPv6Native(rName, 2),
+			fmt.Sprintf(`
+		resource "aws_elasticache_serverless_cache" "test" {
+		name        = %[1]q
+		engine       = "valkey"
+		network_type = %[2]q
+		subnet_ids   = aws_subnet.test_ipv6_native[*].id
+		}
+		`, rName, networkType))
+	}
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+	resource "aws_elasticache_serverless_cache" "test" {
+	name        = %[1]q
+	engine       = "valkey"
+	network_type = %[2]q
+	subnet_ids   = aws_subnet.test[*].id
+	}
+	`, rName, networkType))
+}
+
+func ConfigSubnetsIPv6Native(rName string, subnetCount int) string {
+	// Avoid colliding with the other subnets
+	return fmt.Sprintf(`
+resource "aws_subnet" "test_ipv6_native" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  ipv6_native = true
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index + 3)
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount)
 }
