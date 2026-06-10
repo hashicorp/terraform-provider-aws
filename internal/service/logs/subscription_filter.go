@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -152,7 +153,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 				return true, err
 			}
 
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
 				return true, err
 			}
 
