@@ -1086,6 +1086,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test_with_count" {
   message_type        = "TRANSACTIONAL"
   number_type         = "SIMULATOR"
   number_capabilities = ["SMS"]
+  force_disassociate  = true
 }
 `
 }
