@@ -6,7 +6,7 @@ applyTo: "internal/service/**/*.go"
 
 # Helpers, Sweepers, Data Sources, List Resources
 
-Scope: non-test resource code. Pairs with `lifecycle.instructions.md` (CRUD/errors/embeds). Both files apply to the same files; consult lifecycle for CRUD-shaped rules first.
+Scope: finders, status, waiters, sweepers, data sources, list resources.
 
 ## Finders, status, waiters
 
@@ -15,13 +15,13 @@ Scope: non-test resource code. Pairs with `lifecycle.instructions.md` (CRUD/erro
 - Status function reuses the finder and returns `retry.StateRefreshFunc`. Design status so one function powers create, update, and delete waiters.
 - Waiters use `retry.StateChangeConf`. Created/updated waiters typically set `NotFoundChecks: 20` and `ContinuousTargetOccurence: 2`. Deleted waiters use empty `Target` with `Pending` covering deletion-in-progress states.
 - Prefer SDK-provided status constants (e.g. `awstypes.StatusInProgress`) over package-level string consts.
-- Finders and `ResName<Name>` constants referenced in tests must be re-exported via `exports_test.go` (test rules cover this).
+- Finders and `ResName<Name>` constants referenced in tests must be re-exported via `exports_test.go`.
 
 Flag finders that return raw errors (must wrap with `smarterr.NewError`), status that duplicates finder logic, or hand-rolled polling loops in place of `retry.StateChangeConf`.
 
 ## Sweepers
 
-Each new resource needs a sweeper. Iterate the SDK paginator, build via `framework.NewSweepResource(new<Resource>Resource, client, framework.NewAttribute(names.AttrID, aws.ToString(v.<Thing>Id)))` (where `framework` is `internal/sweep/framework`), and register in the package's `sweep.go` with `awsv2.Register("aws_<svc>_<thing>", sweep<Resource>s, ...optionalDeps)`. Multiple `framework.NewAttribute(...)` arguments are passed when a resource has composite identity.
+Each new resource needs a sweeper. Iterate the SDK paginator, build via `framework.NewSweepResource(new<Resource>Resource, client, framework.NewAttribute(names.AttrID, aws.ToString(v.<Thing>Id)))` (where `framework` is `internal/sweep/framework`), and register in the package's `sweep.go` with `awsv2.Register("aws_<svc>_<thing>", sweep<Resource>s, ...optionalDeps)`. Pass multiple `framework.NewAttribute(...)` arguments for composite identity.
 
 Flag new resources without a sweeper, sweepers that don't propagate paginator errors via `smarterr.NewError`, and sweepers using import aliases other than `framework` for `internal/sweep/framework`.
 

@@ -6,7 +6,7 @@ applyTo: "website/docs/**/*.markdown"
 
 # User-Facing Documentation
 
-Scope: resource docs (`r/`), data source docs (`d/`), and list resource docs (`list/`). These render at `https://registry.terraform.io/providers/hashicorp/aws/latest/docs`. The Import section and Identity Schema content are covered in `docs-import.instructions.md`.
+Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`). Renders at `https://registry.terraform.io/providers/hashicorp/aws/latest/docs`.
 
 ## Description openings
 
@@ -38,17 +38,17 @@ Flag openings like "This resource…", "Use this resource…", "Allows you to…
 Resource docs have these sections, in this order:
 
 1. `# Resource: <aws_resource_name>`
-1. `## Example Usage` (with at least `### Basic Usage`)
-2. `## Argument Reference`
-3. `## Attribute Reference`
-4. `## Timeouts` *(only if the resource exposes timeouts)*
-5. `## Import` *(only for resources)*
+2. `## Example Usage` (with at least `### Basic Usage`)
+3. `## Argument Reference`
+4. `## Attribute Reference`
+5. `## Timeouts` *(only if the resource exposes timeouts)*
+6. `## Import` *(only for resources)*
 
 Data source and list resource docs have only Example Usage, Argument Reference, and Attribute Reference.
 
 ## Argument Reference
 
-Required arguments come first, separated from optional arguments by a header line. Alphabetize arguments. Use these exact lead-ins:
+Required arguments come first, separated from optional arguments by a header line. Alphabetize. Use these exact lead-ins:
 
 ```
 The following arguments are required:
@@ -70,7 +70,7 @@ For tagged resources, `tags` lives under optional arguments with this exact word
 
 ## Attribute Reference
 
-Open with `This resource exports the following attributes in addition to the arguments above:` (substitute "data source" / "list resource" as appropriate). Flag pages that re-document arguments here — only computed attributes belong. Alphabetize attributes.
+Open with `This resource exports the following attributes in addition to the arguments above:` (substitute "data source" / "list resource" as appropriate). Flag pages that re-document arguments here — only computed attributes belong. Alphabetize.
 
 For tagged resources, `tags_all` has this exact wording:
 

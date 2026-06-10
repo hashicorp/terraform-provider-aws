@@ -6,16 +6,14 @@ applyTo: "internal/service/**/*_test.go"
 
 # Acceptance & Unit Tests
 
-Scope: resources, data sources, and list resources. Helper-test patterns (Exists/Destroy, data source tests, list resource tests, unit tests) are in `acceptance-tests-helpers.instructions.md`. Ephemeral resources, provider functions, and actions are reviewed rarely; these rules don't target them.
+Scope: per-resource acceptance test basics. Ephemeral resources, provider functions, and actions are out of scope.
 
-## What every new resource test file must contain
-
-A new resource needs at least:
+## Required tests for new resources
 
 - `TestAcc<Service><Resource>_basic` — full happy path, including an `ImportState` step, check all attributes.
 - `TestAcc<Service><Resource>_disappears` — verifies the provider re-creates a resource that's gone out-of-band.
 
-Tag tests and identity tests are **generated** for resources annotated with `@Tags` and identity annotations. Flag PRs that add hand-written `_tags*` or `_Identity_*` tests for new resources.
+Tag and identity tests are **generated** for resources with `@Tags` and identity annotations. Flag PRs that add hand-written `_tags*` or `_Identity_*` tests for new resources.
 
 ## Naming
 
@@ -26,7 +24,7 @@ Tag tests and identity tests are **generated** for resources annotated with `@Ta
 
 ## TestCase essentials
 
-Acceptance tests normally start with `ctx := acctest.Context(t)` and use `acctest.ParallelTest(ctx, t, resource.TestCase{...})`.
+Acceptance tests start with `ctx := acctest.Context(t)` and use `acctest.ParallelTest(ctx, t, resource.TestCase{...})`.
 
 The `TestCase` must set:
 
@@ -51,7 +49,7 @@ Use `sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)`. Flag hard-coded names
 
 ## PreCheck pattern
 
-`testAccPreCheck` issues a single cheap List/Describe call and skips the test on partition/permission errors via `acctest.PreCheckSkipError(err)`. Flag PreChecks that make multiple API calls, return errors instead of calling `t.Skipf` / `t.Fatalf`, or do not run through `PreCheckSkipError`.
+`testAccPreCheck` issues a single cheap List/Describe call and skips on partition/permission errors via `acctest.PreCheckSkipError(err)`. Flag PreChecks that make multiple API calls, return errors instead of calling `t.Skipf`/`t.Fatalf`, or skip `PreCheckSkipError`.
 
 ## ImportState step
 
@@ -67,7 +65,7 @@ The `_basic` test's last step verifies import:
 
 `ImportStateVerifyIgnore` is for write-only fields the AWS API doesn't return (e.g., passwords, `apply_immediately`). Flag broad ignore lists used to paper over genuine drift.
 
-## Disappears test (Framework vs SDKv2)
+## Disappears test
 
 - Framework: `acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf<svc>.Resource<Name>, resourceName)`.
 - SDKv2: `acctest.CheckResourceDisappears(ctx, acctest.Provider, tf<svc>.Resource<Name>(), resourceName)`.
@@ -96,4 +94,4 @@ The package itself is imported in tests as `tf<svc> "github.com/hashicorp/terraf
 ## Regex and ARN checks
 
 - Use `github.com/YakDriver/regexache`, not stdlib `regexp`. Flag any new test that imports `regexp`.
-- For ARN attributes use `acctest.MatchResourceAttrRegionalARN` / `acctest.CheckResourceAttrRegionalARN` (or the global / alternate-region variants). Flag manual ARN assembly with `fmt.Sprintf` containing account ID or region.
+- For ARN attributes use `acctest.MatchResourceAttrRegionalARN` / `CheckResourceAttrRegionalARN` (or global / alt-region variants). Flag manual ARN assembly via `fmt.Sprintf` with account ID or region.

@@ -6,7 +6,7 @@ applyTo: "internal/service/**/*_test.go"
 
 # Test Helpers, Data Source Tests, List Resource Tests, Unit Tests
 
-Scope: test patterns that pair with `acceptance-tests.instructions.md`. Both files apply to the same files; consult `acceptance-tests.instructions.md` for the per-resource basics first.
+Scope: Exists/Destroy helpers, data source tests, list resource tests, unit tests. See `acceptance-tests.instructions.md` for per-resource basics.
 
 ## Exists / Destroy helpers
 
@@ -20,7 +20,7 @@ Scope: test patterns that pair with `acceptance-tests.instructions.md`. Both fil
 `testAccCheck<Resource>Destroy` should:
 
 - Skip rows where `rs.Type != "aws_<svc>_<thing>"`.
-- Treat `retry.NotFound(err)` as the success case (`return nil`).
+- Treat `retry.NotFound(err)` as success (`return nil`).
 - Use `errs.IsA[*awstypes.<NotFoundException>]` rather than type assertions if it inspects errors directly.
 
 Wrap real failures with `create.Error(names.<Service>, create.ErrActionCheckingExistence|ErrActionCheckingDestroyed, tf<svc>.ResName<Name>, id, err)` rather than `fmt.Errorf` / `errors.New`.
@@ -61,7 +61,7 @@ TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 
 ## Unit tests
 
-Unit tests are for logic that doesn't touch AWS — parsers, custom flatteners/expanders that aren't trivial, ID composition, validators. They:
+Unit tests are for logic that doesn't touch AWS — parsers, custom flatteners/expanders, ID composition, validators. They:
 
 - Run in parallel (`t.Parallel()` at top and inside subtests).
 - Are table-driven with `t.Run(tc.TestName, ...)`.

@@ -10,29 +10,27 @@ Changes must preserve Terraform state compatibility, upgrade behavior, import be
 
 ## Favor recent patterns; do not enforce legacy ones
 
-The provider has both modern (Plugin Framework) and legacy (Plugin SDK v2) code. New work follows recent patterns. Do not ask contributors to mimic legacy patterns just because nearby code uses them. Do not suggest refactors or new abstractions unless they address a correctness, maintainability, or compatibility issue.
+The provider has both modern (Plugin Framework) and legacy (Plugin SDK v2) code. New work follows recent patterns. Do not ask contributors to mimic legacy patterns just because nearby code uses them. Do not suggest refactors or new abstractions unless they address correctness, maintainability, or compatibility.
 
 ## Go style
 
-Write modern Go (Go 1.25+ idioms): `slices`, `maps`, `cmp`, `iter`, `errors.Is` / `errors.As`. Prefer return-early. Use AWS SDK for Go v2 only. Detect AWS API exceptions with `errs.IsA[*awstypes.<Exception>]`, not type assertions or string matching.
+Write modern Go (Go 1.25+): `slices`, `maps`, `cmp`, `iter`, `errors.Is` / `errors.As`, `range` over int/func. Prefer return-early. Use AWS SDK for Go v2 only. Detect AWS API exceptions with `errs.IsA[*awstypes.<Exception>]`.
 
 ## Review tone
 
-Be specific and actionable. Cite the rule and propose the corrected code. Skip generic Go advice that adds no value beyond what a competent Go reviewer already knows.
+Be specific and actionable. Cite the rule and propose the corrected code. Focus on substance over style: avoid minor comments that create noise. Frame comments as guidance for maintainers to weigh, not required changes for contributors.
 
-Frame comments as guidance for maintainers to weigh, not as required changes for contributors. Contributors are not obligated to address every Copilot comment. Prefer "consider…", "this could…", "one option would be…" over imperatives like "change this", "you must", or "this needs to be fixed".
-
-Begin each comment with this line on its own, before any other text:
+**Begin each comment with this line on its own, before any other text:**
 
 > 🤖 _This Copilot comment is not a required action for the contributor._
 
 ## Broader agent context
 
-For Copilot cloud agent and Copilot CLI sessions that work across the repository, see [`AGENTS.md`](../AGENTS.md). It covers personas, skills, build/test commands, and the AI-usage policy. Copilot code review and Copilot Chat in IDEs do not read `AGENTS.md`; rules those surfaces need live in this file or the path-specific instruction files below.
+See [`AGENTS.md`](../AGENTS.md) for personas, skills, build/test commands, and the AI-usage policy.
 
 ## Scoped rules
 
-More detailed rules live in path-specific instruction files. Multiple files may apply to the same path.
+Path-specific instruction files. Multiple files may apply to the same path.
 
 | Concern | File | Applies to |
 |---|---|---|
@@ -47,4 +45,4 @@ More detailed rules live in path-specific instruction files. Multiple files may 
 | User-facing documentation | `instructions/docs.instructions.md` | `website/docs/**/*.markdown` |
 | Import section + Identity Schema docs | `instructions/docs-import.instructions.md` | `website/docs/**/*.markdown` |
 
-The `internal/service/**/*.go` glob also matches `*_test.go`. Most rules in the non-test files don't fire on test files, but Copilot will see all matching files.
+The `internal/service/**/*.go` glob matches both production and test files; non-test rules generally don't apply to tests.

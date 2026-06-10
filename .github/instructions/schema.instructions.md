@@ -6,7 +6,7 @@ applyTo: "internal/service/**/*.go"
 
 # Schema & Resource Shape
 
-Scope: non-test resource code (resources, data sources, list resources). What the construct exposes to users — model struct, attributes, blocks, validators, plan modifiers, timeouts. Identity rules in `identity.instructions.md`. Tags rules (schema attrs, `@Tags`, Create/Update wiring) in `tags.instructions.md`. Lifecycle (CRUD, errors, AutoFlex) in `lifecycle.instructions.md`. Most rules below don't fire on `*_test.go` files.
+Scope: model struct, attributes, blocks, validators, plan modifiers, timeouts on non-test resource code.
 
 ## Model struct
 
@@ -27,7 +27,7 @@ type fooResourceModel struct {
 
 - Attribute names are `snake_case`.
 - **Alphabetize** within `Attributes` and within `Blocks`. No blank lines between attributes.
-- Use the `internal/names` constants (`names.AttrARN`, `names.AttrName`, `names.AttrTags`, `names.AttrTagsAll`, `names.AttrTimeouts`, etc.) instead of string literals when one exists.
+- Use `internal/names` constants (`names.AttrARN`, `names.AttrName`, `names.AttrTags`, `names.AttrTagsAll`, `names.AttrTimeouts`, etc.) instead of string literals when one exists.
 
 ### Required / Optional / Computed
 
@@ -44,7 +44,7 @@ Prefer `Optional + Computed` over `Optional + Default` when AWS supplies a serve
 
 ### `id` attribute
 
-Plugin Framework does **not** require an `id` attribute. Include `names.AttrID: framework.IDAttribute()` only when the AWS API itself returns an `Id` field. Flag schemas that include it on ARN-identified resources just by habit.
+Plugin Framework does **not** require an `id` attribute. Include `names.AttrID: framework.IDAttribute()` only when the AWS API returns an `Id` field. Flag schemas that include it on ARN-identified resources just by habit.
 
 ## Plan modifiers (no `ForceNew`)
 

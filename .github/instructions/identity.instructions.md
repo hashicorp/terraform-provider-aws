@@ -6,7 +6,7 @@ applyTo: "internal/service/**/*.go"
 
 # Resource Identity
 
-Scope: identity declaration on resources and the import-ID parser when applicable. Pairs with `schema.instructions.md` (other resource shape rules) and `lifecycle.instructions.md` (CRUD).
+Scope: identity declaration and import-ID parsers.
 
 ## Identity strategy — exactly one per resource
 
@@ -38,7 +38,7 @@ var _ inttypes.ImportIDParser = fooImportID{}
 Flag multi-attribute identity resources that:
 
 - Omit `@ImportIDHandler` — generation will emit a build error.
-- Reference an `@ImportIDHandler` whose target type doesn't satisfy `inttypes.ImportIDParser` (the `var _ inttypes.ImportIDParser = ...{}` assertion is the convention for catching this).
+- Reference an `@ImportIDHandler` whose target type doesn't satisfy `inttypes.ImportIDParser` (the `var _ inttypes.ImportIDParser = ...{}` assertion catches this).
 - Implement `Parse` without a clear error message describing the expected import-ID format on malformed input.
 
 `@ImportIDHandler` is only valid on parameterized identities with multiple attributes. Flag uses on singleton or single-attribute parameterized resources.

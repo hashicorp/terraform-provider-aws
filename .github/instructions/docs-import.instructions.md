@@ -6,7 +6,7 @@ applyTo: "website/docs/**/*.markdown"
 
 # Import Section & Identity Schema
 
-Scope: the `## Import` section of resource docs and the `Identity Schema` subsection within it. Pairs with `docs.instructions.md` (everything else in user-facing docs).
+Scope: the `## Import` section and `Identity Schema` subsection of resource docs.
 
 ## Import section structure (resources only)
 
