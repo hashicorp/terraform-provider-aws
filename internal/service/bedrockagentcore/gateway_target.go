@@ -566,6 +566,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
+									path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
