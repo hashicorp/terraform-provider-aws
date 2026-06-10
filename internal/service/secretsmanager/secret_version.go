@@ -159,6 +159,11 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
+	// Wait for the new version to be visible. Staging-label propagation is
+	// handled in resourceSecretVersionRead via tfresource.RetryWhenNewResourceNotFound,
+	// gated on d.IsNewResource(), which matches the conventional eventual-
+	// consistency idiom used elsewhere in the provider (see, e.g.,
+	// resourceUserRead in the iam package).
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
@@ -212,7 +217,26 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("secret_id", secretID)
 
 	if hasWriteOnly {
-		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+		// Use the canonical eventual-consistency idiom (see iam.resourceUserRead):
+		// retry on NotFound only while d.IsNewResource() is true. We also
+		// synthesize a NotFoundError when staging labels have not yet
+		// propagated for a freshly-created version, ensuring state is
+		// populated with a non-empty `version_stages`.
+		type writeOnlyEntry struct {
+			arn          *string
+			versionEntry *types.SecretVersionsListEntry
+		}
+		entry, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*writeOnlyEntry, error) {
+			arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+			if err != nil {
+				return nil, err
+			}
+			if d.IsNewResource() && len(versionEntry.VersionStages) == 0 {
+				return nil, &retry.NotFoundError{}
+			}
+			return &writeOnlyEntry{arn: arn, versionEntry: versionEntry}, nil
+		}, d.IsNewResource())
+
 		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -222,18 +246,30 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 		}
 
-		d.Set(names.AttrARN, arn)
-		d.Set("secret_arn", arn)
+		d.Set(names.AttrARN, entry.arn)
+		d.Set("secret_arn", entry.arn)
 		d.Set("secret_binary", nil)
 		d.Set("secret_string", nil)
-		d.Set("version_id", versionEntry.VersionId)
-		d.Set("version_stages", versionEntry.VersionStages)
+		d.Set("version_id", entry.versionEntry.VersionId)
+		d.Set("version_stages", entry.versionEntry.VersionStages)
 		d.Set("has_secret_string_wo", true)
 
 		return diags
 	}
 
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	// See note above re: eventual consistency. Same idiom for the
+	// non-write-only path.
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
+		o, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+		if err != nil {
+			return nil, err
+		}
+		if d.IsNewResource() && len(o.VersionStages) == 0 {
+			return nil, &retry.NotFoundError{}
+		}
+		return o, nil
+	}, d.IsNewResource())
+
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
