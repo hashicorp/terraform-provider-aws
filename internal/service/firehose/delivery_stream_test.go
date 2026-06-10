@@ -220,6 +220,23 @@ func TestAccFirehoseDeliveryStream_s3WithCloudWatchLogging(t *testing.T) {
 					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryStreamConfig_s3CloudWatchLoggingUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -3133,7 +3150,7 @@ EOF
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_s3CloudWatchLogging(rName string) string {
+func testAccDeliveryStreamConfig_baseS3CloudWatchLogging(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -3210,10 +3227,16 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_stream" "test" {
-  name           = %[1]q
+  count = 2
+
+  name           = "%[1]s-${count.index}"
   log_group_name = aws_cloudwatch_log_group.test.name
 }
+`, rName)
+}
 
+func testAccDeliveryStreamConfig_s3CloudWatchLogging(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_baseS3CloudWatchLogging(rName), fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
   name        = %[1]q
@@ -3226,11 +3249,45 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     cloudwatch_logging_options {
       enabled         = true
       log_group_name  = aws_cloudwatch_log_group.test.name
-      log_stream_name = aws_cloudwatch_log_stream.test.name
+      log_stream_name = aws_cloudwatch_log_stream.test[0].name
     }
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_s3CloudWatchLoggingUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_baseS3CloudWatchLogging(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+
+    cloudwatch_logging_options {
+      enabled         = true
+      log_group_name  = aws_cloudwatch_log_group.test.name
+      log_stream_name = aws_cloudwatch_log_stream.test[0].name
+    }
+
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn            = aws_iam_role.firehose.arn
+      bucket_arn          = aws_s3_bucket.bucket.arn
+      error_output_prefix = "prefix1"
+
+      cloudwatch_logging_options {
+        enabled         = true
+        log_group_name  = aws_cloudwatch_log_group.test.name
+        log_stream_name = aws_cloudwatch_log_stream.test[1].name
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccDeliveryStreamConfig_baseSecretsManager(rName, privateKey string) string {
