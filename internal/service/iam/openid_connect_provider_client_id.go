@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -51,7 +52,7 @@ type openIDConnectProviderClientIDResource struct {
 func (r *openIDConnectProviderClientIDResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"client_id": schema.StringAttribute{
+			names.AttrClientID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -165,7 +166,7 @@ func findOpenIDConnectProviderClientID(ctx context.Context, conn *iam.Client, pr
 }
 
 type openIDConnectProviderClientIDResourceModel struct {
-	ClientID                 types.String `tfsdk:"client_id"`
+	ClientID                 types.String `tfsdk:names.AttrClientID`
 	OpenIDConnectProviderARN fwtypes.ARN  `tfsdk:"openid_connect_provider_arn"`
 }
 
@@ -183,7 +184,7 @@ func (openIDConnectProviderClientIDImportID) Parse(id string) (string, map[strin
 
 	result := map[string]any{
 		"openid_connect_provider_arn": providerARN,
-		"client_id":                   clientID,
+		names.AttrClientID:            clientID,
 	}
 
 	return id, result, nil
