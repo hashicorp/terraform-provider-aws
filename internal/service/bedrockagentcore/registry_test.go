@@ -193,6 +193,70 @@ func TestAccBedrockAgentCoreRegistry_approvalConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreRegistry_authorizerConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_registry.test"
+	discoveryURL := "https://accounts.google.com/.well-known/openid-configuration"
+
+	jwtPath := tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckRegistries(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegistryConfig_customJWTAuthorizer(rName, discoveryURL, "audience-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_type"), knownvalue.StringExact("CUSTOM_JWT")),
+					statecheck.ExpectKnownValue(resourceName, jwtPath.AtMapKey("discovery_url"), knownvalue.StringExact(discoveryURL)),
+					statecheck.ExpectKnownValue(resourceName, jwtPath.AtMapKey("allowed_audience"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("audience-1"),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
+			},
+			{
+				// Updating the authorizer configuration is an in-place update.
+				Config: testAccRegistryConfig_customJWTAuthorizer(rName, discoveryURL, "audience-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, jwtPath.AtMapKey("allowed_audience"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("audience-2"),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRegistryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -270,4 +334,20 @@ resource "aws_bedrockagentcore_registry" "test" {
   auto_approval = %[2]t
 }
 `, rName, autoApproval)
+}
+
+func testAccRegistryConfig_customJWTAuthorizer(rName, discoveryURL, audience string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_registry" "test" {
+  name            = %[1]q
+  authorizer_type = "CUSTOM_JWT"
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q]
+    }
+  }
+}
+`, rName, discoveryURL, audience)
 }
