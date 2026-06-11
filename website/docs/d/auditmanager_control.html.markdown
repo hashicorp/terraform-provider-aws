@@ -56,12 +56,19 @@ resource "aws_auditmanager_framework" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the control.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `type` - (Required) Type of control. Valid values are `Custom` and `Standard`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
+* `action_plan_instructions` - Recommended actions to carry out if the control isn't fulfilled.
+* `action_plan_title` - Title of the action plan for remediating the control.
+* `arn` - ARN of the control.
+* `control_mapping_sources` - Data mapping sources for the control.
+* `description` - Description of the control.
+* `id` - Unique identifier for the control.
+* `tags` - Map of tags assigned to the control.
+* `testing_information` - Steps to follow to determine if the control is satisfied.

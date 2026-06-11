@@ -24,56 +24,58 @@ func dataSourceRouterConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouterConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"customer_router_config": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"router": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"platform": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"router_type_identifier": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"software": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vendor": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name_for_mac_sec": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"customer_router_config": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"router": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"platform": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"router_type_identifier": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"software": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"vendor": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name_for_mac_sec": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"router_type_identifier": {
-				Type: schema.TypeString,
-				// even though the API Reference shows this as optional, the API call will fail without this argument
-				Required: true,
-			},
-			"virtual_interface_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"virtual_interface_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"router_type_identifier": {
+					Type: schema.TypeString,
+					// even though the API Reference shows this as optional, the API call will fail without this argument
+					Required: true,
+				},
+				"virtual_interface_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"virtual_interface_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

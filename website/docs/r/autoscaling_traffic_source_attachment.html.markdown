@@ -48,6 +48,13 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Auto Scaling Traffic Source Attachments using `autoscaling_group_name`, `traffic_source_type`, and `traffic_source_identifier` separated by a comma (`,`). For example:

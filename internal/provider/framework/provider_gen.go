@@ -1025,6 +1025,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// interconnect
+
+				"interconnect": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// internetmonitor
 
 				"internetmonitor": schema.StringAttribute{

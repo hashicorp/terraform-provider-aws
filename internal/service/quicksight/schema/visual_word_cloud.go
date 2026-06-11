@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +52,7 @@ func wordCloudVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -71,21 +72,21 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringEnumSchema[awstypes.WordCloudCloudLayout](attrOptional),
-										"maximum_string_length": intBetweenSchema(attrOptional, 1, 100),
-										"word_casing":           stringEnumSchema[awstypes.WordCloudWordCasing](attrOptional),
-										"word_orientation":      stringEnumSchema[awstypes.WordCloudWordOrientation](attrOptional),
-										"word_padding":          stringEnumSchema[awstypes.WordCloudWordPadding](attrOptional),
-										"word_scaling":          stringEnumSchema[awstypes.WordCloudWordScaling](attrOptional),
+										"cloud_layout":          sdkschema.StringEnumSchema[awstypes.WordCloudCloudLayout](sdkschema.AttrOptional),
+										"maximum_string_length": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 100),
+										"word_casing":           sdkschema.StringEnumSchema[awstypes.WordCloudWordCasing](sdkschema.AttrOptional),
+										"word_orientation":      sdkschema.StringEnumSchema[awstypes.WordCloudWordOrientation](sdkschema.AttrOptional),
+										"word_padding":          sdkschema.StringEnumSchema[awstypes.WordCloudWordPadding](sdkschema.AttrOptional),
+										"word_scaling":          sdkschema.StringEnumSchema[awstypes.WordCloudWordScaling](sdkschema.AttrOptional),
 									},
 								},
 							},
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				attrSubtitle:         visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				attrTitle:            visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
@@ -97,7 +98,7 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
 					Type:     schema.TypeList,
@@ -123,7 +124,7 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
@@ -138,21 +139,21 @@ func wordCloudVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
+										"cloud_layout":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
 										"maximum_string_length": intComputedOnly(),
-										"word_casing":           stringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
-										"word_orientation":      stringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
-										"word_padding":          stringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
-										"word_scaling":          stringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
+										"word_casing":           sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
+										"word_orientation":      sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
+										"word_padding":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
+										"word_scaling":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
 									},
 								},
 							},
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesDataSourceSchema(),
-				attrSubtitle:         visualSubtitleLabelOptionsDataSourceSchema(),
-				"title":              visualTitleLabelOptionsDataSourceSchema(),
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -179,7 +180,7 @@ func expandWordCloudVisual(tfList []any) *awstypes.WordCloudVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandWordCloudChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
@@ -210,7 +211,7 @@ func expandWordCloudChartConfiguration(tfList []any) *awstypes.WordCloudChartCon
 	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandWordCloudFieldWells(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandWordCloudSortConfiguration(v)
 	}
 	if v, ok := tfMap["word_cloud_options"].([]any); ok && len(v) > 0 {
@@ -333,7 +334,7 @@ func flattenWordCloudVisual(apiObject *awstypes.WordCloudVisual) []any {
 		tfMap["chart_configuration"] = flattenWordCloudChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
@@ -359,7 +360,7 @@ func flattenWordCloudChartConfiguration(apiObject *awstypes.WordCloudChartConfig
 		tfMap["field_wells"] = flattenWordCloudFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.WordCloudOptions != nil {
 		tfMap["word_cloud_options"] = flattenWordCloudOptions(apiObject.WordCloudOptions)

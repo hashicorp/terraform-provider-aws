@@ -35,22 +35,24 @@ func ResourceContainerPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"container_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"container_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
+				names.AttrPolicy: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     verify.ValidIAMPolicyJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+			}
 		},
 		DeprecationMessage: "aws_media_store_container_policy is deprecated. Use S3, AWS MediaPackage, or other storage solution instead.",
 	}

@@ -43,52 +43,54 @@ func resourceStandardsControl() *schema.Resource {
 		UpdateWithoutTimeout: resourceStandardsControlPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"control_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control_status": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ControlStatus](),
-			},
-			"control_status_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disabled_reason": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"related_requirements": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"remediation_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"severity_rating": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"standards_control_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"title": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"control_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"control_status": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ControlStatus](),
+				},
+				"control_status_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disabled_reason": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"related_requirements": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"remediation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"severity_rating": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"standards_control_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"title": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

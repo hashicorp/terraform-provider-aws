@@ -348,6 +348,8 @@ service/inspector:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector_'
 service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
+service/interconnect:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_interconnect_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
 service/invoicing:

@@ -40,46 +40,48 @@ func resourceApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_config_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"auto_create": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cwe_monitor_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"grouping_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.GroupingType](),
-			},
-			"ops_center_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"ops_item_sns_topic_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"resource_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_config_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"auto_create": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cwe_monitor_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"grouping_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.GroupingType](),
+				},
+				"ops_center_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"ops_item_sns_topic_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"resource_group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

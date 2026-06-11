@@ -71,14 +71,6 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 * `synonyms` - (Optional) Additional values related to the slot type value. Each item must be less than or equal to 140 characters in length.
 * `value` - (Required) The value of the slot type. Must be less than or equal to 140 characters in length.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `1m`)
-* `update` - (Default `1m`)
-* `delete` - (Default `5m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -88,6 +80,14 @@ not included as an argument because the resource will add it automatically when 
 * `created_date` - The date when the slot type version was created.
 * `last_updated_date` - The date when the `$LATEST` version of this slot type was updated.
 * `version` - The version of the slot type.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

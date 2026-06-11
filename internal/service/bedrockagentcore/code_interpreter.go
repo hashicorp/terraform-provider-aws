@@ -196,6 +196,8 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
 
 	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("code_interpreter_id"), codeInterpreterID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}

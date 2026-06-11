@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,9 +100,9 @@ var legendOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"position":     stringEnumSchema[awstypes.LegendPosition](attrOptional),
+				"position":     sdkschema.StringEnumSchema[awstypes.LegendPosition](sdkschema.AttrOptional),
 				attrTitle:      labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 				"width": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -117,11 +118,11 @@ var legendOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"height":     stringComputedOnly(),
-				"position":   stringEnumDataSourceSchema[awstypes.LegendPosition](),
-				"title":      labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
-				"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-				"width":      stringComputedOnly(),
+				"height":       stringComputedOnly(),
+				"position":     sdkschema.StringEnumDataSourceSchema[awstypes.LegendPosition](),
+				attrTitle:      labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+				"width":        stringComputedOnly(),
 			},
 		},
 	}
@@ -142,7 +143,7 @@ var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"aggregation_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"aggregation_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 							"tooltip_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipItem.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -163,7 +164,7 @@ var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -174,24 +175,24 @@ var tooltipOptionsSchema = sync.OnceValue(func() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													"label": {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
 									},
 								},
 							},
-							"tooltip_title_type": stringEnumSchema[awstypes.TooltipTitleType](attrOptional),
+							"tooltip_title_type": sdkschema.StringEnumSchema[awstypes.TooltipTitleType](sdkschema.AttrOptional),
 						},
 					},
 				},
-				"selected_tooltip_type": stringEnumSchema[awstypes.SelectedTooltipType](attrOptional),
-				"tooltip_visibility":    stringEnumSchema[awstypes.Visibility](attrOptional),
+				"selected_tooltip_type": sdkschema.StringEnumSchema[awstypes.SelectedTooltipType](sdkschema.AttrOptional),
+				"tooltip_visibility":    sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -208,7 +209,7 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"aggregation_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+							"aggregation_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 							"tooltip_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipItem.html
 								Type:     schema.TypeList,
 								Computed: true,
@@ -219,10 +220,10 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrColumn:    columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-													"aggregation": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-													"label":       stringComputedOnly(),
-													"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrColumn:     columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													"aggregation":  aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+													"label":        stringComputedOnly(),
+													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -231,21 +232,21 @@ var tooltipOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID:  stringComputedOnly(),
-													"label":      stringComputedOnly(),
-													"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrFieldID:    stringComputedOnly(),
+													"label":        stringComputedOnly(),
+													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
 									},
 								},
 							},
-							"tooltip_title_type": stringEnumDataSourceSchema[awstypes.TooltipTitleType](),
+							"tooltip_title_type": sdkschema.StringEnumDataSourceSchema[awstypes.TooltipTitleType](),
 						},
 					},
 				},
-				"selected_tooltip_type": stringEnumDataSourceSchema[awstypes.SelectedTooltipType](),
-				"tooltip_visibility":    stringEnumDataSourceSchema[awstypes.Visibility](),
+				"selected_tooltip_type": sdkschema.StringEnumDataSourceSchema[awstypes.SelectedTooltipType](),
+				"tooltip_visibility":    sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -259,7 +260,7 @@ var visualPaletteSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"chart_color": hexColorSchema(attrOptional),
+				"chart_color": hexColorSchema(sdkschema.AttrOptional),
 				"color_map": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathColor.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -267,9 +268,9 @@ var visualPaletteSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            hexColorSchema(attrRequired),
+							attrColor:          hexColorSchema(sdkschema.AttrRequired),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
-							"time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrOptional),
+							"time_granularity": sdkschema.StringEnumSchema[awstypes.TimeGranularity](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -290,9 +291,9 @@ var visualPaletteDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            stringComputedOnly(),
+							attrColor:          stringComputedOnly(),
 							"element":          dataPathValueDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
-							"time_granularity": stringEnumDataSourceSchema[awstypes.TimeGranularity](),
+							"time_granularity": sdkschema.StringEnumDataSourceSchema[awstypes.TimeGranularity](),
 						},
 					},
 				},
@@ -309,8 +310,8 @@ func dataPathValueSchema(maxItems int) *schema.Schema {
 		MaxItems: maxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrFieldID:   stringLenBetweenSchema(attrRequired, 1, 512),
-				"field_value": stringLenBetweenSchema(attrRequired, 1, 2048),
+				attrFieldID:   sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+				"field_value": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 			},
 		},
 	}
@@ -344,7 +345,7 @@ var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"hierarchy_id":       stringLenBetweenSchema(attrRequired, 1, 512),
+							"hierarchy_id":       sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -363,12 +364,12 @@ var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-										"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+										"column_name":         sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 									},
 								},
 							},
-							"hierarchy_id":       stringLenBetweenSchema(attrRequired, 1, 512),
+							"hierarchy_id":       sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -387,12 +388,12 @@ var columnHierarchiesSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
-										"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+										"column_name":         sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 									},
 								},
 							},
-							"hierarchy_id":       stringLenBetweenSchema(attrRequired, 1, 512),
+							"hierarchy_id":       sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -473,7 +474,7 @@ var visualSubtitleLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text":  longFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptionalComputed),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptionalComputed),
 			},
 		},
 	}
@@ -485,8 +486,8 @@ var visualSubtitleLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.S
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"format_text": longFormatTextDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
-				"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
+				"format_text":  longFormatTextDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -500,8 +501,8 @@ func longFormatTextSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"plain_text": stringLenBetweenSchema(attrOptional, 1, 1024),
-				"rich_text":  stringLenBetweenSchema(attrOptional, 1, 2048),
+				"plain_text": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
+				"rich_text":  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 			},
 		},
 	}
@@ -528,8 +529,8 @@ func shortFormatTextSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"plain_text": stringLenBetweenSchema(attrOptional, 1, 512),
-				"rich_text":  stringLenBetweenSchema(attrOptional, 1, 1024),
+				"plain_text": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
+				"rich_text":  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 			},
 		},
 	}
@@ -558,7 +559,7 @@ var visualTitleLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text":  shortFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShortFormatText.html
-				attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptionalComputed),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptionalComputed),
 			},
 		},
 	}
@@ -570,8 +571,8 @@ var visualTitleLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sche
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"format_text": shortFormatTextDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShortFormatText.html
-				"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
+				"format_text":  shortFormatTextDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShortFormatText.html
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -597,7 +598,7 @@ var comparisonConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 						},
 					},
 				},
-				"comparison_method": stringEnumSchema[awstypes.ComparisonMethod](attrOptional),
+				"comparison_method": sdkschema.StringEnumSchema[awstypes.ComparisonMethod](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -619,7 +620,7 @@ var comparisonConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Sche
 						},
 					},
 				},
-				"comparison_method": stringEnumDataSourceSchema[awstypes.ComparisonMethod](),
+				"comparison_method": sdkschema.StringEnumDataSourceSchema[awstypes.ComparisonMethod](),
 			},
 		},
 	}
@@ -633,7 +634,7 @@ var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color_fill_type": stringEnumSchema[awstypes.ColorFillType](attrRequired),
+				"color_fill_type": sdkschema.StringEnumSchema[awstypes.ColorFillType](sdkschema.AttrRequired),
 				"colors": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColor.html
 					Type:     schema.TypeList,
 					Required: true,
@@ -641,7 +642,7 @@ var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(sdkschema.AttrOptional),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -656,7 +657,7 @@ var colorScaleSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": hexColorSchema(attrOptional),
+							attrColor: hexColorSchema(sdkschema.AttrOptional),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -675,13 +676,13 @@ var colorScaleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color_fill_type": stringEnumDataSourceSchema[awstypes.ColorFillType](),
+				"color_fill_type": sdkschema.StringEnumDataSourceSchema[awstypes.ColorFillType](),
 				"colors": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColor.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringComputedOnly(),
+							attrColor:    stringComputedOnly(),
 							"data_value": floatComputedOnly(),
 						},
 					},
@@ -691,7 +692,7 @@ var colorScaleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringComputedOnly(),
+							attrColor:    stringComputedOnly(),
 							"data_value": floatComputedOnly(),
 						},
 					},
@@ -709,7 +710,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"category_label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				"category_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 				"data_label_types": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelType.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -724,9 +725,9 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:    stringLenBetweenSchema(attrOptional, 1, 512),
-										"field_value":  stringLenBetweenSchema(attrOptional, 1, 2048),
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
+										"field_value":  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -737,8 +738,8 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:    stringLenBetweenSchema(attrOptional, 1, 512),
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -749,7 +750,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -760,7 +761,7 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -771,20 +772,20 @@ var dataLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+										attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
 						},
 					},
 				},
-				"label_color":              hexColorSchema(attrOptional),
-				"label_content":            stringEnumSchema[awstypes.DataLabelContent](attrOptional),
+				"label_color":              hexColorSchema(sdkschema.AttrOptional),
+				"label_content":            sdkschema.StringEnumSchema[awstypes.DataLabelContent](sdkschema.AttrOptional),
 				"label_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"measure_label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-				"overlap":                  stringEnumSchema[awstypes.DataLabelOverlap](attrOptional),
-				"position":                 stringEnumSchema[awstypes.DataLabelPosition](attrOptional),
-				attrVisibility:             stringEnumSchema[awstypes.Visibility](attrOptional),
+				"measure_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+				"overlap":                  sdkschema.StringEnumSchema[awstypes.DataLabelOverlap](sdkschema.AttrOptional),
+				"position":                 sdkschema.StringEnumSchema[awstypes.DataLabelPosition](sdkschema.AttrOptional),
+				attrVisibility:             sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -796,7 +797,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"category_label_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+				"category_label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 				"data_label_types": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelType.html
 					Type:     schema.TypeList,
 					Computed: true,
@@ -807,9 +808,9 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:   stringComputedOnly(),
-										"field_value": stringComputedOnly(),
-										"visibility":  stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrFieldID:    stringComputedOnly(),
+										"field_value":  stringComputedOnly(),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -818,8 +819,8 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										attrFieldID:  stringComputedOnly(),
-										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrFieldID:    stringComputedOnly(),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -828,7 +829,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -837,7 +838,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -846,7 +847,7 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -854,19 +855,19 @@ var dataLabelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 					},
 				},
 				"label_color":              stringComputedOnly(),
-				"label_content":            stringEnumDataSourceSchema[awstypes.DataLabelContent](),
+				"label_content":            sdkschema.StringEnumDataSourceSchema[awstypes.DataLabelContent](),
 				"label_font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"measure_label_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-				"overlap":                  stringEnumDataSourceSchema[awstypes.DataLabelOverlap](),
-				"position":                 stringEnumDataSourceSchema[awstypes.DataLabelPosition](),
-				"visibility":               stringEnumDataSourceSchema[awstypes.Visibility](),
+				"measure_label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+				"overlap":                  sdkschema.StringEnumDataSourceSchema[awstypes.DataLabelOverlap](),
+				"position":                 sdkschema.StringEnumDataSourceSchema[awstypes.DataLabelPosition](),
+				attrVisibility:             sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
 })
 
-func hexColorSchema(handling attrHandling) *schema.Schema {
-	return stringMatchSchema(handling, `^#[0-9A-F]{6}$`, "")
+func hexColorSchema(handling sdkschema.AttrHandling) *schema.Schema {
+	return sdkschema.StringMatchSchema(handling, `^#[0-9A-F]{6}$`, "")
 }
 
 func expandVisual(tfMap map[string]any) *awstypes.Visual {
@@ -1286,7 +1287,7 @@ func expandColumnTooltipItem(tfList []any) *awstypes.ColumnTooltipItem {
 	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumn].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["aggregation"].([]any); ok && len(v) > 0 {
@@ -1374,7 +1375,7 @@ func expandDataPathColor(tfMap map[string]any) *awstypes.DataPathColor {
 
 	apiObject := &awstypes.DataPathColor{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
@@ -1707,7 +1708,7 @@ func expandDataColor(tfList []any) *awstypes.DataColor {
 func expandDataColorInternal(tfMap map[string]any) *awstypes.DataColor {
 	apiObject := &awstypes.DataColor{}
 
-	if v, ok := tfMap["color"].(string); ok && v != "" {
+	if v, ok := tfMap[attrColor].(string); ok && v != "" {
 		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["data_value"].(float64); ok {
@@ -2039,7 +2040,7 @@ func flattenColumnTooltipItem(apiObject *awstypes.ColumnTooltipItem) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Aggregation != nil {
 		tfMap["aggregation"] = flattenAggregationFunction(apiObject.Aggregation)
@@ -2096,7 +2097,7 @@ func flattenDataPathColor(apiObjects []awstypes.DataPathColor) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
-			tfMap["color"] = aws.ToString(apiObject.Color)
+			tfMap[attrColor] = aws.ToString(apiObject.Color)
 		}
 		if apiObject.Element != nil {
 			tfMap["element"] = flattenDataPathValue(apiObject.Element)
@@ -2229,7 +2230,7 @@ func flattenCategoryDrillDownFilter(apiObject *awstypes.CategoryDrillDownFilter)
 		tfMap["category_values"] = apiObject.CategoryValues
 	}
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 
 	return []any{tfMap}
@@ -2243,7 +2244,7 @@ func flattenNumericEqualityDrillDownFilter(apiObject *awstypes.NumericEqualityDr
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	tfMap[names.AttrValue] = apiObject.Value
 
@@ -2258,7 +2259,7 @@ func flattenTimeRangeDrillDownFilter(apiObject *awstypes.TimeRangeDrillDownFilte
 	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
-		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+		tfMap[attrColumn] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.RangeMaximum != nil {
 		tfMap["range_maximum"] = aws.ToTime(apiObject.RangeMaximum).Format(time.RFC3339)
@@ -2401,7 +2402,7 @@ func flattenDataColor(apiObject *awstypes.DataColor) []any {
 	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap[attrColor] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.DataValue != nil {
 		tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
@@ -2421,7 +2422,7 @@ func flattenDataColors(apiObject []awstypes.DataColor) []any {
 		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
-			tfMap["color"] = aws.ToString(apiObject.Color)
+			tfMap[attrColor] = aws.ToString(apiObject.Color)
 		}
 		if apiObject.DataValue != nil {
 			tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
