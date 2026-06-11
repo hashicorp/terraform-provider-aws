@@ -116,7 +116,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, string(awstypes.CertificateAuthorityTypeRoot), true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.CertificateAuthorityTypeRoot)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -125,7 +125,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, string(awstypes.CertificateAuthorityTypeRoot), true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.CertificateAuthorityTypeRoot)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -133,7 +133,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, string(awstypes.CertificateAuthorityTypeRoot), false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
@@ -164,7 +164,7 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_usageMode(commonName, string(awstypes.CertificateAuthorityTypeRoot), "SHORT_LIVED_CERTIFICATE"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
@@ -199,7 +199,7 @@ func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, string(awstypes.CertificateAuthorityTypeRoot), "FIPS_140_2_LEVEL_2_OR_HIGHER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_2_OR_HIGHER"),
 				),
@@ -254,7 +254,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
@@ -307,7 +307,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			// Test creating revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -329,7 +329,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			// Test updating revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -342,7 +342,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			// Test removing custom cname on resource update
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -355,7 +355,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			// Test adding custom cname on resource update
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomCNAME(rName, commonName, customCName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -397,7 +397,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
 			// Test creating revocation configuration with custom_path on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomPath(rName, commonName, customPath1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -419,7 +419,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
 			// Test updating custom_path
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomPath(rName, commonName, customPath2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -432,7 +432,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
 			// Test removing custom_path on resource update
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -462,7 +462,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			// Test creating revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -484,7 +484,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			// Test disabling revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -494,7 +494,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			// Test enabling revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -534,7 +534,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 			// Test creating revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationExpirationInDays(rName, commonName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -557,7 +557,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 			// Test updating revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationExpirationInDays(rName, commonName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -596,7 +596,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 			// Test creating revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3ObjectACL(rName, commonName, "BUCKET_OWNER_FULL_CONTROL"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -618,7 +618,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 			// Test updating revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3ObjectACL(rName, commonName, "PUBLIC_READ"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -647,7 +647,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 			// Test creating OCSP revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -667,7 +667,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 			// Test disabling OCSP revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -677,7 +677,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 			// Test enabling OCSP revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -717,7 +717,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 			// Test creating revocation configuration on resource creation
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -737,7 +737,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 			// Test updating OCSP revocation configuration
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -748,7 +748,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 			// Test removing OCSP custom cname on resource update
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
@@ -759,7 +759,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 			// Test adding OCSP custom cname on resource update
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
