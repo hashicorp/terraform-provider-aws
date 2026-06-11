@@ -5,9 +5,10 @@ package detective
 
 // Exports for use in tests only.
 var (
-	ResourceGraph              = resourceGraph
-	ResourceInvitationAccepter = resourceInvitationAccepter
-	ResourceMember             = resourceMember
+	ResourceGraph                    = resourceGraph
+	ResourceInvitationAccepter       = resourceInvitationAccepter
+	ResourceMember                   = resourceMember
+	ResourceOrganizationAdminAccount = resourceOrganizationAdminAccount
 
 	FindGraphByARN                          = findGraphByARN
 	FindInvitationByGraphARN                = findInvitationByGraphARN
