@@ -169,9 +169,10 @@ func TestAccACMCertificate_AmazonIssued_root(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
@@ -1150,9 +1151,10 @@ func TestAccACMCertificate_AmazonIssued_rootAndWildcardSan(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
@@ -1457,9 +1459,10 @@ func TestAccACMCertificate_AmazonIssued_wildcard(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
@@ -1505,9 +1508,10 @@ func TestAccACMCertificate_AmazonIssued_wildcardAndRootSan(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
@@ -1548,9 +1552,10 @@ func TestAccACMCertificate_AmazonIssued_keyAlgorithm(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
@@ -1592,9 +1597,10 @@ func TestAccACMCertificate_AmazonIssued_disableCTLogging(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"not_after", "not_before", names.AttrStatus},
 			},
 		},
 	})
