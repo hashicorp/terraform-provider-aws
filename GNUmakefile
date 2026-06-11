@@ -138,9 +138,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -433,7 +433,7 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 		$(TEST)
 
 help: ## Display this help
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
 
 import-lint: ## [CI] Provider Checks / import-lint
 	@echo "make: Provider Checks / import-lint..."
@@ -444,6 +444,10 @@ install: build ## build
 lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
+
+makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
+	@echo "make: Makefile Linting / alignment check..."
+	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
@@ -508,13 +512,13 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
-quick-fix-core-heading: ## Just a heading for quick-fix-core
+quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
 quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
-quick-fix-heading: ## Just a heading for quick-fix
+quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
@@ -856,7 +860,7 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 		$(MAKE) test-full; \
 	fi
 
-test-single-service: ## Internal: test single service
+test-single-service: ## [internal] test single service
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
@@ -877,7 +881,7 @@ test-single-service: ## Internal: test single service
 		-count=1; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
-test-full: ## Internal: test full codebase
+test-full: ## [internal] test full codebase
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-aws-build-$$$$"; \
@@ -932,7 +936,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-test-naming: ## Check test naming conventions
+test-naming: ## [CI] Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
 testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
@@ -968,7 +972,7 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
 
-terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+terraform-fmt: ## [CI] Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
 	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
 	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
 	@terraform fmt -recursive .
@@ -1046,6 +1050,7 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./tools/makelign && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1130,7 +1135,7 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
-website-terrafmt-fix: ## [CI] Fix Website / terrafmt
+website-terrafmt-fix: ## Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
 	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
@@ -1203,6 +1208,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-make-tests \
 	clean-tidy \
 	copyright \
+	copyright-fix \
 	default \
 	deps-check \
 	docs \
@@ -1224,7 +1230,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	gen-check \
 	gen-raw \
 	generate-changelog \
-	gh-workflows-lint \
+	gh-workflow-lint \
 	go-build \
 	go-misspell \
 	golangci-lint \
@@ -1238,6 +1244,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	install \
 	lint \
 	lint-fix \
+	makefile-lint \
 	misspell \
 	modern-check \
 	modern-fix \
@@ -1252,6 +1259,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-heading \
 	sane \
 	sanity \
+	schema-validate \
 	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
@@ -1262,6 +1270,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming \
 	semgrep-naming-cae \
 	semgrep-service-naming \
+	semgrep-test \
 	semgrep-validate \
 	skaff \
 	skaff-check-compile \
@@ -1275,9 +1284,11 @@ yamllint: ## [CI] YAML Linting / yamllint
 	swissshepherd-count \
 	swissshepherd-refresh \
 	t \
+	terraform-fmt \
 	test \
 	test-compile \
 	test-full \
+	test-naming \
 	test-shard \
 	test-single-service \
 	testacc \
@@ -1287,8 +1298,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
+	testacc-tflint-dir-fix \
 	testacc-tflint-embedded \
-	terraform-fmt \
 	tflint-init \
 	tfproviderdocs \
 	tools \
