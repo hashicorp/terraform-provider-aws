@@ -167,17 +167,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_msk_replicator.example
-  id = "arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+  identity = {
+    arn = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+  }
+}
+
+resource "aws_msk_replicator" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import MSK replicators using the replicator ARN. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the MSK replicator.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using `arn`. For example:
+
+```terraform
+import {
+  to = aws_msk_replicator.example
+  id = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+}
+```
+
+Using `terraform import`, import MSK replicators using `arn`. For example:
 
 ```console
-% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b
 ```
