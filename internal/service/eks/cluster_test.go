@@ -1381,7 +1381,8 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType, etcdInstanceType := "r7izde.4xlarge", "r7izde.4xlarge"
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -1413,8 +1414,8 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType, etcdInstanceType := "r7izde.4xlarge", "r7izde.4xlarge"
-
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -2561,7 +2562,7 @@ data "aws_iam_role" "test" {
 }
 
 data "aws_outposts_outpost" "test" {
-  id = "op-081f5c708b9fd009d"
+  id = "op-XXXXXXXX"
 }
 
 resource "aws_eks_cluster" "test" {
@@ -2588,7 +2589,7 @@ resource "aws_eks_cluster" "test" {
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = ["subnet-064e055b1fd305a0d"]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))
@@ -2601,7 +2602,7 @@ data "aws_iam_role" "test" {
 }
 
 data "aws_outposts_outpost" "test" {
-  id = "op-081f5c708b9fd009d"
+  id = "op-XXXXXXXX"
 }
 
 resource "aws_placement_group" "test" {
@@ -2634,7 +2635,7 @@ resource "aws_eks_cluster" "test" {
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = ["subnet-064e055b1fd305a0d"]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))

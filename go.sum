@@ -231,8 +231,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0 h1:LQKIHuVHqdbU9LUt5c2G9f+CcQAz
 github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0/go.mod h1:0vahPCh3slyORHbSuAP8YDyJKLEUQAMX7+bzYGxEnVI=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1 h1:Ii4N3TQ2wa18cOlFR2Kxcji4wVsaySku+ygiBeKGqTU=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1/go.mod h1:AMhRvE41tgqPUU9hqtyCw8ektaKSnKbm10kyX9xL+FQ=
-github.com/aws/aws-sdk-go-v2/service/eks v1.84.6 h1:RSCziGPe92ZoBreWKOJsLhK45Nx7+2b2y8hNbOUvHLQ=
-github.com/aws/aws-sdk-go-v2/service/eks v1.84.6/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
+github.com/aws/aws-sdk-go-v2/service/eks v1.85.0 h1:PX1X82jI4OEpsB7zrEuU0/V0Tq0+ylEJEu/CjhorV1c=
+github.com/aws/aws-sdk-go-v2/service/eks v1.85.0/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3 h1:KZDlMf8V5riU8xBCMJLWhfa+RP/MIagz2qJFwRg/b1g=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3/go.mod h1:nsMdHtF/ned4F5GCAfoerJaa/Q6cx+G+WYNsb/TFN7Q=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4 h1:hS5ilJrr1xgHvrw0pwb+xKwZDx0KA1LULHbN+OzwBDM=
@@ -587,6 +587,8 @@ github.com/aws/aws-sdk-go-v2/service/xray v1.37.3 h1:ozG9CuAEB1zS7hBI7BYWYvr798L
 github.com/aws/aws-sdk-go-v2/service/xray v1.37.3/go.mod h1:8bpZogGTIFDJBAXh9Le/rVo6rCcxOMMtZh8fG8lR6Po=
 github.com/aws/smithy-go v1.27.1 h1:4T340VFndXtADGF52gYa1POyL7s9E4Z1OeZ1hCscIw8=
 github.com/aws/smithy-go v1.27.1/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+github.com/aws/smithy-go v1.27.2 h1:y9NPmSE6am6LjEFPfqHqG/jJk7AauQvhCJONKh7kpzk=
+github.com/aws/smithy-go v1.27.2/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/beevik/etree v1.6.0 h1:u8Kwy8pp9D9XeITj2Z0XtA5qqZEmtJtuXZRQi+j03eE=
 github.com/beevik/etree v1.6.0/go.mod h1:bh4zJxiIr62SOf9pRzN7UUYaEDa9HEKafK25+sLc0Gc=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=

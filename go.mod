@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.84.6
+	github.com/aws/aws-sdk-go-v2/service/eks v1.85.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.34.6
@@ -281,7 +281,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.69.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/xray v1.37.3
-	github.com/aws/smithy-go v1.27.1
+	github.com/aws/smithy-go v1.27.2
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.8.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -397,5 +397,3 @@ require (
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
-
-replace github.com/aws/aws-sdk-go-v2/service/eks v1.84.0 => /home/ANT.AMAZON.COM/kvetsins/pre-release-sdk/service/eks
