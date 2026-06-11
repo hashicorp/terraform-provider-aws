@@ -782,7 +782,7 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	// Step 1: Wait for managed certificate to be issued.
-	mcOutput, err := waitForManagedCertificateIssued(ctx, conn, id, timeout)
+	mcOutput, err := waitForManagedCertificateIssued(ctx, conn, id)
 	if err != nil {
 		return fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate issuance failed: %w", id, err)
 	}
@@ -791,7 +791,8 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput, timeout)
 }
 
-func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
+func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
+	timeout := 3 * time.Hour
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {
@@ -815,9 +816,7 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 
 		case awstypes.ManagedCertificateStatusPendingValidation:
 			// Certificate still being validated, continue waiting
-			if err := sleepWithContext(ctx, 1*time.Minute); err != nil {
-				return nil, err
-			}
+			time.Sleep(1 * time.Minute) // Longer sleep for certificate issuance
 			continue
 
 		default:
@@ -825,7 +824,7 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 		}
 	}
 
-	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after %s waiting for managed certificate to be issued", id, timeout)
+	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 3 hours waiting for managed certificate to be issued", id)
 }
 
 func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput, timeout time.Duration) error {
@@ -875,18 +874,6 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	return nil
-}
-
-func sleepWithContext(ctx context.Context, duration time.Duration) error {
-	timer := time.NewTimer(duration)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
 }
 
 func needToUpdateCertificateARN(dt *awstypes.DistributionTenant, certArn string) bool {
