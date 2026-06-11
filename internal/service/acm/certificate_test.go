@@ -234,6 +234,9 @@ func TestAccACMCertificate_Private_renewable(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			// Step 1: Create potentially renewable certificate
+			// Ineligible for renewal because it has not been exported
+			// See https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html for details on certificate renewal
 			{
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -263,12 +266,15 @@ func TestAccACMCertificate_Private_renewable(t *testing.T) {
 					},
 				},
 			},
+			// Step 2: Import
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
 			},
-			// Export to make certificate eligible for renewal
+			// Step 3: Export to make certificate eligible for renewal
+			// Because the early renewal date is unset, the certificate is not pending renewal.
 			{
 				PreConfig: func() {
 					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
@@ -286,6 +292,7 @@ func TestAccACMCertificate_Private_renewable(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
@@ -299,11 +306,8 @@ func TestAccACMCertificate_Private_renewable(t *testing.T) {
 					},
 				},
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			// Step 4: Renew the certificate out-of-band
+			// This will reset the renewal eligiblity and pending renewal status
 			{
 				PreConfig: func() {
 					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
@@ -335,15 +339,10 @@ func TestAccACMCertificate_Private_renewable(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectEmptyPlan(),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
 					},
 				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -888,7 +887,7 @@ func TestAccACMCertificate_Private_addEarlyRenewalFuture(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
 			},
 			// Step 3: Export to make certificate eligible for renewal
-			// Plan is non-empty to trigger Update on subsequent apply
+			// Because the early renewal date is unset, the certificate is not pending renewal.
 			{
 				PreConfig: func() {
 					conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
@@ -915,8 +914,8 @@ func TestAccACMCertificate_Private_addEarlyRenewalFuture(t *testing.T) {
 				),
 				RefreshPlanChecks: resource.RefreshPlanChecks{
 					PostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("pending_renewal")),
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
 					},
 				},
 				ExpectNonEmptyPlan: true,
@@ -937,7 +936,7 @@ func TestAccACMCertificate_Private_addEarlyRenewalFuture(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("pending_renewal")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("pending_renewal"), knownvalue.Bool(false)),
 					},
 				},
 			},
