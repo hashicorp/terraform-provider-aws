@@ -781,7 +781,7 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
 	}
 
-	// Step 1: Wait for managed certificate to be issued.
+	// Step 1: Wait for managed certificate to be issued (3 hours max)
 	mcOutput, err := waitForManagedCertificateIssued(ctx, conn, id)
 	if err != nil {
 		return fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate issuance failed: %w", id, err)
