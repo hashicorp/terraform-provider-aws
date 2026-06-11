@@ -12,15 +12,15 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.42.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.24
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.23
+	github.com/aws/aws-sdk-go-v2/config v1.32.25
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.26
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.27
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.49.5
 	github.com/aws/aws-sdk-go-v2/service/account v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.47.6
-	github.com/aws/aws-sdk-go-v2/service/amp v1.43.5
+	github.com/aws/aws-sdk-go-v2/service/amp v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.35.6
@@ -106,10 +106,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.306.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.82.4
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.84.6
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
@@ -164,13 +164,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.62.4
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.55.4
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.93.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.98.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.40.1
@@ -234,7 +234,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.6
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.253.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.254.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.35.6
@@ -323,7 +323,7 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.69.0
 	go.opentelemetry.io/otel v1.44.0
-	golang.org/x/crypto v0.52.0
+	golang.org/x/crypto v0.53.0
 	golang.org/x/text v0.38.0
 	golang.org/x/tools v0.45.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
@@ -345,7 +345,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.1.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.6 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
@@ -391,7 +391,7 @@ require (
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/grpc v1.79.3 // indirect

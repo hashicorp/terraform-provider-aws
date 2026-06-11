@@ -1,5 +1,11 @@
 ## 6.51.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_cloudfront_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
+* resource/aws_cloudfront_multitenant_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
+* resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
+
 ## 6.50.0 (June 10, 2026)
 
 NOTES:
