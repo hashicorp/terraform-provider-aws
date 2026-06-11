@@ -38,9 +38,9 @@ import (
 func newDistributionTenantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &distributionTenantResource{}
 
-	r.SetDefaultCreateTimeout(15 * time.Minute)
-	r.SetDefaultUpdateTimeout(15 * time.Minute)
-	r.SetDefaultDeleteTimeout(15 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
