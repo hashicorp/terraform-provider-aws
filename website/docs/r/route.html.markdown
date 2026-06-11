@@ -26,7 +26,7 @@ resource "aws_route" "r" {
 }
 ```
 
-## Example IPv6 Usage
+### Example IPv6 Usage
 
 ```terraform
 resource "aws_vpc" "vpc" {

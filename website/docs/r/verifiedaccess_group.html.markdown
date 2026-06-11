@@ -62,11 +62,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner` - AWS account number owning this resource.
 * `verifiedaccess_group_arn` - ARN of this verified acess group.
 * `verifiedaccess_group_id` - ID of this verified access group.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
