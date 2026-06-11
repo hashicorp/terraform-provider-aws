@@ -8,7 +8,7 @@ self-hosted-runner:
 paths:
   .github/workflows/agentics-maintenance.yml:
     ignore:
-      - 'string should not be empty \[syntax-check\]'
+      - 'string should not be empty'
   .github/workflows/*.lock.yml:
     ignore:
       - 'unexpected key "queue" for "concurrency" section'
