@@ -810,15 +810,15 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 swissshepherd: ## [CI] Run Swiss Shepherd checks
-	@echo "make: Running Swiss Shepherd checks..."
+	@echo "make: Running Swiss Shepherd checks (config: .ci/swissshepherd-weak.hcl)..."
 	@swissshepherd --config .ci/swissshepherd-weak.hcl
 
 swissshepherd-count: ## [CI] Run Swiss Shepherd checks
-	@echo "make: Count of all Swiss Shepherd checks..."
+	@echo "make: Counting all Swiss Shepherd findings (config: .ci/swissshepherd-full.hcl)..."
 	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
 
 swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
-	@echo "make: Refreshing Swiss Shepherd schemas..."
+	@echo "make: Refreshing Swiss Shepherd schemas (config: .ci/swissshepherd-weak.hcl)..."
 	@echo "make: This will take a while..."
 	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
 

@@ -404,6 +404,11 @@ make go-misspell
 
 Swiss Shepherd checks provider documentation for quality and consistency against the provider's schema.
 
+The provider keeps two Swiss Shepherd configurations side by side under `.ci/`:
+
+- `.ci/swissshepherd-weak.hcl` is the working configuration. It carries the AWS-specific type definitions and bylines plus per-resource exceptions (`ignore_*` lists) so a run against today's documentation is clean. The `swissshepherd` and `swissshepherd-refresh` targets, and CI, all use this file. New work should not grow these exception lists; fixing the underlying documentation is the goal.
+- `.ci/swissshepherd-full.hcl` carries the same type definitions but omits the per-resource exceptions, so a run reports every finding the linter can produce. The `swissshepherd-count` target uses this file. The resulting count gives a sense of how much documentation work remains before every rule can run unconditionally.
+
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
 Use the `swissshepherd` target to run the standard checks:
