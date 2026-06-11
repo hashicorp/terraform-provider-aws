@@ -2,7 +2,9 @@
 extends: default
 
 ignore: |
-  vendor/
+  # Managed by "gh aw compile".
+  - ".github/workflows/agentics-maintenance.yml"
+  - ".github/workflows/*.lock.yml"
 
 rules:
   comments:
