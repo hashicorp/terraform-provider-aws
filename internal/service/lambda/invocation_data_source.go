@@ -36,6 +36,12 @@ func dataSourceInvocation() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringIsJSON,
 				},
+				"maximum_retry_attempts": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 20),
+				},
 				"qualifier": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -73,7 +79,8 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.TenantId = aws.String(v.(string))
 	}
 
-	output, err := conn.Invoke(ctx, input)
+	retryCount := d.Get("maximum_retry_attempts").(int)
+	output, err := invokeWithRetry(ctx, conn, input, retryCount)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
