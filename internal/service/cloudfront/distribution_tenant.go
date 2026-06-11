@@ -273,6 +273,12 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// When managed_certificate_request is used without an explicit
+	// customizations block, the API auto-populates customizations.certificate.
+	// Preserve the planned (null) value so the post-apply consistency check passes.
+	plannedCustomizations := data.Customizations
+	managedCertRequested := !data.ManagedCertificateRequest.IsNull() && !data.ManagedCertificateRequest.IsUnknown()
+
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
@@ -354,6 +360,14 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
+	// Restore planned customizations to maintain plan/state consistency.
+	// The API auto-populates customizations.certificate when managed_certificate_request
+	// is used. Restore the planned value whether customizations was entirely null or
+	// present but without a certificate sub-block.
+	if managedCertRequested {
+		data.Customizations = suppressManagedCertificateCustomizations(ctx, plannedCustomizations, data.Customizations)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -363,6 +377,10 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Preserve prior customizations state before flatten overwrites it.
+	priorCustomizations := data.Customizations
+	managedCertRequested := !data.ManagedCertificateRequest.IsNull() && !data.ManagedCertificateRequest.IsUnknown()
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
@@ -394,6 +412,11 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
+	// Restore prior customizations to prevent drift when managed cert is active.
+	if managedCertRequested {
+		data.Customizations = suppressManagedCertificateCustomizations(ctx, priorCustomizations, data.Customizations)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -404,6 +427,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Preserve planned customizations for managed cert consistency.
+	plannedCustomizations := new.Customizations
+	managedCertRequested := !new.ManagedCertificateRequest.IsNull() && !new.ManagedCertificateRequest.IsUnknown()
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
@@ -528,6 +555,11 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
+	}
+
+	// Restore planned customizations to maintain plan/state consistency.
+	if managedCertRequested {
+		new.Customizations = suppressManagedCertificateCustomizations(ctx, plannedCustomizations, new.Customizations)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
@@ -905,4 +937,32 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 	}
 
 	return domainItems
+}
+
+// suppressManagedCertificateCustomizations returns the planned/prior customizations
+// value when the API would have injected a certificate sub-block that wasn't in config.
+// This handles two cases:
+//   - customizations entirely null (no block in HCL) → return planned (null)
+//   - customizations non-null but certificate sub-block null (e.g. only web_acl set) → return planned
+// If the user explicitly configured a certificate sub-block, the flattened value is returned unchanged.
+func suppressManagedCertificateCustomizations(ctx context.Context, planned, flattened fwtypes.ListNestedObjectValueOf[customizationsModel]) fwtypes.ListNestedObjectValueOf[customizationsModel] {
+	// Case 1: No customizations block in config at all.
+	if planned.IsNull() {
+		return planned
+	}
+
+	// Case 2: Customizations block present — check if certificate sub-block was configured.
+	plannedElems, diags := planned.ToSlice(ctx)
+	if diags.HasError() || len(plannedElems) == 0 {
+		return planned
+	}
+
+	// If the user configured a certificate sub-block, don't suppress — let the flattened value through.
+	if !plannedElems[0].Certificate.IsNull() {
+		return flattened
+	}
+
+	// User didn't configure certificate; return planned which preserves their other sub-blocks
+	// (geo_restriction, web_acl) without the API-injected certificate.
+	return planned
 }
