@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.TestGridProject")
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,
@@ -41,48 +39,50 @@ func resourceTestGridProject() *schema.Resource {
 		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
 		DeleteWithoutTimeout: resourceTestGridProjectDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Required: true,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Required: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -201,9 +201,8 @@ func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	output, err := conn.GetTestGridProject(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

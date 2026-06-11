@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,7 +38,6 @@ const (
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
@@ -53,278 +51,280 @@ func resourceGraphQLAPI() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"additional_authentication_provider": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
-						},
-						"lambda_authorizer_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorizer_result_ttl_in_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      defaultAuthorizerResultTTLInSeconds,
-										ValidateFunc: validateAuthorizerResultTTLInSeconds,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_authentication_provider": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+							},
+							"lambda_authorizer_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authorizer_result_ttl_in_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      defaultAuthorizerResultTTLInSeconds,
+											ValidateFunc: validateAuthorizerResultTTLInSeconds,
+										},
+										"authorizer_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"identity_validation_expression": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
-									"authorizer_uri": {
-										Type:     schema.TypeString,
-										Required: true,
+								},
+							},
+							"openid_connect_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"auth_ttl": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										names.AttrClientID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"iat_ttl": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
-									"identity_validation_expression": {
-										Type:     schema.TypeString,
-										Optional: true,
+								},
+							},
+							"user_pool_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"app_id_client_regex": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"aws_region": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrUserPoolID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
-						"openid_connect_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"auth_ttl": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									names.AttrClientID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"iat_ttl": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+					},
+				},
+				"api_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiType](),
+					ForceNew:         true,
+					Default:          awstypes.GraphQLApiTypeGraphql,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+				},
+				"enhanced_metrics_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_source_level_metrics_behavior": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DataSourceLevelMetricsBehavior](),
 							},
-						},
-						"user_pool_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"app_id_client_regex": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"aws_region": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrUserPoolID: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"operation_level_metrics_config": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OperationLevelMetricsConfig](),
+							},
+							"resolver_level_metrics_behavior": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResolverLevelMetricsBehavior](),
 							},
 						},
 					},
 				},
-			},
-			"api_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiType](),
-				ForceNew:         true,
-				Default:          awstypes.GraphQLApiTypeGraphql,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
-			},
-			"enhanced_metrics_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_source_level_metrics_behavior": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DataSourceLevelMetricsBehavior](),
-						},
-						"operation_level_metrics_config": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OperationLevelMetricsConfig](),
-						},
-						"resolver_level_metrics_behavior": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResolverLevelMetricsBehavior](),
+				"introspection_config": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.GraphQLApiIntrospectionConfigEnabled,
+					ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiIntrospectionConfig](),
+				},
+				"lambda_authorizer_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorizer_result_ttl_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      defaultAuthorizerResultTTLInSeconds,
+								ValidateFunc: validateAuthorizerResultTTLInSeconds,
+							},
+							"authorizer_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"identity_validation_expression": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"introspection_config": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.GraphQLApiIntrospectionConfigEnabled,
-				ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiIntrospectionConfig](),
-			},
-			"lambda_authorizer_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorizer_result_ttl_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      defaultAuthorizerResultTTLInSeconds,
-							ValidateFunc: validateAuthorizerResultTTLInSeconds,
-						},
-						"authorizer_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"identity_validation_expression": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"log_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_logs_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"exclude_verbose_content": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"field_log_level": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FieldLogLevel](),
+							},
 						},
 					},
 				},
-			},
-			"log_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"exclude_verbose_content": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"field_log_level": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FieldLogLevel](),
+				"merged_api_execution_role_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), ""),
+				},
+				"openid_connect_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_ttl": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"iat_ttl": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrIssuer: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"merged_api_execution_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), ""),
-			},
-			"openid_connect_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"iat_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrIssuer: {
-							Type:     schema.TypeString,
-							Required: true,
+				"query_depth_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 75),
+				},
+				"resolver_count_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 10000),
+				},
+				names.AttrSchema: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"uris": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"user_pool_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"app_id_client_regex": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"aws_region": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrDefaultAction: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DefaultAction](),
+							},
+							names.AttrUserPoolID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"query_depth_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 75),
-			},
-			"resolver_count_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 10000),
-			},
-			names.AttrSchema: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uris": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"user_pool_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"app_id_client_regex": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"aws_region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrDefaultAction: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DefaultAction](),
-						},
-						names.AttrUserPoolID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+				"visibility": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.GraphQLApiVisibilityGlobal,
+					ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiVisibility](),
 				},
-			},
-			"visibility": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.GraphQLApiVisibilityGlobal,
-				ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiVisibility](),
-			},
-			"xray_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+				"xray_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -581,7 +581,9 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetGraphqlApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -603,7 +605,9 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	output, err := conn.GetSchemaCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -617,8 +621,8 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	return output, nil
 }
 
-func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSchemaCreation(conn *appsync.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -634,10 +638,10 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 }
 
 func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*appsync.GetSchemaCreationStatusOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusProcessing),
 		Target:  enum.Slice(awstypes.SchemaStatusActive, awstypes.SchemaStatusSuccess),
-		Refresh: statusSchemaCreation(ctx, conn, id),
+		Refresh: statusSchemaCreation(conn, id),
 		Timeout: timeout,
 	}
 

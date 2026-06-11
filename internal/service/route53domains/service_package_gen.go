@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDelegationSignerRecordResource,
 			TypeName: "aws_route53domains_delegation_signer_record",
 			Name:     "Delegation Signer Record",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newDomainResource,
@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrDomainName,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -58,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

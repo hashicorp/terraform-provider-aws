@@ -201,7 +201,7 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 			create.WithConfiguredName(data.Name.ValueString()),
 			create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
 			create.WithDefaultPrefix("tf-"),
-		).Generate(),
+		).Generate(ctx),
 	)
 	input.Tags = getTagsIn(ctx)
 

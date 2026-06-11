@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,88 +39,90 @@ func resourceThingGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCreationDate: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"parent_group_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"root_to_parent_groups": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"group_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrGroupName: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCreationDate: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"parent_group_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"root_to_parent_groups": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"group_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrGroupName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"parent_group_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_payload": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAttributes: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"parent_group_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_payload": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAttributes: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -267,9 +268,8 @@ func findThingGroupByName(ctx context.Context, conn *iot.Client, name string) (*
 	output, err := conn.DescribeThingGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

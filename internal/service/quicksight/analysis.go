@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Analysis")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalysisCreate,
@@ -354,9 +352,8 @@ func findAnalysisByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsA
 	}
 
 	if status := output.Status; status == awstypes.ResourceStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -367,9 +364,8 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	output, err := conn.DescribeAnalysis(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -397,9 +393,8 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeAnalysisDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -427,9 +422,8 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	output, err := conn.DescribeAnalysisPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -444,8 +438,8 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	return output.Permissions, nil
 }
 
-func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAnalysis(conn *quicksight.Client, awsAccountID, analysisID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAnalysisByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
 		if retry.NotFound(err) {
@@ -461,10 +455,10 @@ func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, 
 }
 
 func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
+		Refresh: statusAnalysis(conn, awsAccountID, analysisID),
 		Timeout: timeout,
 	}
 
@@ -482,10 +476,10 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 }
 
 func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
+		Refresh: statusAnalysis(conn, awsAccountID, analysisID),
 		Timeout: timeout,
 	}
 

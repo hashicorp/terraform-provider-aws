@@ -25,25 +25,25 @@ func testAccMediaPackageV2ChannelGroup_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccMediaPackageV2ChannelGroup_tags,
-		"null":                                      testAccMediaPackageV2ChannelGroup_tags_null,
-		"EmptyMap":                                  testAccMediaPackageV2ChannelGroup_tags_EmptyMap,
-		"AddOnUpdate":                               testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccMediaPackageV2ChannelGroup_Tags_null,
+		"EmptyMap":                                  testAccMediaPackageV2ChannelGroup_Tags_emptyMap,
+		"AddOnUpdate":                               testAccMediaPackageV2ChannelGroup_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccMediaPackageV2ChannelGroup_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccMediaPackageV2ChannelGroup_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -243,7 +243,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -311,7 +311,7 @@ func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -367,7 +367,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -453,7 +453,7 @@ func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -551,7 +551,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -698,7 +698,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -794,7 +794,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -987,7 +987,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1157,7 +1157,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1343,7 +1343,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1439,7 +1439,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1534,7 +1534,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1606,7 +1606,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *test
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1670,7 +1670,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1745,7 +1745,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceT
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1822,7 +1822,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResour
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1883,7 +1883,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -1986,7 +1986,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -2079,7 +2079,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *test
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput
@@ -2245,7 +2245,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	})
 }
 
-func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccMediaPackageV2ChannelGroup_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v mediapackagev2.GetChannelGroupOutput

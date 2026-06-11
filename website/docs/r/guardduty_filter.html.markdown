@@ -64,10 +64,10 @@ The `criterion` block supports the following:
 * `field` - (Required) The name of the field to be evaluated. The full list of field names can be found in [AWS documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_filter-findings.html#filter_criteria).
 * `equals` - (Optional) List of string values to be evaluated.
 * `not_equals` - (Optional) List of string values to be evaluated.
-* `greater_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `greater_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `less_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `less_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `greater_than` - (Optional) A value to be evaluated. Accepts either an integer given as a string (i.e., enclosed in quotations) or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `greater_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer given as a string (i.e., enclosed in quotations) or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `less_than` - (Optional) A value to be evaluated. Accepts either an integer given as a string (i.e., enclosed in quotations) or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `less_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer given as a string (i.e., enclosed in quotations) or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `matches` - (Optional) List of string values to be evaluated as matching conditions.
 * `not_matches` - (Optional) List of string values to be evaluated as non-matching conditions.
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -50,179 +49,181 @@ func resourceInstanceFleet() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"instance_type_configs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bid_price": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"bid_price_as_percentage_of_on_demand_price": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							ForceNew: true,
-							Default:  100,
-						},
-						"configurations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"classification": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-									names.AttrProperties: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"ebs_config": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrIOPS: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									names.AttrSize: {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrType: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validEBSVolumeType(),
-									},
-									"volumes_per_instance": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
-							},
-							Set: resourceClusterEBSHashConfig,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"weighted_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  1,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-				Set: resourceInstanceTypeHashConfig,
-			},
-			"launch_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_demand_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allocation_strategy": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+				"instance_type_configs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bid_price": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"bid_price_as_percentage_of_on_demand_price": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								ForceNew: true,
+								Default:  100,
+							},
+							"configurations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"classification": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										names.AttrProperties: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"spot_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allocation_strategy": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
-									},
-									"block_duration_minutes": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  0,
-									},
-									"timeout_action": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
-									},
-									"timeout_duration_minutes": {
-										Type:     schema.TypeInt,
-										ForceNew: true,
-										Required: true,
+							"ebs_config": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIOPS: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										names.AttrSize: {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrType: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validEBSVolumeType(),
+										},
+										"volumes_per_instance": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
+										},
 									},
 								},
+								Set: resourceClusterEBSHashConfig,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"weighted_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  1,
 							},
 						},
 					},
+					Set: resourceInstanceTypeHashConfig,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"provisioned_on_demand_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"provisioned_spot_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"target_on_demand_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-			"target_spot_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
+				"launch_specifications": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_demand_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allocation_strategy": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+										},
+									},
+								},
+							},
+							"spot_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allocation_strategy": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
+										},
+										"block_duration_minutes": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  0,
+										},
+										"timeout_action": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
+										},
+										"timeout_duration_minutes": {
+											Type:     schema.TypeInt,
+											ForceNew: true,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"provisioned_on_demand_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"provisioned_spot_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"target_on_demand_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+				},
+				"target_spot_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+				},
+			}
 		},
 	}
 }
@@ -373,9 +374,8 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -393,8 +393,8 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceFleet(conn *emr.Client, clusterID, fleetID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 
 		if retry.NotFound(err) {
@@ -410,10 +410,10 @@ func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleet
 }
 
 func waitInstanceFleetRunning(ctx context.Context, conn *emr.Client, clusterID, fleetID string, timeout time.Duration) (*awstypes.InstanceFleet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceFleetStateProvisioning, awstypes.InstanceFleetStateBootstrapping, awstypes.InstanceFleetStateResizing),
 		Target:     enum.Slice(awstypes.InstanceFleetStateRunning),
-		Refresh:    statusInstanceFleet(ctx, conn, clusterID, fleetID),
+		Refresh:    statusInstanceFleet(conn, clusterID, fleetID),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 30 * time.Second,

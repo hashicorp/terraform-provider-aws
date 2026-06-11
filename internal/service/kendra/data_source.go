@@ -22,11 +22,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -79,265 +78,267 @@ func ResourceDataSource() *schema.Resource {
 				return nil
 			},
 		),
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_configuration": {
-							Type:       schema.TypeList,
-							Deprecated: "s3_configuration is deprecated. Use template_configuration instead.",
-							Optional:   true,
-							MaxItems:   1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"access_control_list_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key_path": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_configuration": {
+								Type:       schema.TypeList,
+								Deprecated: "s3_configuration is deprecated. Use template_configuration instead.",
+								Optional:   true,
+								MaxItems:   1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_control_list_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"key_path": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
 												},
 											},
 										},
-									},
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(3, 63),
-											validation.StringMatch(
-												regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
-												"Must be a valid bucket name",
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(3, 63),
+												validation.StringMatch(
+													regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
+													"Must be a valid bucket name",
+												),
 											),
-										),
-									},
-									"documents_metadata_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"s3_prefix": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
 										},
-									},
-									"exclusion_patterns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 150),
-										},
-									},
-									"inclusion_patterns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 150),
-										},
-									},
-									"inclusion_prefixes": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 150),
-										},
-									},
-								},
-							},
-						},
-						"template_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"template": sdkv2.JSONDocumentSchemaRequired(),
-								},
-							},
-						},
-						"web_crawler_configuration": {
-							Type:       schema.TypeList,
-							Deprecated: "web_crawler_configuration is deprecated. Use template_configuration instead.",
-							Optional:   true,
-							MaxItems:   1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"basic_authentication": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 10,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"credentials": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: verify.ValidARN,
-															},
-															"host": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 253),
-															},
-															names.AttrPort: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
-															},
-														},
+										"documents_metadata_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"s3_prefix": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
 													},
 												},
 											},
 										},
-									},
-									"crawl_depth": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      2,
-										ValidateFunc: validation.IntBetween(0, 10),
-									},
-									"max_content_size_per_page_in_mega_bytes": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										// Default:      50,
-										ValidateFunc: validation.FloatBetween(0.000001, 50),
-									},
-									"max_links_per_page": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntBetween(1, 1000),
-									},
-									"max_urls_per_minute_crawl_rate": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      300,
-										ValidateFunc: validation.IntBetween(1, 300),
-									},
-									"proxy_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"credentials": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"host": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 253),
-												},
-												names.AttrPort: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
-												},
+										"exclusion_patterns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 150),
+											},
+										},
+										"inclusion_patterns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 150),
+											},
+										},
+										"inclusion_prefixes": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 150),
 											},
 										},
 									},
-									"url_exclusion_patterns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 150),
-										},
+								},
+							},
+							"template_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"template": sdkv2.JSONDocumentSchemaRequired(),
 									},
-									"url_inclusion_patterns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 150),
-										},
-									},
-									"urls": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"seed_url_configuration": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"seed_urls": {
-																Type:     schema.TypeSet,
-																Required: true,
-																MinItems: 0,
-																MaxItems: 100,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																	ValidateFunc: validation.All(
-																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
-																	),
+								},
+							},
+							"web_crawler_configuration": {
+								Type:       schema.TypeList,
+								Deprecated: "web_crawler_configuration is deprecated. Use template_configuration instead.",
+								Optional:   true,
+								MaxItems:   1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"basic_authentication": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 10,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"credentials": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+																"host": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 253),
+																},
+																names.AttrPort: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntBetween(1, 65535),
 																},
 															},
-															"web_crawler_mode": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.WebCrawlerMode](),
-															},
 														},
 													},
 												},
-												"site_maps_configuration": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"site_maps": {
-																Type:     schema.TypeSet,
-																Required: true,
-																MinItems: 0,
-																MaxItems: 3,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																	ValidateFunc: validation.All(
-																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
-																	),
+											},
+										},
+										"crawl_depth": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      2,
+											ValidateFunc: validation.IntBetween(0, 10),
+										},
+										"max_content_size_per_page_in_mega_bytes": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+											// Default:      50,
+											ValidateFunc: validation.FloatBetween(0.000001, 50),
+										},
+										"max_links_per_page": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntBetween(1, 1000),
+										},
+										"max_urls_per_minute_crawl_rate": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      300,
+											ValidateFunc: validation.IntBetween(1, 300),
+										},
+										"proxy_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"credentials": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"host": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 253),
+													},
+													names.AttrPort: {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(1, 65535),
+													},
+												},
+											},
+										},
+										"url_exclusion_patterns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 150),
+											},
+										},
+										"url_inclusion_patterns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 150),
+											},
+										},
+										"urls": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"seed_url_configuration": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"seed_urls": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	MinItems: 0,
+																	MaxItems: 100,
+																	Elem: &schema.Schema{
+																		Type: schema.TypeString,
+																		ValidateFunc: validation.All(
+																			validation.StringLenBetween(1, 2048),
+																			validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		),
+																	},
+																},
+																"web_crawler_mode": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[types.WebCrawlerMode](),
+																},
+															},
+														},
+													},
+													"site_maps_configuration": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"site_maps": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	MinItems: 0,
+																	MaxItems: 3,
+																	Elem: &schema.Schema{
+																		Type: schema.TypeString,
+																		ValidateFunc: validation.All(
+																			validation.StringLenBetween(1, 2048),
+																			validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		),
+																	},
 																},
 															},
 														},
@@ -351,149 +352,149 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-			},
-			"custom_document_enrichment_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"inline_configurations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 100,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCondition: func() *schema.Schema {
-										schema := documentAttributeConditionSchema()
-										return schema
-									}(),
-									"document_content_deletion": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrTarget: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_document_attribute_key": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 200),
-														validation.StringMatch(
-															regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
-															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
+				"custom_document_enrichment_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inline_configurations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 100,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCondition: func() *schema.Schema {
+											schema := documentAttributeConditionSchema()
+											return schema
+										}(),
+										"document_content_deletion": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrTarget: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_document_attribute_key": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 200),
+															validation.StringMatch(
+																regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
+																"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
+															),
 														),
-													),
-												},
-												"target_document_attribute_value": func() *schema.Schema {
-													schema := documentAttributeValueSchema()
-													return schema
-												}(),
-												"target_document_attribute_value_deletion": {
-													Type:     schema.TypeBool,
-													Optional: true,
+													},
+													"target_document_attribute_value": func() *schema.Schema {
+														schema := documentAttributeValueSchema()
+														return schema
+													}(),
+													"target_document_attribute_value_deletion": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"post_extraction_hook_configuration": func() *schema.Schema {
-							schema := hookConfigurationSchema()
-							return schema
-						}(),
-						"pre_extraction_hook_configuration": func() *schema.Schema {
-							schema := hookConfigurationSchema()
-							return schema
-						}(),
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							"post_extraction_hook_configuration": func() *schema.Schema {
+								schema := hookConfigurationSchema()
+								return schema
+							}(),
+							"pre_extraction_hook_configuration": func() *schema.Schema {
+								schema := hookConfigurationSchema()
+								return schema
+							}(),
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"error_message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-				),
-			},
-			names.AttrLanguageCode: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 10),
-					validation.StringMatch(
-						regexache.MustCompile(`[A-Za-z-]*`),
-						"Must have alphanumeric characters or hyphens.",
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"error_message": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
+						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 					),
-				),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-						"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
+				},
+				names.AttrLanguageCode: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 10),
+						validation.StringMatch(
+							regexache.MustCompile(`[A-Za-z-]*`),
+							"Must have alphanumeric characters or hyphens.",
+						),
 					),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.DataSourceType](),
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1000),
+						validation.StringMatch(
+							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
+							"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
+						),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.DataSourceType](),
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -616,7 +617,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateDataSourceInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
@@ -856,11 +857,11 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusCreating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
-		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		Refresh:                   statusDataSource(conn, id, indexId),
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -878,11 +879,11 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
-		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		Refresh:                   statusDataSource(conn, id, indexId),
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -900,11 +901,11 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusDataSource(ctx, conn, id, indexId),
+		Refresh: statusDataSource(conn, id, indexId),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -918,8 +919,8 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 
 		if retry.NotFound(err) {

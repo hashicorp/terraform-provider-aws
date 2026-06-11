@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,7 +23,7 @@ func testAccServiceIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_devopsguru_service_integration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -32,12 +31,12 @@ func testAccServiceIntegration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
@@ -52,7 +51,7 @@ func testAccServiceIntegration_basic(t *testing.T) {
 			{
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
@@ -68,7 +67,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 	resourceName := "aws_devopsguru_service_integration.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -76,12 +75,12 @@ func testAccServiceIntegration_kms(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceIntegrationConfig_kmsCustomerManaged(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_server_side_encryption.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
@@ -96,7 +95,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 			{
 				Config: testAccServiceIntegrationConfig_kmsAWSOwned(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeAwsOwnedKmsKey)),
@@ -106,9 +105,9 @@ func testAccServiceIntegration_kms(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceIntegrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devopsguru_service_integration" {
@@ -137,7 +136,7 @@ func testAccCheckServiceIntegrationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckServiceIntegrationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckServiceIntegrationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -148,7 +147,7 @@ func testAccCheckServiceIntegrationExists(ctx context.Context, name string) reso
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameServiceIntegration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 		_, err := tfdevopsguru.FindServiceIntegration(ctx, conn)
 		if err != nil {
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameServiceIntegration, rs.Primary.ID, err)

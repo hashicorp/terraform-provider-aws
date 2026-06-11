@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,12 +16,12 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_datapipeline_pipeline_definition.test"
 	resourceName := "aws_datapipeline_pipeline_definition.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{

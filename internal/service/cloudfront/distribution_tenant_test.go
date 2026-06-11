@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,24 +27,24 @@ import (
 func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionTenantConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -53,10 +52,31 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("cloudfront", regexache.MustCompile(`distribution-tenant/dt_[0-9A-Za-z]+`))),
+					tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cloudfront", "distribution-tenant/{id}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("connection_group_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("distribution_id"), "aws_cloudfront_multitenant_distribution.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("managed_certificate_request"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParameter), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("origin_domain"),
+							names.AttrValue: knownvalue.StringExact("www.example.com"),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("wait_for_deployment"), knownvalue.Bool(true)),
 				},
 			},
 			{
@@ -76,24 +96,24 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionTenantConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceDistributionTenant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,29 +133,45 @@ func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionTenantConfig_customCertificate(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrCertificate: knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrARN: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("customizations").AtSliceIndex(0).AtMapKey(names.AttrCertificate).AtSliceIndex(0).AtMapKey(names.AttrARN),
+						"data.aws_acm_certificate.test", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
 				},
 			},
 			{
@@ -155,29 +191,46 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionTenantConfig_customCertificateWithWebACL(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"web_acl": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrAction: tfknownvalue.StringExact(awstypes.CustomizationActionTypeOverride),
+									names.AttrARN:    knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("customizations").AtSliceIndex(0).AtMapKey("web_acl").AtSliceIndex(0).AtMapKey(names.AttrARN),
+						"aws_wafv2_web_acl.test", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
 				},
 			},
 			{
@@ -197,24 +250,24 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionTenantConfig_tags1(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -240,7 +293,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 			{
 				Config: testAccDistributionTenantConfig_tags2(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -257,7 +310,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 			{
 				Config: testAccDistributionTenantConfig_tags1(rName, rootDomain, domain, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -274,9 +327,9 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDistributionTenantDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDistributionTenantDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_distribution_tenant" {
@@ -300,14 +353,14 @@ func testAccCheckDistributionTenantDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckDistributionTenantExists(ctx context.Context, n string, v *awstypes.DistributionTenant) resource.TestCheckFunc {
+func testAccCheckDistributionTenantExists(ctx context.Context, t *testing.T, n string, v *awstypes.DistributionTenant) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindDistributionTenantByIdentifier(ctx, conn, rs.Primary.ID)
 
@@ -415,8 +468,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   domain {
     domain = %[2]q
   }
-  name    = %[1]q
-  enabled = false
+  name = %[1]q
 
   parameter {
     name  = "origin_domain"

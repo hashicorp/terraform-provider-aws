@@ -16,10 +16,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -100,74 +100,76 @@ func resourceNetworkInsightsPath() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			"destination_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"destination_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"filter_at_destination": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: networkInsightsPathFilterSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"filter_at_source": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: networkInsightsPathFilterSchema(),
+				names.AttrDestinationARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
-			},
-			names.AttrSource: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			"source_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDestination: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"destination_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"destination_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"filter_at_destination": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: networkInsightsPathFilterSchema(),
+					},
+				},
+				"filter_at_source": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: networkInsightsPathFilterSchema(),
+					},
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+				},
+				names.AttrSource: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"source_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -177,7 +179,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateNetworkInsightsPathInput{
-		ClientToken:       aws.String(sdkid.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		Protocol:          awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get(names.AttrSource).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkInsightsPath),

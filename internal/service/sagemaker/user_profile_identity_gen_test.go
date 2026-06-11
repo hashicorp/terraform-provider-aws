@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSageMakerUserProfile_IdentitySerial(t *testing.T) {
+func testAccSageMakerUserProfile_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_Basic,
-		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccSageMakerUserProfile_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_basic,
+		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccSageMakerUserProfile_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -48,7 +48,7 @@ func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{domain_id}/{user_profile_name}"),
@@ -125,7 +125,7 @@ func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSageMakerUserProfile_Identity_RegionOverride(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -218,7 +218,7 @@ func testAccSageMakerUserProfile_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -231,7 +231,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy: testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy: testAccCheckUserProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -240,7 +240,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -278,7 +278,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -291,7 +291,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy: testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy: testAccCheckUserProfileDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -305,7 +305,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -36,19 +35,21 @@ func resourceEmailIdentity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					return strings.TrimSuffix(v.(string), ".")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						return strings.TrimSuffix(v.(string), ".")
+					},
+				},
+			}
 		},
 	}
 }
@@ -132,7 +133,7 @@ func findIdentityVerificationAttributesByIdentity(ctx context.Context, conn *ses
 		return &v, nil
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityVerificationAttributesInput) (map[string]awstypes.IdentityVerificationAttributes, error) {

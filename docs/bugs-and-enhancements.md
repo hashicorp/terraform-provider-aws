@@ -15,7 +15,7 @@ Most contributions to the provider will take the form of small additions or bug-
    existing test and follow the conventions you see there, modifying the test
    to exercise the behavior of your code.
 - __Documentation updates__: If your code makes any changes that need to
-   be documented, you should include those [documentation changes](documentation-changes.md)
+   be documented, you should include those [documentation changes](end-user-documentation.md)
    in the same PR. This includes things like new resource attributes or changes in default values.
 - __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.

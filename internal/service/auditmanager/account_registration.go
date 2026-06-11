@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -208,17 +207,16 @@ func findAccountRegistration(ctx context.Context, conn *auditmanager.Client) (*a
 	}
 
 	if status := output.Status; status == awstypes.AccountStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAccountRegistration(ctx context.Context, conn *auditmanager.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccountRegistration(conn *auditmanager.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountRegistration(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -237,10 +235,10 @@ func waitAccountRegistered(ctx context.Context, conn *auditmanager.Client) (*aud
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AccountStatusPendingActivation),
 		Target:  enum.Slice(awstypes.AccountStatusActive),
-		Refresh: statusAccountRegistration(ctx, conn),
+		Refresh: statusAccountRegistration(conn),
 		Timeout: timeout,
 	}
 

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -38,24 +37,26 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"thing": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"thing_principal_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ThingPrincipalType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"thing": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"thing_principal_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ThingPrincipalType](),
+				},
+			}
 		},
 	}
 }
@@ -167,9 +168,8 @@ func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListT
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

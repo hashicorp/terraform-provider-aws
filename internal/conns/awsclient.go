@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"iter"
 	"maps"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"net/http"
 	"os"
 	"strings"
@@ -20,16 +21,21 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
+	callRecorder              *apicall.Recorder         // For acceptance tests asserting which AWS API operations are made.
 	clients                   map[string]map[string]any // Region -> service package name -> API client.
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
@@ -38,6 +44,7 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
+	randomnessSource          rand.Source // For VCR deterministic randomness.
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
 	s3OriginalRegion          string // Original region for S3-compatible storage
@@ -100,6 +107,62 @@ func (c *AWSClient) AccountID(context.Context) string {
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
+}
+
+// RandomnessSource returns the VCR randomness source if set.
+func (c *AWSClient) RandomnessSource() rand.Source {
+	return c.randomnessSource
+}
+
+// SetRandomnessSource sets the VCR randomness source.
+//
+// This should only be called during provider configuration for VCR testing.
+func (c *AWSClient) SetRandomnessSource(source rand.Source) {
+	c.randomnessSource = source
+}
+
+// CallRecorder returns the attached API call recorder, or nil.
+//
+// SDKv2 and Plugin Framework wrappers plumb a non-nil recorder onto the
+// per-resource request context, where the apicall middleware (registered
+// once on the base aws.Config) finds it and records each AWS SDK operation.
+func (c *AWSClient) CallRecorder() *apicall.Recorder {
+	return c.callRecorder
+}
+
+// SetCallRecorder attaches r to the client. Acceptance test setup only.
+func (c *AWSClient) SetCallRecorder(r *apicall.Recorder) {
+	c.callRecorder = r
+}
+
+// RequestContext augments ctx with the per-request observability and
+// configuration values that every framework- and SDKv2-managed AWS API
+// call needs. This is the single point where these are wired; new
+// request-scoped values should be added here, never inline at call sites.
+//
+// The chain is, in order:
+//
+//   - tag configuration (default, ignore, policy)
+//   - the AWS client logger
+//   - the VCR randomness source, when VCR testing is active
+//   - the API-call recorder, when one is attached for the test
+//   - the AutoFlex logger
+//   - HTTP request/response body redaction
+//
+// Each element is a no-op when the corresponding feature is inactive.
+// Safe to call on a nil receiver, in which case ctx is returned unchanged.
+func (c *AWSClient) RequestContext(ctx context.Context) context.Context {
+	if c == nil {
+		return ctx
+	}
+	ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
+	ctx = c.RegisterLogger(ctx)
+	if s := c.RandomnessSource(); s != nil {
+		ctx = vcr.NewContext(ctx, s)
+	}
+	ctx = apicall.NewContext(ctx, c.callRecorder)
+	ctx = fwflex.RegisterLogger(ctx)
+	return logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 }
 
 // Region returns the ID of the effective AWS Region.

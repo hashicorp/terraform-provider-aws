@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
+func TestAccCognitoIDPLogDeliveryConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LogDeliveryConfigurationType
@@ -34,7 +34,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &v),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -109,7 +109,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPLogDeliveryConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccCognitoIDPLogDeliveryConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cognito_log_delivery_configuration.test"

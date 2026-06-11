@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,45 +36,47 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"calling_regions": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(2, 2),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"calling_regions": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(2, 2),
+					},
 				},
-			},
-			"cidr_allow_list": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDRNetwork(27, 32),
+				"cidr_allow_list": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.IsCIDRNetwork(27, 32),
+					},
 				},
-			},
-			"cps_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"default_phone_number": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
-			},
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"cps_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"default_phone_number": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
+				},
+				"disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -212,19 +213,14 @@ func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.Reso
 }
 
 func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.Termination, error) {
-	in := &chimesdkvoice.GetVoiceConnectorInput{
-		VoiceConnectorId: aws.String(id),
-	}
-
 	input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(id),
 	}
 
 	resp, err := conn.GetVoiceConnectorTermination(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -24,13 +24,13 @@ func TestAccBedrock_serial(t *testing.T) {
 			"vpcConfig":                             testAccCustomModel_vpcConfig,
 			"singularDataSourceBasic":               testAccCustomModelDataSource_basic,
 			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
-			"Identity":                              testAccBedrockCustomModel_IdentitySerial,
+			"Identity":                              testAccBedrockCustomModel_identitySerial,
 		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
 			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
 			"upgradeV6.0.0":      testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
-			"Identity":           testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial,
+			"Identity":           testAccBedrockModelInvocationLoggingConfiguration_identitySerial,
 		},
 	}
 

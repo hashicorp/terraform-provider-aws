@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -35,7 +34,6 @@ import (
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(preCheck="testAccPreCheck")
 // @Tags(identifierAttribute="id")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,
@@ -43,56 +41,58 @@ func resourceAssessmentTemplate() *schema.Resource {
 		UpdateWithoutTimeout: resourceAssessmentTemplateUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTemplateDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"event_subscription": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InspectorEvent](),
-						},
-						names.AttrTopicARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				"event_subscription": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"event": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InspectorEvent](),
+							},
+							names.AttrTopicARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rules_package_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"rules_package_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
 					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+			}
 		},
 	}
 }
@@ -316,9 +316,8 @@ func findSubscriptions(ctx context.Context, conn *inspector.Client, input *inspe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

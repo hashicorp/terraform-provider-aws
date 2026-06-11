@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -31,7 +30,7 @@ import (
 
 const (
 	rolePolicyNameMaxLen       = 128
-	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - id.UniqueIDSuffixLength
+	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
@@ -41,7 +40,6 @@ const (
 // @ImportIDHandler("rolePolicyImportID")
 // @Testing(existsType="string")
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
@@ -49,40 +47,42 @@ func resourceRolePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validRolePolicyName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validRolePolicyName,
 				},
-			},
-			names.AttrRole: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validRolePolicyRole,
-			},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
+				},
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          verify.ValidIAMPolicyJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := verify.LegacyPolicyNormalize(v)
+						return json
+					},
+				},
+				names.AttrRole: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validRolePolicyRole,
+				},
+			}
 		},
 	}
 }
@@ -96,7 +96,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	policyName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	roleName := d.Get(names.AttrRole).(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
@@ -199,9 +199,8 @@ func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	output, err := conn.GetRolePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -238,13 +237,13 @@ func (rolePolicyImportID) Create(d *schema.ResourceData) string {
 	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
 }
 
-func (rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyImportID) Parse(id string) (string, map[string]any, error) {
 	roleName, policyName, err := rolePolicyParseID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrRole: roleName,
 		names.AttrName: policyName,
 	}

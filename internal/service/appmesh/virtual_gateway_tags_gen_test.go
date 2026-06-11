@@ -25,25 +25,25 @@ func testAccAppMeshVirtualGateway_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshVirtualGateway_tags,
-		"null":                                      testAccAppMeshVirtualGateway_tags_null,
-		"EmptyMap":                                  testAccAppMeshVirtualGateway_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAppMeshVirtualGateway_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAppMeshVirtualGateway_Tags_null,
+		"EmptyMap":                                  testAccAppMeshVirtualGateway_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAppMeshVirtualGateway_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAppMeshVirtualGateway_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualGateway_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshVirtualGateway_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAppMeshVirtualGateway_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAppMeshVirtualGateway_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAppMeshVirtualGateway_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAppMeshVirtualGateway_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAppMeshVirtualGateway_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAppMeshVirtualGateway_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshVirtualGateway_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshVirtualGateway_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAppMeshVirtualGateway_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAppMeshVirtualGateway_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAppMeshVirtualGateway_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshVirtualGateway_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshVirtualGateway_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -62,7 +62,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -119,7 +119,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -168,7 +168,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -210,7 +210,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -239,7 +239,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -252,7 +252,7 @@ func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -264,7 +264,7 @@ func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -311,7 +311,7 @@ func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -324,7 +324,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -334,7 +334,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -379,7 +379,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -392,7 +392,7 @@ func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -402,7 +402,7 @@ func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -426,7 +426,7 @@ func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -465,7 +465,7 @@ func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -478,7 +478,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -490,7 +490,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -531,7 +531,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -560,7 +560,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -573,7 +573,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -585,7 +585,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -617,7 +617,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -664,7 +664,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -703,7 +703,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -716,7 +716,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -728,7 +728,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -759,7 +759,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -797,7 +797,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -810,7 +810,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -823,7 +823,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -868,7 +868,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -915,7 +915,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -956,7 +956,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -986,7 +986,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -999,7 +999,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1014,7 +1014,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1069,7 +1069,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1123,7 +1123,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1153,7 +1153,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1166,7 +1166,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1181,7 +1181,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1235,7 +1235,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1293,7 +1293,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1336,7 +1336,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1349,7 +1349,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1361,7 +1361,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1394,7 +1394,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1431,7 +1431,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testi
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1444,7 +1444,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1457,7 +1457,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1485,7 +1485,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1525,7 +1525,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testi
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1538,7 +1538,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1553,7 +1553,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1595,7 +1595,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1608,7 +1608,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1621,7 +1621,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1657,7 +1657,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1670,7 +1670,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1685,7 +1685,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1724,7 +1724,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t 
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1737,7 +1737,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1752,7 +1752,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1791,7 +1791,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1804,7 +1804,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1814,7 +1814,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1851,7 +1851,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1864,7 +1864,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1876,7 +1876,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1908,7 +1908,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1953,7 +1953,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -1966,7 +1966,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1978,7 +1978,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2008,7 +2008,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2045,7 +2045,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -2058,7 +2058,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2077,7 +2077,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2126,7 +2126,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2175,7 +2175,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2211,7 +2211,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 	})
 }
 
-func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshVirtualGateway_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualGatewayData
@@ -2224,7 +2224,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppMeshServiceID),
-		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckVirtualGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2241,7 +2241,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2304,7 +2304,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2367,7 +2367,7 @@ func testAccAppMeshVirtualGateway_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
+					testAccCheckVirtualGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

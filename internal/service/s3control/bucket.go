@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,7 +37,6 @@ const (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(preCheck="acctest.PreCheckOutpostsOutposts")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -46,38 +44,40 @@ func resourceBucket() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z]`), "must begin with lowercase letter or number"),
-					validation.StringMatch(regexache.MustCompile(`[0-9a-z]$`), "must end with lowercase letter or number"),
-				),
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"public_access_block_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z]`), "must begin with lowercase letter or number"),
+						validation.StringMatch(regexache.MustCompile(`[0-9a-z]$`), "must end with lowercase letter or number"),
+					),
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"outpost_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"public_access_block_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -213,9 +213,8 @@ func findBucketByTwoPartKey(ctx context.Context, conn *s3control.Client, account
 	output, err := conn.GetBucket(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchOutpost) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

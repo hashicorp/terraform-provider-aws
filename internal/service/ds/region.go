@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,47 +48,49 @@ func resourceRegion() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"desired_number_of_domain_controllers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(2),
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"region_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidRegionName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"desired_number_of_domain_controllers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(2),
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"region_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidRegionName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -290,9 +291,8 @@ func findRegions(ctx context.Context, conn *directoryservice.Client, input *dire
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -319,17 +319,16 @@ func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	if status := output.Status; status == awstypes.DirectoryStageDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRegion(conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
 
 		if retry.NotFound(err) {
@@ -345,10 +344,10 @@ func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryI
 }
 
 func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
 		Target:  enum.Slice(awstypes.DirectoryStageActive),
-		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Refresh: statusRegion(conn, directoryID, regionName, optFns...),
 		Timeout: timeout,
 	}
 
@@ -362,10 +361,10 @@ func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func waitRegionDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
 		Target:  []string{},
-		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Refresh: statusRegion(conn, directoryID, regionName, optFns...),
 		Timeout: timeout,
 	}
 

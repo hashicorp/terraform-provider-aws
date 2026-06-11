@@ -17,7 +17,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,72 +48,74 @@ func resourceMountTarget() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrIPAddress: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPv4Address,
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			"ipv6_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPv6Address,
-			},
-			"mount_target_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrIPAddress: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				"ipv6_address": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv6Address,
+				},
+				"mount_target_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -305,9 +306,8 @@ func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.MountTargetNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -337,17 +337,16 @@ func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMountTargetLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMountTargetByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -363,10 +362,10 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id s
 }
 
 func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -382,10 +381,10 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, ti
 }
 
 func waitMountTargetDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:     []string{},
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,7 +38,6 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxWindowsImportStateID")
 // @Testing(domainTfVar="domain")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
@@ -66,64 +64,66 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 253),
-			},
-			"fsx_filesystem_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPassword: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
-			"security_group_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
 					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 253),
+				},
+				"fsx_filesystem_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
+				names.AttrPassword: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 104),
+				},
+				"security_group_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 104),
+				},
+			}
 		},
 	}
 }
@@ -230,9 +230,8 @@ func findLocationFSxWindowsByARN(ctx context.Context, conn *datasync.Client, arn
 	output, err := conn.DescribeLocationFsxWindows(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

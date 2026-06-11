@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ import (
 func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -40,12 +38,12 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -75,11 +73,11 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_xrayDelivery(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 	deliveryResourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -87,12 +85,12 @@ func TestAccBedrockAgentCoreGateway_xrayDelivery(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_xrayDelivery(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttrSet(deliveryResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(deliveryResourceName, "delivery_source_name", rName+"-source"),
 				),
@@ -110,10 +108,10 @@ func TestAccBedrockAgentCoreGateway_xrayDelivery(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -121,12 +119,12 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -146,10 +144,10 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -157,12 +155,12 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -185,7 +183,7 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -202,7 +200,7 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -222,10 +220,10 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -233,12 +231,12 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_interceptorConfigurations(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
@@ -258,10 +256,10 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -269,12 +267,12 @@ func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_description(rName, "Initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -295,7 +293,7 @@ func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_description(rName, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -313,10 +311,10 @@ func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_IAMAuthorizer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -324,12 +322,12 @@ func TestAccBedrockAgentCoreGateway_IAMAuthorizer(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_IAMAuthorizer(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -350,7 +348,7 @@ func TestAccBedrockAgentCoreGateway_IAMAuthorizer(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -369,10 +367,10 @@ func TestAccBedrockAgentCoreGateway_kmsKey(t *testing.T) {
 	acctest.Skip(t, "KMS key returns HTTP 500")
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -380,12 +378,12 @@ func TestAccBedrockAgentCoreGateway_kmsKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_kmsKey(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -403,7 +401,7 @@ func TestAccBedrockAgentCoreGateway_kmsKey(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_kmsKey(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -418,10 +416,10 @@ func TestAccBedrockAgentCoreGateway_kmsKey(t *testing.T) {
 func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -429,12 +427,12 @@ func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_protocolConfiguration(rName, "First set of instructions"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -452,7 +450,7 @@ func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayConfig_protocolConfiguration(rName, "Second set of instructions"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -464,9 +462,501 @@ func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccBedrockAgentCoreGateway_protocolConfigurationWithSessionAndStreamingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, "First set of instructions", 1200, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.0.session_timeout_in_seconds", "1200"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.0.enable_response_streaming", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, "Second set of instructions", 1800, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.0.session_timeout_in_seconds", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.0.enable_response_streaming", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Remove session_configuration and streaming_configuration blocks
+				Config: testAccGatewayConfig_protocolConfiguration(rName, "Third set of instructions"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.session_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.streaming_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_noProtocolType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_noProtocolType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_type"), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimString(
+					rName,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+					string(awstypes.InboundTokenClaimValueTypeString),
+					string(awstypes.ClaimMatchOperatorTypeEquals),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeString)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				// Update to inbound_token_claim_value_type "STRING_ARRAY" and claim_match_operator "CONTAINS"
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimString(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+					string(awstypes.InboundTokenClaimValueTypeStringArray),
+					string(awstypes.ClaimMatchOperatorTypeContains),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContains)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				// Update to use match_value_string_list instead of match_value_string for claim_match_operator "CONTAINS_ANY"
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(
+					rName,
+					"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+					"finance", "technology",
+					"client-111", "client-222",
+					"openid", names.AttrProfile,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContainsAny)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string": knownvalue.Null(),
+															"match_value_string_list": knownvalue.SetExact([]knownvalue.Check{
+																knownvalue.StringExact("admin"),
+																knownvalue.StringExact("user"),
+															}),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeLogOnly),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeEnforce),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_gateway" {
@@ -489,14 +979,14 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetGatewayOutput) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetGatewayOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindGatewayByID(ctx, conn, rs.Primary.Attributes["gateway_id"])
 		if err != nil {
@@ -510,7 +1000,7 @@ func testAccCheckGatewayExists(ctx context.Context, n string, v *bedrockagentcor
 }
 
 func testAccPreCheckGateways(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	var input bedrockagentcorecontrol.ListGatewaysInput
 
@@ -526,6 +1016,8 @@ func testAccPreCheckGateways(ctx context.Context, t *testing.T) {
 
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
@@ -540,6 +1032,11 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
 }
 `, rName)
 }
@@ -559,6 +1056,23 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 
   protocol_type = "MCP"
+}
+`, rName))
+}
+
+func testAccGatewayConfig_noProtocolType(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
 }
 `, rName))
 }
@@ -623,6 +1137,41 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, instructions))
+}
+
+func testAccGatewayConfig_protocolConfigurationWithSessionAndStreamingConfiguration(rName, instructions string, sessionTimeoutInSeconds int, enableResponseStreaming bool) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_configuration {
+    mcp {
+      instructions       = %[2]q
+      search_type        = "SEMANTIC"
+      supported_versions = ["2025-03-26"]
+
+      session_configuration {
+        session_timeout_in_seconds = %[3]d
+      }
+
+      streaming_configuration {
+        enable_response_streaming = %[4]t
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, instructions, sessionTimeoutInSeconds, enableResponseStreaming))
 }
 
 func testAccGatewayConfig_description(rName, description string) string {
@@ -780,4 +1329,115 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGatewayConfig_customJWTAuthorizer(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerCustomClaimString(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = %[9]q
+        authorizing_claim_match_value {
+          claim_match_operator = %[10]q
+          claim_match_value {
+            match_value_string = "admin"
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = "STRING_ARRAY"
+        authorizing_claim_match_value {
+          claim_match_operator = "CONTAINS_ANY"
+          claim_match_value {
+            match_value_string_list = ["admin", "user"]
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine string, mode awstypes.GatewayPolicyEngineMode) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+
+  policy_engine_configuration {
+    arn  = aws_bedrockagentcore_policy_engine.test.policy_engine_arn
+    mode = %[3]q
+  }
+}
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[2]q
+}
+`, rName, rNamePolicyEngine, mode))
 }

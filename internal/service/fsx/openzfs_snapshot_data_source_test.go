@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,14 +17,14 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_fsx_openzfs_snapshot.test"
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	mostRecentResourceName := "aws_fsx_openzfs_snapshot.latest"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSSnapshotDataSourceConfig_basic(rName),

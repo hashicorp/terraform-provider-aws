@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,15 +26,17 @@ func dataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -64,9 +66,8 @@ func findSigningCertificateByID(ctx context.Context, conn *cognitoidentityprovid
 	output, err := conn.GetSigningCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

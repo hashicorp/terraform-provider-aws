@@ -23,38 +23,39 @@ import (
 
 // @SDKDataSource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSubnetGroupRead,
 
-		Schema: map[string]*schema.Schema{
-			"replication_subnet_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_subnet_group_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_subnet_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"subnet_group_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"replication_subnet_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_subnet_group_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_subnet_group_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"subnet_group_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

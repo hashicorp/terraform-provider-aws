@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,98 +40,100 @@ func resourceEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"endpoint_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"event_bus": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 2,
-				MinItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event_bus_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"endpoint_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"event_bus": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 2,
+					MinItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"event_bus_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
-			},
-			"replication_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrState: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ReplicationStateEnabled,
-							ValidateDiagFunc: enum.Validate[types.ReplicationState](),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
+				},
+				"replication_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrState: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ReplicationStateEnabled,
+								ValidateDiagFunc: enum.Validate[types.ReplicationState](),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"routing_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failover_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"primary": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrHealthCheck: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"routing_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failover_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"primary": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrHealthCheck: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									"secondary": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"route": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidRegionName,
+										"secondary": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"route": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidRegionName,
+													},
 												},
 											},
 										},
@@ -142,7 +143,7 @@ func resourceEndpoint() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -313,9 +314,8 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -330,8 +330,8 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpointState(conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -347,10 +347,10 @@ func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateCreating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -366,10 +366,10 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateUpdating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -385,10 +385,10 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 

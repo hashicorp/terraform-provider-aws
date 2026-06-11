@@ -16,8 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +32,6 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -52,132 +49,134 @@ func resourceInput() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attached_channels": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"destinations": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attached_channels": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"destinations": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"input_devices": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"input_devices": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_partner_ids": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"input_security_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"input_source_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"media_connect_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_partner_ids": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"input_security_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"input_source_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"media_connect_flows": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRoleARN: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-			},
-			"sources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password_param": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrURL: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRoleARN: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+				},
+				"sources": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"password_param": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrURL: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.InputType](),
-			},
-			"vpc": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 2,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.InputType](),
+				},
+				"vpc": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 2,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -194,7 +193,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
-		RequestId: aws.String(id.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get(names.AttrType).(string)),
@@ -381,10 +380,10 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -400,10 +399,10 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -419,10 +418,10 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.InputStateDeleting),
 		Target:  enum.Slice(types.InputStateDeleted),
-		Refresh: statusInput(ctx, conn, id),
+		Refresh: statusInput(conn, id),
 		Timeout: timeout,
 	}
 
@@ -434,8 +433,8 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	return nil, err
 }
 
-func statusInput(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInput(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findInputByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -457,9 +456,8 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

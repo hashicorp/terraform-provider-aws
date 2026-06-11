@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
+func TestAccVPCVPCEncryptionControl_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.VpcEncryptionControl
@@ -104,7 +104,7 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCVPCEncryptionControl_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_encryption_control.test"

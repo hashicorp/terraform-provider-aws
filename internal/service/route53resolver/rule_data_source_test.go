@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,14 +18,14 @@ func init() {
 
 func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
 	ds2ResourceName := "data.aws_route53_resolver_rule.by_domain_name"
 	ds3ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,12 +73,12 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -108,12 +107,12 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 
 func TestAccRoute53ResolverRuleDataSource_targetIPs(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	dsResourceName := "data.aws_route53_resolver_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -141,12 +140,12 @@ func TestAccRoute53ResolverRuleDataSource_targetIPs(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -179,12 +178,12 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

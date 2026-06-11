@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -58,58 +57,60 @@ func resourceGatewayAssociation() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"associated_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			"associated_gateway_owner_account_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidAccountID,
-				ConflictsWith: []string{"associated_gateway_id"},
-				RequiredWith:  []string{"proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			"associated_gateway_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dx_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proposal_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"associated_gateway_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"associated_gateway_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				"associated_gateway_owner_account_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidAccountID,
+					ConflictsWith: []string{"associated_gateway_id"},
+					RequiredWith:  []string{"proposal_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				"associated_gateway_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dx_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proposal_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"associated_gateway_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -354,9 +355,8 @@ func findNonDisassociatedGatewayAssociation(ctx context.Context, conn *directcon
 	}
 
 	if state := output.AssociationState; state == awstypes.DirectConnectGatewayAssociationStateDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -397,8 +397,8 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 	return output, nil
 }
 
-func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayAssociation(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGatewayAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -414,10 +414,10 @@ func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, i
 }
 
 func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -433,10 +433,10 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateUpdating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -452,10 +452,10 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateDisassociating),
 		Target:  []string{},
-		Refresh: statusGatewayAssociation(ctx, conn, id),
+		Refresh: statusGatewayAssociation(conn, id),
 		Timeout: timeout,
 	}
 

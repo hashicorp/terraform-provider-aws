@@ -11,11 +11,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,12 +28,10 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	acctest.AccountID(ctx)
-
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -38,7 +39,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initResources(rName),
@@ -46,25 +47,47 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
-					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
-					resource.TestCheckResourceAttr(resourceName, "collaboration_creator_display_name", TEST_CREATOR_DISPLAY_NAME),
-					resource.TestCheckResourceAttrSet(resourceName, "collaboration_id"),
-					resource.TestCheckResourceAttr(resourceName, "collaboration_name", rName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
-						names.AttrBucket: rName,
-						"result_format":  TEST_RESULT_FORMAT,
-						"key_prefix":     TEST_KEY_PREFIX,
-					}),
-					resource.TestCheckResourceAttr(resourceName, "member_abilities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "member_abilities.0", "CAN_RECEIVE_RESULTS"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
-					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
-					acctest.MatchResourceAttrAccountID(resourceName, "collaboration_creator_account_id"),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "default_result_configuration.0.role_arn", "iam", regexache.MustCompile("role/"+rName)),
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "collaboration_arn", "cleanrooms", "collaboration"),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cleanrooms", "membership/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:cleanrooms:[^:]*:[^:]*:collaboration/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_creator_account_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_creator_display_name"), knownvalue.StringExact(TEST_CREATOR_DISPLAY_NAME)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collaboration_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreateTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_result_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrRoleARN: knownvalue.NotNull(),
+							"output_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"s3": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											names.AttrBucket: knownvalue.StringExact(rName),
+											"key_prefix":     knownvalue.StringExact(TEST_KEY_PREFIX),
+											"result_format":  knownvalue.StringExact(TEST_RESULT_FORMAT),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("member_abilities"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("CAN_RECEIVE_RESULTS"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("payment_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("query_log_status"), knownvalue.StringExact(TEST_QUERY_LOG_STATUS)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("update_time"), knownvalue.NotNull()),
+				},
 			},
 			{
 				Config:            testAccMembershipConfig_basic(rName),
@@ -80,10 +103,10 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -91,7 +114,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initResources(rName),
@@ -99,10 +122,18 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcleanrooms.ResourceMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -112,11 +143,11 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameSecond := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameSecond := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -124,7 +155,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initDoubledResources(rName, rNameSecond),
@@ -132,7 +163,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_mutableProperties(rName, rNameSecond, rName, TEST_QUERY_LOG_STATUS, TEST_RESULT_FORMAT, TEST_KEY_PREFIX, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 			{
@@ -156,10 +187,10 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -167,12 +198,12 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_outputConfigurationWithEmptyAdditionalParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 		},
@@ -183,10 +214,10 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -194,12 +225,12 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, "[]", "[\"CAN_QUERY\",\"CAN_RECEIVE_RESULTS\"]", TEST_QUERY_LOG_STATUS, "", TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 		},
@@ -210,11 +241,11 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -222,18 +253,18 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, "[]", "[\"CAN_QUERY\",\"CAN_RECEIVE_RESULTS\"]", TEST_QUERY_LOG_STATUS, "", TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 			{
 				Config: testAccMembershipConfig_outputConfigurationWithEmptyAdditionalParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
 						names.AttrBucket: rName,
 						"result_format":  TEST_RESULT_FORMAT,
@@ -244,7 +275,7 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckMembershipExists(ctx context.Context, name string, membership *cleanrooms.GetMembershipOutput) resource.TestCheckFunc {
+func testAccCheckMembershipExists(ctx context.Context, t *testing.T, name string, membership *cleanrooms.GetMembershipOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -255,7 +286,7 @@ func testAccCheckMembershipExists(ctx context.Context, name string, membership *
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameMembership, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		resp, err := tfcleanrooms.FindMembershipByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -268,9 +299,9 @@ func testAccCheckMembershipExists(ctx context.Context, name string, membership *
 	}
 }
 
-func testAccCheckMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMembershipDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cleanrooms_membership" {
@@ -464,6 +495,7 @@ resource "aws_cleanrooms_collaboration" "test" {
   creator_display_name     = %[2]q
   creator_member_abilities = %[3]s
   query_log_status         = "ENABLED"
+  analytics_engine         = "SPARK"
 
   member {
     account_id       = data.aws_caller_identity.test.account_id

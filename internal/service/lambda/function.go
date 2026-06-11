@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +50,6 @@ const (
 // @Testing(idAttrDuplicates="function_name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @CustomImport
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -75,505 +73,507 @@ func resourceFunction() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"architectures": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"architectures": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity_provider_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"lambda_managed_instances_capacity_provider_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_provider_arn": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-									},
-									"execution_environment_memory_gib_per_vcpu": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										Computed: true,
-									},
-									"per_execution_environment_max_concurrency": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity_provider_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"lambda_managed_instances_capacity_provider_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_provider_arn": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+										},
+										"execution_environment_memory_gib_per_vcpu": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+											Computed: true,
+										},
+										"per_execution_environment_max_concurrency": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"code_sha256": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"code_signing_config_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"dead_letter_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrTargetARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
+				"code_sha256": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"durable_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execution_timeout": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 31622400),
-						},
-						names.AttrRetentionPeriod: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      14,
-							ValidateFunc: validation.IntBetween(1, 90),
-						},
-					},
-				},
-			},
-			names.AttrEnvironment: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-				// Suppress diff if change is to an empty list
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == "1" {
-						_, n := d.GetChange("environment.0.variables")
-						newn, ok := n.(map[string]any)
-						if ok && len(newn) == 0 {
-							return true
-						}
-					}
-					return false
-				},
-			},
-			"ephemeral_storage": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(512, 10240),
-						},
-					},
-				},
-			},
-			"file_system_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				// Lambda file system supports 1 EFS file system per lambda function. This might increase in future.
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// EFS access point arn
-						names.AttrARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						// Local mount path inside a lambda function. Must start with "/mnt/".
-						"local_mount_path": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[0-9A-Za-z_.-]+$`), "must start with '/mnt/'"),
-						},
-					},
-				},
-			},
-			"filename": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
-			},
-			"function_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validFunctionName(),
-			},
-			"handler": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"entry_point": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"working_directory": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == "1" {
-						imageConfigPlan := d.GetRawPlan().GetAttr("image_config")
-						if !imageConfigPlan.IsNull() {
-							icSlice := imageConfigPlan.AsValueSlice()[0]
-							if !icSlice.IsNull() {
-								var suppressCommand, suppressEntryPoint, suppressWorkingDirectory bool
-								icMap := icSlice.AsValueMap()
-								if v, ok := icMap["command"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
-									suppressCommand = true
-								}
-								if v, ok := icMap["entry_point"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
-									suppressEntryPoint = true
-								}
-								if v, ok := icMap["working_directory"]; ok && (v.IsNull() || len(v.AsString()) == 0) {
-									suppressWorkingDirectory = true
-								}
-
-								return suppressCommand && suppressEntryPoint && suppressWorkingDirectory
-							}
-						}
-					}
-					return false
-				},
-			},
-			"image_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"code_signing_config_arn": {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"logging_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application_log_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "",
-							ValidateDiagFunc: enum.Validate[awstypes.ApplicationLogLevel](),
-							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
-						},
-						"log_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
-						},
-						"log_group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validLogGroupName(),
-						},
-						"system_log_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "",
-							ValidateDiagFunc: enum.Validate[awstypes.SystemLogLevel](),
-							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
+				"dead_letter_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrTargetARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"memory_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      128,
-				ValidateFunc: validation.IntBetween(128, 32768),
-			},
-			"package_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.PackageTypeZip,
-				ValidateDiagFunc: enum.Validate[awstypes.PackageType](),
-			},
-			"publish": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"publish_to": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FunctionVersionLatestPublished](),
-			},
-			"qualified_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replace_security_groups_on_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"replacement_security_group_ids": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				RequiredWith: []string{"replace_security_groups_on_destroy"},
-			},
-			"reserved_concurrent_executions": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      -1,
-				ValidateFunc: validation.IntAtLeast(-1),
-			},
-			"response_streaming_invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRole: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"runtime": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
-			},
-			names.AttrS3Bucket: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
-				RequiredWith: []string{"s3_key"},
-			},
-			"s3_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{names.AttrS3Bucket},
-			},
-			"s3_object_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"snap_start": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"apply_on": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SnapStartApplyOn](),
-						},
-						"optimization_status": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"durable_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execution_timeout": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 31622400),
+							},
+							names.AttrRetentionPeriod: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      14,
+								ValidateFunc: validation.IntBetween(1, 90),
+							},
 						},
 					},
 				},
-			},
-			"source_code_hash": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"source_kms_key_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"image_uri"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tenancy_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tenant_isolation_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TenantIsolationMode](),
+				names.AttrEnvironment: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"variables": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
-				},
-			},
-			names.AttrTimeout: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3,
-				ValidateFunc: validation.IntBetween(1, 900),
-			},
-			"tracing_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
-						},
-					},
-				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv6_allowed_for_dual_stack": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-
-				// Suppress diffs if the VPC configuration is provided, but empty
-				// which is a valid Lambda function configuration. e.g.
-				//   vpc_config {
-				//     ipv6_allowed_for_dual_stack = false
-				//     security_group_ids          = []
-				//     subnet_ids                  = []
-				//   }
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Id() == "" || old == "1" || new == "0" {
+					// Suppress diff if change is to an empty list
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == "0" && new == "1" {
+							_, n := d.GetChange("environment.0.variables")
+							newn, ok := n.(map[string]any)
+							if ok && len(newn) == 0 {
+								return true
+							}
+						}
 						return false
-					}
-
-					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
-						return false
-					}
-
-					return true
+					},
 				},
-			},
+				"ephemeral_storage": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSize: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(512, 10240),
+							},
+						},
+					},
+				},
+				"file_system_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					// Lambda file system supports 1 EFS file system per lambda function. This might increase in future.
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							// EFS access point arn
+							names.AttrARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							// Local mount path inside a lambda function. Must start with "/mnt/".
+							"local_mount_path": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[0-9A-Za-z_.-]+$`), "must start with '/mnt/'"),
+							},
+						},
+					},
+				},
+				"filename": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
+				},
+				"function_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validFunctionName(),
+				},
+				"handler": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"image_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"command": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"entry_point": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"working_directory": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == "0" && new == "1" {
+							imageConfigPlan := d.GetRawPlan().GetAttr("image_config")
+							if !imageConfigPlan.IsNull() {
+								icSlice := imageConfigPlan.AsValueSlice()[0]
+								if !icSlice.IsNull() {
+									var suppressCommand, suppressEntryPoint, suppressWorkingDirectory bool
+									icMap := icSlice.AsValueMap()
+									if v, ok := icMap["command"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
+										suppressCommand = true
+									}
+									if v, ok := icMap["entry_point"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
+										suppressEntryPoint = true
+									}
+									if v, ok := icMap["working_directory"]; ok && (v.IsNull() || len(v.AsString()) == 0) {
+										suppressWorkingDirectory = true
+									}
+
+									return suppressCommand && suppressEntryPoint && suppressWorkingDirectory
+								}
+							}
+						}
+						return false
+					},
+				},
+				"image_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
+				},
+				"invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"layers": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"logging_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_log_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "",
+								ValidateDiagFunc: enum.Validate[awstypes.ApplicationLogLevel](),
+								DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
+							},
+							"log_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
+							},
+							"log_group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validLogGroupName(),
+							},
+							"system_log_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "",
+								ValidateDiagFunc: enum.Validate[awstypes.SystemLogLevel](),
+								DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
+							},
+						},
+					},
+				},
+				"memory_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      128,
+					ValidateFunc: validation.IntBetween(128, 32768),
+				},
+				"package_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.PackageTypeZip,
+					ValidateDiagFunc: enum.Validate[awstypes.PackageType](),
+				},
+				"publish": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"publish_to": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FunctionVersionLatestPublished](),
+				},
+				"qualified_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"qualified_invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replace_security_groups_on_destroy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"replacement_security_group_ids": {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					RequiredWith: []string{"replace_security_groups_on_destroy"},
+				},
+				"reserved_concurrent_executions": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      -1,
+					ValidateFunc: validation.IntAtLeast(-1),
+				},
+				"response_streaming_invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRole: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"runtime": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
+				},
+				names.AttrS3Bucket: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
+					RequiredWith: []string{"s3_key"},
+				},
+				"s3_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{names.AttrS3Bucket},
+				},
+				"s3_object_version": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"filename", "image_uri"},
+				},
+				"signing_job_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_profile_version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"snap_start": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"apply_on": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SnapStartApplyOn](),
+							},
+							"optimization_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"source_code_hash": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				"source_code_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"source_kms_key_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"image_uri"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tenancy_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tenant_isolation_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TenantIsolationMode](),
+							},
+						},
+					},
+				},
+				names.AttrTimeout: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      3,
+					ValidateFunc: validation.IntBetween(1, 900),
+				},
+				"tracing_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
+							},
+						},
+					},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv6_allowed_for_dual_stack": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+
+					// Suppress diffs if the VPC configuration is provided, but empty
+					// which is a valid Lambda function configuration. e.g.
+					//   vpc_config {
+					//     ipv6_allowed_for_dual_stack = false
+					//     security_group_ids          = []
+					//     subnet_ids                  = []
+					//   }
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.Id() == "" || old == "1" || new == "0" {
+							return false
+						}
+
+						if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
+							return false
+						}
+
+						return true
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -793,165 +793,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", d.Id(), err)
 	}
 
-	// If Qualifier is specified, GetFunction will return nil for Concurrency.
-	// Need to fetch it separately using GetFunctionConcurrency.
-	if output.Concurrency == nil && input.Qualifier != nil {
-		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
-		}
-
-		output.Concurrency = &awstypes.Concurrency{
-			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
-		}
-	}
-
-	function := output.Configuration
-	functionCode := output.Code
-	d.Set("architectures", function.Architectures)
-	functionARN := aws.ToString(function.FunctionArn)
-	d.Set(names.AttrARN, functionARN)
-	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
-	}
-	d.Set("code_sha256", function.CodeSha256)
-	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		if err := d.Set("dead_letter_config", []any{
-			map[string]any{
-				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
-			},
-		}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
-		}
-	} else {
-		d.Set("dead_letter_config", []any{})
-	}
-	if function.DurableConfig != nil {
-		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
-		}
-	} else {
-		d.Set("durable_config", []any{})
-	}
-	d.Set(names.AttrDescription, function.Description)
-	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
-	}
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
-	}
-	d.Set("handler", function.Handler)
-	if err := d.Set("image_config", flattenImageConfig(function.ImageConfigResponse)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
-	}
-	if output.Code != nil {
-		d.Set("image_uri", output.Code.ImageUri)
-	}
-	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
-	d.Set("last_modified", function.LastModified)
-	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
-	}
-	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
-	}
-	d.Set("memory_size", function.MemorySize)
-	d.Set("package_type", function.PackageType)
-	if output.Concurrency != nil {
-		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
-	} else {
-		d.Set("reserved_concurrent_executions", -1)
-	}
-	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-	d.Set(names.AttrRole, function.Role)
-	d.Set("runtime", function.Runtime)
-	d.Set("signing_job_arn", function.SigningJobArn)
-	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
-	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
-	}
-	d.Set("source_code_hash", d.Get("source_code_hash"))
-	d.Set("source_code_size", function.CodeSize)
-	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
-	d.Set(names.AttrTimeout, function.Timeout)
-	tracingConfigMode := awstypes.TracingModePassThrough
-	if function.TracingConfig != nil {
-		tracingConfigMode = function.TracingConfig.Mode
-	}
-	if err := d.Set("tracing_config", []any{
-		map[string]any{
-			names.AttrMode: string(tracingConfigMode),
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
-	}
-	if function.TenancyConfig != nil {
-		if err := d.Set("tenancy_config", []any{
-			map[string]any{
-				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
-			},
-		}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
-		}
-	}
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
-	}
-
-	if hasQualifier {
-		d.Set("qualified_arn", functionARN)
-		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
-		d.Set(names.AttrVersion, function.Version)
-	} else {
-		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", d.Id(), err)
-		}
-
-		qualifiedARN := aws.ToString(latest.FunctionArn)
-		d.Set("qualified_arn", qualifiedARN)
-		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
-		d.Set(names.AttrVersion, latest.Version)
-
-		setTagsOut(ctx, output.Tags)
-	}
-
-	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
-	// partitions and other partitions return ambiguous error codes.
-	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
-	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
-		var codeSigningConfigARN string
-
-		// Code Signing is only supported on zip packaged lambda functions.
-		if function.PackageType == awstypes.PackageTypeZip {
-			input := lambda.GetFunctionCodeSigningConfigInput{
-				FunctionName: aws.String(d.Id()),
-			}
-
-			output, err := conn.GetFunctionCodeSigningConfig(ctx, &input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
-			}
-
-			if output != nil {
-				codeSigningConfigARN = aws.ToString(output.CodeSigningConfigArn)
-			}
-		}
-
-		d.Set("code_signing_config_arn", codeSigningConfigARN)
-	}
-
-	return diags
+	return append(diags, resourceFunctionFlatten(ctx, meta.(*conns.AWSClient), d, output, input, hasQualifier)...)
 }
 
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1333,9 +1175,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	output, err := conn.GetDurableExecution(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1350,8 +1191,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	return output, nil
 }
 
-func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDurableExecution(conn *lambda.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDurableExecution(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1367,10 +1208,10 @@ func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string
 }
 
 func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
 		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
-		Refresh: statusDurableExecution(ctx, conn, arn),
+		Refresh: statusDurableExecution(conn, arn),
 		Timeout: timeout,
 		Delay:   2 * time.Second,
 	}
@@ -1396,9 +1237,8 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1428,9 +1268,8 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	output, err := conn.GetFunctionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1485,9 +1324,8 @@ func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *la
 	output, err := conn.GetFunctionConcurrency(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1563,8 +1401,8 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionLastUpdateStatus(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1579,8 +1417,8 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionState(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1595,8 +1433,8 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 	}
 }
 
-func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lambda.Client, name, qualifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionConfigurationLastUpdateStatus(conn *lambda.Client, name, qualifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionConfigurationByTwoPartKey(ctx, conn, name, qualifier)
 
 		if retry.NotFound(err) {
@@ -1619,10 +1457,10 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
 		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1639,10 +1477,10 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionLastUpdateStatus(ctx, conn, name),
+		Refresh: statusFunctionLastUpdateStatus(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1659,10 +1497,10 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, name, qualifier string, timeout time.Duration) (*lambda.GetFunctionConfigurationOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionConfigurationLastUpdateStatus(ctx, conn, name, qualifier),
+		Refresh: statusFunctionConfigurationLastUpdateStatus(conn, name, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1679,10 +1517,10 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 }
 
 func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
 		Target:  []string{},
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -2148,4 +1986,168 @@ func resetNonRefreshableAttributes(d *schema.ResourceData) {
 			d.Set(key, old)
 		}
 	}
+}
+
+func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *lambda.GetFunctionOutput, input lambda.GetFunctionInput, hasQualifier bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := awsClient.LambdaClient(ctx)
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
+	function := output.Configuration
+	functionCode := output.Code
+	d.Set("architectures", function.Architectures)
+	functionARN := aws.ToString(function.FunctionArn)
+	d.Set(names.AttrARN, functionARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
+	d.Set("code_sha256", function.CodeSha256)
+	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
+		if err := d.Set("dead_letter_config", []any{
+			map[string]any{
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+		}
+	} else {
+		d.Set("dead_letter_config", []any{})
+	}
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	} else {
+		d.Set("durable_config", []any{})
+	}
+	d.Set(names.AttrDescription, function.Description)
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
+	}
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
+	}
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
+	}
+	d.Set("handler", function.Handler)
+	if err := d.Set("image_config", flattenImageConfig(function.ImageConfigResponse)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
+	}
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
+	d.Set("invoke_arn", invokeARN(ctx, awsClient, functionARN))
+	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
+	d.Set("last_modified", function.LastModified)
+	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
+	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	}
+	d.Set("memory_size", function.MemorySize)
+	d.Set("package_type", function.PackageType)
+	if output.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", -1)
+	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, awsClient, functionARN))
+	d.Set(names.AttrRole, function.Role)
+	d.Set("runtime", function.Runtime)
+	d.Set("signing_job_arn", function.SigningJobArn)
+	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
+	}
+	d.Set("source_code_hash", d.Get("source_code_hash"))
+	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
+	d.Set(names.AttrTimeout, function.Timeout)
+	tracingConfigMode := awstypes.TracingModePassThrough
+	if function.TracingConfig != nil {
+		tracingConfigMode = function.TracingConfig.Mode
+	}
+	if err := d.Set("tracing_config", []any{
+		map[string]any{
+			names.AttrMode: string(tracingConfigMode),
+		},
+	}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
+	}
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
+	}
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+
+	if hasQualifier {
+		d.Set("qualified_arn", functionARN)
+		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, functionARN))
+		d.Set(names.AttrVersion, function.Version)
+	} else {
+		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", d.Id(), err)
+		}
+
+		qualifiedARN := aws.ToString(latest.FunctionArn)
+		d.Set("qualified_arn", qualifiedARN)
+		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, qualifiedARN))
+		d.Set(names.AttrVersion, latest.Version)
+
+		setTagsOut(ctx, output.Tags)
+	}
+
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
+	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
+	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
+	if partition, region := awsClient.Partition(ctx), awsClient.Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
+		var codeSigningConfigARN string
+
+		// Code Signing is only supported on zip packaged lambda functions.
+		if function.PackageType == awstypes.PackageTypeZip {
+			input := lambda.GetFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			}
+
+			output, err := conn.GetFunctionCodeSigningConfig(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
+			}
+
+			if output != nil {
+				codeSigningConfigARN = aws.ToString(output.CodeSigningConfigArn)
+			}
+		}
+
+		d.Set("code_signing_config_arn", codeSigningConfigARN)
+	}
+
+	return diags
 }

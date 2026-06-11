@@ -25,392 +25,58 @@ func dataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_policies": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"advanced_options": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"advanced_security_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"anonymous_auth_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"internal_user_database_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policies": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_tune_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"maintenance_schedule": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cron_expression_for_recurrence": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrDuration: {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrUnit: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
+				"advanced_options": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"advanced_security_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"anonymous_auth_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"internal_user_database_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"jwt_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
 										},
-									},
-									"start_at": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"rollback_on_disable": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"use_off_peak_window": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"cluster_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cold_storage_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"dedicated_master_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"dedicated_master_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrInstanceCount: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"multi_az_with_standby_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"node_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"node_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"count": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												names.AttrType: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+										"jwks_url": {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
-									},
-									"node_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"warm_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"zone_awareness_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"cognito_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRoleARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrUserPoolID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"dashboard_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dashboard_endpoint_v2": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deleted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"domain_endpoint_v2_hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"ebs_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ebs_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"encryption_at_rest": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_v2": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_center_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled_api_access": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"identity_center_instance_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"roles_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subject_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogGroupARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"log_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"node_to_node_encryption": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"off_peak_window_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"off_peak_window": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"window_start_time": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hours": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"minutes": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
+										names.AttrPublicKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"roles_key": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"subject_key": {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
 									},
 								},
@@ -418,63 +84,439 @@ func dataSourceDomain() *schema.Resource {
 						},
 					},
 				},
-			},
-			"processing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"snapshot_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automated_snapshot_start_hour": {
-							Type:     schema.TypeInt,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_tune_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_state": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"maintenance_schedule": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cron_expression_for_recurrence": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrDuration: {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrUnit: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"start_at": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"rollback_on_disable": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"use_off_peak_window": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"software_update_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_software_update_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"cluster_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cold_storage_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"dedicated_master_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"dedicated_master_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"dedicated_master_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrInstanceCount: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"multi_az_with_standby_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"node_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"node_config": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
+													names.AttrType: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"node_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"warm_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"warm_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"warm_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"zone_awareness_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"availability_zone_count": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"zone_awareness_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"cognito_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"identity_pool_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRoleARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrUserPoolID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				"created": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"dashboard_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dashboard_endpoint_v2": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deleted": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"deployment_strategy_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_strategy": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"domain_endpoint_v2_hosted_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"ebs_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ebs_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"encryption_at_rest": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_v2": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_center_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled_api_access": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"identity_center_instance_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"roles_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"subject_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_publishing_options": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogGroupARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"log_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"node_to_node_encryption": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"off_peak_window_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"off_peak_window": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"window_start_time": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"hours": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													"minutes": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"processing": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"snapshot_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automated_snapshot_start_hour": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"software_update_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_software_update_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vpc_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -606,6 +648,9 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("deployment_strategy_options", flattenDeploymentStrategyOptions(ds.DeploymentStrategyOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_strategy_options: %s", err)
 	}
 
 	if ds.OffPeakWindowOptions != nil {

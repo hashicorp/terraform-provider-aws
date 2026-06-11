@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,27 +37,29 @@ func resourceConditionalForwarder() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dns_ips": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"remote_domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// Documentation is incorrect, the API call fails if a trailing period is included
-				ValidateFunc: domainValidator,
-			},
+				"dns_ips": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"remote_domain_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// Documentation is incorrect, the API call fails if a trailing period is included
+					ValidateFunc: domainValidator,
+				},
+			}
 		},
 	}
 }
@@ -210,9 +211,8 @@ func findConditionalForwarders(ctx context.Context, conn *directoryservice.Clien
 	output, err := conn.DescribeConditionalForwarders(ctx, input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

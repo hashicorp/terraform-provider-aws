@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,7 +39,6 @@ import (
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeRuleOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -57,94 +55,96 @@ func resourceRule() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-				StateFunc: func(v any) string {
-					json, _ := ruleEventPatternJSONDecoder(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_enabled": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "is_enabled is deprecated. Use state instead.",
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					rawPlan := d.GetRawPlan()
-					rawIsEnabled := rawPlan.GetAttr("is_enabled")
-					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
-				ConflictsWith: []string{
-					names.AttrState,
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusNameOrARN,
+					Default:      DefaultEventBusName,
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrScheduleExpression: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.RuleState](),
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					if oldValue != "" && newValue == "" {
-						return true
-					}
-					return false
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+					StateFunc: func(v any) string {
+						json, _ := ruleEventPatternJSONDecoder(v.(string))
+						return json
+					},
 				},
-				ConflictsWith: []string{
-					"is_enabled",
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"is_enabled": {
+					Type:       schema.TypeBool,
+					Optional:   true,
+					Deprecated: "is_enabled is deprecated. Use state instead.",
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						rawPlan := d.GetRawPlan()
+						rawIsEnabled := rawPlan.GetAttr("is_enabled")
+						return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+					},
+					ConflictsWith: []string{
+						names.AttrState,
+					},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrScheduleExpression: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.RuleState](),
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						if oldValue != "" && newValue == "" {
+							return true
+						}
+						return false
+					},
+					ConflictsWith: []string{
+						"is_enabled",
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -153,7 +153,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := expandPutRuleInput(d, name)
 	input.Tags = getTagsIn(ctx)
 
@@ -222,31 +222,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(output.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
-	if output.EventPattern != nil {
-		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		d.Set("event_pattern", pattern)
-	}
-	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
-	switch output.State {
-	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
-		d.Set("is_enabled", true)
-	default:
-		d.Set("is_enabled", false)
-	}
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
-	d.Set(names.AttrState, output.State)
-
-	return diags
+	return append(diags, resourceRuleFlatten(ctx, eventBusName, d, output)...)
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -342,9 +318,8 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 	output, err := conn.DescribeRule(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -492,4 +467,34 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
+}
+
+func resourceRuleFlatten(_ context.Context, eventBusName string, d *schema.ResourceData, output *eventbridge.DescribeRuleOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	arn := aws.ToString(output.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
+	if output.EventPattern != nil {
+		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		d.Set("event_pattern", pattern)
+	}
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
+	switch output.State {
+	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
+		d.Set("is_enabled", true)
+	default:
+		d.Set("is_enabled", false)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
+	d.Set(names.AttrState, output.State)
+
+	return diags
 }

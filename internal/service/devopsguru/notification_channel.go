@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -195,7 +194,7 @@ func (r *notificationChannelResource) Delete(ctx context.Context, req resource.D
 
 	_, err := conn.RemoveNotificationChannel(ctx, in)
 	if err != nil {
-		if errs.IsA[*sdkretry.NotFoundError](err) {
+		if errs.IsA[*retry.NotFoundError](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -223,9 +222,8 @@ func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, i
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastError:   errors.New("not found"),
-		LastRequest: in,
+	return nil, &retry.NotFoundError{
+		LastError: errors.New("not found"),
 	}
 }
 

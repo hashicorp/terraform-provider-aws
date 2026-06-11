@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,16 +15,16 @@ import (
 
 func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonDataSourceConfig_basic(rName, addonName),
@@ -46,18 +45,18 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 
 func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
 	addonVersion := "v1.18.3-eksbuild.2"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, string(awstypes.ResolveConflictsOverwrite)),

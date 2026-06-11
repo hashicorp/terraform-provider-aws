@@ -16,7 +16,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @SDKResource("aws_dms_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.EventSubscription")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
@@ -51,49 +49,51 @@ func resourceEventSubscription() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrSNSTopicARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"source_ids": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrSourceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"replication-instance",
-					"replication-task",
-				}, false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_categories": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrSNSTopicARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"source_ids": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrSourceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"replication-instance",
+						"replication-task",
+					}, false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -244,9 +244,8 @@ func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -260,8 +259,8 @@ func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.De
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *dms.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventSubscription(conn *dms.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -277,10 +276,10 @@ func statusEventSubscription(ctx context.Context, conn *dms.Client, name string)
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *dms.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating, eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
@@ -296,10 +295,10 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *dms.Client, name st
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *dms.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
@@ -315,10 +314,10 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *dms.Client, name st
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *dms.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,

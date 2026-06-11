@@ -72,6 +72,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - Name of the database resource.Unique to the Data Catalog.
 * `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
+### LF-Tag
+
+* `key` - (Required) Key name for the LF-Tag.
+* `values` - (Required) Set of tag values for the LF-Tag key. At least one value is required. Each value can be 1-255 characters.
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
 ### LF-Tag Expression
 
 * `name` - Name of the LF-Tag expression to grand permissions on.
@@ -98,11 +104,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `column_names` - List of column names for the table. At least one of ColumnNames or ColumnWildcard is required.
 * `column_wildcard` - Wildcard specified by a ColumnWildcard object. At least one of ColumnNames or ColumnWildcard is required.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)

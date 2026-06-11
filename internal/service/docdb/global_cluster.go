@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,79 +45,81 @@ func resourceGlobalCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEngine: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringInSlice(engine_Values(), false),
-				AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
-				ConflictsWith: []string{"source_db_cluster_identifier"},
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"global_cluster_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validGlobalCusterIdentifier,
-			},
-			"global_cluster_members": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"db_cluster_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_writer": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEngine: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringInSlice(engine_Values(), false),
+					AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
+					ConflictsWith: []string{"source_db_cluster_identifier"},
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"global_cluster_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validGlobalCusterIdentifier,
+				},
+				"global_cluster_members": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"db_cluster_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"is_writer": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_db_cluster_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
-				ConflictsWith: []string{names.AttrEngine},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"global_cluster_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_db_cluster_identifier": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
+					ConflictsWith: []string{names.AttrEngine},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -326,17 +327,14 @@ func findGlobalClusterByID(ctx context.Context, conn *docdb.Client, id string) (
 	}
 
 	if status := aws.ToString(output.Status); status == globalClusterStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -370,9 +368,8 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		if err != nil {
@@ -389,8 +386,8 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalCluster(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -406,10 +403,10 @@ func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) sdk
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -423,10 +420,10 @@ func waitGlobalClusterCreated(ctx context.Context, conn *docdb.Client, id string
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -441,10 +438,10 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *docdb.Client, id string
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
-		Refresh:        statusGlobalCluster(ctx, conn, id),
+		Refresh:        statusGlobalCluster(conn, id),
 		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}

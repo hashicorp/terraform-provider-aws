@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,40 +27,42 @@ func dataSourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dedicated_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"warmup_percentage": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"warmup_status": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dedicated_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"warmup_percentage": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"warmup_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"pool_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"scaling_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"pool_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"scaling_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -127,9 +129,8 @@ func findDedicatedIPs(ctx context.Context, conn *sesv2.Client, input *sesv2.GetD
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

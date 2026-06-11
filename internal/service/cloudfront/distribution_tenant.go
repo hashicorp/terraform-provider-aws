@@ -214,13 +214,13 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainResultModel]               `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainResultModel]               `tfsdk:"domain"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
-	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter" autoflex:",xmlwrapper=Items"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
@@ -837,6 +837,10 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 }
 
 func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput) error {
+	if mcOutput == nil {
+		return nil
+	}
+
 	// Check if we need to update the certificate ARN
 	if !needToUpdateCertificateARN(dtOutput.DistributionTenant, aws.ToString(mcOutput.ManagedCertificateDetails.CertificateArn)) {
 		// Certificate ARN already matches, nothing to do

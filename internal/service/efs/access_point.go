@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -42,95 +41,97 @@ func resourceAccessPoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"posix_user": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"gid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"secondary_gids": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-							ForceNew: true,
-						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"posix_user": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"gid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"secondary_gids": {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								Optional: true,
+								ForceNew: true,
+							},
+							"uid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"root_directory": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"creation_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"owner_gid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"owner_uid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrPermissions: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+				"root_directory": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"creation_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"owner_gid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										"owner_uid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrPermissions: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -258,9 +259,8 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.AccessPointNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -290,17 +290,16 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccessPointLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -319,10 +318,10 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -340,10 +339,10 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 		accessPointCreatedTimeout = 10 * time.Minute
 		accessPointDeletedTimeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: accessPointDeletedTimeout,
 	}
 

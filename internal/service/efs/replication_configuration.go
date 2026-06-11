@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -44,67 +43,69 @@ func resourceReplicationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrFileSystemID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestination: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zone_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidRegionName,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"original_source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"source_file_system_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"original_source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"source_file_system_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -238,9 +239,8 @@ func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input 
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -276,8 +276,8 @@ func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id 
 	return output, nil
 }
 
-func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id string, optFns ...func(*efs.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationConfiguration(conn *efs.Client, id string, optFns ...func(*efs.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationConfigurationByID(ctx, conn, id, optFns...)
 
 		if retry.NotFound(err) {
@@ -293,10 +293,10 @@ func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id st
 }
 
 func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ReplicationStatusEnabling),
 		Target:  enum.Slice(awstypes.ReplicationStatusEnabled),
-		Refresh: statusReplicationConfiguration(ctx, conn, id, optFns...),
+		Refresh: statusReplicationConfiguration(conn, id, optFns...),
 		Timeout: timeout,
 	}
 
@@ -310,10 +310,10 @@ func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, 
 }
 
 func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ReplicationStatusDeleting),
 		Target:                    []string{},
-		Refresh:                   statusReplicationConfiguration(ctx, conn, id, optFns...),
+		Refresh:                   statusReplicationConfiguration(conn, id, optFns...),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

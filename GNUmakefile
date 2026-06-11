@@ -138,9 +138,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -245,7 +245,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
 	cd skaff && $$gover mod tidy && cd .. ; \
@@ -269,16 +268,7 @@ deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 
 docs: docs-link-check docs-markdown-lint docs-misspell ## [CI] Run all CI documentation checks
 
-docs-check: ## Check provider documentation (Legacy, use caution)
-	@echo "make: Legacy target, use caution..."
-	@tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-		-provider-name=aws \
-		-require-resource-subcategory
+docs-check: swissshepherd ## Alias to swissshepherd
 
 docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
@@ -399,7 +389,7 @@ go-build: ## [CI] Provider Checks / go-build
 
 go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar" internal/
+	@misspell -error -source auto -i "littel,ceasar,ect" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
@@ -519,7 +509,7 @@ quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -527,8 +517,10 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		-v "$(PWD):/markdown" \
 		avtodev/markdown-lint:v1.5.0 \
 		--config markdown/.markdownlint.yml \
+		--ignore markdown/.agents \
 		--ignore markdown/docs \
 		--ignore markdown/website/docs \
+		--ignore markdown/AGENTS.md \
 		--ignore markdown/CHANGELOG.md \
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
@@ -603,6 +595,13 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		exit 1; \
 	fi
 
+schema-validate: ## Validate schemas
+	@echo "make: Validating schemas"
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/sdkv2 -run=TestProviderInit
+	@$(GO_VER) test -vet=off -buildvcs=false \
+		./internal/provider/framework -run=TestProviderInit
+
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
 semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
@@ -612,19 +611,32 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
@@ -635,12 +647,25 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
@@ -662,7 +687,7 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -684,7 +709,7 @@ semgrep-fix-core: semgrep-validate ## Fix Semgrep issues in core directories
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
@@ -710,12 +735,14 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-caps-aws-ec2.yml
+		--config .ci/semgrep-caps-aws-ec2.yml
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
 	@semgrep --quiet \
 		--test .ci/semgrep/
+	@semgrep --quiet \
+		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -733,21 +760,13 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
-
-semgrep-vcr: ## Enable VCR support with Semgrep --autofix
-	@echo "make: Enable VCR support with Semgrep --autofix"
-	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
-	@echo "this target may need to be run twice."
-	@semgrep $(SEMGREP_ARGS) --autofix \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config internal/vcr/.semgrep-vcr.yml
 
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
@@ -789,6 +808,19 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 	echo "make: sweeper-unlinked: found $$count, expected 0" ; \
 	[ $$count -eq 0 ] || \
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
+
+swissshepherd: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Running Swiss Shepherd checks (config: .ci/swissshepherd-weak.hcl)..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl
+
+swissshepherd-count: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Counting all Swiss Shepherd findings (config: .ci/swissshepherd-full.hcl)..."
+	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
+
+swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
+	@echo "make: Refreshing Swiss Shepherd schemas (config: .ci/swissshepherd-weak.hcl)..."
+	@echo "make: This will take a while..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -891,7 +923,10 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-testacc: prereq-go fmt-check ## Run acceptance tests
+test-naming: ## Check test naming conventions
+	@.ci/scripts/check-test-naming.sh
+
+testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -904,7 +939,7 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."
@@ -923,6 +958,12 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
+
+terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
+	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
+	@terraform fmt -recursive .
+	@find . -name "*.BEGIANT.tf" -type f -exec sh -c 'mv "$$1" "$${1%.BEGIANT.tf}.tfquery.hcl"' _ {} \;
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
@@ -950,37 +991,10 @@ testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
 tflint-init: ## Initialize tflint
 	@tflint --config .ci/.tflint.hcl --init
 
-tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
-	@echo "make: Provider Checks / tfproviderdocs..."
-	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
-	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
-	echo 'data "aws_partition" "example" {}' > example.tf ; \
-	terraform init -plugin-dir terraform-plugin-dir ; \
-	mkdir -p terraform-providers-schema ; \
-	terraform providers schema -json > terraform-providers-schema/schema.json ; \
-	tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
-		-provider-source registry.terraform.io/hashicorp/aws \
-		-providers-schema-json terraform-providers-schema/schema.json \
-		-require-resource-subcategory \
-		-ignore-cdktf-missing-files \
-		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
-		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
-		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
-		-enable-enhanced-region-check
-
-tfsdk2fw: prereq-go ## Install tfsdk2fw
-	@echo "make: Installing tfsdk2fw..."
-	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
@@ -999,7 +1013,6 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1011,12 +1024,6 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-
-vcr-enable: ## Enable VCR testing
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) fmt
-	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -1080,8 +1087,6 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 		-v "$(PWD):/markdown" \
 		avtodev/markdown-lint:v1.5.0 \
 		--config /markdown/.markdownlint.yml \
-		--ignore /markdown/website/docs/cdktf/python/guides \
-		--ignore /markdown/website/docs/cdktf/typescript/guides \
 		/markdown/website/docs
 
 website-misspell: ## [CI] Website Checks / misspell
@@ -1096,7 +1101,7 @@ website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
 	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
-	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs ! -name cdktf | sort); do \
+	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs | sort); do \
 		echo "make: Fixing $$dir with terrafmt..."; \
 		terrafmt fmt $$dir --pattern '*.markdown'; \
 	done
@@ -1144,7 +1149,7 @@ website-tflint: tflint-init ## [CI] Website Checks / tflint
 		set +e ; \
 		./.ci/scripts/validate-terraform-file.sh "$$filename" "$${rules[@]}" || exit_code=1 ; \
 		set -e ; \
-	done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u) ; \
+	done < <(find ./website/docs -type f -name '*.markdown' | sort -u) ; \
 	exit $$exit_code
 
 yamllint: ## [CI] YAML Linting / yamllint
@@ -1225,7 +1230,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep-vcr \
 	skaff \
 	skaff-check-compile \
 	smoke \
@@ -1234,6 +1238,9 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
+	swissshepherd \
+	swissshepherd-count \
+	swissshepherd-refresh \
 	t \
 	test \
 	test-compile \
@@ -1248,13 +1255,11 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
+	terraform-fmt \
 	tflint-init \
-	tfproviderdocs \
-	tfsdk2fw \
 	tools \
 	ts \
 	update \
-	vcr-enable \
 	website \
 	website-link-check \
 	website-link-check-ghrc \

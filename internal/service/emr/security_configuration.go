@@ -14,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,33 +37,35 @@ func resourceSecurityConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrConfiguration: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 10280),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConfiguration: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 10280),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 10280-sdkid.UniqueIDSuffixLength),
+				},
+			}
 		},
 	}
 }
@@ -77,7 +78,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-emr-sc-"),
-	).Generate()
+	).Generate(ctx)
 	input := &emr.CreateSecurityConfigurationInput{
 		Name:                  aws.String(name),
 		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),
@@ -146,9 +147,8 @@ func findSecurityConfigurationByName(ctx context.Context, conn *emr.Client, name
 	output, err := conn.DescribeSecurityConfiguration(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

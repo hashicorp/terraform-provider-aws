@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"
@@ -33,7 +33,7 @@ func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{role}/{policy_arn}"),
@@ -107,7 +107,7 @@ func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"
@@ -119,7 +119,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -128,7 +128,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -165,7 +165,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"
@@ -177,7 +177,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -191,7 +191,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

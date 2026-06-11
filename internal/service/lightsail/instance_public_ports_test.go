@@ -11,21 +11,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -33,12 +32,12 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
@@ -53,10 +52,10 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -64,12 +63,12 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
@@ -89,10 +88,10 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -100,12 +99,12 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_cidrs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
@@ -123,10 +122,10 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -134,12 +133,12 @@ func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_cidrListAliases(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol:    "tcp",
@@ -157,9 +156,9 @@ func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
 func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_instance_public_ports.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -167,15 +166,23 @@ func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceInstancePublicPorts(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -183,11 +190,11 @@ func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	parentResourceName := "aws_lightsail_instance.test"
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -195,15 +202,23 @@ func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -211,10 +226,10 @@ func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_icmpPing(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -222,12 +237,12 @@ func TestAccLightsailInstancePublicPorts_icmpPing(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_icmpPing(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						"cidrs.0":          "0.0.0.0/0",
@@ -249,10 +264,10 @@ func TestAccLightsailInstancePublicPorts_icmpPing(t *testing.T) {
 
 func TestAccLightsailInstancePublicPorts_icmpAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -260,12 +275,12 @@ func TestAccLightsailInstancePublicPorts_icmpAll(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_icmpAll(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstancePublicPortsExists(ctx, resourceName),
+					testAccCheckInstancePublicPortsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						"cidrs.0":          "0.0.0.0/0",
@@ -285,14 +300,14 @@ func TestAccLightsailInstancePublicPorts_icmpAll(t *testing.T) {
 	})
 }
 
-func testAccCheckInstancePublicPortsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInstancePublicPortsExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		input := &lightsail.GetInstancePortStatesInput{
 			InstanceName: aws.String(rs.Primary.Attributes["instance_name"]),
@@ -308,9 +323,9 @@ func testAccCheckInstancePublicPortsExists(ctx context.Context, resourceName str
 	}
 }
 
-func testAccCheckInstancePublicPortsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstancePublicPortsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_instance_public_ports" {

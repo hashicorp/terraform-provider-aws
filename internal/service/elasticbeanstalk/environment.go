@@ -41,24 +41,26 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 func settingSchema() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrNamespace: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrNamespace: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "", // This default is required to work around an error seen is some situations with Unknown values
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

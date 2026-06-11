@@ -26,25 +26,25 @@ func testAccOrganizationsResourcePolicy_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccOrganizationsResourcePolicy_tags,
-		"null":                                      testAccOrganizationsResourcePolicy_tags_null,
-		"EmptyMap":                                  testAccOrganizationsResourcePolicy_tags_EmptyMap,
-		"AddOnUpdate":                               testAccOrganizationsResourcePolicy_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccOrganizationsResourcePolicy_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccOrganizationsResourcePolicy_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccOrganizationsResourcePolicy_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccOrganizationsResourcePolicy_Tags_null,
+		"EmptyMap":                                  testAccOrganizationsResourcePolicy_Tags_emptyMap,
+		"AddOnUpdate":                               testAccOrganizationsResourcePolicy_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccOrganizationsResourcePolicy_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccOrganizationsResourcePolicy_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccOrganizationsResourcePolicy_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccOrganizationsResourcePolicy_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccOrganizationsResourcePolicy_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccOrganizationsResourcePolicy_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccOrganizationsResourcePolicy_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccOrganizationsResourcePolicy_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccOrganizationsResourcePolicy_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccOrganizationsResourcePolicy_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccOrganizationsResourcePolicy_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccOrganizationsResourcePolicy_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccOrganizationsResourcePolicy_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccOrganizationsResourcePolicy_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccOrganizationsResourcePolicy_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccOrganizationsResourcePolicy_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -67,7 +67,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -78,7 +78,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -122,7 +122,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -170,7 +170,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -211,7 +211,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -239,7 +239,7 @@ func testAccOrganizationsResourcePolicy_tags(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_null(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -256,7 +256,7 @@ func testAccOrganizationsResourcePolicy_tags_null(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -267,7 +267,7 @@ func testAccOrganizationsResourcePolicy_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -313,7 +313,7 @@ func testAccOrganizationsResourcePolicy_tags_null(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_EmptyMap(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -330,7 +330,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyMap(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -339,7 +339,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -383,7 +383,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_AddOnUpdate(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -400,7 +400,7 @@ func testAccOrganizationsResourcePolicy_tags_AddOnUpdate(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -409,7 +409,7 @@ func testAccOrganizationsResourcePolicy_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -433,7 +433,7 @@ func testAccOrganizationsResourcePolicy_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -471,7 +471,7 @@ func testAccOrganizationsResourcePolicy_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -488,7 +488,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -499,7 +499,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -539,7 +539,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -567,7 +567,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -584,7 +584,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -595,7 +595,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -627,7 +627,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -673,7 +673,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -711,7 +711,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -728,7 +728,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace(t *testin
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -739,7 +739,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -770,7 +770,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -807,7 +807,7 @@ func testAccOrganizationsResourcePolicy_tags_EmptyTag_OnUpdate_Replace(t *testin
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -824,7 +824,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -836,7 +836,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -878,7 +878,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -922,7 +922,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -960,7 +960,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -988,7 +988,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_providerOnly(t *testing
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1005,7 +1005,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testi
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1019,7 +1019,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1071,7 +1071,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1122,7 +1122,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1150,7 +1150,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nonOverlapping(t *testi
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1167,7 +1167,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1181,7 +1181,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1232,7 +1232,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1287,7 +1287,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1328,7 +1328,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_overlapping(t *testing.
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1345,7 +1345,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly(t 
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1356,7 +1356,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1388,7 +1388,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1423,7 +1423,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToProviderOnly(t 
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1440,7 +1440,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly(t 
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1452,7 +1452,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1479,7 +1479,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1517,7 +1517,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_updateToResourceOnly(t 
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1534,7 +1534,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyResourceTag(t *tes
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1548,7 +1548,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1588,7 +1588,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyResourceTag(t *tes
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1605,7 +1605,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyProviderOnlyTag(t 
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1617,7 +1617,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyProviderOnlyTag(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1651,7 +1651,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_emptyProviderOnlyTag(t 
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1668,7 +1668,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullOverlappingResource
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1682,7 +1682,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullOverlappingResource
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1719,7 +1719,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullOverlappingResource
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1736,7 +1736,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullNonOverlappingResou
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1750,7 +1750,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullNonOverlappingResou
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1787,7 +1787,7 @@ func testAccOrganizationsResourcePolicy_tags_DefaultTags_nullNonOverlappingResou
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1804,7 +1804,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnCreate(t *testing.T) 
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1813,7 +1813,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnCreate(t *testing.T) 
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1848,7 +1848,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnCreate(t *testing.T) 
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1865,7 +1865,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add(t *testing
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1876,7 +1876,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1907,7 +1907,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add(t *testing
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1950,7 +1950,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Add(t *testing
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -1967,7 +1967,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace(t *tes
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1978,7 +1978,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2007,7 +2007,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace(t *tes
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2042,7 +2042,7 @@ func testAccOrganizationsResourcePolicy_tags_ComputedTag_OnUpdate_Replace(t *tes
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -2059,7 +2059,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *te
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2077,7 +2077,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2125,7 +2125,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2173,7 +2173,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2209,7 +2209,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	})
 }
 
-func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -2226,7 +2226,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag(t *t
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2242,7 +2242,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2304,7 +2304,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2366,7 +2366,7 @@ func testAccOrganizationsResourcePolicy_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

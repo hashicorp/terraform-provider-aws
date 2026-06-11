@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -21,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_function", name="Function")
+// @Tags(identifierAttribute="arn")
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -38,54 +39,58 @@ func resourceFunction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_value_store_associations": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"live_stage_etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"publish": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"runtime": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FunctionRuntime](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_value_store_associations": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"live_stage_etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"publish": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"runtime": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FunctionRuntime](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -106,6 +111,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("key_value_store_associations"); ok {
 		input.FunctionConfig.KeyValueStoreAssociations = expandKeyValueStoreAssociations(v.(*schema.Set).List())
+	}
+
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	output, err := conn.CreateFunction(ctx, input)
@@ -259,9 +270,8 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	output, err := conn.DescribeFunction(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchFunctionExists](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

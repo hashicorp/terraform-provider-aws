@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,49 +38,51 @@ func resourceArchive() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"event_source_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_key_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
-				),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validArchiveName,
-			},
-			"retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v.(string))
+						return json
+					},
+				},
+				"event_source_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validArchiveName,
+				},
+				"retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -221,9 +222,8 @@ func findArchiveByName(ctx context.Context, conn *eventbridge.Client, name strin
 	output, err := conn.DescribeArchive(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

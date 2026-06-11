@@ -89,6 +89,7 @@ func resourceDomain() *schema.Resource {
 				}
 				return !slices.Contains(resp.CompatibleVersions[0].TargetVersions, newVersion)
 			}),
+			validateJWTOptionsVersion,
 			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
 				if o.(bool) && !n.(bool) {
@@ -118,583 +119,102 @@ func resourceDomain() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"advanced_options": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"advanced_security_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"anonymous_auth_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"internal_user_database_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"master_user_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"master_user_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"master_user_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"master_user_password": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"advanced_options": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"aiml_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"natural_language_query_generation_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"desired_state": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
-									},
-								},
+				"advanced_security_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"anonymous_auth_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
 							},
-						},
-						"s3_vectors_engine": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-								},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
 							},
-						},
-						"serverless_vector_acceleration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-								},
+							"internal_user_database_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_tune_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_state": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AutoTuneDesiredState](),
-						},
-						"maintenance_schedule": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cron_expression_for_recurrence": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrDuration: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrUnit: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
-												},
-												names.AttrValue: {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
+							"jwt_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
+										"jwks_url": {
+											Type:     schema.TypeString,
+											Optional: true,
+											AtLeastOneOf: []string{
+												"advanced_security_options.0.jwt_options.0.jwks_url",
+												"advanced_security_options.0.jwt_options.0.public_key",
+											},
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 2048),
+											),
+										},
+										names.AttrPublicKey: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											DiffSuppressFunc: suppressPublicKeyDiff,
+											AtLeastOneOf: []string{
+												"advanced_security_options.0.jwt_options.0.jwks_url",
+												"advanced_security_options.0.jwt_options.0.public_key",
 											},
 										},
-									},
-									"start_at": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsRFC3339Time,
-									},
-								},
-							},
-						},
-						"rollback_on_disable": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RollbackOnDisable](),
-						},
-						"use_off_peak_window": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"cluster_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cold_storage_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"dedicated_master_count": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							DiffSuppressFunc: suppressComputedDedicatedMaster,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"dedicated_master_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressComputedDedicatedMaster,
-						},
-						names.AttrInstanceCount: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  awstypes.OpenSearchPartitionInstanceTypeM3MediumSearch,
-						},
-						"multi_az_with_standby_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"node_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"node_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Computed: true,
-												},
-												names.AttrType: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
+										"roles_key": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"subject_key": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
 									},
-									"node_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
-									},
 								},
 							},
-						},
-						"warm_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 150),
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OpenSearchWarmPartitionInstanceType](),
-						},
-						"zone_awareness_config": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      2,
-										ValidateFunc: validation.IntInSlice([]int{2, 3}),
-									},
-								},
-							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"cognito_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrUserPoolID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"dashboard_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dashboard_endpoint_v2": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_endpoint_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_endpoint": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-						"custom_endpoint_certificate_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     verify.ValidARN,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-						"custom_endpoint_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"tls_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TLSSecurityPolicy](),
-						},
-					},
-				},
-			},
-			"domain_endpoint_v2_hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
-					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
-						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
-			},
-			"ebs_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ebs_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrThroughput: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntAtLeast(125),
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrVolumeType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
-						},
-					},
-				},
-			},
-			"encrypt_at_rest": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
-						},
-					},
-				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_v2": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"identity_center_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled_api_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"identity_center_instance_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     verify.ValidARN,
-							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
-						},
-						"roles_key": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RolesKeyIdCOption](),
-							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
-						},
-						"subject_key": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SubjectKeyIdCOption](),
-							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
-						},
-					},
-				},
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IPAddressType](),
-			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogGroupARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
-						},
-					},
-				},
-			},
-			"node_to_node_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"off_peak_window_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"off_peak_window": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"window_start_time": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hours": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													Computed: true,
-												},
-												"minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													Computed: true,
-												},
-											},
+							"master_user_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"master_user_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"master_user_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"master_user_password": {
+											Type:      schema.TypeString,
+											Optional:  true,
+											Sensitive: true,
 										},
 									},
 								},
@@ -702,71 +222,616 @@ func resourceDomain() *schema.Resource {
 						},
 					},
 				},
-			},
-			"snapshot_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automated_snapshot_start_hour": {
-							Type:     schema.TypeInt,
-							Required: true,
+				"aiml_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"natural_language_query_generation_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"desired_state": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
+										},
+									},
+								},
+							},
+							"s3_vectors_engine": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"serverless_vector_acceleration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			"software_update_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Computed:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_software_update_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_tune_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_state": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AutoTuneDesiredState](),
+							},
+							"maintenance_schedule": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cron_expression_for_recurrence": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrDuration: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrUnit: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
+													},
+													names.AttrValue: {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
+												},
+											},
+										},
+										"start_at": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.IsRFC3339Time,
+										},
+									},
+								},
+							},
+							"rollback_on_disable": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RollbackOnDisable](),
+							},
+							"use_off_peak_window": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"cluster_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cold_storage_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"dedicated_master_count": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								DiffSuppressFunc: suppressComputedDedicatedMaster,
+							},
+							"dedicated_master_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"dedicated_master_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: suppressComputedDedicatedMaster,
+							},
+							names.AttrInstanceCount: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  1,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.OpenSearchPartitionInstanceTypeM3MediumSearch,
+							},
+							"multi_az_with_standby_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"node_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"node_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Computed: true,
+													},
+													names.AttrType: {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"node_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
+										},
+									},
+								},
+							},
+							"warm_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(2, 150),
+							},
+							"warm_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"warm_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OpenSearchWarmPartitionInstanceType](),
+							},
+							"zone_awareness_config": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"availability_zone_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      2,
+											ValidateFunc: validation.IntInSlice([]int{2, 3}),
+										},
+									},
+								},
+							},
+							"zone_awareness_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+				"cognito_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"identity_pool_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrUserPoolID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"dashboard_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dashboard_endpoint_v2": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_strategy_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_strategy": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
+							},
+						},
+					},
+				},
+				"domain_endpoint_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_endpoint": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: isCustomEndpointDisabled,
+							},
+							"custom_endpoint_certificate_arn": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateFunc:     verify.ValidARN,
+								DiffSuppressFunc: isCustomEndpointDisabled,
+							},
+							"custom_endpoint_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"enforce_https": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"tls_security_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TLSSecurityPolicy](),
+							},
+						},
+					},
+				},
+				"domain_endpoint_v2_hosted_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+						"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+							" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
+				},
+				"ebs_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ebs_enabled": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrThroughput: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(125),
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrVolumeType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+							},
+						},
+					},
+				},
+				"encrypt_at_rest": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
+							},
+						},
+					},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_v2": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"identity_center_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled_api_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"identity_center_instance_arn": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateFunc:     verify.ValidARN,
+								DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+							},
+							"roles_key": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RolesKeyIdCOption](),
+								DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+							},
+							"subject_key": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SubjectKeyIdCOption](),
+								DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+							},
+						},
+					},
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IPAddressType](),
+				},
+				"log_publishing_options": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogGroupARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
+						},
+					},
+				},
+				"node_to_node_encryption": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"off_peak_window_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"off_peak_window": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"window_start_time": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"hours": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														Computed: true,
+													},
+													"minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"snapshot_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automated_snapshot_start_hour": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+						},
+					},
+				},
+				"software_update_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					Computed:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_software_update_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      schema.HashString,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      schema.HashString,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      schema.HashString,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -837,6 +902,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("cognito_options"); ok {
 		input.CognitoOptions = expandCognitoOptions(v.([]any))
+	}
+
+	if v, ok := d.GetOk("deployment_strategy_options"); ok {
+		input.DeploymentStrategyOptions = expandDeploymentStrategyOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
@@ -1033,6 +1102,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if v := ds.AdvancedSecurityOptions; v != nil && aws.ToBool(v.Enabled) {
 		advSecOpts := flattenAdvancedSecurityOptions(v)
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
+
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
@@ -1055,6 +1125,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("deployment_strategy_options", flattenDeploymentStrategyOptions(ds.DeploymentStrategyOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_strategy_options: %s", err)
 	}
 	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
@@ -1175,6 +1248,18 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+
+			// When jwt_options block is removed from config, explicitly disable JWT authentication
+			if input.AdvancedSecurityOptions.JWTOptions == nil {
+				if oldRaw, _ := d.GetChange("advanced_security_options"); len(oldRaw.([]any)) > 0 && oldRaw.([]any)[0] != nil {
+					oldMap := oldRaw.([]any)[0].(map[string]any)
+					if oldJwt, ok := oldMap["jwt_options"].([]any); ok && len(oldJwt) > 0 && oldJwt[0] != nil {
+						input.AdvancedSecurityOptions.JWTOptions = &awstypes.JWTOptionsInput{
+							Enabled: aws.Bool(false),
+						}
+					}
+				}
+			}
 		}
 
 		if d.HasChange("aiml_options") {
@@ -1189,6 +1274,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("cognito_options") {
 			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
+		}
+
+		if d.HasChange("deployment_strategy_options") {
+			input.DeploymentStrategyOptions = expandDeploymentStrategyOptions(d.Get("deployment_strategy_options").([]any))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
@@ -1268,7 +1357,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
 				return v.(map[string]any)["log_type"].(string)
 			})
-			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, flex.Equal)
 			for _, logType := range remove {
 				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
 					Enabled: aws.Bool(false),
@@ -1417,11 +1506,46 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	return false
 }
 
+// validateJWTOptionsVersion validates that JWT options are only used with OpenSearch 2.11 or later.
+func validateJWTOptionsVersion(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if v, ok := d.GetOk("advanced_security_options"); ok {
+		options := v.([]any)
+		if len(options) > 0 && options[0] != nil {
+			m := options[0].(map[string]any)
+			if jwtOptions, ok := m["jwt_options"].([]any); ok && len(jwtOptions) > 0 && jwtOptions[0] != nil {
+				jwtMap := jwtOptions[0].(map[string]any)
+				if enabled, ok := jwtMap[names.AttrEnabled].(bool); ok && enabled {
+					engineVersion := d.Get(names.AttrEngineVersion).(string)
+					if engineType, version, err := parseEngineVersion(engineVersion); err == nil {
+						switch engineType {
+						case string(awstypes.EngineTypeElasticsearch):
+							return fmt.Errorf("jwt_options is not supported with Elasticsearch. Use OpenSearch 2.11 or later")
+						case string(awstypes.EngineTypeOpenSearch):
+							if semver.LessThan(version, "2.11") {
+								return fmt.Errorf("jwt_options requires OpenSearch 2.11 or later, got %s", engineVersion)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {
 	// The OpenSearch API accepts a short KMS key id but always returns the ARN of the key.
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func suppressPublicKeyDiff(k, old, new string, d *schema.ResourceData) bool {
+	// AWS returns the public key without newlines, but users may provide it with newlines.
+	// Normalize both values by removing newlines before comparison.
+	oldNormalized := strings.ReplaceAll(old, "\n", "")
+	newNormalized := strings.ReplaceAll(new, "\n", "")
+	return oldNormalized == newNormalized
 }
 
 func getDashboardEndpoint(endpoint string) string {

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +26,6 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_repository_permissions_policy", name="Repository Permissions Policy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(serialize=true)
@@ -38,33 +36,35 @@ func resourceRepositoryPermissionsPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceRepositoryPermissionsPolicyRead,
 		DeleteWithoutTimeout: resourceRepositoryPermissionsPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"domain_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"policy_revision": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"domain_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"policy_revision": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -185,9 +185,8 @@ func findRepositoryPermissionsPolicyByThreePartKey(ctx context.Context, conn *co
 	output, err := conn.GetRepositoryPermissionsPolicy(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

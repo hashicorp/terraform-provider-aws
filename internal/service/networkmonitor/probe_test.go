@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -29,18 +29,18 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProbeDestroy(ctx),
+		CheckDestroy:             testAccCheckProbeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProbeConfig_basic(rName, "10.0.0.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProbeExists(ctx, resourceName),
+					testAccCheckProbeExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
@@ -76,21 +76,29 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProbeDestroy(ctx),
+		CheckDestroy:             testAccCheckProbeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProbeConfig_basic(rName, "10.0.0.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProbeExists(ctx, resourceName),
+					testAccCheckProbeExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmonitor.ResourceProbe, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
@@ -108,18 +116,18 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProbeDestroy(ctx),
+		CheckDestroy:             testAccCheckProbeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProbeConfig_full(rName, "10.0.0.1", 8080, 256),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProbeExists(ctx, resourceName),
+					testAccCheckProbeExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
@@ -138,7 +146,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 			{
 				Config: testAccProbeConfig_full(rName, "10.0.0.2", 8443, 512),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProbeExists(ctx, resourceName),
+					testAccCheckProbeExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.2"),
@@ -160,9 +168,9 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 	})
 }
 
-func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProbeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmonitor_probe" {
@@ -186,14 +194,14 @@ func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProbeExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckProbeExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkMonitorClient(ctx)
 
 		_, err := tfnetworkmonitor.FindProbeByTwoPartKey(ctx, conn, rs.Primary.Attributes["monitor_name"], rs.Primary.Attributes["probe_id"])
 

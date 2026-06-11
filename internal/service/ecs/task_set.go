@@ -16,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -44,232 +43,234 @@ func resourceTaskSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCapacityProviderStrategy: {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"launch_type"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 100000),
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrWeight: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCapacityProviderStrategy: {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"launch_type"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"base": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(0, 100000),
+							},
+							"capacity_provider": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrWeight: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
-			"cluster": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrExternalID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			names.AttrForceDelete: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"launch_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
-				ConflictsWith:    []string{names.AttrCapacityProviderStrategy},
-			},
-			// If you are using the CodeDeploy or an external deployment controller,
-			// multiple target groups are not supported.
-			// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/register-multiple-targetgroups.html
-			"load_balancer": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"container_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"load_balancer_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+				"cluster": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrExternalID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"launch_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
+					ConflictsWith:    []string{names.AttrCapacityProviderStrategy},
+				},
+				// If you are using the CodeDeploy or an external deployment controller,
+				// multiple target groups are not supported.
+				// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/register-multiple-targetgroups.html
+				"load_balancer": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"container_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"load_balancer_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"target_group_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrNetworkConfiguration: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-							ForceNew: true,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							MaxItems: 5,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							MaxItems: 16,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"platform_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"scale": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrUnit: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ScaleUnitPercent,
-							ValidateDiagFunc: enum.Validate[awstypes.ScaleUnit](),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							ValidateFunc: validation.FloatBetween(0.0, 100.0),
+				names.AttrNetworkConfiguration: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"assign_public_ip": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+								ForceNew: true,
+							},
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								MaxItems: 5,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								MaxItems: 16,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"service": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_registries": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"container_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"registry_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+				"platform_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"scale": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrUnit: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ScaleUnitPercent,
+								ValidateDiagFunc: enum.Validate[awstypes.ScaleUnit](),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeFloat,
+								Optional:     true,
+								ValidateFunc: validation.FloatBetween(0.0, 100.0),
+							},
 						},
 					},
 				},
-			},
-			"stability_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"task_set_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"wait_until_stable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"wait_until_stable_timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "10m",
-				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %w", k, err))
-					}
-					if duration < 0 {
-						errors = append(errors, fmt.Errorf(
-							"%q must be greater than zero", k))
-					}
-					return
+				"service": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
+				"service_registries": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"container_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"registry_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"stability_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"task_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"task_set_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"wait_until_stable": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"wait_until_stable_timeout": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "10m",
+					ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+						value := v.(string)
+						duration, err := time.ParseDuration(value)
+						if err != nil {
+							errors = append(errors, fmt.Errorf(
+								"%q cannot be parsed as a duration: %w", k, err))
+						}
+						if duration < 0 {
+							errors = append(errors, fmt.Errorf(
+								"%q must be greater than zero", k))
+						}
+						return
+					},
+				},
+			}
 		},
 	}
 }
@@ -282,7 +283,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
 	input := &ecs.CreateTaskSetInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
 		Tags:           getTagsIn(ctx),
@@ -537,9 +538,8 @@ func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTask
 	output, err := conn.DescribeTaskSets(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -588,8 +588,8 @@ func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, task
 	return findTaskSet(ctx, conn, input)
 }
 
-func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTaskSetStability(conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if retry.NotFound(err) {
@@ -604,8 +604,8 @@ func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, se
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTaskSet(conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if retry.NotFound(err) {
@@ -628,10 +628,10 @@ const (
 
 // Does not return tags.
 func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
 		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
-		Refresh: statusTaskSetStability(ctx, conn, taskSetID, service, cluster),
+		Refresh: statusTaskSetStability(conn, taskSetID, service, cluster),
 		Timeout: timeout,
 	}
 
@@ -649,10 +649,10 @@ func waitTaskSetDeleted(ctx context.Context, conn *ecs.Client, taskSetID, servic
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
 		Target:  []string{},
-		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),
+		Refresh: statusTaskSet(conn, taskSetID, service, cluster),
 		Timeout: timeout,
 	}
 

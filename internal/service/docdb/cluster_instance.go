@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,141 +49,143 @@ func resourceClusterInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"certificate_rotation_restart": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"copy_tags_to_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"db_subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_performance_insights": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      engineDocDB,
-				ValidateFunc: validation.StringInSlice(engine_Values(), false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validIdentifier,
-			},
-			"identifier_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifierPrefix,
-			},
-			"instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"performance_insights_kms_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preferred_backup_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					if v != nil {
-						value := v.(string)
-						return strings.ToLower(value)
-					}
-					return ""
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"promotion_tier": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 15),
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"writer": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"ca_cert_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"certificate_rotation_restart": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"copy_tags_to_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"db_subnet_group_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dbi_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_performance_insights": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      engineDocDB,
+					ValidateFunc: validation.StringInSlice(engine_Values(), false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIdentifier: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"identifier_prefix"},
+					ValidateFunc:  validIdentifier,
+				},
+				"identifier_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifierPrefix,
+				},
+				"instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"performance_insights_kms_key_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preferred_backup_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(v any) string {
+						if v != nil {
+							value := v.(string)
+							return strings.ToLower(value)
+						}
+						return ""
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"promotion_tier": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 15),
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"writer": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -197,7 +198,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &docdb.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
@@ -406,9 +407,7 @@ func findDBInstanceByID(ctx context.Context, conn *docdb.Client, id string) (*aw
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -432,9 +431,9 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: input,
-				LastError:   err,
+			return nil, &retry.NotFoundError{
+
+				LastError: err,
 			}
 		}
 
@@ -448,8 +447,8 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -465,7 +464,7 @@ func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) sdkret
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
 			"configuring-enhanced-monitoring",
@@ -482,7 +481,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string,
 			"upgrading",
 		},
 		Target:                    []string{"available"},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     30 * time.Second,
@@ -499,14 +498,14 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string,
 }
 
 func waitDBInstanceDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"configuring-log-exports",
 			"modifying",
 			"deleting",
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

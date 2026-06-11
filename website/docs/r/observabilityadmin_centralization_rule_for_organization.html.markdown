@@ -49,7 +49,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "example"
 }
 ```
 
-### Advanced Configuration with Encryption and Backup
+### Advanced Configuration with Encryption, Backup and Log Group Name Configuration
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -70,6 +70,10 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "advanced
 
         backup_configuration {
           region = "us-west-1"
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = "/centralized-logs/$${source.accountId}/$${source.region}/$${source.logGroup}"
         }
       }
     }
@@ -152,12 +156,17 @@ The following arguments are optional:
 #### destination_logs_configuration
 
 * `backup_configuration` - (Optional) Configuration block for backup settings. See [`backup_configuration`](#backup_configuration) below.
+* `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration`](#log_group_name_configuration) below.
 * `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
 
 ##### backup_configuration
 
 * `region` - (Required) AWS region for backup storage.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for backup encryption.
+
+##### log_group_name_configuration
+
+* `log_group_name_pattern` - (Required) Pattern used for generating destination log group names during centralization. The pattern can contain static text and dynamic variables that are replaced with source attributes. For supported dynamic variables, see the [AWS documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/API_LogGroupNameConfiguration.html). Note that `$` used in dynamic variables must be escaped as `$$` in Terraform configuration.
 
 ##### logs_encryption_configuration
 
@@ -174,7 +183,8 @@ The following arguments are optional:
 #### source_logs_configuration
 
 * `encrypted_log_group_strategy` - (Required) Strategy for handling encrypted log groups. Valid values: `ALLOW`, `SKIP`.
-* `log_group_selection_criteria` - (Required) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
+* `data_source_selection_criteria` - (Optional) Criteria for selecting data sources. Uses the same filter expression format as `log_group_selection_criteria`, but operates on Data Source Name and Data Source Type operands. When both `log_group_selection_criteria` and `data_source_selection_criteria` are specified, a log event must match both criteria to be centralized. Must be between 1 and 2000 characters.
+* `log_group_selection_criteria` - (Optional) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
 
 ## Attribute Reference
 

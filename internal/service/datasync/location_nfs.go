@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationNfsOutput")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,
@@ -43,73 +41,75 @@ func resourceLocationNFS() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationNFSUpdate,
 		DeleteWithoutTimeout: resourceLocationNFSDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mount_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVersion: {
-							Type:             schema.TypeString,
-							Default:          awstypes.NfsVersionAutomatic,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"on_prem_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"agent_arns": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
+				"mount_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVersion: {
+								Type:             schema.TypeString,
+								Default:          awstypes.NfsVersionAutomatic,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
 							},
 						},
 					},
 				},
-			},
-			"server_hostname": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-				// Ignore missing trailing slash
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
-						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
+				"on_prem_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"agent_arns": {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+						},
+					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"server_hostname": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+					// Ignore missing trailing slash
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "/" {
+							return false
+						}
+						if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
+							return true
+						}
+						return false
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -234,9 +234,8 @@ func findLocationNFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	output, err := conn.DescribeLocationNfs(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

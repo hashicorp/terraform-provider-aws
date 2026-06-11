@@ -16,7 +16,7 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -45,7 +45,7 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 	datasourceName := "data.aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)

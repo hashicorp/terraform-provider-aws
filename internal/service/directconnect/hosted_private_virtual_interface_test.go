@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,23 +26,23 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(t, 9))
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPrivateVirtualInterfaceConfig_basic(connectionID, rName, bgpAsn, vlan),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.ToString(vif.VirtualInterfaceId)))),
@@ -81,23 +80,23 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(t, 9))
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPrivateVirtualInterfaceConfig_accepterTags(connectionID, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.ToString(vif.VirtualInterfaceId)))),
@@ -123,7 +122,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 			{
 				Config: testAccHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(connectionID, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.ToString(vif.VirtualInterfaceId)))),
@@ -150,14 +149,14 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 	})
 }
 
-func testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostedPrivateVirtualInterfaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_hosted_private_virtual_interface")
+		return testAccCheckVirtualInterfaceDestroy(ctx, t, s, "aws_dx_hosted_private_virtual_interface")
 	}
 }
 
-func testAccCheckHostedPrivateVirtualInterfaceExists(ctx context.Context, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
+func testAccCheckHostedPrivateVirtualInterfaceExists(ctx context.Context, t *testing.T, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, t, name, vif)
 }
 
 func testAccHostedPrivateVirtualInterfaceConfig_base(cid, rName string, bgpAsn, vlan int) string {

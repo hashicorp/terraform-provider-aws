@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,63 +37,65 @@ func resourceProxyTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"db_cluster_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+					ExactlyOneOf: []string{
+						"db_instance_identifier",
+						"db_cluster_identifier",
+					},
 				},
-			},
-			"db_instance_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
+				"db_instance_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+					ExactlyOneOf: []string{
+						"db_instance_identifier",
+						"db_cluster_identifier",
+					},
 				},
-			},
-			"db_proxy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"rds_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTargetARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"tracked_cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"db_proxy_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"rds_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTargetARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_group_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				"tracked_cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -259,9 +260,8 @@ func findDBProxyTargets(ctx context.Context, conn *rds.Client, input *rds.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) || errs.IsA[*types.DBProxyTargetGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

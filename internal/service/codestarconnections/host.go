@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -30,7 +29,6 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections;codestarconnections.GetHostOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,
@@ -44,59 +42,61 @@ func resourceHost() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"provider_endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provider_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ProviderType](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"tls_certificate": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"provider_endpoint": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provider_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ProviderType](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"tls_certificate": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -248,9 +248,8 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	output, err := conn.GetHost(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -265,8 +264,8 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	return output, nil
 }
 
-func statusHost(ctx context.Context, conn *codestarconnections.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHost(conn *codestarconnections.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -290,10 +289,10 @@ const (
 )
 
 func waitHostPendingOrAvailable(ctx context.Context, conn *codestarconnections.Client, arn string, timeout time.Duration) (*codestarconnections.GetHostOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigInitializing},
 		Target:  []string{hostStatusAvailable, hostStatusPending},
-		Refresh: statusHost(ctx, conn, arn),
+		Refresh: statusHost(conn, arn),
 		Timeout: timeout,
 	}
 

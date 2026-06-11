@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,55 +40,57 @@ func resourcePermission() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "events:PutEvents",
-				ValidateFunc: validatePermissionAction,
-			},
-			names.AttrCondition: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "events:PutEvents",
+					ValidateFunc: validatePermissionAction,
+				},
+				names.AttrCondition: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
 						},
 					},
 				},
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusName,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validatePermissionPrincipal,
-			},
-			"statement_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validatePermissionStatementID,
-			},
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusName,
+					Default:      DefaultEventBusName,
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validatePermissionPrincipal,
+				},
+				"statement_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validatePermissionStatementID,
+				},
+			}
 		},
 	}
 }
@@ -240,7 +241,7 @@ func findPermissionByTwoPartKey(ctx context.Context, conn *eventbridge.Client, e
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 const permissionResourceIDSeparator = "/"

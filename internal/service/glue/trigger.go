@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,165 +48,167 @@ func resourceTrigger() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrActions: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arguments": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"crawler_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"job_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrTimeout: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"security_configuration": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"notification_property": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"notify_delay_after": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrActions: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"arguments": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"crawler_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"job_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrTimeout: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"security_configuration": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"notification_property": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"notify_delay_after": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_batching_condition": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
-						},
-						"batch_window": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      900,
-							ValidateFunc: validation.IntBetween(1, 900),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_batching_condition": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"batch_window": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      900,
+								ValidateFunc: validation.IntBetween(1, 900),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"predicate": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"conditions": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"job_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"crawler_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"logical_operator": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.LogicalOperatorEquals,
-										ValidateDiagFunc: enum.Validate[awstypes.LogicalOperator](),
-									},
-									names.AttrState: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.JobRunState](),
-									},
-									"crawl_state": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CrawlState](),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"predicate": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conditions": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"job_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"crawler_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"logical_operator": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.LogicalOperatorEquals,
+											ValidateDiagFunc: enum.Validate[awstypes.LogicalOperator](),
+										},
+										names.AttrState: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.JobRunState](),
+										},
+										"crawl_state": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CrawlState](),
+										},
 									},
 								},
 							},
-						},
-						"logical": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.LogicalAnd,
-							ValidateDiagFunc: enum.Validate[awstypes.Logical](),
+							"logical": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.LogicalAnd,
+								ValidateDiagFunc: enum.Validate[awstypes.Logical](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"start_on_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TriggerType](),
-			},
-			"workflow_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"start_on_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TriggerType](),
+				},
+				"workflow_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -492,11 +494,9 @@ func findTriggerByName(ctx context.Context, conn *glue.Client, name string) (*gl
 	return output, nil
 }
 
-func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) sdkretry.StateRefreshFunc {
-	const (
-		triggerStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusTrigger(conn *glue.Client, triggerName string) retry.StateRefreshFunc {
+	const triggerStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		input := &glue.GetTriggerInput{
 			Name: aws.String(triggerName),
 		}
@@ -516,7 +516,7 @@ func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) s
 }
 
 func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TriggerStateActivating,
 			awstypes.TriggerStateCreating,
@@ -526,7 +526,7 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName stri
 			awstypes.TriggerStateActivated,
 			awstypes.TriggerStateCreated,
 		),
-		Refresh: statusTrigger(ctx, conn, triggerName),
+		Refresh: statusTrigger(conn, triggerName),
 		Timeout: timeout,
 	}
 
@@ -540,10 +540,10 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName stri
 }
 
 func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TriggerStateDeleting),
 		Target:  []string{},
-		Refresh: statusTrigger(ctx, conn, triggerName),
+		Refresh: statusTrigger(conn, triggerName),
 		Timeout: timeout,
 	}
 

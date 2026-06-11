@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,37 +41,39 @@ func resourceAPIKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"api_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			"expires": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Ignore unsetting value.
-					if old != "" && new == "" {
-						return true
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			names.AttrKey: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
+				"api_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				"expires": {
+					Type:     schema.TypeString,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Ignore unsetting value.
+						if old != "" && new == "" {
+							return true
+						}
+						return false
+					},
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				names.AttrKey: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }
@@ -239,7 +240,9 @@ func findAPIKeys(ctx context.Context, conn *appsync.Client, input *appsync.ListA
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {

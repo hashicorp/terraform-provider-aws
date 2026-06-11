@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +19,7 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 	version := "2.4.1.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -41,7 +40,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_msk_kafka_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,7 +58,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 }
 
 func testAccVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 	input := &kafka.ListKafkaVersionsInput{}
 

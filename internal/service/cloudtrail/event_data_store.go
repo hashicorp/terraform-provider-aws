@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,
@@ -47,149 +45,151 @@ func resourceEventDataStore() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"advanced_event_selector": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_selector": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"advanced_event_selector": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_selector": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									names.AttrField: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(field_Values(), false),
-									},
-									"not_ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
+										names.AttrField: {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice(field_Values(), false),
 										},
-									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"not_starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
+										},
+										"starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1000),
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"billing_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.BillingModeExtendableRetentionPricing,
-				ValidateDiagFunc: enum.Validate[types.BillingMode](),
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"multi_region_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
-			"organization_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2555,
-				ValidateFunc: validation.All(
-					validation.IntBetween(7, 2555),
-				),
-			},
-			"suspend": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"termination_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"billing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.BillingModeExtendableRetentionPricing,
+					ValidateDiagFunc: enum.Validate[types.BillingMode](),
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"multi_region_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 128),
+				},
+				"organization_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  2555,
+					ValidateFunc: validation.All(
+						validation.IntBetween(7, 2555),
+					),
+				},
+				"suspend": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"termination_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }
@@ -372,9 +372,8 @@ func findEventDataStoreByARN(ctx context.Context, conn *cloudtrail.Client, arn s
 	}
 
 	if status := output.Status; status == types.EventDataStoreStatusPendingDeletion {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -385,9 +384,8 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 	output, err := conn.GetEventDataStore(ctx, input)
 
 	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -402,8 +400,8 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 	return output, nil
 }
 
-func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventDataStore(conn *cloudtrail.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventDataStoreByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -455,10 +453,10 @@ func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, a
 }
 
 func waitEventDataStoreCreated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled, types.EventDataStoreStatusStoppedIngestion),
-		Refresh: statusEventDataStore(ctx, conn, arn),
+		Refresh: statusEventDataStore(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -472,10 +470,10 @@ func waitEventDataStoreCreated(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreUpdated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
-		Refresh: statusEventDataStore(ctx, conn, arn),
+		Refresh: statusEventDataStore(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -489,10 +487,10 @@ func waitEventDataStoreUpdated(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusEnabled),
 		Target:  []string{},
-		Refresh: statusEventDataStore(ctx, conn, arn),
+		Refresh: statusEventDataStore(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -506,10 +504,10 @@ func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusStartingIngestion),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
-		Refresh: statusEventDataStore(ctx, conn, arn),
+		Refresh: statusEventDataStore(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -523,10 +521,10 @@ func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Cl
 }
 
 func waitEventDataStoreIngestionStopped(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusStoppingIngestion),
 		Target:  enum.Slice(types.EventDataStoreStatusStoppedIngestion),
-		Refresh: statusEventDataStore(ctx, conn, arn),
+		Refresh: statusEventDataStore(conn, arn),
 		Timeout: timeout,
 	}
 

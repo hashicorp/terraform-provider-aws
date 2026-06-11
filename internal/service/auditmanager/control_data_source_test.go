@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,7 +20,7 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 	name := "RA-3: Risk Assessment (FedRAMP-r4)"
 	dataSourceName := "data.aws_auditmanager_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
@@ -42,10 +41,10 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 
 func TestAccAuditManagerControlDataSource_custom(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_auditmanager_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)

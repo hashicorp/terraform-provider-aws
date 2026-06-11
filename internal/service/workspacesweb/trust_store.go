@@ -27,8 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -47,7 +46,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.TrustStore")
 // @Testing(importStateIdAttribute="trust_store_arn")
 // @Testing(importIgnore="certificate_list")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustStoreResource{}, nil
 }
@@ -122,7 +120,7 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.CreateTrustStoreInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -234,7 +232,7 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 
 	if !new.Certificates.Equal(old.Certificates) {
 		input := workspacesweb.UpdateTrustStoreInput{
-			ClientToken:   aws.String(sdkid.UniqueId()),
+			ClientToken:   aws.String(create.UniqueId(ctx)),
 			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 		}
 
@@ -356,9 +354,8 @@ func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn st
 	output, err := conn.GetTrustStore(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

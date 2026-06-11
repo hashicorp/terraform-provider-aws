@@ -13,9 +13,9 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -38,88 +38,90 @@ func resourceSafetyRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asserted_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ExactlyOneOf: []string{
-					"asserted_controls",
-					"gating_controls",
+				"asserted_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					ExactlyOneOf: []string{
+						"asserted_controls",
+						"gating_controls",
+					},
 				},
-			},
-			"control_panel_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"gating_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"control_panel_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-				ExactlyOneOf: []string{
-					"asserted_controls",
-					"gating_controls",
+				"gating_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					ExactlyOneOf: []string{
+						"asserted_controls",
+						"gating_controls",
+					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"rule_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"inverted": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"threshold": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuleType](),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"rule_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inverted": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"threshold": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuleType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				RequiredWith: []string{
-					"gating_controls",
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					RequiredWith: []string{
+						"gating_controls",
+					},
 				},
-			},
-			"wait_period_ms": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
+				"wait_period_ms": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -256,7 +258,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(create.UniqueId(ctx)),
 		AssertionRule: assertionRule,
 	}
 
@@ -298,7 +300,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		GatingRule:  gatingRule,
 	}
 

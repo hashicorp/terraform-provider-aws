@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -24,11 +23,11 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 	}
 
 	var input medialive.DescribeInputOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_input.test"
 	dataSourceName := "data.aws_medialive_input.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -36,12 +35,12 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputDestroy(ctx),
+		CheckDestroy:             testAccCheckInputDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputExists(ctx, dataSourceName, &input),
+					testAccCheckInputExists(ctx, t, dataSourceName, &input),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", "2"),

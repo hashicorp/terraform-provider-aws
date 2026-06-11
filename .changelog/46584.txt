@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_grafana_workspace: Add `kms_key_id` argument
+```
+
+```release-note:enhancement
+data-source/aws_grafana_workspace: Add `kms_key_id` attribute
+```

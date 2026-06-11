@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,48 +36,50 @@ func resourcePullThroughCacheRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"credential_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"custom_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"ecr_repository_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
-					validation.StringMatch(
-						regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
-						"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
-				),
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"upstream_registry_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"upstream_repository_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
-					validation.StringMatch(
-						regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
-						"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"credential_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"custom_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"ecr_repository_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 30),
+						validation.StringMatch(
+							regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
+							"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
+					),
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"upstream_registry_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"upstream_repository_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 30),
+						validation.StringMatch(
+							regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
+							"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
+					),
+				},
+			}
 		},
 	}
 }
@@ -214,9 +215,8 @@ func findPullThroughCacheRules(ctx context.Context, conn *ecr.Client, input *ecr
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.PullThroughCacheRuleNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

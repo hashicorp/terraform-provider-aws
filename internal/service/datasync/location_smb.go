@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationSmbOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="password")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
@@ -43,80 +41,82 @@ func resourceLocationSMB() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationSMBUpdate,
 		DeleteWithoutTimeout: resourceLocationSMBDelete,
 
-		Schema: map[string]*schema.Schema{
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 253),
-			},
-			"mount_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVersion: {
-							Type:             schema.TypeString,
-							Default:          awstypes.SmbVersionAutomatic,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SmbVersion](),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 253),
+				},
+				"mount_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVersion: {
+								Type:             schema.TypeString,
+								Default:          awstypes.SmbVersionAutomatic,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SmbVersion](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrPassword: {
-				Type:         schema.TypeString,
-				Required:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
-			"server_hostname": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-				/*// Ignore missing trailing slash
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
-						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
+				names.AttrPassword: {
+					Type:         schema.TypeString,
+					Required:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 104),
 				},
-				*/
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
+				"server_hostname": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+					/*// Ignore missing trailing slash
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "/" {
+							return false
+						}
+						if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
+							return true
+						}
+						return false
+					},
+					*/
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 104),
+				},
+			}
 		},
 	}
 }
@@ -247,9 +247,8 @@ func findLocationSMBByARN(ctx context.Context, conn *datasync.Client, arn string
 	output, err := conn.DescribeLocationSmb(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

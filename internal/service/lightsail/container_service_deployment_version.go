@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service_deployment_version", name=Container Service Deployment Version")
+// @SDKResource("aws_lightsail_container_service_deployment_version", name="Container Service Deployment Version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
@@ -43,135 +42,137 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"container": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 53,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
-						},
-						"image": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						names.AttrEnvironment: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ports": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"container": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 53,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
-							}},
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringIsNotWhiteSpace,
+							},
+							"image": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"command": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrEnvironment: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ports": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
+								}},
+						},
 					},
 				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_endpoint": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"container_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrHealthCheck: {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"healthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
-									},
-									"interval_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      5,
-										ValidateFunc: validation.IntBetween(5, 300),
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "/",
-									},
-									"success_codes": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "200-499",
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      2,
-										ValidateFunc: validation.IntBetween(2, 60),
-									},
-									"unhealthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_endpoint": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"container_port": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrHealthCheck: {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"healthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
+										"interval_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      5,
+											ValidateFunc: validation.IntBetween(5, 300),
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "/",
+										},
+										"success_codes": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "200-499",
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      2,
+											ValidateFunc: validation.IntBetween(2, 60),
+										},
+										"unhealthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -446,9 +447,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	output, err := conn.GetContainerServiceDeployments(ctx, input)
 
 	if IsANotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -474,9 +474,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
-		return nil, &sdkretry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: "Empty result",
 		}
 	}
 

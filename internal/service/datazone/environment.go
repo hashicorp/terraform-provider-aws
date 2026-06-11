@@ -25,20 +25,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_environment", name="Environment")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("environmentImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentOutput")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(serialize=true)
 func newEnvironmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -56,6 +64,7 @@ const (
 type environmentResource struct {
 	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *environmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -381,23 +390,11 @@ func (r *environmentResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *environmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("resource import invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-}
-
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusCreating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
-		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
+		Refresh:                   statusEnvironment(conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -415,10 +412,10 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusUpdating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
-		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
+		Refresh:                   statusEnvironment(conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -436,10 +433,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
 		Target:       []string{},
-		Refresh:      statusEnvironment(ctx, conn, domainId, id),
+		Refresh:      statusEnvironment(conn, domainId, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: 5 * time.Second,
@@ -456,8 +453,8 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -480,9 +477,8 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	out, err := conn.GetEnvironment(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -495,6 +491,26 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = environmentImportID{}
+)
+
+type environmentImportID struct{}
+
+func (environmentImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, envID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        envID,
+	}
+
+	return id, result, nil
 }
 
 type environmentResourceModel struct {

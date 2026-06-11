@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,17 +31,19 @@ func resourceDomainIdentityVerification() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainIdentityVerificationRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -83,7 +84,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 
 	if err == nil {
 		if status := att.VerificationStatus; status != awstypes.VerificationStatusSuccess {
-			err = &sdkretry.NotFoundError{
+			err = &retry.NotFoundError{
 				Message: string(status),
 			}
 		}

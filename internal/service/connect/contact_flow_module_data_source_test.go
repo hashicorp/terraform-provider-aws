@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func testAccContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,12 +44,12 @@ func testAccContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
 
 func testAccContactFlowModuleDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

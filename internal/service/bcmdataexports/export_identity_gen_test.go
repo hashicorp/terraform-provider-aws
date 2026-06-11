@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBCMDataExportsExport_Identity_Basic(t *testing.T) {
+func TestAccBCMDataExportsExport_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bcmdataexports.GetExportOutput

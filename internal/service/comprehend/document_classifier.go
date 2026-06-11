@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +51,6 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
@@ -66,175 +64,177 @@ func resourceDocumentClassifier() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_access_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"augmented_manifests": {
-							Type:         schema.TypeSet,
-							Optional:     true,
-							ExactlyOneOf: []string{"input_data_config.0.augmented_manifests", "input_data_config.0.s3_uri"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"annotation_data_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"attribute_names": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"document_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
-										Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"source_documents_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"split": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Split](),
-										Default:          types.SplitTrain,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_access_role_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"augmented_manifests": {
+								Type:         schema.TypeSet,
+								Optional:     true,
+								ExactlyOneOf: []string{"input_data_config.0.augmented_manifests", "input_data_config.0.s3_uri"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"annotation_data_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"attribute_names": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"document_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
+											Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
+										},
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"source_documents_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"split": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Split](),
+											Default:          types.SplitTrain,
+										},
 									},
 								},
 							},
-						},
-						"data_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.DocumentClassifierDataFormat](),
-							Default:          types.DocumentClassifierDataFormatComprehendCsv,
-						},
-						"label_delimiter": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(documentClassifierLabelSeparators(), false),
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"test_s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
-			},
-			names.AttrMode: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.DocumentClassifierMode](),
-				Default:          types.DocumentClassifierModeMultiClass,
-			},
-			"model_kms_key_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: tfkms.DiffSuppressKey,
-				ValidateFunc:     tfkms.ValidateKey,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validModelName,
-			},
-			"output_data_config": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Computed:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
-							ValidateFunc:     tfkms.ValidateKeyOrAlias,
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-								o := strings.TrimRight(oldValue, "/")
-								n := strings.TrimRight(newValue, "/")
-								return o == n
+							"data_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.DocumentClassifierDataFormat](),
+								Default:          types.DocumentClassifierDataFormatComprehendCsv,
+							},
+							"label_delimiter": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice(documentClassifierLabelSeparators(), false),
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"test_s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
-						"output_s3_uri": {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+				},
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
+				},
+				names.AttrMode: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.DocumentClassifierMode](),
+					Default:          types.DocumentClassifierModeMultiClass,
+				},
+				"model_kms_key_id": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					DiffSuppressFunc: tfkms.DiffSuppressKey,
+					ValidateFunc:     tfkms.ValidateKey,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validModelName,
+				},
+				"output_data_config": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					Computed:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
+								ValidateFunc:     tfkms.ValidateKeyOrAlias,
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+									o := strings.TrimRight(oldValue, "/")
+									n := strings.TrimRight(newValue, "/")
+									return o == n
+								},
+							},
+							"output_s3_uri": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validModelVersionName,
-				ConflictsWith: []string{"version_name_prefix"},
-			},
-			"version_name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validModelVersionNamePrefix,
-				ConflictsWith: []string{"version_name"},
-			},
-			"volume_kms_key_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: tfkms.DiffSuppressKey,
-				ValidateFunc:     tfkms.ValidateKey,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validModelVersionName,
+					ConflictsWith: []string{"version_name_prefix"},
+				},
+				"version_name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validModelVersionNamePrefix,
+					ConflictsWith: []string{"version_name"},
+				},
+				"volume_kms_key_id": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					DiffSuppressFunc: tfkms.DiffSuppressKey,
+					ValidateFunc:     tfkms.ValidateKey,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -281,7 +281,7 @@ func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceDat
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
 	if raw.IsNull() {
-		versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+		versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 	} else if v := raw.AsString(); v != "" {
 		versionName = aws.String(v)
 	}
@@ -353,7 +353,7 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 		if d.HasChange("version_name") {
 			versionName = aws.String(d.Get("version_name").(string))
 		} else if v := d.Get("version_name_prefix").(string); v != "" {
-			versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+			versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 		}
 
 		diags := documentClassifierPublishVersion(ctx, conn, d, versionName, create.ErrActionUpdating, d.Timeout(schema.TimeoutUpdate), awsClient)
@@ -478,7 +478,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]any)),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
-		ClientRequestToken:     aws.String(id.UniqueId()),
+		ClientRequestToken:     aws.String(create.UniqueId(ctx)),
 		Tags:                   getTagsIn(ctx),
 	}
 

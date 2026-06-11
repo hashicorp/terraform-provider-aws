@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +29,10 @@ import (
 )
 
 // @SDKResource("aws_config_configuration_recorder", name="Configuration Recorder")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationRecorder")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderPut,
@@ -37,119 +40,117 @@ func resourceConfigurationRecorder() *schema.Resource {
 		UpdateWithoutTimeout: resourceConfigurationRecorderPut,
 		DeleteWithoutTimeout: resourceConfigurationRecorderDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		CustomizeDiff: resourceConfigurationRecorderCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      defaultConfigurationRecorderName,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"recording_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"all_supported": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"exclusion_by_resource_types": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_types": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"include_global_resource_types": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"recording_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"use_only": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.RecordingStrategyType](),
-									},
-								},
-							},
-						},
-						"resource_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      defaultConfigurationRecorderName,
+					ValidateFunc: validation.StringLenBetween(0, 256),
 				},
-			},
-			"recording_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recording_frequency": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.RecordingFrequencyContinuous,
-							ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
-						},
-						"recording_mode_override": {
-							Type:     schema.TypeList,
-							Optional: true,
-							// Even though the name is plural, the API only allows one override:
-							// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDescription: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"recording_frequency": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
-									},
-									"resource_types": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"recording_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all_supported": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"exclusion_by_resource_types": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
+							},
+							"include_global_resource_types": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"recording_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"use_only": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.RecordingStrategyType](),
+										},
+									},
+								},
+							},
+							"resource_types": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
 				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"recording_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recording_frequency": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.RecordingFrequencyContinuous,
+								ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
+							},
+							"recording_mode_override": {
+								Type:     schema.TypeList,
+								Optional: true,
+								// Even though the name is plural, the API only allows one override:
+								// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDescription: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"recording_frequency": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
+										},
+										"resource_types": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -159,7 +160,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutConfigurationRecorderInput{
+	input := configservice.PutConfigurationRecorderInput{
 		ConfigurationRecorder: &types.ConfigurationRecorder{
 			Name:    aws.String(name),
 			RoleARN: aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -175,7 +176,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.PutConfigurationRecorder(ctx, input)
+	_, err := conn.PutConfigurationRecorder(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Recorder (%s): %s", name, err)
@@ -298,11 +299,11 @@ func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.
 }
 
 func findConfigurationRecorderByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationRecorder, error) {
-	input := &configservice.DescribeConfigurationRecordersInput{
+	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []string{name},
 	}
 
-	return findConfigurationRecorder(ctx, conn, input)
+	return findConfigurationRecorder(ctx, conn, &input)
 }
 
 func findConfigurationRecorder(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecordersInput) (*types.ConfigurationRecorder, error) {
@@ -319,9 +320,8 @@ func findConfigurationRecorders(ctx context.Context, conn *configservice.Client,
 	output, err := conn.DescribeConfigurationRecorders(ctx, input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

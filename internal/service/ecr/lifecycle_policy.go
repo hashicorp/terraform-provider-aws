@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,35 +33,36 @@ import (
 // @IdentityAttribute("repository")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(idAttrDuplicates="repository")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
 		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsJSON,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentLifecyclePolicyJSON(old, new)
-					return equal
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsJSON,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentLifecyclePolicyJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 				},
-				DiffSuppressOnRefresh: true,
-				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -156,9 +156,8 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 	output, err := conn.GetLifecyclePolicy(ctx, input)
 
 	if errs.IsA[*types.LifecyclePolicyNotFoundException](err) || errs.IsA[*types.RepositoryNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

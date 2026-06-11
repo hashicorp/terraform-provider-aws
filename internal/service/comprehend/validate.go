@@ -5,13 +5,13 @@ package comprehend
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
 	modelIdentifierMaxLen       = 63 // Documentation says 256, Console says 63
-	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - id.UniqueIDSuffixLength
+	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 var validModelName = validIdentifier

@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -99,33 +101,25 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	// Get AWS client
 	conn := a.Meta().LambdaClient(ctx)
 
-	functionName := config.FunctionName.ValueString()
-	payload := config.Payload.ValueString()
+	functionName := fwflex.StringValueFromFramework(ctx, config.FunctionName)
+	payload := fwflex.StringValueFromFramework(ctx, config.Payload)
 
 	// Set default values for optional parameters
-	invocationType := awstypes.InvocationTypeRequestResponse
-	if !config.InvocationType.IsNull() && !config.InvocationType.IsUnknown() {
-		invocationType = config.InvocationType.ValueEnum()
-	}
-
-	logType := awstypes.LogTypeNone
-	if !config.LogType.IsNull() && !config.LogType.IsUnknown() {
-		logType = config.LogType.ValueEnum()
-	}
+	invocationType := fwflex.StringEnumValueOr(ctx, config.InvocationType, awstypes.InvocationTypeRequestResponse)
+	logType := fwflex.StringEnumValueOr(ctx, config.LogType, awstypes.LogTypeNone)
 
 	tflog.Info(ctx, "Starting Lambda function invocation action", map[string]any{
 		"function_name":      functionName,
-		"invocation_type":    string(invocationType),
-		"log_type":           string(logType),
+		"invocation_type":    invocationType,
+		"log_type":           logType,
 		"payload_length":     len(payload),
 		"has_qualifier":      !config.Qualifier.IsNull(),
 		"has_client_context": !config.ClientContext.IsNull(),
 	})
 
 	// Send initial progress update
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Invoking Lambda function %s...", functionName),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Invoking Lambda function %s...", functionName)
 
 	// Build the invoke input
 	input := &lambda.InvokeInput{
@@ -182,21 +176,17 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	// Handle different invocation types
 	switch invocationType {
 	case awstypes.InvocationTypeRequestResponse:
-		a.handleSyncInvocation(resp, functionName, output, logType)
+		a.handleSyncInvocation(ctx, cb, functionName, output, logType)
 
 	case awstypes.InvocationTypeEvent:
 		// For asynchronous invocations, we only get confirmation that the request was accepted
 		statusCode := output.StatusCode
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("Lambda function %s invoked asynchronously (status: %d)", functionName, statusCode),
-		})
+		cb(ctx, "Lambda function %s invoked asynchronously (status: %d)", functionName, statusCode)
 
 	case awstypes.InvocationTypeDryRun:
 		// For dry run, we validate parameters without actually invoking
 		statusCode := output.StatusCode
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("Lambda function %s dry run completed successfully (status: %d)", functionName, statusCode),
-		})
+		cb(ctx, "Lambda function %s dry run completed successfully (status: %d)", functionName, statusCode)
 	}
 
 	tflog.Info(ctx, "Lambda function invocation action completed successfully", map[string]any{
@@ -209,15 +199,13 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	})
 }
 
-func (a *invokeAction) handleSyncInvocation(resp *action.InvokeResponse, functionName string, output *lambda.InvokeOutput, logType awstypes.LogType) {
+func (a *invokeAction) handleSyncInvocation(ctx context.Context, cb fwactions.SendProgressFunc, functionName string, output *lambda.InvokeOutput, logType awstypes.LogType) {
 	statusCode := output.StatusCode
 	payloadLength := len(output.Payload)
 
 	// Send success message
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
-			functionName, statusCode, payloadLength),
-	})
+	cb(ctx, "Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
+		functionName, statusCode, payloadLength)
 
 	// Output logs if available
 	if logType != awstypes.LogTypeTail || output.LogResult == nil {
@@ -226,13 +214,9 @@ func (a *invokeAction) handleSyncInvocation(resp *action.InvokeResponse, functio
 
 	logData, err := base64.StdEncoding.DecodeString(aws.ToString(output.LogResult))
 	if err != nil {
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("Failed to decode Lambda logs: %s", err),
-		})
+		cb(ctx, "Failed to decode Lambda logs: %s", err)
 		return
 	}
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Lambda function logs:\n%s", string(logData)),
-	})
+	cb(ctx, "Lambda function logs:\n%s", string(logData))
 }

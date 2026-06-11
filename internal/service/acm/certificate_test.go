@@ -205,8 +205,8 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	var v1, v2, v3, v4 types.CertificateDetail
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -333,8 +333,8 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 	ctx := acctest.Context(t)
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	var v1, v2, v3 types.CertificateDetail
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -452,8 +452,8 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
@@ -527,8 +527,8 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := "P395D"
 	var v1, v2 types.CertificateDetail
 
@@ -602,8 +602,8 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2, v3 types.CertificateDetail
 
@@ -691,8 +691,8 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
@@ -744,8 +744,8 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (90 * 24 * time.Hour).String()
 	var v1, v2, v3 types.CertificateDetail
 
@@ -830,8 +830,8 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	durationUpdated := (90 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
@@ -902,8 +902,8 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
 	duration := (395 * 24 * time.Hour).String()
 	var v1, v2 types.CertificateDetail
 
@@ -1507,6 +1507,47 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	commonName := "example.com"
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
+	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
+	newKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, newKey, commonName)
+	var v1, v2 types.CertificateDetail
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateKeyWo(certificate, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v1),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
+					resource.TestCheckNoResourceAttr(resourceName, "private_key_wo"),
+					resource.TestCheckResourceAttr(resourceName, "private_key_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 // lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1519,7 +1560,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, key, commonName)
-	withoutChainDomain := acctest.RandomDomainName()
+	withoutChainDomain := acctest.RandomDomainName(t)
 	var v1, v2, v3 types.CertificateDetail
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1541,7 +1582,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v2),
-					testAccCheckCertficateNotRecreated(&v1, &v2),
+					testAccCheckCertificateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
@@ -1551,7 +1592,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, t, resourceName, &v3),
-					testAccCheckCertficateNotRecreated(&v2, &v3),
+					testAccCheckCertificateNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, withoutChainDomain),
@@ -1822,7 +1863,7 @@ func testAccCheckCertificateDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccCheckCertficateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
+func testAccCheckCertificateNotRecreated(v1, v2 *types.CertificateDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(v1.CertificateArn) != aws.ToString(v2.CertificateArn) {
 			return fmt.Errorf("ACM Certificate recreated")
@@ -1999,6 +2040,26 @@ resource "aws_acm_certificate" "test" {
   certificate_chain = "%[3]s"
 }
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(chain))
+}
+
+func testAccCertificateConfig_privateKeyWo(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 1
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
+}
+
+func testAccCertificateConfig_privateKeyWoUpdate(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 2
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
 }
 
 func testAccCertificateConfig_disableCTLogging(domainName string, validationMethod types.ValidationMethod) string {

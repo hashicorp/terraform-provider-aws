@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -31,7 +30,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCIngressConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIngressConnectionCreate,
@@ -39,52 +37,54 @@ func resourceVPCIngressConnection() *schema.Resource {
 		UpdateWithoutTimeout: resourceVPCIngressConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPCIngressConnectionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ingress_vpc_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ingress_vpc_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -188,9 +188,8 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	output, err := conn.DescribeVpcIngressConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -203,17 +202,16 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	}
 
 	if status := output.VpcIngressConnection.Status; status == types.VpcIngressConnectionStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output.VpcIngressConnection, nil
 }
 
-func statusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCIngressConnection(conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCIngressConnectionByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -231,10 +229,10 @@ func waitVPCIngressConnectionCreated(ctx context.Context, conn *apprunner.Client
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcIngressConnectionStatusPendingCreation),
 		Target:  enum.Slice(types.VpcIngressConnectionStatusAvailable),
-		Refresh: statusVPCIngressConnection(ctx, conn, arn),
+		Refresh: statusVPCIngressConnection(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -251,10 +249,10 @@ func waitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcIngressConnectionStatusAvailable, types.VpcIngressConnectionStatusPendingDeletion),
 		Target:  []string{},
-		Refresh: statusVPCIngressConnection(ctx, conn, arn),
+		Refresh: statusVPCIngressConnection(conn, arn),
 		Timeout: timeout,
 	}
 

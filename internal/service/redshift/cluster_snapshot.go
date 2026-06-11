@@ -25,7 +25,6 @@ import (
 // @SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Snapshot")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -37,36 +36,38 @@ func resourceClusterSnapshot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"manual_snapshot_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  -1,
-			},
-			"owner_account": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"manual_snapshot_retention_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  -1,
+				},
+				"owner_account": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

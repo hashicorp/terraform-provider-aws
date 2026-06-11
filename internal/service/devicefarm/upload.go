@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="url", plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,
@@ -41,45 +39,47 @@ func resourceUpload() *schema.Resource {
 		UpdateWithoutTimeout: resourceUploadUpdate,
 		DeleteWithoutTimeout: resourceUploadDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"metadata": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"project_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UploadType](),
-			},
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"category": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"metadata": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"project_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UploadType](),
+				},
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -197,9 +197,8 @@ func findUploadByARN(ctx context.Context, conn *devicefarm.Client, arn string) (
 	output, err := conn.GetUpload(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

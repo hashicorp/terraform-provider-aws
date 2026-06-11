@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -55,96 +54,98 @@ func resourceInstanceGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"autoscaling_policy": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-			},
-			"bid_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"configurations_json": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_policy": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
 				},
-			},
-			"ebs_config": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validEBSVolumeType(),
-						},
-						"volumes_per_instance": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  1,
-						},
+				"bid_price": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"configurations_json": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
 					},
 				},
-				Set: resourceClusterEBSHashConfig,
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"running_instance_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"ebs_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrSize: {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validEBSVolumeType(),
+							},
+							"volumes_per_instance": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  1,
+							},
+						},
+					},
+					Set: resourceClusterEBSHashConfig,
+				},
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"running_instance_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -371,9 +372,8 @@ func findInstanceGroupByTwoPartKey(ctx context.Context, conn *emr.Client, cluste
 	}
 
 	if state := output.Status.State; state == awstypes.InstanceGroupStateTerminating || state == awstypes.InstanceGroupStateTerminated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -398,9 +398,8 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -418,8 +417,8 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceGroup(conn *emr.Client, clusterID, groupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceGroupByTwoPartKey(ctx, conn, clusterID, groupID)
 
 		if retry.NotFound(err) {
@@ -435,10 +434,10 @@ func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, group
 }
 
 func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
 		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
-		Refresh:    statusInstanceGroup(ctx, conn, clusterID, groupID),
+		Refresh:    statusInstanceGroup(conn, clusterID, groupID),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

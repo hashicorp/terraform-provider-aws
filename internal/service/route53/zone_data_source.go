@@ -27,64 +27,66 @@ func dataSourceZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceZoneRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_accelerated_recovery": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"linked_service_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"linked_service_principal": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name_servers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"primary_name_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_zone": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"resource_record_set_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_accelerated_recovery": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"linked_service_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"linked_service_principal": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name_servers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"primary_name_server": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_zone": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"resource_record_set_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

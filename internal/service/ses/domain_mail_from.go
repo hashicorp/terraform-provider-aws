@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -35,22 +34,24 @@ func resourceDomainMailFrom() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
-				ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
+					ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -132,7 +133,7 @@ func findIdentityMailFromDomainAttributesByIdentity(ctx context.Context, conn *s
 		return &v, nil
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityMailFromDomainAttributesInput) (map[string]awstypes.IdentityMailFromDomainAttributes, error) {

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -480,10 +479,10 @@ func deleteConnectionGroup(ctx context.Context, conn *cloudfront.Client, id stri
 }
 
 func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetConnectionGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress},
 		Target:     []string{connectionGroupStatusDeployed},
-		Refresh:    statusConnectionGroup(ctx, conn, id),
+		Refresh:    statusConnectionGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -499,10 +498,10 @@ func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, i
 }
 
 func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetConnectionGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress, connectionGroupStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusConnectionGroup(ctx, conn, id),
+		Refresh:    statusConnectionGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -517,8 +516,8 @@ func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id
 	return nil, err
 }
 
-func statusConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnectionGroup(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionGroupByID(ctx, conn, id)
 
 		if retry.NotFound(err) {

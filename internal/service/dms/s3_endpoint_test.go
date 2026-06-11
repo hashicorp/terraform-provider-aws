@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,18 +16,18 @@ import (
 func TestAccDMSS3Endpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
@@ -83,18 +82,18 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 func TestAccDMSS3Endpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
@@ -139,7 +138,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
@@ -189,18 +188,18 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 func TestAccDMSS3Endpoint_simple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_simple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
@@ -250,18 +249,18 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_sourceSimple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "beckut_name"),
@@ -308,18 +307,18 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 func TestAccDMSS3Endpoint_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_source(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, names.AttrBucketName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path"),
@@ -355,7 +354,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_sourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "beckut_name"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path2"),
@@ -396,25 +395,25 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_simple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet"),
 				),
 			},
 			{
 				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path"),
 					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", acctest.CtTrue),
 				),
@@ -422,7 +421,7 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path2", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path2"),
 					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", acctest.CtTrue),
 				),
@@ -430,7 +429,7 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path3", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
+					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path3"),
 					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", acctest.CtFalse),
 				),
@@ -439,12 +438,12 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 	})
 }
 
-func testAccCheckS3EndpointDestroy(ctx context.Context) resource.TestCheckFunc {
-	return testAccCheckEndpointDestroy(ctx)
+func testAccCheckS3EndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckEndpointDestroy(ctx, t)
 }
 
-func testAccCheckS3EndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return testAccCheckEndpointExists(ctx, n)
+func testAccCheckS3EndpointExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return testAccCheckEndpointExists(ctx, t, n)
 }
 
 func testAccS3EndpointConfig_base(rName string) string {

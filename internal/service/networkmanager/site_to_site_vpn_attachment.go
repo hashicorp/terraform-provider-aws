@@ -33,7 +33,6 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(randomBgpAsn="64512;65534")
 // @Testing(randomIPv4Address="172.0.0.0/24")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,
@@ -51,62 +50,63 @@ func resourceSiteToSiteVPNAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachment_policy_rule_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"attachment_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"edge_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"routing_policy_label": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"segment_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpn_connection_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:vpn-connection\/vpn-[0-9a-f]{8,17}$`), "Must be valid VPN ARN"),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachment_policy_rule_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"attachment_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"edge_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"routing_policy_label": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"segment_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpn_connection_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:vpn-connection\/vpn-[0-9a-f]{8,17}$`), "Must be valid VPN ARN"),
+				},
+			}
 		},
 	}
 }
@@ -168,7 +168,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("edge_location", attachment.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
 	} else {
 		d.Set("routing_policy_label", routingPolicyLabel)
@@ -183,8 +183,41 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// Tags only.
-	return resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+
+	// An update (via transparent tagging) to tags can put the attachment into PENDING_NETWORK_UPDATE state.
+	if _, err := waitSiteToSiteVPNAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site To Site VPN Attachment (%s) update: %s", d.Id(), err)
+	}
+
+	if d.HasChange("routing_policy_label") {
+		if v, ok := d.GetOk("routing_policy_label"); ok {
+			input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
+				AttachmentId:       aws.String(d.Id()),
+				CoreNetworkId:      aws.String(d.Get("core_network_id").(string)),
+				RoutingPolicyLabel: aws.String(v.(string)),
+			}
+			_, err := conn.PutAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
+		} else {
+			input := networkmanager.RemoveAttachmentRoutingPolicyLabelInput{
+				AttachmentId:  aws.String(d.Id()),
+				CoreNetworkId: aws.String(d.Get("core_network_id").(string)),
+			}
+			_, err := conn.RemoveAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
+		}
+		if _, err := waitSiteToSiteVPNAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site To Site VPN Attachment (%s) routing policy label update: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -318,6 +351,25 @@ func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmana
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
+		Timeout: timeout,
+		Refresh: statusSiteToSiteVPNAttachment(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSiteToSiteVPNAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
+		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
 		Timeout: timeout,
 		Refresh: statusSiteToSiteVPNAttachment(conn, id),
 	}

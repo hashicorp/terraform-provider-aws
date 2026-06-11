@@ -16,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -40,19 +40,21 @@ func resourceResourceAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"resource_share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -139,7 +141,7 @@ func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceDa
 
 func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -158,7 +160,7 @@ func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Clien
 
 func deleteResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}

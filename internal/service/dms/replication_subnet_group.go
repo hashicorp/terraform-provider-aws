@@ -15,7 +15,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,7 +29,6 @@ import (
 
 // @SDKResource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,
@@ -42,33 +40,35 @@ func resourceReplicationSubnetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"replication_subnet_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_subnet_group_description": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"replication_subnet_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validReplicationSubnetGroupID,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				MinItems: 2,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"replication_subnet_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_subnet_group_description": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"replication_subnet_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validReplicationSubnetGroupID,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					MinItems: 2,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -212,9 +212,8 @@ func findReplicationSubnetGroups(ctx context.Context, conn *dms.Client, input *d
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

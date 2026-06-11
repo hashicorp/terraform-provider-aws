@@ -31,8 +31,6 @@ import (
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -44,32 +42,34 @@ func resourceDestination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringLenBetween(1, 512),
-					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringLenBetween(1, 512),
+						validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

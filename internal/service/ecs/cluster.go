@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -42,125 +41,127 @@ func resourceCluster() *schema.Resource {
 			StateContext: resourceClusterImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execute_command_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloud_watch_encryption_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"cloud_watch_log_group_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"s3_bucket_encryption_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												names.AttrS3BucketName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrS3KeyPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execute_command_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cloud_watch_encryption_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"cloud_watch_log_group_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"s3_bucket_encryption_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													names.AttrS3BucketName: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrS3KeyPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
+										"logging": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.ExecuteCommandLoggingDefault,
+											ValidateDiagFunc: enum.Validate[awstypes.ExecuteCommandLogging](),
+										},
 									},
-									"logging": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.ExecuteCommandLoggingDefault,
-										ValidateDiagFunc: enum.Validate[awstypes.ExecuteCommandLogging](),
+								},
+							},
+							"managed_storage_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"fargate_ephemeral_storage_kms_key_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
-						"managed_storage_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"fargate_ephemeral_storage_kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrKMSKeyID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateClusterName,
+				},
+				"service_connect_defaults": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrNamespace: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateClusterName,
-			},
-			"service_connect_defaults": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrNamespace: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ClusterSettingName](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ClusterSettingName](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -371,9 +372,8 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	output, err := conn.DescribeClusters(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -416,17 +416,16 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	}
 
 	if status := aws.ToString(output.Status); status == clusterStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -445,10 +444,10 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusProvisioning},
 		Target:  []string{clusterStatusActive},
-		Refresh: statusCluster(ctx, conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -463,10 +462,10 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 }
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
 		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 	}
 

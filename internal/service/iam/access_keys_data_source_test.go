@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,18 +14,18 @@ import (
 
 func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_access_keys.test"
 	resourceName := "aws_iam_access_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IAM)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeysDataSourceConfig_basic(rName),
@@ -43,19 +42,19 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 
 func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_access_keys.test"
 	resourceName1 := "aws_iam_access_key.test.0"
 	resourceName2 := "aws_iam_access_key.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IAM)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeysDataSourceConfig_twoKeys(rName),
