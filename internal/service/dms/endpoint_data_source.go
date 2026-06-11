@@ -441,6 +441,10 @@ func dataSourceEndpoint() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"map_boolean_as_boolean": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 							"server_side_encryption_kms_key_id": {
 								Type:     schema.TypeString,
 								Computed: true,
