@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -249,6 +250,8 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	if _, err := waitMemoryCreated(ctx, conn, memoryID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), memoryID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}

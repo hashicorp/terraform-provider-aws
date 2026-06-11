@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -142,6 +143,8 @@ func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRe
 
 	policyEngine, err := waitPolicyEngineCreated(ctx, conn, policyEngineID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("policy_engine_id"), policyEngineID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 		return
 	}
