@@ -229,9 +229,11 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 
 		if !plan.Description.Equal(state.Description) {
-			descriptionValue := plan.Description.ValueString()
+			// A nil OptionalValue clears the description (PATCH semantics of
+			// UpdatedDescription). ValueStringPointer returns nil when the
+			// configured description is removed.
 			input.Description = &awstypes.UpdatedDescription{
-				OptionalValue: &descriptionValue,
+				OptionalValue: plan.Description.ValueStringPointer(),
 			}
 		}
 
