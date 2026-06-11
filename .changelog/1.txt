@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Normalize empty prefix values when reading lifecycle configurations from S3-compatible services
+```
