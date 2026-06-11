@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -214,6 +215,76 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1, 1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+									},
+									"write_order": schema.ListNestedBlock{
+										Description: "Sort order configuration for the Iceberg table.",
+										CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergSortOrderModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"order_id": schema.Int32Attribute{
+													Optional:    true,
+													Computed:    true,
+													Description: "The unique identifier for this sort order. Defaults to 1.",
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.RequiresReplace(),
+														int32planmodifier.UseStateForUnknown(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												names.AttrField: schema.ListNestedBlock{
+													Description: "Sort fields that define how data is ordered within files.",
+													CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergSortFieldModel](ctx),
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"direction": schema.StringAttribute{
+																CustomType:  fwtypes.StringEnumType[awstypes.IcebergSortDirection](),
+																Required:    true,
+																Description: "Sort direction. Valid values: asc, desc.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"null_order": schema.StringAttribute{
+																CustomType:  fwtypes.StringEnumType[awstypes.IcebergNullOrder](),
+																Required:    true,
+																Description: "Null value ordering. Valid values: nulls-first, nulls-last.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"source_id": schema.Int32Attribute{
+																Required:    true,
+																Description: "The ID of the source schema field to sort by.",
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.RequiresReplace(),
+																},
+															},
+															"transform": schema.StringAttribute{
+																Required:    true,
+																Description: "The transform to apply to the source field before sorting.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
@@ -1014,7 +1085,8 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	Schema     fwtypes.ListNestedObjectValueOf[icebergSchemaModel]    `tfsdk:"schema"`
+	WriteOrder fwtypes.ListNestedObjectValueOf[icebergSortOrderModel] `tfsdk:"write_order"`
 }
 
 type icebergSchemaModel struct {
@@ -1025,6 +1097,18 @@ type icebergSchemaFieldModel struct {
 	Name     types.String `tfsdk:"name"`
 	Required types.Bool   `tfsdk:"required"`
 	Type     types.String `tfsdk:"type"`
+}
+
+type icebergSortOrderModel struct {
+	Fields  fwtypes.ListNestedObjectValueOf[icebergSortFieldModel] `tfsdk:"field"`
+	OrderId types.Int32                                            `tfsdk:"order_id"`
+}
+
+type icebergSortFieldModel struct {
+	Direction fwtypes.StringEnum[awstypes.IcebergSortDirection] `tfsdk:"direction"`
+	NullOrder fwtypes.StringEnum[awstypes.IcebergNullOrder]     `tfsdk:"null_order"`
+	SourceId  types.Int32                                       `tfsdk:"source_id"`
+	Transform types.String                                      `tfsdk:"transform"`
 }
 
 var (
