@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_acm_certificate: Correctly updates `subject_alternative_names` for Imported certificates ([#48362](https://github.com/hashicorp/terraform-provider-aws/issues/48362))
 * resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with length 0` panic when importing a replicator with no replication configurations ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
 
 ## 6.50.0 (June 10, 2026)
