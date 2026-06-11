@@ -4625,3 +4625,18 @@ rules:
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
+  - id: connectcases-in-test-name
+    languages:
+      - go
+    message: Include "ConnectCases" in test name
+    paths:
+      include:
+        - "/internal/service/connectcases/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConnectCases"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
