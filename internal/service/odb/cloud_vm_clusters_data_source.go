@@ -87,7 +87,7 @@ type dataSourceCloudVmClustersListModel struct {
 }
 
 type cloudVmClusterSummary struct {
-	CloudAutonomousVmClusterId   types.String `tfsdk:"id"`
+	CloudVmClusterId             types.String `tfsdk:"id"`
 	CloudVmClusterArn            types.String `tfsdk:"arn"`
 	CloudExadataInfrastructureId types.String `tfsdk:"cloud_exadata_infrastructure_id"`
 	OciResourceAnchorName        types.String `tfsdk:"oci_resource_anchor_name"`
