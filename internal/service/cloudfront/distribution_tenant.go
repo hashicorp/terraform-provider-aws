@@ -47,6 +47,7 @@ func newDistributionTenantResource(context.Context) (resource.ResourceWithConfig
 
 const (
 	distributionTenantPollInterval = 30 * time.Second
+	managedCertificateTimeout      = 3 * time.Hour
 )
 
 type distributionTenantResource struct {
@@ -332,7 +333,7 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 			// The managed certificate path uses a fixed 3-hour timeout because
 			// waitManagedCertificateReady can legitimately take hours. This will
 			// be replaced with the configured resource timeout in v7.0.0.
-			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, 3*time.Hour); err != nil {
+			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, managedCertificateTimeout); err != nil {
 				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 				return
 			}
@@ -474,7 +475,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 				// The managed certificate path uses a fixed 3-hour timeout because
 				// waitManagedCertificateReady can legitimately take hours. This will
 				// be replaced with the configured resource timeout in v7.0.0.
-				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, 3*time.Hour); err != nil {
+				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, managedCertificateTimeout); err != nil {
 					resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 					return
 				}
@@ -798,7 +799,7 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 }
 
 func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
-	timeout := 3 * time.Hour
+	timeout := managedCertificateTimeout
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {
@@ -830,7 +831,7 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 		}
 	}
 
-	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 3 hours waiting for managed certificate to be issued", id)
+	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after %s waiting for managed certificate to be issued", id, timeout)
 }
 
 func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput, timeout time.Duration) error {
