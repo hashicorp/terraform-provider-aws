@@ -42,6 +42,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newHubContentReferenceResource,
+			TypeName: "aws_sagemaker_hub_content_reference",
+			Name:     "Hub Content Reference",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "hub_content_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newHyperParameterTuningJobResource,
 			TypeName: "aws_sagemaker_hyper_parameter_tuning_job",
 			Name:     "Hyper Parameter Tuning Job",
