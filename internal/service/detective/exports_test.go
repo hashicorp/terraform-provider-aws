@@ -5,8 +5,10 @@ package detective
 
 // Exports for use in tests only.
 var (
-	ResourceGraph = resourceGraph
+	ResourceGraph  = resourceGraph
+	ResourceMember = resourceMember
 
 	FindGraphByARN                          = findGraphByARN
+	FindMemberByTwoPartKey                  = findMemberByTwoPartKey
 	FindOrganizationAdminAccountByAccountID = findOrganizationAdminAccountByAccountID
 )

@@ -56,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_detective_member",
 			Name:     "Member",
 			Region:   inttypes.ResourceRegionDefault(),
