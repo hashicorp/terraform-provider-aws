@@ -329,7 +329,10 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, deadline.Remaining()); err != nil {
+			// The managed certificate path uses a fixed 3-hour timeout because
+			// waitManagedCertificateReady can legitimately take hours. This will
+			// be replaced with the configured resource timeout in v7.0.0.
+			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, 3*time.Hour); err != nil {
 				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 				return
 			}
@@ -468,7 +471,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, deadline.Remaining()); err != nil {
+				// The managed certificate path uses a fixed 3-hour timeout because
+				// waitManagedCertificateReady can legitimately take hours. This will
+				// be replaced with the configured resource timeout in v7.0.0.
+				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, 3*time.Hour); err != nil {
 					resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 					return
 				}

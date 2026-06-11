@@ -127,7 +127,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-~> **NOTE:** In previous versions of this resource, configured timeouts were accepted but not enforced. Timeouts are now fully enforced. If you have previously configured custom timeouts, they will now take effect.
+~> **NOTE:** In versions prior to `v6.51.0`, resource timeouts were accepted but not enforced. Timeouts are now fully enforced. If you have previously configured custom timeouts, they will now take effect.
 
 ~> **NOTE:** When using `managed_certificate_request`, the managed certificate issuance uses a fixed 3 hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version.
 
