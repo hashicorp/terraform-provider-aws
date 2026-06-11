@@ -125,6 +125,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - Current version of the distribution tenant.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+~> **NOTE:** In previous versions of this resource, configured timeouts were accepted but not enforced. Timeouts are now fully enforced. If you have previously configured custom timeouts, they will now take effect.
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `45m`)
+* `update` - (Default `45m`)
+* `delete` - (Default `45m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Distribution Tenants using the `id`. For example:
