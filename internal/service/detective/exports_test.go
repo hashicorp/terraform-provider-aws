@@ -5,5 +5,8 @@ package detective
 
 // Exports for use in tests only.
 var (
+	ResourceGraph = resourceGraph
+
+	FindGraphByARN                          = findGraphByARN
 	FindOrganizationAdminAccountByAccountID = findOrganizationAdminAccountByAccountID
 )

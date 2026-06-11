@@ -18,6 +18,7 @@ func TestAccDetective_serial(t *testing.T) {
 			acctest.CtBasic:      testAccGraph_basic,
 			acctest.CtDisappears: testAccGraph_disappears,
 			"tags":               testAccGraph_tags,
+			"Identity":           testAccDetectiveGraph_identitySerial,
 		},
 		"InvitationAccepter": {
 			acctest.CtBasic: testAccInvitationAccepter_basic,
