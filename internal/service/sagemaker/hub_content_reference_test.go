@@ -50,7 +50,7 @@ func TestAccSageMakerHubContentReference_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "hub_name", "hub_content_name"),
+				ImportStateIdFunc:                    testAccHubContentReferenceImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "hub_name",
 			},
@@ -123,7 +123,7 @@ func TestAccSageMakerHubContentReference_minVersion(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "hub_name", "hub_content_name"),
+				ImportStateIdFunc:                    testAccHubContentReferenceImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "hub_name",
 			},
@@ -165,7 +165,7 @@ func TestAccSageMakerHubContentReference_tags(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "hub_name", "hub_content_name"),
+				ImportStateIdFunc:                    testAccHubContentReferenceImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "hub_name",
 			},
@@ -249,6 +249,10 @@ func testAccCheckHubContentReferenceExists(ctx context.Context, t *testing.T, n 
 
 		return nil
 	}
+}
+
+func testAccHubContentReferenceImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "hub_name", "hub_content_name")
 }
 
 func testAccHubContentReferenceConfig_base(rName string) string {

@@ -49,6 +49,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "hub_content_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("hub_name", true),
+				inttypes.StringIdentityAttribute("hub_content_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      hubContentReferenceImportID{},
+			},
 		},
 		{
 			Factory:  newHyperParameterTuningJobResource,

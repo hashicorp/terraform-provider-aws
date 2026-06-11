@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -32,12 +31,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_sagemaker_hub_content_reference", name="Hub Content Reference")
 // @Tags(identifierAttribute="hub_content_arn")
-// @Testing(importStateIdAttribute="hub_name,hub_content_name")
+// @IdentityAttribute("hub_name")
+// @IdentityAttribute("hub_content_name")
+// @ImportIDHandler("hubContentReferenceImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc=testAccHubContentReferenceImportStateIDFunc)
+// @Testing(importStateIdAttribute="hub_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeHubContentOutput")
 func newHubContentReferenceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hubContentReferenceResource{}
@@ -56,6 +61,7 @@ const (
 type hubContentReferenceResource struct {
 	framework.ResourceWithModel[hubContentReferenceResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -288,19 +294,6 @@ func (r *hubContentReferenceResource) Delete(ctx context.Context, request resour
 	}
 }
 
-func (r *hubContentReferenceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(request.ID, hubContentReferenceIDPartCount, false)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"importing SageMaker Hub Content Reference",
-			fmt.Sprintf("invalid import ID %q, expected hub_name%shub_content_name: %s", request.ID, flex.ResourceIdSeparator, err),
-		)
-		return
-	}
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("hub_name"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("hub_content_name"), parts[1])...)
-}
-
 // stripARNVersion removes the version suffix from a SageMaker ARN
 func stripARNVersion(arn *string) *string {
 	s := aws.ToString(arn)
@@ -308,6 +301,36 @@ func stripARNVersion(arn *string) *string {
 		s = s[:i]
 	}
 	return aws.String(s)
+}
+
+const hubContentReferenceImportIDSeparator = intflex.ResourceIdSeparator
+
+func hubContentReferenceParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, hubContentReferenceImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected hub-name%[2]shub-content-name", id, hubContentReferenceImportIDSeparator)
+}
+
+var _ inttypes.ImportIDParser = hubContentReferenceImportID{}
+
+type hubContentReferenceImportID struct{}
+
+func (hubContentReferenceImportID) Parse(id string) (string, map[string]any, error) {
+	hubName, hubContentName, err := hubContentReferenceParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"hub_name":         hubName,
+		"hub_content_name": hubContentName,
+	}
+
+	return id, result, nil
 }
 
 func findHubContentByName(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, contentType awstypes.HubContentType) (*sagemaker.DescribeHubContentOutput, error) {
