@@ -445,6 +445,72 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 	})
 }
 
+func TestAccRDSCluster_autoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				// Toggling the value is an in-place modify, not a recreate.
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_AutoMinorVersionUpgrade_multiAZ(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	// The non-Aurora Multi-AZ DB cluster is the second cluster type the API
+	// documents this setting for; verify it is honored on create there too.
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgradeMultiAZ(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4679,6 +4745,51 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, storageType, allocatedStorage, iops))
+}
+
+func testAccClusterConfig_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately          = true
+  auto_minor_version_upgrade = %[2]t
+  cluster_identifier         = %[1]q
+  engine                     = %[3]q
+  master_password            = "barbarbarbar"
+  master_username            = "foo"
+  skip_final_snapshot        = true
+}
+`, rName, autoMinorVersionUpgrade, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_autoMinorVersionUpgradeMultiAZ(rName string, autoMinorVersionUpgrade bool) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+resource "aws_rds_cluster" "test" {
+  allocated_storage          = 100
+  apply_immediately          = true
+  auto_minor_version_upgrade = %[4]t
+  cluster_identifier         = %[3]q
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name       = aws_db_subnet_group.test.name
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = data.aws_rds_orderable_db_instance.test.engine_version
+  iops                       = 1000
+  master_password            = "mustbeeightcharaters"
+  master_username            = "test"
+  skip_final_snapshot        = true
+  storage_type               = data.aws_rds_orderable_db_instance.test.storage_type
+}
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, autoMinorVersionUpgrade))
 }
 
 func testAccClusterConfig_iops(rName string, iops int) string {

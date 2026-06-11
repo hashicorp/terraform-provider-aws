@@ -94,6 +94,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -1188,6 +1193,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.AllocatedStorage = aws.Int32(int32(v.(int)))
 		}
 
+		// Only send AutoMinorVersionUpgrade when the practitioner set it.
+		// Leaving the field unset must make no change (the API default is
+		// read back as Computed), so GetOkExists distinguishes an explicit
+		// false from an unset attribute.
+		if v, ok := d.GetOkExists(names.AttrAutoMinorVersionUpgrade); ok {
+			input.AutoMinorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
@@ -1455,6 +1468,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, dbc.AutoMinorVersionUpgrade)
 	clusterARN := aws.ToString(dbc.DBClusterArn)
 	d.Set(names.AttrARN, clusterARN)
 	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
@@ -1633,6 +1647,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
 				input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 			}
+		}
+
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
