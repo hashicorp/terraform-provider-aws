@@ -38,8 +38,8 @@ import (
 func newPipelineEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineEndpointResource{}
 
-	r.SetDefaultCreateTimeout(45 * time.Minute)
-	r.SetDefaultDeleteTimeout(45 * time.Minute)
+	r.SetDefaultCreateTimeout(15 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 	return r, nil
 }
 
@@ -124,7 +124,6 @@ func (r *pipelineEndpointResource) Create(ctx context.Context, request resource.
 	if response.Diagnostics.HasError() {
 		return
 	}
-	vpcOptions := data.VPCOptions
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
@@ -156,7 +155,6 @@ func (r *pipelineEndpointResource) Create(ctx context.Context, request resource.
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.VPCOptions = vpcOptions
 
 	data.Status = fwflex.StringValueToFramework(ctx, string(endpoint.Status))
 
@@ -169,7 +167,6 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 	if response.Diagnostics.HasError() {
 		return
 	}
-	vpcOptions := data.VPCOptions
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
@@ -192,12 +189,8 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-    // This is being set directly to be stored in the resource model because VPC options aren't returned in the OSIS API responses.
-	data.VPCOptions = vpcOptions
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
-
 
 func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data pipelineEndpointResourceModel
@@ -230,7 +223,7 @@ func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-// FindPipelineEndpointByID retrieves a pipeline endpoint by its ID.
+// findPipelineEndpointByID retrieves a pipeline endpoint by its ID.
 func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID string) (*awstypes.PipelineEndpoint, error) {
 	input := &osis.ListPipelineEndpointsInput{
 		MaxResults: aws.Int32(100),

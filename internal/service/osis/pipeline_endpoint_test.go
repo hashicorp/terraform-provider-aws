@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/osis/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,11 +21,11 @@ import (
 func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineEndpoint awstypes.PipelineEndpoint
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline_endpoint.test"
 	pipelineResourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -34,12 +33,12 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineEndpointExists(ctx, resourceName, &pipelineEndpoint),
+					testAccCheckPipelineEndpointExists(ctx, t, resourceName, &pipelineEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_arn", pipelineResourceName, "pipeline_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
@@ -49,10 +48,9 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"vpc_options"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -61,10 +59,10 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 func TestAccOpenSearchIngestionPipelineEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineEndpoint awstypes.PipelineEndpoint
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -72,23 +70,28 @@ func TestAccOpenSearchIngestionPipelineEndpoint_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineEndpointExists(ctx, resourceName, &pipelineEndpoint),
+					testAccCheckPipelineEndpointExists(ctx, t, resourceName, &pipelineEndpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckPipelineEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPipelineEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_osis_pipeline_endpoint" {
@@ -112,7 +115,7 @@ func testAccCheckPipelineEndpointDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckPipelineEndpointExists(ctx context.Context, n string, v *awstypes.PipelineEndpoint) resource.TestCheckFunc {
+func testAccCheckPipelineEndpointExists(ctx context.Context, t *testing.T, n string, v *awstypes.PipelineEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,7 +126,7 @@ func testAccCheckPipelineEndpointExists(ctx context.Context, n string, v *awstyp
 			return fmt.Errorf("No OpenSearch Ingestion Pipeline Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		output, err := tfosis.FindPipelineEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -148,23 +151,15 @@ resource "aws_osis_pipeline_endpoint" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = {
-    Name = "%[1]s-endpoint"
-  }
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test" {
@@ -177,6 +172,10 @@ resource "aws_security_group" "test" {
 func testAccPipelineEndpointConfig_pipeline(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q

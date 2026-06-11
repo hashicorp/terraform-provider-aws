@@ -19,8 +19,8 @@ resource "aws_osis_pipeline_endpoint" "example" {
   pipeline_arn = aws_osis_pipeline.example.pipeline_arn
 
   vpc_options {
-    subnet_ids         = [aws_subnet.example.id]
     security_group_ids = [aws_security_group.example.id]
+    subnet_ids         = [aws_subnet.example.id]
   }
 }
 ```
@@ -30,22 +30,21 @@ resource "aws_osis_pipeline_endpoint" "example" {
 The following arguments are required:
 
 * `pipeline_arn` - (Required) ARN of the pipeline to create the endpoint for.
-* `vpc_options` - (Required) VPC options for the pipeline endpoint. See [`vpc_options`](#vpc_options) below.
+* `vpc_options` - (Required) VPC options for the pipeline endpoint. See [`vpc_options` Block](#vpc_options-block) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### vpc_options
+### `vpc_options` Block
 
-* `subnet_ids` - (Required) List of subnet IDs associated with the VPC endpoint.
 * `security_group_ids` - (Optional) List of security groups associated with the VPC endpoint.
+* `subnet_ids` - (Required) List of subnet IDs associated with the VPC endpoint.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `endpoint_id` - Unique identifier for the endpoint.
 * `id` - Unique identifier for the endpoint.
 * `status` - Status of the endpoint.
 * `vpc_id` - ID of the VPC.
@@ -54,8 +53,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `45m`)
-* `delete` - (Default `45m`)
+* `create` - (Default `15m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

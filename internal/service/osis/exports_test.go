@@ -5,13 +5,10 @@ package osis
 
 // Exports for use in tests only.
 var (
-	ResourcePipeline = newPipelineResource
-
-	FindPipelineByName = findPipelineByName
-
+	FindPipelineByName       = findPipelineByName
 	FindPipelineEndpointByID = findPipelineEndpointByID
 
-	ResourcePipelineEndpoint = newPipelineEndpointResource
-
+	ResourcePipeline               = newPipelineResource
+	ResourcePipelineEndpoint       = newPipelineEndpointResource
 	ResourcePipelineResourcePolicy = newPipelineResourcePolicyResource
 )

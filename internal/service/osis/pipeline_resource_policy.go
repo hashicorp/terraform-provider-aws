@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -25,7 +24,8 @@ import (
 )
 
 // @FrameworkResource("aws_osis_pipeline_resource_policy", name="Pipeline Resource Policy")
-// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @ArnIdentity("resource_arn")
+// @Testing(hasNoPreExistingResource=true)
 func newPipelineResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResourcePolicyResource{}
 
@@ -40,7 +40,6 @@ type pipelineResourcePolicyResource struct {
 func (r *pipelineResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
@@ -78,8 +77,6 @@ func (r *pipelineResourcePolicyResource) Create(ctx context.Context, request res
 
 		return
 	}
-
-	data.ID = types.StringValue(data.ResourceARN.ValueString())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -173,7 +170,6 @@ func (r *pipelineResourcePolicyResource) Delete(ctx context.Context, request res
 
 type pipelineResourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	ID          types.String      `tfsdk:"id"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 }

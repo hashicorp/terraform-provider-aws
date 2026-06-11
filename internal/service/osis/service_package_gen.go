@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_osis_pipeline_resource_policy",
 			Name:     "Pipeline Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

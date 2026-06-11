@@ -9,41 +9,47 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/osis"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	pipelineName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	pipelineName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineResourcePolicyConfig_basic(pipelineName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, resourceName),
+					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not found: %s", resourceName)
+					}
+					return rs.Primary.Attributes[names.AttrResourceARN], nil
+				},
 			},
 		},
 	})
@@ -51,10 +57,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceArn := "aws_osis_pipeline_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -62,15 +68,20 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, resourceArn),
+					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceArn),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineResourcePolicy, resourceArn),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceArn, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -78,10 +89,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -89,22 +100,22 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, resourceName),
+					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccPipelineResourcePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, resourceName),
+					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Sid", "AllowIngestUpdated"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
@@ -113,17 +124,18 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_osis_pipeline_resource_policy" {
 				continue
 			}
 
+			resourceArn := rs.Primary.Attributes[names.AttrResourceARN]
 			input := osis.GetResourcePolicyInput{
-				ResourceArn: &rs.Primary.ID,
+				ResourceArn: &resourceArn,
 			}
 			output, err := conn.GetResourcePolicy(ctx, &input)
 
@@ -133,7 +145,7 @@ func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context) resource.Tes
 			}
 
 			if output != nil && output.Policy != nil && *output.Policy != "{}" {
-				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", resourceArn)
 			}
 		}
 
@@ -141,21 +153,26 @@ func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckPipelineResourcePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPipelineResourcePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		resourceArn := rs.Primary.Attributes[names.AttrResourceARN]
+		if resourceArn == "" {
+			return fmt.Errorf("No OpenSearch Ingestion Pipeline Resource Policy resource_arn is set")
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		input := osis.GetResourcePolicyInput{
-			ResourceArn: &rs.Primary.ID,
+			ResourceArn: &resourceArn,
 		}
 		_, err := conn.GetResourcePolicy(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("Error reading OpenSearch Ingestion Pipeline Resource Policy (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("Error reading OpenSearch Ingestion Pipeline Resource Policy (%s): %w", resourceArn, err)
 		}
 
 		return nil
@@ -200,16 +217,14 @@ resource "aws_osis_pipeline_resource_policy" "test" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Id": "ingestPolicy",
   "Statement": [{
     "Sid": "AllowIngestUpdated",
     "Effect": "Allow",
     "Principal": {
-      "AWS": "${data.aws_caller_identity.current.account_id}"
+      "AWS": "*"
     },
     "Action": [
-      "osis:CreatePipelineEndpoint",
-      "osis:DeletePipelineEndpoint"
+      "osis:CreatePipelineEndpoint"
     ],
     "Resource": "${aws_osis_pipeline.test.pipeline_arn}"
   }]

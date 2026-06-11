@@ -50,7 +50,7 @@ resource "aws_osis_pipeline_resource_policy" "example" {
         Principal = {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
-        Action   = "osis:Ingest"
+        Action   = "osis:CreatePipelineEndpoint"
         Resource = aws_osis_pipeline.example.pipeline_arn
       }
     ]
@@ -73,8 +73,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the pipeline.
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline Resource Policy using the `resource_arn`. For example:
@@ -82,7 +80,9 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_osis_pipeline_resource_policy.example
-  id = "arn:aws:osis:us-east-1:123456789012:pipeline/example"
+  identity = {
+    resource_arn = "arn:aws:osis:us-east-1:123456789012:pipeline/example"
+  }
 }
 ```
 
@@ -91,3 +91,9 @@ Using `terraform import`, import OpenSearch Ingestion Pipeline Resource Policy u
 ```console
 % terraform import aws_osis_pipeline_resource_policy.example arn:aws:osis:us-east-1:123456789012:pipeline/example
 ```
+
+### Identity Schema
+
+Use the following attributes for [import](https://developer.hashicorp.com/terraform/language/import):
+
+* `resource_arn` - (Required) ARN of the pipeline.
