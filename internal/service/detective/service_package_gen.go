@@ -50,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceInvitationAccepter,
+			Factory:  resourceInvitationAccepter,
 			TypeName: "aws_detective_invitation_accepter",
 			Name:     "Invitation Accepter",
 			Region:   inttypes.ResourceRegionDefault(),
