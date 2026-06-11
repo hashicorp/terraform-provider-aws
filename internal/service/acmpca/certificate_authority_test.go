@@ -70,6 +70,37 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthority_permanentDeletionTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority awstypes.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "7"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+		},
+	})
+}
+
 func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
