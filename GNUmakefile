@@ -138,7 +138,7 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
 ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
@@ -268,16 +268,7 @@ deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 
 docs: docs-link-check docs-markdown-lint docs-misspell ## [CI] Run all CI documentation checks
 
-docs-check: ## Check provider documentation (Legacy, use caution)
-	@echo "make: Legacy target, use caution..."
-	@tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-		-provider-name=aws \
-		-require-resource-subcategory
+docs-check: swissshepherd ## Alias to swissshepherd
 
 docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
@@ -1000,33 +991,9 @@ testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
 tflint-init: ## Initialize tflint
 	@tflint --config .ci/.tflint.hcl --init
 
-tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
-	@echo "make: Provider Checks / tfproviderdocs..."
-	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
-	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
-	echo 'data "aws_partition" "example" {}' > example.tf ; \
-	terraform init -plugin-dir terraform-plugin-dir ; \
-	mkdir -p terraform-providers-schema ; \
-	terraform providers schema -json > terraform-providers-schema/schema.json ; \
-	tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
-		-provider-source registry.terraform.io/hashicorp/aws \
-		-providers-schema-json terraform-providers-schema/schema.json \
-		-require-resource-subcategory \
-		-ignore-cdktf-missing-files \
-		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
-		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
-		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
-		-enable-enhanced-region-check
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -1290,7 +1257,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-tflint-embedded \
 	terraform-fmt \
 	tflint-init \
-	tfproviderdocs \
 	tools \
 	ts \
 	update \
