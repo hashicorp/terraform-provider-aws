@@ -1710,6 +1710,7 @@ func TestAccACMCertificate_AmazonIssued_disableReenableCTLogging(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
 func TestAccACMCertificate_Imported_PrivateKeyWo(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
@@ -2004,6 +2005,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
+// lintignore:AT002
 func TestAccACMCertificate_Imported_ReimportWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
