@@ -273,6 +273,12 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// When managed_certificate_request is used without an explicit
+	// customizations block, the API auto-populates customizations.certificate.
+	// Preserve the planned (null) value so the post-apply consistency check passes.
+	plannedCustomizations := data.Customizations
+	managedCertRequested := !data.ManagedCertificateRequest.IsNull() && !data.ManagedCertificateRequest.IsUnknown()
+
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
@@ -354,6 +360,13 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
+	// Restore planned customizations to maintain plan/state consistency.
+	// The API auto-populates customizations.certificate when managed_certificate_request
+	// is used. Restore the planned value when customizations was entirely null
+	if managedCertRequested && plannedCustomizations.IsNull() {
+		data.Customizations = plannedCustomizations
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -363,6 +376,10 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Preserve prior customizations state before flatten overwrites it.
+	priorCustomizations := data.Customizations
+	managedCertRequested := !data.ManagedCertificateRequest.IsNull() && !data.ManagedCertificateRequest.IsUnknown()
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
@@ -394,6 +411,11 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
+	// Restore prior customizations to prevent drift when managed cert is active.
+	if managedCertRequested && priorCustomizations.IsNull() {
+		data.Customizations = priorCustomizations
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -404,6 +426,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Preserve planned customizations for managed cert consistency.
+	plannedCustomizations := new.Customizations
+	managedCertRequested := !new.ManagedCertificateRequest.IsNull() && !new.ManagedCertificateRequest.IsUnknown()
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
@@ -528,6 +554,11 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
+	}
+
+	// Restore planned customizations to maintain plan/state consistency.
+	if managedCertRequested && plannedCustomizations.IsNull() {
+		new.Customizations = plannedCustomizations
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
