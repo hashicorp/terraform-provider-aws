@@ -895,12 +895,78 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
+		if err := applyReplicationGroupPendingModifications(d, rgp, &c); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): applying pending modifications: %s", d.Id(), err)
+		}
+
 		if c.AuthTokenEnabled != nil && !aws.ToBool(c.AuthTokenEnabled) {
-			d.Set("auth_token", nil)
+			// Do not clear auth_token if a pending auth token change is in progress
+			// (SETTING or ROTATING), as the token is being modified and will be applied
+			// during the next maintenance window.
+			if c.PendingModifiedValues == nil || c.PendingModifiedValues.AuthTokenStatus == "" {
+				d.Set("auth_token", nil)
+			}
 		}
 	}
 
 	return diags
+}
+
+func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awstypes.ReplicationGroup, c *awstypes.CacheCluster) error {
+	if c.PendingModifiedValues != nil {
+		nodeType := aws.ToString(c.PendingModifiedValues.CacheNodeType)
+		if nodeType != "" {
+			d.Set("node_type", nodeType)
+		}
+
+		if c.PendingModifiedValues.EngineVersion != nil {
+			switch aws.ToString(c.Engine) {
+			case engineRedis:
+				if err := setEngineVersionRedis(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			case engineValkey:
+				if err := setEngineVersionValkey(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			}
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(c.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", c.PendingModifiedValues.TransitEncryptionMode)
+		}
+	}
+
+	if rgp.PendingModifiedValues != nil {
+		if rgp.PendingModifiedValues.AutomaticFailoverStatus != "" {
+			switch rgp.PendingModifiedValues.AutomaticFailoverStatus {
+			case awstypes.PendingAutomaticFailoverStatusEnabled:
+				d.Set("automatic_failover_enabled", true)
+			case awstypes.PendingAutomaticFailoverStatusDisabled:
+				d.Set("automatic_failover_enabled", false)
+			}
+		}
+
+		if rgp.PendingModifiedValues.ClusterMode != "" {
+			d.Set("cluster_mode", rgp.PendingModifiedValues.ClusterMode)
+		}
+
+		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", rgp.PendingModifiedValues.TransitEncryptionMode)
+		}
+	}
+
+	return nil
 }
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
