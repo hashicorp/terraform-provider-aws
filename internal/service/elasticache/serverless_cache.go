@@ -387,22 +387,47 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// ModifyServerlessCache only supports one field modification per API call.
+	// Each changed field must be sent in a separate request.
 
-	if diff.HasChanges() {
-		input := elasticache.ModifyServerlessCacheInput{
+	if !new.Description.Equal(old.Description) {
+		input := &elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+			Description:         new.Description.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, diff.IgnoredFieldNamesOpts()...)...)
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if response.Diagnostics.HasError() {
 			return
 		}
+	}
 
-		if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) && new.CacheUsageLimits.IsNull() {
+	if !new.DailySnapshotTime.Equal(old.DailySnapshotTime) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+			DailySnapshotTime:   new.DailySnapshotTime.ValueStringPointer(),
+		}
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.SnapshotRetentionLimit.Equal(old.SnapshotRetentionLimit) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName:    new.ServerlessCacheName.ValueStringPointer(),
+			SnapshotRetentionLimit: aws.Int32(int32(new.SnapshotRetentionLimit.ValueInt64())),
+		}
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if new.CacheUsageLimits.IsNull() {
 			// Removing CacheUsageLimits.
 			// https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Scaling.html#Pre-Scaling.console
 			input.CacheUsageLimits = &awstypes.CacheUsageLimits{
@@ -416,39 +441,73 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 					Minimum: aws.Int32(0),
 				},
 			}
+		} else {
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.CacheUsageLimits, &input.CacheUsageLimits)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		}
-
-		// If no engine changes are made, unset related fields to prevent the following error:
-		// This API supports only cross-engine upgrades to Valkey engine currently.
-		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
-			input.Engine = nil
-			input.MajorEngineVersion = nil
-		}
-
-		// If engine is changed but major_engine_version is omitted in configuration, explicitly
-		// include it in the request to prevent the following error:
-		// InvalidParameterCombination: No modifications were requested
-		if !new.Engine.Equal(old.Engine) && input.MajorEngineVersion == nil {
-			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
-		}
-
-		if !new.UserGroupID.Equal(old.UserGroupID) && new.UserGroupID.IsNull() {
-			input.RemoveUserGroup = aws.Bool(true)
-		}
-
-		if _, err := conn.ModifyServerlessCache(ctx, &input); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
-			return
-		}
-
-		if _, err := waitServerlessCacheAvailable(ctx, conn, old.ServerlessCacheName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", new.ID.ValueString()), err.Error())
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	// AWS returns null values for certain values that are available on redis/valkey only.
-	// always set these values to the state value to avoid unnecessary diff failures on computed values.
+	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.SecurityGroupIDs, &input.SecurityGroupIds)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.UserGroupID.Equal(old.UserGroupID) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if new.UserGroupID.IsNull() {
+			input.RemoveUserGroup = aws.Bool(true)
+		} else {
+			input.UserGroupId = new.UserGroupID.ValueStringPointer()
+		}
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// Engine and MajorEngineVersion must be sent together when engine changes.
+	if !new.Engine.Equal(old.Engine) || !new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
+		input := &elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if !new.Engine.Equal(old.Engine) {
+			// Cross-engine upgrade (e.g., redis -> valkey).
+			input.Engine = new.Engine.ValueStringPointer()
+			if !new.MajorEngineVersion.IsNull() {
+				input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
+			} else {
+				// If engine is changed but major_engine_version is omitted in configuration, explicitly
+				// include it in the request to prevent the following error:
+				// InvalidParameterCombination: No modifications were requested
+				input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
+			}
+		} else {
+			// Only major_engine_version changed, engine stays the same.
+			input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
+		}
+		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", old.ID.ValueString()), err.Error())
@@ -461,6 +520,18 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func updateServerlessCache(ctx context.Context, conn *elasticache.Client, response *resource.UpdateResponse, input *elasticache.ModifyServerlessCacheInput, oldServerlessCacheName string, newId string, timout time.Duration) {
+	if _, err := conn.ModifyServerlessCache(ctx, input); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", newId), err.Error())
+		return
+	}
+
+	if _, err := waitServerlessCacheAvailable(ctx, conn, oldServerlessCacheName, timout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", newId), err.Error())
+		return
+	}
 }
 
 func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
