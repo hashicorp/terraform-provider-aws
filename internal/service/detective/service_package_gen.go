@@ -68,7 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_detective_organization_configuration",
 			Name:     "Organization Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
