@@ -2619,7 +2619,7 @@ resource "aws_eks_cluster" "test" {
     control_plane_placement {
       spread_level = "host"
     }
-    etcd_instance_type          = "r7izde.4xlarge"
+    etcd_instance_type = "r7izde.4xlarge"
     etcd_placement {
       spread_level = "host"
     }
