@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix `deployment_configuration.lifecycle_hook` not being removed from the ECS service when removed from configuration
+```
