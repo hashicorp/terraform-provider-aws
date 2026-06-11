@@ -68,17 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chatbot Microsoft Teams Channel Configuration using the `team_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chatbot Microsoft Teams Channel Configuration using the `chat_configuration_arn`. For example:
 
 ```terraform
 import {
   to = aws_chatbot_teams_channel_configuration.example
-  id = "5f4f15d2-b958-522a-8333-124aa8bf0925"
+  id = "arn:aws:chatbot::123456789012:chat-configuration/microsoft-teams-channel/mitt-lags-kanal"
 }
 ```
 
-Using `terraform import`, import Chatbot Microsoft Teams Channel Configuration using the `team_id`. For example:
+Using `terraform import`, import Chatbot Microsoft Teams Channel Configuration using the `chat_configuration_arn`. For example:
 
 ```console
-% terraform import aws_chatbot_teams_channel_configuration.example 5f4f15d2-b958-522a-8333-124aa8bf0925
+% terraform import aws_chatbot_teams_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/microsoft-teams-channel/mitt-lags-kanal
 ```
