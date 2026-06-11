@@ -35,8 +35,8 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_defaultsOnly(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
@@ -114,8 +114,8 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourceCertificateAuthority(), resourceName),
 				),
@@ -300,7 +300,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
-					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtFalse),
@@ -314,6 +314,9 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -398,12 +401,15 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", ""),
 				),
 			},
 		},
@@ -537,12 +543,15 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", ""),
 				),
 			},
 		},
@@ -599,12 +608,15 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", ""),
 				),
 			},
 		},
@@ -718,12 +730,15 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", ""),
 				),
 			},
 		},
@@ -800,12 +815,15 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityConfig_basicSevenDays(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", ""),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", ""),
 				),
 			},
 		},
@@ -919,9 +937,33 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccCertificateAuthorityConfig_required(commonName string) string {
+// testAccCertificateAuthorityConfig_defaultsOnly should ONLY be used with
+// the `TestAccACMPCACertificateAuthority_basic` test, as it uses the default
+// `permanent_deletion_time_in_days` of 30.
+func testAccCertificateAuthorityConfig_defaultsOnly(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+`, commonName)
+}
+
+// testAccCertificateAuthorityConfig_basicSevenDays only sets required values except
+// for `permanent_deletion_time_in_days`, which is set to the minimum
+func testAccCertificateAuthorityConfig_basicSevenDays(commonName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   usage_mode = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
@@ -939,6 +981,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 func testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   usage_mode = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
