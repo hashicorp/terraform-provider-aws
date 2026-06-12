@@ -17,6 +17,6 @@ resource "aws_detective_organization_admin_account" "test" {
 data "aws_caller_identity" "current" {}
 
 variable "autoEnable" {
-  type        = bool
-  nullable    = false
+  type     = bool
+  nullable = false
 }
