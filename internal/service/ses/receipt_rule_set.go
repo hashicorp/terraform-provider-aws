@@ -56,11 +56,11 @@ func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	name := d.Get("rule_set_name").(string)
-	input := &ses.CreateReceiptRuleSetInput{
+	input := ses.CreateReceiptRuleSetInput{
 		RuleSetName: aws.String(name),
 	}
 
-	_, err := conn.CreateReceiptRuleSet(ctx, input)
+	_, err := conn.CreateReceiptRuleSet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Rule Set (%s): %s", name, err)
@@ -100,9 +100,10 @@ func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Receipt Rule Set: %s", d.Id())
-	_, err := conn.DeleteReceiptRuleSet(ctx, &ses.DeleteReceiptRuleSetInput{
+	input := ses.DeleteReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReceiptRuleSet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Receipt Rule Set (%s): %s", d.Id(), err)
@@ -112,11 +113,11 @@ func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findReceiptRuleSetByName(ctx context.Context, conn *ses.Client, name string) (*ses.DescribeReceiptRuleSetOutput, error) {
-	input := &ses.DescribeReceiptRuleSetInput{
+	input := ses.DescribeReceiptRuleSetInput{
 		RuleSetName: aws.String(name),
 	}
 
-	return findReceiptRuleSet(ctx, conn, input)
+	return findReceiptRuleSet(ctx, conn, &input)
 }
 
 func findReceiptRuleSet(ctx context.Context, conn *ses.Client, input *ses.DescribeReceiptRuleSetInput) (*ses.DescribeReceiptRuleSetOutput, error) {
