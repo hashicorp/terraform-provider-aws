@@ -403,6 +403,18 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				},
 			},
 			{
+				Config: testAccHarnessConfig_bedrockModelAdditionalParams(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttrSet(resourceName, "model.0.bedrock_model_config.0.additional_params"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -413,6 +425,7 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 					"memory",
 					"model.0.bedrock_model_config.0.temperature",
 					"model.0.bedrock_model_config.0.top_p",
+					"model.0.bedrock_model_config.0.additional_params",
 				},
 			},
 		},
@@ -2750,6 +2763,36 @@ resource "aws_bedrockagentcore_harness" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func testAccHarnessConfig_bedrockModelAdditionalParams(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id    = "anthropic.claude-sonnet-4-20250514"
+      temperature = 0.7
+      top_p       = 0.9
+
+      additional_params = jsonencode({
+        additionalModelRequestFields = {
+          thinking = {
+            type          = "enabled"
+            budget_tokens = 2048
+          }
+        }
+      })
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
 }
 `, rName))
 }
