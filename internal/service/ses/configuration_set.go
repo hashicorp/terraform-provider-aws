@@ -216,10 +216,6 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func configurationSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "configuration-set/"+id)
-}
-
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -387,4 +383,8 @@ func flattenTrackingOptions(apiObject *awstypes.TrackingOptions) []any {
 	}
 
 	return []any{tfMap}
+}
+
+func configurationSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "configuration-set/"+id)
 }

@@ -124,10 +124,6 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func receiptFilterARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "receipt-filter/"+id)
-}
-
 func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -174,4 +170,8 @@ func findReceiptFilters(ctx context.Context, conn *ses.Client, input *ses.ListRe
 	}
 
 	return tfslices.Filter(output.Filters, tfslices.PredicateValue(filter)), nil
+}
+
+func receiptFilterARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "receipt-filter/"+id)
 }

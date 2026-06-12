@@ -323,10 +323,6 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
-func receiptRuleARN(ctx context.Context, c *conns.AWSClient, ruleSetName, id string) string {
-	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+ruleSetName+":receipt-rule/"+id)
-}
-
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
@@ -778,4 +774,8 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 	apiObject.Actions = sortedActions
 
 	return apiObject
+}
+
+func receiptRuleARN(ctx context.Context, c *conns.AWSClient, ruleSetName, id string) string {
+	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+ruleSetName+":receipt-rule/"+id)
 }

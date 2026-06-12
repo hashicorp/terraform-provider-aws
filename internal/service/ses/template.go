@@ -127,10 +127,6 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func templateARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "template/"+id)
-}
-
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -206,4 +202,8 @@ func findTemplate(ctx context.Context, conn *ses.Client, input *ses.GetTemplateI
 	}
 
 	return output.Template, nil
+}
+
+func templateARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "template/"+id)
 }

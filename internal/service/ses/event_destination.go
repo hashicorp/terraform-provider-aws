@@ -233,10 +233,6 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func eventDestinationARN(ctx context.Context, c *conns.AWSClient, configurationSetName, id string) string {
-	return c.RegionalARN(ctx, "ses", "configuration-set/"+configurationSetName+":event-destination/"+id)
-}
-
 func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -363,4 +359,8 @@ func flattenSNSDestination(apiObject *awstypes.SNSDestination) []any {
 	}
 
 	return []any{tfMap}
+}
+
+func eventDestinationARN(ctx context.Context, c *conns.AWSClient, configurationSetName, id string) string {
+	return c.RegionalARN(ctx, "ses", "configuration-set/"+configurationSetName+":event-destination/"+id)
 }

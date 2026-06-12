@@ -95,10 +95,6 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func activeReceiptRuleSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+id)
-}
-
 func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -157,4 +153,8 @@ func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client) (*awstypes.
 	}
 
 	return output.Metadata, nil
+}
+
+func activeReceiptRuleSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+id)
 }

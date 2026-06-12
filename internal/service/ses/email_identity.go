@@ -95,10 +95,6 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func identityARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "identity/"+id)
-}
-
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
@@ -144,4 +140,8 @@ func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	return output.VerificationAttributes, nil
+}
+
+func identityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
