@@ -12,17 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists s3control service tags.
+// listTagsImpl lists s3control service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceType string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
+func listTagsImpl(ctx context.Context, conn *s3control.Client, identifier, resourceType string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
 	input := s3control.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		AccountId:   aws.String(resourceType),
@@ -35,23 +34,6 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 	}
 
 	return keyValueTags(ctx, output.Tags), nil
-}
-
-// ListTags lists s3control service tags and set them in Context.
-// It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	c := meta.(*conns.AWSClient)
-	tags, err := listTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
-
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(tags)
-	}
-
-	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -102,10 +84,10 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
-// updateTags updates s3control service tags.
+// updateTagsImpl updates s3control service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourceType string, oldTagsMap, newTagsMap any, optFns ...func(*s3control.Options)) error {
+func updateTagsImpl(ctx context.Context, conn *s3control.Client, identifier, resourceType string, oldTagsMap, newTagsMap any, optFns ...func(*s3control.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -144,11 +126,4 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 	}
 
 	return nil
-}
-
-// UpdateTags updates s3control service tags.
-// It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	c := meta.(*conns.AWSClient)
-	return updateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 }
