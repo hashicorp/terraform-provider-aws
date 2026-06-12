@@ -8,6 +8,7 @@ package opensearchserverless
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -189,7 +189,6 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(plan.validateVectorOptions(ctx)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -357,6 +356,35 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
+func (r *collectionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data collectionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.VectorOptions.IsNull() || data.VectorOptions.IsUnknown() {
+		return
+	}
+
+	vo, d := data.VectorOptions.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	voSlice := enum.Values[awstypes.ServerlessVectorAccelerationStatus]()
+	if !slices.Contains(voSlice, vo.ServerlessVectorAcceleration.ValueString()) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("vector_options").AtListIndex(0).AtName("serverless_vector_acceleration"),
+			"Invalid serverless_vector_acceleration value",
+			fmt.Sprintf("Expected one of: %v, got: %s", voSlice, vo.ServerlessVectorAcceleration.ValueString()),
+		)
+
+		return
+	}
+}
+
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
@@ -417,39 +445,4 @@ func statusCollection(conn *opensearchserverless.Client, id string) retry.StateR
 
 		return output, string(output.Status), nil
 	}
-}
-
-func (m *collectionResourceModel) validateVectorOptions(ctx context.Context) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if m.VectorOptions.IsNull() || m.VectorOptions.IsUnknown() {
-		return diags
-	}
-
-	vo, d := m.VectorOptions.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	validValues := []awstypes.ServerlessVectorAccelerationStatus{
-		awstypes.ServerlessVectorAccelerationStatusEnabled,
-		awstypes.ServerlessVectorAccelerationStatusDisabled,
-		awstypes.ServerlessVectorAccelerationStatusAllowed,
-	}
-
-	val := vo.ServerlessVectorAcceleration.ValueString()
-	for _, v := range validValues {
-		if val == string(v) {
-			return diags
-		}
-	}
-
-	diags.AddAttributeError(
-		path.Root("vector_options").AtName("serverless_vector_acceleration"),
-		"Invalid serverless_vector_acceleration value",
-		fmt.Sprintf("Expected one of: %v, got: %s", validValues, val),
-	)
-
-	return diags
 }
