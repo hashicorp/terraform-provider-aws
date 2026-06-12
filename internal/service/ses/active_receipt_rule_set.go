@@ -89,7 +89,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
 	}
 
-	d.Set(names.AttrARN, activeReceiptRuleSetARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, d.Id()))
 	d.Set("rule_set_name", output.Name)
 
 	return diags
@@ -129,7 +129,7 @@ func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceD
 
 	d.Set("rule_set_name", response.Metadata.Name)
 
-	d.Set(names.AttrARN, activeReceiptRuleSetARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, d.Id()))
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -153,8 +153,4 @@ func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client) (*awstypes.
 	}
 
 	return output.Metadata, nil
-}
-
-func activeReceiptRuleSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+id)
 }

@@ -49,7 +49,7 @@ func dataSourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceD
 
 	name := aws.ToString(data.Name)
 	d.SetId(name)
-	d.Set(names.AttrARN, activeReceiptRuleSetARN(ctx, c, name))
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, name))
 	d.Set("rule_set_name", name)
 
 	return diags
