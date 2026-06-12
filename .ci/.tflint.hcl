@@ -7,6 +7,12 @@ plugin "aws" {
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
+plugin "opa" {
+  enabled = true
+  version = "0.10.0"
+  source  = "github.com/terraform-linters/tflint-ruleset-opa"
+}
+
 # Terraform Rules
 # https://github.com/terraform-linters/tflint-ruleset-terraform/blob/main/docs/rules/README.md
 

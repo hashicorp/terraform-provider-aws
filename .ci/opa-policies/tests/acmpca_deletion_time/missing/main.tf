@@ -1,0 +1,12 @@
+resource "aws_acmpca_certificate_authority" "test" {
+  type = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_2048"
+    signing_algorithm = "SHA256WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+}
