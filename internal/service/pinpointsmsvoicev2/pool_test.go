@@ -6,9 +6,11 @@ package pinpointsmsvoicev2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -23,6 +25,205 @@ import (
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPoolValidatePhoneIdentity(t *testing.T) {
+	t.Parallel()
+
+	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:phone-number/abc"
+
+	testCases := []struct {
+		TestName      string
+		Info          awstypes.PhoneNumberInformation
+		Intended      tfpinpointsmsvoicev2.IntendedIdentityConfig
+		WantSummaries []string
+	}{
+		{
+			TestName: "active_match",
+			Info: awstypes.PhoneNumberInformation{
+				Status:         awstypes.NumberStatusActive,
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: nil,
+		},
+		{
+			TestName: "status_pending_short_circuits",
+			Info: awstypes.PhoneNumberInformation{
+				Status:         awstypes.NumberStatusPending,
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"is not ACTIVE"},
+		},
+		{
+			TestName: "message_type_mismatch",
+			Info: awstypes.PhoneNumberInformation{
+				Status:         awstypes.NumberStatusActive,
+				MessageType:    awstypes.MessageTypePromotional,
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"mismatched message_type"},
+		},
+		{
+			TestName: "iso_country_code_mismatch",
+			Info: awstypes.PhoneNumberInformation{
+				Status:         awstypes.NumberStatusActive,
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: aws.String("GB"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"mismatched iso_country_code"},
+		},
+		{
+			TestName: "both_mismatch",
+			Info: awstypes.PhoneNumberInformation{
+				Status:         awstypes.NumberStatusActive,
+				MessageType:    awstypes.MessageTypePromotional,
+				IsoCountryCode: aws.String("GB"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"mismatched message_type", "mismatched iso_country_code"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			diags := tfpinpointsmsvoicev2.ValidatePhoneIdentity(identityARN, testCase.Info, testCase.Intended)
+
+			if got, want := len(diags), len(testCase.WantSummaries); got != want {
+				t.Fatalf("diag count: got %d, want %d (%v)", got, want, diags)
+			}
+			for i, want := range testCase.WantSummaries {
+				if !strings.Contains(diags[i].Summary(), want) {
+					t.Errorf("diag %d summary %q does not contain %q", i, diags[i].Summary(), want)
+				}
+			}
+		})
+	}
+}
+
+func TestPoolValidateSenderIdentity(t *testing.T) {
+	t.Parallel()
+
+	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:sender-id/EXAMPLE/US"
+
+	testCases := []struct {
+		TestName      string
+		Info          awstypes.SenderIdInformation
+		Intended      tfpinpointsmsvoicev2.IntendedIdentityConfig
+		WantSummaries []string
+	}{
+		{
+			TestName: "supported_match",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{awstypes.MessageTypeTransactional},
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: nil,
+		},
+		{
+			TestName: "supported_multi_type_match",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{awstypes.MessageTypeTransactional, awstypes.MessageTypePromotional},
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypePromotional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: nil,
+		},
+		{
+			TestName: "unsupported_type",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{awstypes.MessageTypePromotional},
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"does not support message_type="},
+		},
+		{
+			TestName: "iso_country_code_mismatch",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{awstypes.MessageTypeTransactional},
+				IsoCountryCode: aws.String("GB"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"mismatched iso_country_code"},
+		},
+		{
+			TestName: "both_mismatch",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{awstypes.MessageTypePromotional},
+				IsoCountryCode: aws.String("GB"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"does not support message_type=", "mismatched iso_country_code"},
+		},
+		{
+			TestName: "empty_message_types",
+			Info: awstypes.SenderIdInformation{
+				MessageTypes:   []awstypes.MessageType{},
+				IsoCountryCode: aws.String("US"),
+			},
+			Intended: tfpinpointsmsvoicev2.IntendedIdentityConfig{
+				MessageType:    awstypes.MessageTypeTransactional,
+				IsoCountryCode: "US",
+			},
+			WantSummaries: []string{"does not support message_type="},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			diags := tfpinpointsmsvoicev2.ValidateSenderIdentity(identityARN, testCase.Info, testCase.Intended)
+
+			if got, want := len(diags), len(testCase.WantSummaries); got != want {
+				t.Fatalf("diag count: got %d, want %d (%v)", got, want, diags)
+			}
+			for i, want := range testCase.WantSummaries {
+				if !strings.Contains(diags[i].Summary(), want) {
+					t.Errorf("diag %d summary %q does not contain %q", i, diags[i].Summary(), want)
+				}
+			}
+		})
+	}
+}
 
 func TestAccPinpointSMSVoiceV2Pool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
