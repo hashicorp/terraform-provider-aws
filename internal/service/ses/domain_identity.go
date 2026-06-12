@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -76,7 +75,8 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	verificationAttrs, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
@@ -90,18 +90,15 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity (%s) verification: %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, domainIdentityARN(ctx, c, d.Id()))
 	d.Set(names.AttrDomain, d.Id())
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 
 	return diags
+}
+
+func domainIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", id))
 }
 
 func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
