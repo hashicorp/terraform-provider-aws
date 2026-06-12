@@ -108,6 +108,12 @@ func findOrganizationConfigurationByGraphARN(ctx context.Context, conn *detectiv
 func findOrganizationConfiguration(ctx context.Context, conn *detective.Client, input *detective.DescribeOrganizationConfigurationInput) (*detective.DescribeOrganizationConfigurationOutput, error) {
 	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
 	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "a delegated administrator account has not been enabled") {
 		return nil, &retry.NotFoundError{
 			LastError: err,
