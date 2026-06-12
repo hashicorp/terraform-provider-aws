@@ -154,7 +154,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	eventDestinationName := d.Get(names.AttrName).(string)
-	input := &ses.CreateConfigurationSetEventDestinationInput{
+	input := ses.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
 		EventDestination: &awstypes.EventDestination{
 			Enabled:            d.Get(names.AttrEnabled).(bool),
@@ -184,7 +184,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	_, err := conn.CreateConfigurationSetEventDestination(ctx, input)
+	_, err := conn.CreateConfigurationSetEventDestination(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Configuration Set Event Destination (%s): %s", eventDestinationName, err)
@@ -238,10 +238,11 @@ func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Configuration Set Event Destination: %s", d.Id())
-	_, err := conn.DeleteConfigurationSetEventDestination(ctx, &ses.DeleteConfigurationSetEventDestinationInput{
+	input := ses.DeleteConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
 		EventDestinationName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationSetEventDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) || errs.IsA[*awstypes.EventDestinationDoesNotExistException](err) {
 		return diags
@@ -255,13 +256,10 @@ func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'configuration-set-name/event-destination-name'", d.Id())
+	configurationSetName, eventDestinationName, err := eventDestinationParseImportID(d.Id())
+	if err != nil {
+		return nil, err
 	}
-
-	configurationSetName := parts[0]
-	eventDestinationName := parts[1]
 
 	d.SetId(eventDestinationName)
 	d.Set("configuration_set_name", configurationSetName)
@@ -269,18 +267,30 @@ func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData,
 	return []*schema.ResourceData{d}, nil
 }
 
+const eventDestinationImportIDSeparator = "/"
+
+func eventDestinationParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, eventDestinationImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected configuration-set-name%[2]sevent-destination-name", id, eventDestinationImportIDSeparator)
+}
+
 func findEventDestinationByTwoPartKey(ctx context.Context, conn *ses.Client, configurationSetName, eventDestinationName string) (*awstypes.EventDestination, error) {
-	input := &ses.DescribeConfigurationSetInput{
+	input := ses.DescribeConfigurationSetInput{
 		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
 		ConfigurationSetName:           aws.String(configurationSetName),
 	}
 
-	return findEventDestination(ctx, conn, input, func(v *awstypes.EventDestination) bool {
+	return findEventDestination(ctx, conn, &input, func(v awstypes.EventDestination) bool {
 		return aws.ToString(v.Name) == eventDestinationName
 	})
 }
 
-func findEventDestination(ctx context.Context, conn *ses.Client, input *ses.DescribeConfigurationSetInput, filter tfslices.Predicate[*awstypes.EventDestination]) (*awstypes.EventDestination, error) {
+func findEventDestination(ctx context.Context, conn *ses.Client, input *ses.DescribeConfigurationSetInput, filter tfslices.Predicate[awstypes.EventDestination]) (*awstypes.EventDestination, error) {
 	output, err := findEventDestinations(ctx, conn, input, filter)
 
 	if err != nil {
@@ -290,14 +300,14 @@ func findEventDestination(ctx context.Context, conn *ses.Client, input *ses.Desc
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEventDestinations(ctx context.Context, conn *ses.Client, input *ses.DescribeConfigurationSetInput, filter tfslices.Predicate[*awstypes.EventDestination]) ([]awstypes.EventDestination, error) {
+func findEventDestinations(ctx context.Context, conn *ses.Client, input *ses.DescribeConfigurationSetInput, filter tfslices.Predicate[awstypes.EventDestination]) ([]awstypes.EventDestination, error) {
 	output, err := findConfigurationSet(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfslices.Filter(output.EventDestinations, tfslices.PredicateValue(filter)), nil
+	return tfslices.Filter(output.EventDestinations, filter), nil
 }
 
 func expandCloudWatchDimensionConfigurations(tfList []any) []awstypes.CloudWatchDimensionConfiguration {
