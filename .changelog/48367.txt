@@ -1,11 +1,11 @@
 ```release-note:enhancement
-resource/aws_eks_cluster: Make `group_name` field in `control_plane_placement` optional  
+resource/aws_eks_cluster: Change `outpost_config.control_plane_placement.group_name` to Optional  
 ```
 
 ```release-note:enhancement
-resource/aws_eks_cluster: Add new optional `etcd_instance_type` field in `outpost_config`
+resource/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` arguments
 ```
 
 ```release-note:enhancement
-resource/aws_eks_cluster: Add new optional `etcd_placement` block in `outpost_config`
+data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` attributes
 ```
