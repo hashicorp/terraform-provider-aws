@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -126,7 +125,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func receiptFilterARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-filter/%s", id))
+	return c.RegionalARN(ctx, "ses", "receipt-filter/"+id)
 }
 
 func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
