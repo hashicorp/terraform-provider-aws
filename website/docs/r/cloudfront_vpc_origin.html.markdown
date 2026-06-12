@@ -64,6 +64,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The VPC origin ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
+
 ## Import
 
 ```terraform

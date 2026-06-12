@@ -1,26 +1,59 @@
-## 6.50.0 (Unreleased)
+## 6.51.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_cloudfront_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
+* resource/aws_cloudfront_multitenant_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
+* resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
+* resource/aws_msk_replicator: Add Resource Identity support ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
+
+BUG FIXES:
+
+* resource/aws_acm_certificate: Correctly updates `subject_alternative_names` for Imported certificates ([#48362](https://github.com/hashicorp/terraform-provider-aws/issues/48362))
+* resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with length 0` panic when importing a replicator with no replication configurations ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
+
+## 6.50.0 (June 10, 2026)
+
+NOTES:
+
+* resource/aws_bedrockagentcore_gateway_target: Because we cannot easily test the behavior of `private_endpoint`, it is best effort and we ask for community help in testing ([#47602](https://github.com/hashicorp/terraform-provider-aws/issues/47602))
 
 FEATURES:
 
+* **New List Resource:** `aws_bedrockagentcore_policy` ([#47971](https://github.com/hashicorp/terraform-provider-aws/issues/47971))
 * **New List Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
+* **New List Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New List Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_bedrockagentcore_policy` ([#47971](https://github.com/hashicorp/terraform-provider-aws/issues/47971))
 * **New Resource:** `aws_cloudwatch_log_s3_table_integration_source` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
+* **New Resource:** `aws_ecs_daemon` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
+* **New Resource:** `aws_ecs_daemon_task_definition` ([#47562](https://github.com/hashicorp/terraform-provider-aws/issues/47562))
 * **New Resource:** `aws_observabilityadmin_s3_table_integration` ([#48190](https://github.com/hashicorp/terraform-provider-aws/issues/48190))
 
 ENHANCEMENTS:
 
+* provider: Add Linux s390x support ([#48272](https://github.com/hashicorp/terraform-provider-aws/issues/48272))
 * resource/aws_bedrockagentcore_agent_runtime: Add `AGUI` as a valid value for `protocol_configuration.server_protocol` ([#47906](https://github.com/hashicorp/terraform-provider-aws/issues/47906))
 * resource/aws_bedrockagentcore_gateway: Add `policy_engine_configuration` configuration block ([#47818](https://github.com/hashicorp/terraform-provider-aws/issues/47818))
 * resource/aws_bedrockagentcore_gateway_target: Add `listing_mode` argument to the `target_configuration.mcp.mcp_server` configuration block ([#48225](https://github.com/hashicorp/terraform-provider-aws/issues/48225))
+* resource/aws_bedrockagentcore_gateway_target: Add `private_endpoint` argument to support private connectivity to VPC-hosted MCP servers via Amazon VPC Lattice ([#47602](https://github.com/hashicorp/terraform-provider-aws/issues/47602))
 * resource/aws_bedrockagentcore_memory: Add `indexed_key` and `stream_delivery_resources` arguments ([#48240](https://github.com/hashicorp/terraform-provider-aws/issues/48240))
 
 BUG FIXES:
 
+* data-source/aws_secretsmanager_secret_version: Fix eventual consistency issues that could result in `couldn't find resource` errors when reading a version immediately after creation ([#48318](https://github.com/hashicorp/terraform-provider-aws/issues/48318))
+* resource/aws_cloudwatch_log_subscription_filter: Retry `ValidationException: Make sure you have given CloudWatch Logs permission to assume the provided role` IAM eventual consistency errors on Create and Update ([#48255](https://github.com/hashicorp/terraform-provider-aws/issues/48255))
+* resource/aws_datazone_project: Fix import separator to match the expected format. ([#48271](https://github.com/hashicorp/terraform-provider-aws/issues/48271))
 * resource/aws_default_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 * resource/aws_ecs_express_gateway_service: Fix "inconsistent result after apply" error for `network_configuration[0].security_groups` when using `network_configuration`. `ec2:DescribeSecurityGroups` IAM permission is newly required. ([#47944](https://github.com/hashicorp/terraform-provider-aws/issues/47944))
 * resource/aws_ecs_express_gateway_service: Fix `Resource Already Exists` error when recreating a service after deletion ([#48098](https://github.com/hashicorp/terraform-provider-aws/issues/48098))
 * resource/aws_elasticsearch_domain: Fix unexpected state error during engine version upgrade ([#47316](https://github.com/hashicorp/terraform-provider-aws/issues/47316))
+* resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException` errors when creating or updating `extended_s3_configuration` in AWS partitions that do not support the `custom_time_zone` and `file_extension` attributes ([#48284](https://github.com/hashicorp/terraform-provider-aws/issues/48284))
 * resource/aws_route: Fix perpetual drift on `gateway_id` when `odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
 * resource/aws_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured ([#48239](https://github.com/hashicorp/terraform-provider-aws/issues/48239))
+* resource/aws_secretsmanager_secret_version: Fix `Provider produced inconsistent final plan` errors when `secret_string` or `secret_string_wo_version` references a resource being created or replaced in the same apply ([#48318](https://github.com/hashicorp/terraform-provider-aws/issues/48318))
+* resource/aws_secretsmanager_secret_version: Fix eventual consistency issues on resource creation that could result in `version_stages` being empty in state ([#48318](https://github.com/hashicorp/terraform-provider-aws/issues/48318))
+* resource/aws_secretsmanager_secret_version: Fix unnecessary resource replacement when switching between `secret_string` and `secret_string_wo` (or vice versa) without changing the secret value ([#48318](https://github.com/hashicorp/terraform-provider-aws/issues/48318))
 
 ## 6.49.0 (June 4, 2026)
 

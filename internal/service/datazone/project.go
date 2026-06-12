@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -48,6 +47,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetProjectOutput")
 // @Testing(importIgnore="skip_deletion_check;project_status")
 // @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdFunc="testAccProjectImportStateIdFunc")
 // @Testing(preIdentityVersion="v6.47.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
@@ -413,9 +413,9 @@ var (
 type projectImportID struct{}
 
 func (projectImportID) Parse(id string) (string, map[string]any, error) {
-	domainID, projectID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	domainID, projectID, found := strings.Cut(id, ":")
 	if !found {
-		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, ":")
 	}
 
 	result := map[string]any{
