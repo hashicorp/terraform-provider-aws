@@ -45,7 +45,6 @@ import (
 )
 
 const (
-	iamPropagationTimeout     = 2 * time.Minute
 	poolDisassociationTimeout = 2 * time.Minute
 )
 
