@@ -55,7 +55,7 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(domainName)
-	d.Set(names.AttrARN, domainIdentityARN(ctx, c, domainName))
+	d.Set(names.AttrARN, identityARN(ctx, c, domainName))
 	d.Set(names.AttrDomain, domainName)
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 

@@ -99,12 +99,8 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity Verification (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainIdentityVerificationARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, identityARN(ctx, c, d.Id()))
 	d.Set(names.AttrDomain, d.Id())
 
 	return diags
-}
-
-func domainIdentityVerificationARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }

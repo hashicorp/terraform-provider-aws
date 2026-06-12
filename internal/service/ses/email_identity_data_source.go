@@ -52,7 +52,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(email)
-	d.Set(names.AttrARN, emailIdentityARN(ctx, c, email))
+	d.Set(names.AttrARN, identityARN(ctx, c, email))
 	d.Set(names.AttrEmail, email)
 
 	return diags

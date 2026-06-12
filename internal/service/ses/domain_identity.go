@@ -89,15 +89,11 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity (%s) verification: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainIdentityARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, identityARN(ctx, c, d.Id()))
 	d.Set(names.AttrDomain, d.Id())
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 
 	return diags
-}
-
-func domainIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
 
 func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

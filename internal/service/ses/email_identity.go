@@ -89,13 +89,13 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SES Email Identity (%s) verification: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, emailIdentityARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, identityARN(ctx, c, d.Id()))
 	d.Set(names.AttrEmail, d.Id())
 
 	return diags
 }
 
-func emailIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+func identityARN(ctx context.Context, c *conns.AWSClient, id string) string {
 	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
 
