@@ -43,43 +43,45 @@ func resourceTransitGatewayMulticastDomain() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_accept_shared_associations": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.AutoAcceptSharedAssociationsValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAssociationsValue](),
-			},
-			"igmpv2_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.Igmpv2SupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.Igmpv2SupportValue](),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"static_sources_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StaticSourcesSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.StaticSourcesSupportValue](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_accept_shared_associations": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.AutoAcceptSharedAssociationsValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAssociationsValue](),
+				},
+				"igmpv2_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.Igmpv2SupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.Igmpv2SupportValue](),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"static_sources_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StaticSourcesSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.StaticSourcesSupportValue](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }

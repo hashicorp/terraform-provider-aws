@@ -6,6 +6,7 @@ package tfresource
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -240,7 +241,7 @@ func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *
 			return nil, f(ctx)
 		},
 		func(err error) (bool, error) {
-			if err, ok := errs.As[*RetryError](err); ok {
+			if err, ok := errors.AsType[*RetryError](err); ok {
 				if err != nil {
 					return err.isRetryable, err.err
 				}

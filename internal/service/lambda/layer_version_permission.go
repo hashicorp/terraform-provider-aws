@@ -45,55 +45,57 @@ func resourceLayerVersionPermission() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"layer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
-					verify.ValidARN,
-				),
-			},
-			"organization_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"revision_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				ForceNew: true,
-				Optional: true,
-			},
-			"statement_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"layer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+						verify.ValidARN,
+					),
+				},
+				"organization_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"revision_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					ForceNew: true,
+					Optional: true,
+				},
+				"statement_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

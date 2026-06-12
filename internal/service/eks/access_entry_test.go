@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,10 +20,6 @@ import (
 
 func TestAccEKSAccessEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -60,10 +57,6 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 
 func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -84,6 +77,14 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -91,10 +92,6 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 
 func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -116,6 +113,14 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -123,10 +128,6 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 
 func TestAccEKSAccessEntry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -176,10 +177,6 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 
 func TestAccEKSAccessEntry_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -213,10 +210,6 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 
 func TestAccEKSAccessEntry_username(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -261,10 +254,6 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 
 func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"

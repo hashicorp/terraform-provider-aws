@@ -3,12 +3,12 @@ subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_connection"
 description: |-
-  Provides an Glue Connection resource.
+  Manages an AWS Glue Connection.
 ---
 
 # Resource: aws_glue_connection
 
-Provides a Glue Connection resource.
+Manages an AWS Glue Connection.
 
 ## Example Usage
 
@@ -277,34 +277,115 @@ resource "aws_glue_connection" "test" {
 }
 ```
 
+### MySQL Federated Connection
+
+```terraform
+resource "aws_glue_connection" "example" {
+  name            = "athenafederatedcatalog_mysql"
+  connection_type = "MYSQL"
+
+  athena_properties = {
+    lambda_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:athenafederatedcatalog_mysql"
+    spill_bucket        = aws_s3_bucket.example.bucket
+  }
+
+  connection_properties = {
+    HOST     = aws_rds_cluster.example.endpoint
+    PORT     = aws_rds_cluster.example.port
+    DATABASE = aws_rds_cluster.example.database_name
+  }
+
+  authentication_configuration {
+    authentication_type = "BASIC"
+    secret_arn          = aws_secretsmanager_secret.example.arn
+  }
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.example.availability_zone
+    security_group_id_list = [aws_security_group.example.id]
+    subnet_id              = aws_subnet.example.id
+  }
+}
+```
+
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the connection.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `catalog_id` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `athena_properties` - (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
+* `authentication_configuration` - (Optional) Configuration block for authentication options. See [`authentication_configuration`](#authentication_configuration) below.
+* `catalog_id` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` - (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
-
-  **Note:** Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
-* `connection_type` - (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
+* `connection_type` - (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`. Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
 * `description` - (Optional) Description of the connection.
 * `match_criteria` - (Optional) List of criteria that can be used in selecting this connection.
-* `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements` Block](#physical_connection_requirements-block) for details.
+* `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements`](#physical_connection_requirements) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `physical_connection_requirements` Block
+### `authentication_configuration`
+
+The `authentication_configuration` configuration block supports the following arguments:
+
+* `authentication_type` - (Required) Type of authentication. Valid values: `BASIC`, `CUSTOM`, `IAM`, `OAUTH2`.
+* `basic_authentication_credentials` - (Optional) Basic authentication credentials. See [`basic_authentication_credentials`](#basic_authentication_credentials) below.
+* `custom_authentication_credentials` - (Optional) Map of custom authentication credentials.
+* `kms_key_arn` - (Optional) ARN of the KMS key used for encryption.
+* `oauth2_properties` - (Optional) OAuth2 properties. See [`oauth2_properties`](#oauth2_properties) below.
+* `secret_arn` - (Optional) ARN of the Secrets Manager secret containing credentials.
+
+#### `basic_authentication_credentials`
+
+The `basic_authentication_credentials` configuration block supports the following arguments:
+
+* `password` - (Required) Password for authentication.
+* `username` - (Required) Username for authentication.
+
+#### `oauth2_properties`
+
+The `oauth2_properties` configuration block supports the following arguments:
+
+* `authorization_code_properties` - (Optional) Authorization code properties. See [`authorization_code_properties`](#authorization_code_properties) below.
+* `oauth2_client_application` - (Optional) OAuth2 client application details. See [`oauth2_client_application`](#oauth2_client_application) below.
+* `oauth2_credentials` - (Optional) OAuth2 credentials. See [`oauth2_credentials`](#oauth2_credentials) below.
+* `oauth2_grant_type` - (Optional) OAuth2 grant type. Valid values: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`, `JWT_BEARER`.
+* `token_url` - (Optional) Token URL for OAuth2 authentication.
+* `token_url_parameters_map` - (Optional) Map of additional parameters for the token URL.
+
+##### `authorization_code_properties`
+
+The `authorization_code_properties` configuration block supports the following arguments:
+
+* `authorization_code` - (Required) Authorization code.
+* `redirect_uri` - (Required) Redirect URI for OAuth2 flow.
+
+##### `oauth2_client_application`
+
+The `oauth2_client_application` configuration block supports the following arguments:
+
+* `aws_managed_client_application_reference` - (Optional) Reference to an AWS-managed client application.
+* `user_managed_client_application_client_id` - (Optional) Client ID for a user-managed client application.
+
+##### `oauth2_credentials`
+
+The `oauth2_credentials` configuration block supports the following arguments:
+
+* `access_token` - (Optional) OAuth2 access token.
+* `jwt_token` - (Optional) JWT token.
+* `refresh_token` - (Optional) OAuth2 refresh token.
+* `user_managed_client_application_client_secret` - (Optional) Client secret for user-managed client application.
+
+### `physical_connection_requirements`
 
 The `physical_connection_requirements` configuration block supports the following arguments:
 
-* `availability_zone` - (Optional) The availability zone of the connection. This field is redundant and implied by `subnet_id`, but is currently an api requirement.
-* `security_group_id_list` - (Optional) The security group ID list used by the connection.
-* `subnet_id` - (Optional) The subnet ID used by the connection.
+* `availability_zone` - (Optional) Availability zone of the connection. This field is redundant and implied by `subnet_id`, but is currently an API requirement.
+* `security_group_id_list` - (Optional) Security group ID list used by the connection.
+* `subnet_id` - (Optional) Subnet ID used by the connection.
 
 ## Attribute Reference
 
@@ -312,7 +393,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Glue Connection.
 * `id` - Catalog ID and name of the connection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

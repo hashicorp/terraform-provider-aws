@@ -44,64 +44,66 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_pool_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_borrow_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      120,
-							ValidateFunc: validation.IntBetween(0, 3600),
-						},
-						"init_query": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"max_connections_percent": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      100,
-							ValidateFunc: validation.IntBetween(1, 100),
-						},
-						"max_idle_connections_percent": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      50,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						"session_pinning_filters": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								// This isn't available as a constant
-								ValidateFunc: validation.StringInSlice([]string{
-									"EXCLUDE_VARIABLE_SETS",
-								}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_pool_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connection_borrow_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      120,
+								ValidateFunc: validation.IntBetween(0, 3600),
+							},
+							"init_query": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"max_connections_percent": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      100,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"max_idle_connections_percent": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      50,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"session_pinning_filters": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									// This isn't available as a constant
+									ValidateFunc: validation.StringInSlice([]string{
+										"EXCLUDE_VARIABLE_SETS",
+									}, false),
+								},
 							},
 						},
 					},
 				},
-			},
-			"db_proxy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"db_proxy_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -129,6 +129,14 @@ func testAccOptIn_disappears(t *testing.T) {
 					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceOptIn, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: false,
 			},
 		},

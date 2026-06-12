@@ -109,430 +109,432 @@ func resourceDomain() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"advanced_options": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"advanced_security_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"internal_user_database_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"master_user_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"master_user_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"master_user_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"master_user_password": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"advanced_options": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"advanced_security_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"internal_user_database_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"master_user_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"master_user_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"master_user_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"master_user_password": {
+											Type:      schema.TypeString,
+											Optional:  true,
+											Sensitive: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_tune_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_state": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AutoTuneDesiredState](),
-						},
-						"maintenance_schedule": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cron_expression_for_recurrence": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrDuration: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrUnit: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
-												},
-												names.AttrValue: {
-													Type:     schema.TypeInt,
-													Required: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_tune_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_state": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AutoTuneDesiredState](),
+							},
+							"maintenance_schedule": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cron_expression_for_recurrence": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrDuration: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrUnit: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
+													},
+													names.AttrValue: {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"start_at": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsRFC3339Time,
-									},
-								},
-							},
-						},
-						"rollback_on_disable": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RollbackOnDisable](),
-						},
-					},
-				},
-			},
-			"cluster_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cold_storage_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
+										"start_at": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.IsRFC3339Time,
+										},
 									},
 								},
 							},
+							"rollback_on_disable": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RollbackOnDisable](),
+							},
 						},
-						"dedicated_master_count": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"dedicated_master_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
-						},
-						names.AttrInstanceCount: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  awstypes.ESPartitionInstanceTypeM3MediumElasticsearch,
-						},
-						"warm_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 150),
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(warmPartitionInstanceType_Values(), false),
-						},
-						"zone_awareness_config": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      2,
-										ValidateFunc: validation.IntInSlice([]int{2, 3}),
+					},
+				},
+				"cluster_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cold_storage_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"cognito_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrUserPoolID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
-					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
-						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
-			},
-			"domain_endpoint_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_endpoint": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-						"custom_endpoint_certificate_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     verify.ValidARN,
-							DiffSuppressFunc: isCustomEndpointDisabled,
-						},
-						"custom_endpoint_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"tls_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TLSSecurityPolicy](),
+							"dedicated_master_count": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								DiffSuppressFunc: isDedicatedMasterDisabled,
+							},
+							"dedicated_master_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"dedicated_master_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: isDedicatedMasterDisabled,
+							},
+							names.AttrInstanceCount: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  1,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.ESPartitionInstanceTypeM3MediumElasticsearch,
+							},
+							"warm_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(2, 150),
+							},
+							"warm_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"warm_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(warmPartitionInstanceType_Values(), false),
+							},
+							"zone_awareness_config": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"availability_zone_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      2,
+											ValidateFunc: validation.IntInSlice([]int{2, 3}),
+										},
+									},
+								},
+							},
+							"zone_awareness_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"ebs_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ebs_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrThroughput: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntAtLeast(125),
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrVolumeType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+				"cognito_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"identity_pool_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrUserPoolID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"elasticsearch_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1.5",
-			},
-			"encrypt_at_rest": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
+				"domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+						"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+							" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
+				},
+				"domain_endpoint_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_endpoint": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: isCustomEndpointDisabled,
+							},
+							"custom_endpoint_certificate_arn": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateFunc:     verify.ValidARN,
+								DiffSuppressFunc: isCustomEndpointDisabled,
+							},
+							"custom_endpoint_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"enforce_https": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"tls_security_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TLSSecurityPolicy](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogGroupARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
-						},
-					},
-				},
-			},
-			"node_to_node_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
+				"ebs_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ebs_enabled": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrThroughput: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(125),
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrVolumeType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+							},
 						},
 					},
 				},
-			},
-			"snapshot_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automated_snapshot_start_hour": {
-							Type:     schema.TypeInt,
-							Required: true,
+				"elasticsearch_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "1.5",
+				},
+				"encrypt_at_rest": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kibana_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_publishing_options": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogGroupARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
 						},
 					},
 				},
-			},
+				"node_to_node_encryption": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"snapshot_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automated_snapshot_start_hour": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -913,7 +915,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
 				return v.(map[string]any)["log_type"].(string)
 			})
-			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, flex.Equal)
 			for _, logType := range remove {
 				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
 					Enabled: aws.Bool(false),
@@ -1183,7 +1185,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying, awstypes.DomainProcessingStatusTypeUpgrading),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
 		Refresh: statusDomainProcessing(conn, domainName),
 		Timeout: timeout,

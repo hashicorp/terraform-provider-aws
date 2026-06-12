@@ -59,6 +59,9 @@ type fileSystemResource struct {
 func (r *fileSystemResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"accept_bucket_warning": schema.BoolAttribute{
+				Optional: true,
+			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrBucket: schema.StringAttribute{
 				Required: true,
@@ -257,20 +260,21 @@ func (r *fileSystemResource) Delete(ctx context.Context, request resource.Delete
 
 type fileSystemResourceModel struct {
 	framework.WithRegionModel
-	ARN           types.String      `tfsdk:"arn"`
-	Bucket        types.String      `tfsdk:"bucket"`
-	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
-	ID            types.String      `tfsdk:"id"`
-	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
-	Name          types.String      `tfsdk:"name"`
-	OwnerID       types.String      `tfsdk:"owner_id"`
-	Prefix        types.String      `tfsdk:"prefix" autoflex:",omitempty"`
-	RoleArn       fwtypes.ARN       `tfsdk:"role_arn"`
-	Status        types.String      `tfsdk:"status"`
-	StatusMessage types.String      `tfsdk:"status_message"`
-	Tags          tftags.Map        `tfsdk:"tags"`
-	TagsAll       tftags.Map        `tfsdk:"tags_all"`
-	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
+	AcceptBucketWarning types.Bool        `tfsdk:"accept_bucket_warning" autoflex:",omitempty"`
+	ARN                 types.String      `tfsdk:"arn"`
+	Bucket              types.String      `tfsdk:"bucket"`
+	CreationTime        timetypes.RFC3339 `tfsdk:"creation_time"`
+	ID                  types.String      `tfsdk:"id"`
+	KmsKeyId            fwtypes.ARN       `tfsdk:"kms_key_id"`
+	Name                types.String      `tfsdk:"name"`
+	OwnerID             types.String      `tfsdk:"owner_id"`
+	Prefix              types.String      `tfsdk:"prefix" autoflex:",omitempty"`
+	RoleArn             fwtypes.ARN       `tfsdk:"role_arn"`
+	Status              types.String      `tfsdk:"status"`
+	StatusMessage       types.String      `tfsdk:"status_message"`
+	Tags                tftags.Map        `tfsdk:"tags"`
+	TagsAll             tftags.Map        `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value    `tfsdk:"timeouts"`
 }
 
 func findFileSystemByID(ctx context.Context, conn *s3files.Client, id string) (*s3files.GetFileSystemOutput, error) {

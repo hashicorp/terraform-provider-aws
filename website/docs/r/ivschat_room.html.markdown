@@ -20,7 +20,7 @@ resource "aws_ivschat_room" "example" {
 }
 ```
 
-## Usage with Logging Configuration to S3 Bucket
+### Usage with Logging Configuration to S3 Bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {

@@ -100,7 +100,7 @@
     "@message": "Converting",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Parrot",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·78]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·82]",
     "autoflex.target.path": "Parrots",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
   },
@@ -109,7 +109,7 @@
     "@message": "Source is null but target is XML wrapper without omitempty - creating zero-value struct",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Parrot",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·78]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·82]",
     "autoflex.target.path": "Parrots",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
   }
