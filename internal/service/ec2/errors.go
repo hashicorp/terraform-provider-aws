@@ -15,6 +15,7 @@ import (
 const (
 	errCodeAnalysisExistsForNetworkInsightsPath                       = "AnalysisExistsForNetworkInsightsPath"
 	errCodeAuthFailure                                                = "AuthFailure"
+	errCodeCapacityManagerDisabled                                    = "CapacityManager.Disabled"
 	errCodeClientInvalidHostIDNotFound                                = "Client.InvalidHostID.NotFound"
 	errCodeConcurrentMutationLimitExceeded                            = "ConcurrentMutationLimitExceeded"
 	errCodeCopyVolumesLimitExceeded                                   = "CopyVolumesLimitExceeded"
