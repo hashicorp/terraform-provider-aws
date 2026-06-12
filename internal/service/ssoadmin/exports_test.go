@@ -18,6 +18,7 @@ var (
 	ResourcePermissionsBoundaryAttachment             = resourcePermissionsBoundaryAttachment
 	ResourcePermissionSet                             = resourcePermissionSet
 	ResourcePermissionSetInlinePolicy                 = resourcePermissionSetInlinePolicy
+	ResourceRegion                                    = newRegionResource
 	ResourceTrustedTokenIssuer                        = newTrustedTokenIssuerResource
 
 	FindAccountAssignmentByFivePartKey               = findAccountAssignmentByFivePartKey
@@ -33,5 +34,6 @@ var (
 	FindPermissionsBoundaryByTwoPartKey              = findPermissionsBoundaryByTwoPartKey
 	FindPermissionSetByTwoPartKey                    = findPermissionSetByTwoPartKey
 	FindPermissionSetInlinePolicyByTwoPartKey        = findPermissionSetInlinePolicyByTwoPartKey
+	FindRegionByTwoPartKey                           = findRegionByTwoPartKey
 	FindTrustedTokenIssuerByARN                      = findTrustedTokenIssuerByARN
 )
