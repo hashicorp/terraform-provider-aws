@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -218,7 +217,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func configurationSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s", id))
+	return c.RegionalARN(ctx, "ses", "configuration-set/"+id)
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
