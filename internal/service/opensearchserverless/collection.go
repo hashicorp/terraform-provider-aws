@@ -68,7 +68,7 @@ type collectionResourceModel struct {
 	TagsAll             tftags.Map                                             `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
 	Type                types.String                                           `tfsdk:"type"`
-	VectorOptions       fwtypes.ObjectValueOf[vectorOptionsModel]              `tfsdk:"vector_options"`
+	VectorOptions       fwtypes.ListNestedObjectValueOf[vectorOptionsModel]    `tfsdk:"vector_options"`
 }
 
 type encryptionConfigModel struct {
@@ -174,10 +174,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
-			"vector_options": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[vectorOptionsModel](ctx),
-				Optional:   true,
-			},
+			"vector_options": framework.ResourceOptionalComputedListOfObjectsAttribute[vectorOptionsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{

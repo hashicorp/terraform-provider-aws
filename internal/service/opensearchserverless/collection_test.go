@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -186,7 +185,6 @@ func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID, endpoints.ApSoutheast2RegionID)
 			testAccPreCheckCollection(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
@@ -198,7 +196,7 @@ func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName, &collection1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "VECTORSEARCH"),
-					resource.TestCheckResourceAttr(resourceName, "vector_options.serverless_vector_acceleration", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.0.serverless_vector_acceleration", "ENABLED"),
 				),
 			},
 			{
@@ -206,7 +204,7 @@ func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName, &collection2),
 					testAccCheckCollectionNotRecreated(&collection1, &collection2),
-					resource.TestCheckResourceAttr(resourceName, "vector_options.serverless_vector_acceleration", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.0.serverless_vector_acceleration", "DISABLED"),
 				),
 			},
 			{
@@ -595,7 +593,7 @@ resource "aws_opensearchserverless_collection" "test" {
   name = %[1]q
   type = "VECTORSEARCH"
 
-  vector_options = {
+  vector_options {
     serverless_vector_acceleration = %[2]q
   }
 
