@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -97,7 +96,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func receiptRuleSetARN(ctx context.Context, c *conns.AWSClient, name string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s", name))
+	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+name)
 }
 
 func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
