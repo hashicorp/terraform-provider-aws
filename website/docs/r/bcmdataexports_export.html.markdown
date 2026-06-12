@@ -85,6 +85,7 @@ This resource supports the following arguments:
 ### `s3_destination` Argument Reference
 
 * `s3_bucket` - (Required) Name of the Amazon S3 bucket used as the destination of a data export file.
+* `s3_bucket_owner` - (Optional) AWS account ID of the bucket owner. Set this for cross-account S3 delivery.
 * `s3_output_configurations` - (Required) Output configuration for the data export. See the [`s3_output_configurations` argument reference](#s3_output_configurations-argument-reference) below.
 * `s3_prefix` - (Required) S3 path prefix you want prepended to the name of your data export.
 * `s3_region` - (Required) S3 bucket region.

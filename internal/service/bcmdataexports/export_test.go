@@ -145,6 +145,91 @@ func TestAccBCMDataExportsExport_CUR_tableConfigurations(t *testing.T) {
 	})
 }
 
+func TestAccBCMDataExportsExport_s3BucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var export bcmdataexports.GetExportOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bcmdataexports_export.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExportConfig_s3BucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, t, resourceName, &export),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBCMDataExportsExport_s3BucketOwner_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var export1, export2 bcmdataexports.GetExportOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bcmdataexports_export.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExportConfig_CUR_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, t, resourceName, &export1),
+					resource.TestCheckNoResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_bucket_owner"),
+				),
+			},
+			{
+				Config: testAccExportConfig_s3BucketOwner(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, t, resourceName, &export2),
+					resource.TestCheckResourceAttrPair(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBCMDataExportsExport_CarbonEmissions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -672,6 +757,41 @@ resource "aws_bcmdataexports_export" "test" {
         s3_bucket = aws_s3_bucket.test.bucket
         s3_prefix = aws_s3_bucket.test.bucket_prefix
         s3_region = aws_s3_bucket.test.region
+        s3_output_configurations {
+          overwrite   = "OVERWRITE_REPORT"
+          format      = "TEXT_OR_CSV"
+          compression = "GZIP"
+          output_type = "CUSTOM"
+        }
+      }
+    }
+
+    refresh_cadence {
+      frequency = "SYNCHRONOUS"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccExportConfig_s3BucketOwner(rName string) string {
+	return acctest.ConfigCompose(
+		testAccExportConfigBase(rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_bcmdataexports_export" "test" {
+  export {
+    name = %[1]q
+    data_query {
+      query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
+    }
+    destination_configurations {
+      s3_destination {
+        s3_bucket       = aws_s3_bucket.test.bucket
+        s3_bucket_owner = data.aws_caller_identity.current.account_id
+        s3_prefix       = aws_s3_bucket.test.bucket_prefix
+        s3_region       = aws_s3_bucket.test.region
         s3_output_configurations {
           overwrite   = "OVERWRITE_REPORT"
           format      = "TEXT_OR_CSV"
