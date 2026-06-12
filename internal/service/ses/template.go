@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -129,7 +128,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func templateARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("template/%s", id))
+	return c.RegionalARN(ctx, "ses", "template/"+id)
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
