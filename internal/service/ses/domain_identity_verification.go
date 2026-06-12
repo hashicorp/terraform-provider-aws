@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -107,5 +106,5 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 }
 
 func domainIdentityVerificationARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", id))
+	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
