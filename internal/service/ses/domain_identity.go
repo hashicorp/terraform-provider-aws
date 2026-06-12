@@ -27,6 +27,7 @@ func resourceDomainIdentity() *schema.Resource {
 		CreateWithoutTimeout: resourceDomainIdentityCreate,
 		ReadWithoutTimeout:   resourceDomainIdentityRead,
 		DeleteWithoutTimeout: resourceDomainIdentityDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -57,11 +58,11 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	input := &ses.VerifyDomainIdentityInput{
+	input := ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),
 	}
 
-	_, err := conn.VerifyDomainIdentity(ctx, input)
+	_, err := conn.VerifyDomainIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting SES Domain Identity (%s) verification: %s", domainName, err)
@@ -101,9 +102,10 @@ func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Domain Identity: %s", d.Id())
-	_, err := conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
+	input := ses.DeleteIdentityInput{
 		Identity: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Domain Identity (%s): %s", d.Id(), err)
