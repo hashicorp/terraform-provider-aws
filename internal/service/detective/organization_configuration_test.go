@@ -8,8 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
@@ -18,7 +23,6 @@ import (
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	graphResourceName := "aws_detective_graph.test"
 	resourceName := "aws_detective_organization_configuration.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -31,25 +35,67 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
+				ConfigDirectory: config.StaticDirectory("testdata/OrganizationConfiguration/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
+		},
+	})
+}
+
+func testAccOrganizationConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_detective_organization_configuration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
+				ConfigDirectory: config.StaticDirectory("testdata/OrganizationConfiguration/auto_enable/"),
+				ConfigVariables: config.Variables{
+					"autoEnable": config.BoolVariable(true),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OrganizationConfiguration/auto_enable/"),
+				ConfigVariables: config.Variables{
+					"autoEnable": config.BoolVariable(false),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable"), knownvalue.Bool(false)),
+				},
 			},
 		},
 	})
@@ -94,23 +140,4 @@ func testAccCheckOrganizationConfigurationExists(ctx context.Context, t *testing
 
 		return err
 	}
-}
-
-func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
-	return fmt.Sprintf(`
-resource "aws_detective_organization_configuration" "test" {
-  auto_enable = %[1]t
-  graph_arn   = aws_detective_graph.test.graph_arn
-
-  depends_on = [aws_detective_organization_admin_account.test]
-}
-
-resource "aws_detective_graph" "test" {}
-
-resource "aws_detective_organization_admin_account" "test" {
-  account_id = data.aws_caller_identity.current.account_id
-}
-
-data "aws_caller_identity" "current" {}
-`, autoEnable)
 }

@@ -37,6 +37,8 @@ func TestAccDetective_serial(t *testing.T) {
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic: testAccOrganizationConfiguration_basic,
+			"update":        testAccOrganizationConfiguration_update,
+			"Identity":      testAccDetectiveOrganizationConfiguration_identitySerial,
 		},
 	}
 

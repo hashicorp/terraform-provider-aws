@@ -23,16 +23,17 @@ import (
 )
 
 // @SDKResource("aws_detective_organization_configuration", name="Organization Configuration")
+// @ArnIdentity("graph_arn")
+// @Testing(preIdentityVersion="v6.50.0")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
 		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
