@@ -279,7 +279,7 @@ func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Configuration Set: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SES Configuration Set: %s", d.Id())
 	input := ses.DeleteConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
 	}
