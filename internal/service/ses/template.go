@@ -70,7 +70,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	template := &awstypes.Template{
+	template := awstypes.Template{
 		TemplateName: aws.String(name),
 	}
 
@@ -86,11 +86,11 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta an
 		template.TextPart = aws.String(v.(string))
 	}
 
-	input := &ses.CreateTemplateInput{
-		Template: template,
+	input := ses.CreateTemplateInput{
+		Template: &template,
 	}
 
-	_, err := conn.CreateTemplate(ctx, input)
+	_, err := conn.CreateTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Template (%s): %s", name, err)
@@ -131,7 +131,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	template := &awstypes.Template{
+	template := awstypes.Template{
 		TemplateName: aws.String(d.Id()),
 	}
 
@@ -147,11 +147,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		template.TextPart = aws.String(v.(string))
 	}
 
-	input := &ses.UpdateTemplateInput{
-		Template: template,
+	input := ses.UpdateTemplateInput{
+		Template: &template,
 	}
 
-	_, err := conn.UpdateTemplate(ctx, input)
+	_, err := conn.UpdateTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Template (%s): %s", d.Id(), err)
@@ -165,9 +165,10 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Template: %s", d.Id())
-	_, err := conn.DeleteTemplate(ctx, &ses.DeleteTemplateInput{
+	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Template (%s): %s", d.Id(), err)
@@ -177,11 +178,11 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findTemplateByName(ctx context.Context, conn *ses.Client, name string) (*awstypes.Template, error) {
-	input := &ses.GetTemplateInput{
+	input := ses.GetTemplateInput{
 		TemplateName: aws.String(name),
 	}
 
-	return findTemplate(ctx, conn, input)
+	return findTemplate(ctx, conn, &input)
 }
 
 func findTemplate(ctx context.Context, conn *ses.Client, input *ses.GetTemplateInput) (*awstypes.Template, error) {
