@@ -78,7 +78,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ses.CreateReceiptFilterInput{
+	input := ses.CreateReceiptFilterInput{
 		Filter: &awstypes.ReceiptFilter{
 			IpFilter: &awstypes.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
@@ -88,7 +88,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 		},
 	}
 
-	_, err := conn.CreateReceiptFilter(ctx, input)
+	_, err := conn.CreateReceiptFilter(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Filter (%s): %s", name, err)
@@ -129,9 +129,10 @@ func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Receipt Filter: %s", d.Id())
-	_, err := conn.DeleteReceiptFilter(ctx, &ses.DeleteReceiptFilterInput{
+	input := ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReceiptFilter(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Receipt Filter (%s): %s", d.Id(), err)
@@ -141,14 +142,14 @@ func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findReceiptFilterByName(ctx context.Context, conn *ses.Client, name string) (*awstypes.ReceiptFilter, error) {
-	input := &ses.ListReceiptFiltersInput{}
+	var input ses.ListReceiptFiltersInput
 
-	return findReceiptFilter(ctx, conn, input, func(v *awstypes.ReceiptFilter) bool {
+	return findReceiptFilter(ctx, conn, &input, func(v awstypes.ReceiptFilter) bool {
 		return aws.ToString(v.Name) == name
 	})
 }
 
-func findReceiptFilter(ctx context.Context, conn *ses.Client, input *ses.ListReceiptFiltersInput, filter tfslices.Predicate[*awstypes.ReceiptFilter]) (*awstypes.ReceiptFilter, error) {
+func findReceiptFilter(ctx context.Context, conn *ses.Client, input *ses.ListReceiptFiltersInput, filter tfslices.Predicate[awstypes.ReceiptFilter]) (*awstypes.ReceiptFilter, error) {
 	output, err := findReceiptFilters(ctx, conn, input, filter)
 
 	if err != nil {
@@ -158,7 +159,7 @@ func findReceiptFilter(ctx context.Context, conn *ses.Client, input *ses.ListRec
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReceiptFilters(ctx context.Context, conn *ses.Client, input *ses.ListReceiptFiltersInput, filter tfslices.Predicate[*awstypes.ReceiptFilter]) ([]awstypes.ReceiptFilter, error) {
+func findReceiptFilters(ctx context.Context, conn *ses.Client, input *ses.ListReceiptFiltersInput, filter tfslices.Predicate[awstypes.ReceiptFilter]) ([]awstypes.ReceiptFilter, error) {
 	output, err := conn.ListReceiptFilters(ctx, input)
 
 	if err != nil {
@@ -169,7 +170,7 @@ func findReceiptFilters(ctx context.Context, conn *ses.Client, input *ses.ListRe
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return tfslices.Filter(output.Filters, tfslices.PredicateValue(filter)), nil
+	return tfslices.Filter(output.Filters, filter), nil
 }
 
 func receiptFilterARN(ctx context.Context, c *conns.AWSClient, id string) string {
