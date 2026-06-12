@@ -190,7 +190,10 @@ func (r *poolResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Validate the full origination_identities set against the pool's intended configuration before any AWS write.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, identities, plan.MessageType.ValueEnum(), plan.IsoCountryCode.ValueString()))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, identities, intendedIdentityConfig{
+		MessageType:    plan.MessageType.ValueEnum(),
+		IsoCountryCode: plan.IsoCountryCode.ValueString(),
+	}))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -337,7 +340,10 @@ func (r *poolResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 
 		if len(add) > 0 {
-			smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, add, plan.MessageType.ValueEnum(), plan.IsoCountryCode.ValueString()))
+			smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, add, intendedIdentityConfig{
+				MessageType:    plan.MessageType.ValueEnum(),
+				IsoCountryCode: plan.IsoCountryCode.ValueString(),
+			}))
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -539,18 +545,59 @@ func updatePoolWithIAMPropagation(ctx context.Context, conn *pinpointsmsvoicev2.
 	return err
 }
 
-func validateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, identities []string, intendedMessageType awstypes.MessageType, intendedIsoCountryCode string) diag.Diagnostics {
+// intendedIdentityConfig captures the pool attributes for which an origination
+// identity mismatch is an immediate stop (e.g. required/requires-replace fields)
+// It is not a comprehensive list of pool to identity alignment.
+type intendedIdentityConfig struct {
+	MessageType    awstypes.MessageType
+	IsoCountryCode string
+}
+
+func validateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, identities []string, intended intendedIdentityConfig) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if len(identities) == 0 {
 		return diags
 	}
 
-	var phoneARNs []string
-	var senderRefs []awstypes.SenderIdAndCountry
-	unknownARN := map[string]struct{}{}
+	phoneARNs, senderRefs, unknownARN := groupOriginationIdentitiesByType(identities)
 
-	// Parse and group by resource type
+	phoneByARN, d := describePhoneIdentities(ctx, conn, phoneARNs)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	senderByARN, d := describeSenderIdentities(ctx, conn, senderRefs)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	for _, identityARN := range identities {
+		if _, ok := unknownARN[identityARN]; ok {
+			// Fail-open. We don't recognize the ARN shape; defer to AWS to reject.
+			continue
+		}
+		if p, ok := phoneByARN[identityARN]; ok {
+			diags.Append(validatePhoneIdentity(identityARN, p, intended)...)
+			continue
+		}
+		if s, ok := senderByARN[identityARN]; ok {
+			diags.Append(validateSenderIdentity(identityARN, s, intended)...)
+			continue
+		}
+		diags.AddError(
+			fmt.Sprintf("origination identity %s not found", identityARN),
+			"the identity does not exist in the configured AWS account/region. Ensure the upstream resource is fully provisioned before referencing it from the pool.",
+		)
+	}
+
+	return diags
+}
+
+func groupOriginationIdentitiesByType(identities []string) (phoneARNs []string, senderRefs []awstypes.SenderIdAndCountry, unknownARN map[string]struct{}) {
+	unknownARN = map[string]struct{}{}
 	for _, identityARN := range identities {
 		parsed, err := arn.Parse(identityARN)
 		if err != nil {
@@ -575,129 +622,130 @@ func validateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2
 			unknownARN[identityARN] = struct{}{}
 		}
 	}
+	return phoneARNs, senderRefs, unknownARN
+}
 
-	// Pass the full list of ARNs to avoid N DescribePhoneNumbers calls.
-	// Surface errors as one diagnostic rather than attempting per-identity recovery.
-	phoneByARN := map[string]awstypes.PhoneNumberInformation{}
-	if len(phoneARNs) > 0 {
-		pages := pinpointsmsvoicev2.NewDescribePhoneNumbersPaginator(conn, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
-			PhoneNumberIds: phoneARNs,
-		})
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				diags.AddError(
-					"Invalid origination identity",
-					"one or more phone-number origination identities do not exist in the configured AWS account and region. Verify every phone-number ARN in `origination_identities` refers to an existing aws_pinpointsmsvoicev2_phone_number in this region.",
-				)
-				return diags
-			}
-			if err != nil {
-				diags.AddError(
-					"reading phone-number origination identities",
-					fmt.Sprintf("DescribePhoneNumbers failed: %s", err),
-				)
-				return diags
-			}
-
-			// Capture PhoneNumberInformation for each ARN.
-			for _, p := range page.PhoneNumbers {
-				phoneByARN[aws.ToString(p.PhoneNumberArn)] = p
-			}
-		}
+// Pass the full list to avoid N DescribePhoneNumbers calls. Surface errors as
+// one diagnostic rather than attempting per-identity recovery.
+func describePhoneIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, arns []string) (map[string]awstypes.PhoneNumberInformation, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	out := map[string]awstypes.PhoneNumberInformation{}
+	if len(arns) == 0 {
+		return out, diags
 	}
 
-	// Pass the full list of ARNs to avoid N DescribeSenderIds calls.
-	// Surface errors as one diagnostic rather than attempting per-identity recovery.
-	senderByARN := map[string]awstypes.SenderIdInformation{}
-	if len(senderRefs) > 0 {
-		pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, &pinpointsmsvoicev2.DescribeSenderIdsInput{
-			SenderIds: senderRefs,
-		})
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+	pages := pinpointsmsvoicev2.NewDescribePhoneNumbersPaginator(conn, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
+		PhoneNumberIds: arns,
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				diags.AddError(
-					"Invalid origination identity",
-					"one or more sender-id origination identities do not exist in the configured AWS account and region. Verify every sender-id ARN in `origination_identities` refers to an existing sender ID in this region.",
-				)
-				return diags
-			}
-			if err != nil {
-				diags.AddError(
-					"reading sender-id origination identities",
-					fmt.Sprintf("DescribeSenderIds failed: %s", err),
-				)
-				return diags
-			}
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			diags.AddError(
+				"Invalid origination identity",
+				"one or more phone-number origination identities do not exist in the configured AWS account and region. Verify every phone-number ARN in `origination_identities` refers to an existing aws_pinpointsmsvoicev2_phone_number in this region.",
+			)
+			return out, diags
+		}
+		if err != nil {
+			diags.AddError(
+				"reading phone-number origination identities",
+				fmt.Sprintf("DescribePhoneNumbers failed: %s", err),
+			)
+			return out, diags
+		}
 
-			// Capture SenderIdInformation for each ARN.
-			for _, s := range page.SenderIds {
-				senderByARN[aws.ToString(s.SenderIdArn)] = s
-			}
+		for _, p := range page.PhoneNumbers {
+			out[aws.ToString(p.PhoneNumberArn)] = p
 		}
 	}
+	return out, diags
+}
 
-	// Validation checklist for all identities by resource type
-	for _, identityARN := range identities {
-		if _, ok := unknownARN[identityARN]; ok {
-			// Fail-open. We don't recognize the ARN shape; defer to AWS to reject.
-			continue
+// Batch-fetch SenderIdInformation for each sender ID reference. Same
+// contract as describePhoneIdentities: one diagnostic per failure mode.
+func describeSenderIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, refs []awstypes.SenderIdAndCountry) (map[string]awstypes.SenderIdInformation, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	out := map[string]awstypes.SenderIdInformation{}
+	if len(refs) == 0 {
+		return out, diags
+	}
+
+	pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, &pinpointsmsvoicev2.DescribeSenderIdsInput{
+		SenderIds: refs,
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			diags.AddError(
+				"Invalid origination identity",
+				"one or more sender-id origination identities do not exist in the configured AWS account and region. Verify every sender-id ARN in `origination_identities` refers to an existing sender ID in this region.",
+			)
+			return out, diags
+		}
+		if err != nil {
+			diags.AddError(
+				"reading sender-id origination identities",
+				fmt.Sprintf("DescribeSenderIds failed: %s", err),
+			)
+			return out, diags
 		}
 
-		if p, ok := phoneByARN[identityARN]; ok {
-			if p.Status != awstypes.NumberStatusActive {
-				diags.AddError(
-					fmt.Sprintf("origination identity %s is not ACTIVE", identityARN),
-					fmt.Sprintf("the pool requires identities in ACTIVE state; the phone number is currently %q. Ensure the upstream resource has reached ACTIVE status before referencing it from the pool.",
-						string(p.Status)),
-				)
-				continue
-			}
-			if p.MessageType != intendedMessageType {
-				diags.AddError(
-					fmt.Sprintf("origination identity %s has mismatched message_type", identityARN),
-					fmt.Sprintf("the pool's message_type is %q; the phone number's message_type is %q. All identities in a pool must share the same message_type.",
-						string(intendedMessageType), string(p.MessageType)),
-				)
-			}
-			if intendedIsoCountryCode != "" && aws.ToString(p.IsoCountryCode) != intendedIsoCountryCode {
-				diags.AddError(
-					fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
-					fmt.Sprintf("the pool's iso_country_code is %q; the phone number's iso_country_code is %q. All identities in a pool must share the same country.",
-						intendedIsoCountryCode, aws.ToString(p.IsoCountryCode)),
-				)
-			}
-			continue
+		for _, s := range page.SenderIds {
+			out[aws.ToString(s.SenderIdArn)] = s
 		}
+	}
+	return out, diags
+}
 
-		if s, ok := senderByARN[identityARN]; ok {
-			if !slices.Contains(s.MessageTypes, intendedMessageType) {
-				diags.AddError(
-					fmt.Sprintf("origination identity %s does not support message_type=%q", identityARN, string(intendedMessageType)),
-					fmt.Sprintf("the sender ID supports message types %v; the pool's intended message_type is %q.",
-						s.MessageTypes, string(intendedMessageType)),
-				)
-			}
-			if intendedIsoCountryCode != "" && aws.ToString(s.IsoCountryCode) != intendedIsoCountryCode {
-				diags.AddError(
-					fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
-					fmt.Sprintf("the pool's iso_country_code is %q; the sender ID's iso_country_code is %q.",
-						intendedIsoCountryCode, aws.ToString(s.IsoCountryCode)),
-				)
-			}
-			continue
-		}
-
-		// ARN shape valid but could not be found
+func validatePhoneIdentity(identityARN string, p awstypes.PhoneNumberInformation, intended intendedIdentityConfig) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if p.Status != awstypes.NumberStatusActive {
 		diags.AddError(
-			fmt.Sprintf("origination identity %s not found", identityARN),
-			"the identity does not exist in the configured AWS account/region. Ensure the upstream resource is fully provisioned before referencing it from the pool.",
+			fmt.Sprintf("origination identity %s is not ACTIVE", identityARN),
+			fmt.Sprintf("the pool requires identities in ACTIVE state; the phone number is currently %q. Ensure the upstream resource has reached ACTIVE status before referencing it from the pool.",
+				string(p.Status)),
+		)
+		return diags
+	}
+	if p.MessageType != intended.MessageType {
+		diags.AddError(
+			fmt.Sprintf("origination identity %s has mismatched message_type", identityARN),
+			fmt.Sprintf("the pool's message_type is %q; the phone number's message_type is %q. All identities in a pool must share the same message_type.",
+				string(intended.MessageType), string(p.MessageType)),
 		)
 	}
+	if intended.IsoCountryCode != "" && aws.ToString(p.IsoCountryCode) != intended.IsoCountryCode {
+		diags.AddError(
+			fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
+			fmt.Sprintf("the pool's iso_country_code is %q; the phone number's iso_country_code is %q. All identities in a pool must share the same country.",
+				intended.IsoCountryCode, aws.ToString(p.IsoCountryCode)),
+		)
+	}
+	return diags
+}
 
+func validateSenderIdentity(identityARN string, s awstypes.SenderIdInformation, intended intendedIdentityConfig) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	contains := slices.ContainsFunc(s.MessageTypes, func(mt awstypes.MessageType) bool {
+		return strings.EqualFold(string(mt), string(intended.MessageType))
+	})
+	if !contains {
+		diags.AddError(
+			fmt.Sprintf("origination identity %s does not support message_type=%q", identityARN, string(intended.MessageType)),
+			fmt.Sprintf("the sender ID supports message types %v; the pool's intended message_type is %q.",
+				s.MessageTypes, string(intended.MessageType)),
+		)
+	}
+	if intended.IsoCountryCode != "" && aws.ToString(s.IsoCountryCode) != intended.IsoCountryCode {
+		diags.AddError(
+			fmt.Sprintf("origination identity %s has mismatched iso_country_code", identityARN),
+			fmt.Sprintf("the pool's iso_country_code is %q; the sender ID's iso_country_code is %q.",
+				intended.IsoCountryCode, aws.ToString(s.IsoCountryCode)),
+		)
+	}
 	return diags
 }
 
