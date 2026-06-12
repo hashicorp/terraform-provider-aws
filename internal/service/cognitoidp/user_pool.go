@@ -727,12 +727,12 @@ func resourceUserPool() *schema.Resource {
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
 							},
-						},
-						"factor_configuration": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.WebAuthnFactorConfigurationType](),
+							"factor_configuration": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.WebAuthnFactorConfigurationType](),
+							},
 						},
 					},
 				},
