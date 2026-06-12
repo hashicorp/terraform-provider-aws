@@ -101,8 +101,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.0 h1:jZOg03lM41zl89h17avGr6AF
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.0/go.mod h1:f0MnAznWRN75Dnezt6MBnHOKHEpAI/ztr4Q6Lo1IGDk=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.6 h1:4Z9EIZUF8dkVDYTEt7NxKhA3yE3S/x7iWYL/C+reRgw=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.6/go.mod h1:GlwXK7c/0CMTSU4a0PAAp5jiYXH55DRYT3mliKlqf6M=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.6 h1:ENWTSQQ4y5JSQoDZACBrRfM51Jt+flqjfJXXlFptdZk=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.6/go.mod h1:MQ3INaQ+EXhLY92cpengp85BSJcXyvl4ttfPniodC90=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.43.0 h1:MAOM0U1jKqdEFpkX36Cs72Tf6ZNOzLj70AlU/I9d1/s=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.43.0/go.mod h1:MQ3INaQ+EXhLY92cpengp85BSJcXyvl4ttfPniodC90=
 github.com/aws/aws-sdk-go-v2/service/billing v1.11.7 h1:VPPcxuxnfuCvIbTwrpKKVo0awJfugZ+uvce6ildR6Sg=
 github.com/aws/aws-sdk-go-v2/service/billing v1.11.7/go.mod h1:qBg0yF5t7sq/eBLCurTuuJqVR0+zI1YqEDEB7jpA3g4=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.44.6 h1:J/+Txi6glp85LSGzi8iRbc1Jii/FYmgVZ7p2qzHrbYM=
@@ -231,8 +231,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0 h1:LQKIHuVHqdbU9LUt5c2G9f+CcQAz
 github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0/go.mod h1:0vahPCh3slyORHbSuAP8YDyJKLEUQAMX7+bzYGxEnVI=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1 h1:Ii4N3TQ2wa18cOlFR2Kxcji4wVsaySku+ygiBeKGqTU=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1/go.mod h1:AMhRvE41tgqPUU9hqtyCw8ektaKSnKbm10kyX9xL+FQ=
-github.com/aws/aws-sdk-go-v2/service/eks v1.84.6 h1:RSCziGPe92ZoBreWKOJsLhK45Nx7+2b2y8hNbOUvHLQ=
-github.com/aws/aws-sdk-go-v2/service/eks v1.84.6/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
+github.com/aws/aws-sdk-go-v2/service/eks v1.85.0 h1:PX1X82jI4OEpsB7zrEuU0/V0Tq0+ylEJEu/CjhorV1c=
+github.com/aws/aws-sdk-go-v2/service/eks v1.85.0/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3 h1:KZDlMf8V5riU8xBCMJLWhfa+RP/MIagz2qJFwRg/b1g=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3/go.mod h1:nsMdHtF/ned4F5GCAfoerJaa/Q6cx+G+WYNsb/TFN7Q=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4 h1:hS5ilJrr1xgHvrw0pwb+xKwZDx0KA1LULHbN+OzwBDM=
@@ -283,8 +283,8 @@ github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4 h1:xTnhW99i5NzlA9BoYe
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4/go.mod h1:Fq4j1HtE05684wgzkRxqa299U9hlekNaWeT1YLrnXQA=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.79.3 h1:AGUhgPCJKoXbNbk93EtLt6nzu7WoaFyln1g753W9E6g=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.79.3/go.mod h1:OOwqiU2hPl8v3FomNDgNPj3RCCsTfrsjzgWmuqHidhw=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.37.7 h1:82WKHaMQNQl+02lFdTBaT+jm/an/A94Avy4B33DRzV4=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.37.7/go.mod h1:jifgXnA+qTISYl+gW42u4JxCkScqZwpiVNLvt3yU0tc=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.38.0 h1:I97gVNpCyr0kmGE+wjjQoQjJPSKKTbpYY6x+5Fsd22w=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.38.0/go.mod h1:jifgXnA+qTISYl+gW42u4JxCkScqZwpiVNLvt3yU0tc=
 github.com/aws/aws-sdk-go-v2/service/iam v1.54.4 h1:V5Fl1MjjTCuC6PUsHOVWEbI5kMg0MP5Xsxw9fHX94V8=
 github.com/aws/aws-sdk-go-v2/service/iam v1.54.4/go.mod h1:tMNzI+fYFCk4cIdZ7FEybLzShwnmWkfxQw85ED1b4ng=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.37.7 h1:c5WBKnEhJJ5YNVyCHH1Py7efoJoVer74JNDhWfD6aV4=
@@ -381,8 +381,8 @@ github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5 h1:vpMkAtvBhTLkz1JnhRaKxnU/Oaj
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5/go.mod h1:ycNo/qpiotBsKstNE0q+I1YnUEjtGYVnJo4CoMWQiSY=
 github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.2 h1:1YkR3vScLgWVhkdv7KR0IriJZv6dUsjVYtQvhgYysyg=
 github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.2/go.mod h1:mrgq/OO/DlwYPtWtLAIxEdvLmcZY6olvnYbOaw2h3u8=
-github.com/aws/aws-sdk-go-v2/service/neptune v1.45.4 h1:fVgJtTgoLaTLWVfTFmqtSkvVhxSpmhX01iCNyTlG2ik=
-github.com/aws/aws-sdk-go-v2/service/neptune v1.45.4/go.mod h1:WUswNUiUUo7DvVYjEmRZ2NhMSHjmLHhsPQsXz5updh0=
+github.com/aws/aws-sdk-go-v2/service/neptune v1.46.0 h1:Wme5KtOLjRHooCoFq9S02B3aiNmcaSr80h8PMzIAVVE=
+github.com/aws/aws-sdk-go-v2/service/neptune v1.46.0/go.mod h1:WUswNUiUUo7DvVYjEmRZ2NhMSHjmLHhsPQsXz5updh0=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.22.5 h1:hMlFXVLyf8z5VnWYmTcxa+6PMkuNj/tuuDGYe+OWY7k=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.22.5/go.mod h1:AO5AXer2wiYaUKTKohnkbkgS7ZyliTQxSoCRDgVNx4U=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.8 h1:hvGks2kvvOaNvWQN4uYSlRqDi7h8ByMo2HhquOXyH3A=
