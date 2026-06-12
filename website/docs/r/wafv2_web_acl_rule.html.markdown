@@ -747,15 +747,20 @@ Exactly one of the following must be specified:
 
 Exactly one of the following scope down statement blocks must be specified:
 
+* `and_statement` - (Optional) Logical AND statement that combines multiple statements. See [And Statement](#and-statement) above.
 * `asn_match_statement` - (Optional) Match requests based on Autonomous System Number (ASN). See [ASN Match Statement](#asn-match-statement) above.
 * `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) above.
 * `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) above.
 * `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) above.
 * `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) above.
+* `not_statement` - (Optional) Logical NOT statement that negates a single statement. See [Not Statement](#not-statement) above.
+* `or_statement` - (Optional) Logical OR statement that combines multiple statements. See [Or Statement](#or-statement) above.
 * `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) above.
 * `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) above.
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks.
+
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested within scope down statements, matching the same nesting behavior as the main statement block.
 
 ### Custom Keys
 
