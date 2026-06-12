@@ -60,6 +60,42 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayGatewayResponse_defaultStatusCode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetGatewayResponseOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_gateway_response.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayResponseDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayResponseConfig_defaultStatusCode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayResponseExists(ctx, t, resourceName, &conf),
+					// THROTTLED defaults to 429 per the API Gateway documentation.
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "429"),
+				),
+			},
+			{
+				// Re-applying the same configuration must produce an empty plan
+				// (status_code is Computed when omitted).
+				Config:   testAccGatewayResponseConfig_defaultStatusCode(rName),
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccGatewayResponseImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetGatewayResponseOutput
@@ -167,6 +203,23 @@ resource "aws_api_gateway_gateway_response" "test" {
 
   response_parameters = {
     "gatewayresponse.header.Authorization" = "'Basic'"
+  }
+}
+`, rName)
+}
+
+func testAccGatewayResponseConfig_defaultStatusCode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_gateway_response" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  response_type = "THROTTLED"
+
+  response_templates = {
+    "application/json" = "{'message':$context.error.messageString}"
   }
 }
 `, rName)
