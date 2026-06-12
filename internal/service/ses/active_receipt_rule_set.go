@@ -96,7 +96,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func activeReceiptRuleSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s", id))
+	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+id)
 }
 
 func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
