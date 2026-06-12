@@ -289,7 +289,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ses.CreateReceiptRuleInput{
+	input := ses.CreateReceiptRuleInput{
 		Rule:        expandReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
@@ -300,7 +300,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func(ctx context.Context) (any, error) {
-			return conn.CreateReceiptRule(ctx, input)
+			return conn.CreateReceiptRule(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
@@ -489,14 +489,14 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	input := &ses.UpdateReceiptRuleInput{
+	input := ses.UpdateReceiptRuleInput{
 		Rule:        expandReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 		func(ctx context.Context) (any, error) {
-			return conn.UpdateReceiptRule(ctx, input)
+			return conn.UpdateReceiptRule(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidLambdaConfiguration, "Could not invoke Lambda function") ||
@@ -515,13 +515,13 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("after") {
-		input := &ses.SetReceiptRulePositionInput{
+		input := ses.SetReceiptRulePositionInput{
 			After:       aws.String(d.Get("after").(string)),
 			RuleName:    aws.String(d.Get(names.AttrName).(string)),
 			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 		}
 
-		_, err := conn.SetReceiptRulePosition(ctx, input)
+		_, err := conn.SetReceiptRulePosition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting SES Receipt Rule (%s) position: %s", d.Id(), err)
@@ -536,10 +536,11 @@ func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
-	_, err := conn.DeleteReceiptRule(ctx, &ses.DeleteReceiptRuleInput{
+	input := ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-	})
+	}
+	_, err := conn.DeleteReceiptRule(ctx, &input)
 
 	if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 		return diags
@@ -553,13 +554,10 @@ func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
+	ruleSetName, ruleName, err := receiptRuleParseImportID(d.Id())
+	if err != nil {
+		return nil, err
 	}
-
-	ruleSetName := idParts[0]
-	ruleName := idParts[1]
 
 	d.Set("rule_set_name", ruleSetName)
 	d.Set(names.AttrName, ruleName)
@@ -568,13 +566,25 @@ func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta a
 	return []*schema.ResourceData{d}, nil
 }
 
+const receiptRuleImportIDSeparator = ":"
+
+func receiptRuleParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, receiptRuleImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <ruleset-name>%[2]s<rule-name>", id, receiptRuleImportIDSeparator)
+}
+
 func findReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.Client, ruleName, ruleSetName string) (*awstypes.ReceiptRule, error) {
-	input := &ses.DescribeReceiptRuleInput{
+	input := ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String(ruleName),
 		RuleSetName: aws.String(ruleSetName),
 	}
 
-	return findReceiptRule(ctx, conn, input)
+	return findReceiptRule(ctx, conn, &input)
 }
 
 func findReceiptRule(ctx context.Context, conn *ses.Client, input *ses.DescribeReceiptRuleInput) (*awstypes.ReceiptRule, error) {
