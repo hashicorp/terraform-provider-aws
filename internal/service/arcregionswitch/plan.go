@@ -397,6 +397,58 @@ func eksResourceScalingConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func lambdaEventSourceMappingConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEventSourceMappingConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				names.AttrAction: fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.EventSourceMappingAction](),
+					Required:   true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"event_source_mapping": fwschema.SetNestedBlock{
+					CustomType: fwtypes.NewSetNestedObjectTypeOf[eventSourceMappingModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrARN: fwschema.StringAttribute{
+								Required: true,
+							},
+							"cross_account_role": fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrExternalID: fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrRegion: fwschema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaESMUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"behavior": fwschema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.LambdaEventSourceMappingUngracefulBehavior](),
+								Required:   true,
+							},
+						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+				},
+			},
+		},
+	}
+}
+
 func executionApprovalConfigBlock(ctx context.Context) fwschema.Block {
 	return fwschema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
@@ -731,6 +783,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 									"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 									"global_aurora_config":                        globalAuroraConfigBlock(ctx),
+									"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
 									"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 									"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
 									"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
@@ -762,6 +815,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 															"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 															"global_aurora_config":                        globalAuroraConfigBlock(ctx),
+															"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
 															"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 															"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
 															"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
@@ -1141,6 +1195,7 @@ type stepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
+	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
 	Name                                  types.String                                                                `tfsdk:"name"`
 	ParallelConfig                        fwtypes.ListNestedObjectValueOf[parallelConfigModel]                        `tfsdk:"parallel_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
@@ -1264,6 +1319,18 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.LambdaEventSourceMappingConfig.IsNull():
+		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.ParallelConfig.IsNull():
 		config, d := m.ParallelConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1365,6 +1432,8 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ParallelConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
@@ -1712,6 +1781,107 @@ type executionApprovalConfigModel struct {
 	TimeoutMinutes types.Int32  `tfsdk:"timeout_minutes"`
 }
 
+// Lambda Event Source Mapping Configuration Models
+type lambdaEventSourceMappingConfigModel struct {
+	Action              fwtypes.StringEnum[awstypes.EventSourceMappingAction]     `tfsdk:"action"`
+	EventSourceMappings fwtypes.SetNestedObjectValueOf[eventSourceMappingModel]   `tfsdk:"event_source_mapping" autoflex:"-"`
+	TimeoutMinutes      types.Int32                                               `tfsdk:"timeout_minutes"`
+	Ungraceful          fwtypes.ListNestedObjectValueOf[lambdaESMUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+var (
+	_ flex.Expander  = lambdaEventSourceMappingConfigModel{}
+	_ flex.Flattener = &lambdaEventSourceMappingConfigModel{}
+)
+
+func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.LambdaEventSourceMappingConfiguration
+	var diags fwdiag.Diagnostics
+
+	diags.Append(flex.Expand(ctx, m.Action, &result.Action)...)
+	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	diags.Append(flex.Expand(ctx, m.Ungraceful, &result.Ungraceful)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.EventSourceMappings.IsNull() && !m.EventSourceMappings.IsUnknown() {
+		var mappings []eventSourceMappingModel
+		diags.Append(m.EventSourceMappings.ElementsAs(ctx, &mappings, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result.RegionEventSourceMappings = make(map[string]awstypes.EventSourceMapping, len(mappings))
+		for _, mapping := range mappings {
+			region := mapping.Region.ValueString()
+			esm := awstypes.EventSourceMapping{
+				Arn: mapping.ARN.ValueStringPointer(),
+			}
+			if !mapping.CrossAccountRole.IsNull() && !mapping.CrossAccountRole.IsUnknown() {
+				esm.CrossAccountRole = mapping.CrossAccountRole.ValueStringPointer()
+			}
+			if !mapping.ExternalID.IsNull() && !mapping.ExternalID.IsUnknown() {
+				esm.ExternalId = mapping.ExternalID.ValueStringPointer()
+			}
+			result.RegionEventSourceMappings[region] = esm
+		}
+	}
+
+	return &result, diags
+}
+
+func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	config, ok := v.(awstypes.LambdaEventSourceMappingConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.LambdaEventSourceMappingConfiguration")
+		return diags
+	}
+
+	diags.Append(flex.Flatten(ctx, config.Action, &m.Action)...)
+	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	diags.Append(flex.Flatten(ctx, config.Ungraceful, &m.Ungraceful)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if len(config.RegionEventSourceMappings) > 0 {
+		mappings := make([]eventSourceMappingModel, 0, len(config.RegionEventSourceMappings))
+		for region, esm := range config.RegionEventSourceMappings {
+			mapping := eventSourceMappingModel{
+				ARN:    types.StringValue(aws.ToString(esm.Arn)),
+				Region: types.StringValue(region),
+			}
+			if esm.CrossAccountRole != nil {
+				mapping.CrossAccountRole = types.StringValue(aws.ToString(esm.CrossAccountRole))
+			}
+			if esm.ExternalId != nil {
+				mapping.ExternalID = types.StringValue(aws.ToString(esm.ExternalId))
+			}
+			mappings = append(mappings, mapping)
+		}
+
+		var d fwdiag.Diagnostics
+		m.EventSourceMappings, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, mappings)
+		diags.Append(d...)
+	}
+
+	return diags
+}
+
+type eventSourceMappingModel struct {
+	ARN              types.String `tfsdk:"arn"`
+	CrossAccountRole types.String `tfsdk:"cross_account_role"`
+	ExternalID       types.String `tfsdk:"external_id"`
+	Region           types.String `tfsdk:"region"`
+}
+
+type lambdaESMUngracefulModel struct {
+	Behavior fwtypes.StringEnum[awstypes.LambdaEventSourceMappingUngracefulBehavior] `tfsdk:"behavior"`
+}
+
 // Global Aurora Configuration Models
 type globalAuroraConfigModel struct {
 	Behavior                fwtypes.StringEnum[awstypes.GlobalAuroraDefaultBehavior]     `tfsdk:"behavior"`
@@ -1743,6 +1913,7 @@ type parallelStepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
+	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
 	Name                                  types.String                                                                `tfsdk:"name"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
@@ -1865,6 +2036,18 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.LambdaEventSourceMappingConfig.IsNull():
+		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.RegionSwitchPlanConfig.IsNull():
 		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1954,6 +2137,8 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsCreateCrossRegionReadReplicaConfig:

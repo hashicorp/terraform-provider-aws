@@ -810,6 +810,123 @@ func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 	})
 }
 
+func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_lambdaEventSourceMapping(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role", "aws_iam_role.test", names.AttrARN),
+
+					// Verify disable step
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": string(awstypes.ExecutionBlockTypeLambdaEventSourceMapping),
+						names.AttrName:         "disable-esm",
+						names.AttrDescription:  "Disable ESM in deactivating region",
+					}),
+
+					// Verify enable step
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": string(awstypes.ExecutionBlockTypeLambdaEventSourceMapping),
+						names.AttrName:         "enable-esm",
+						names.AttrDescription:  "Enable ESM in activating region",
+					}),
+
+					// Verify disable config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  string(awstypes.EventSourceMappingActionDisable),
+						"timeout_minutes": "10",
+					}),
+
+					// Verify enable config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  string(awstypes.EventSourceMappingActionEnable),
+						"timeout_minutes": "10",
+					}),
+
+					// Verify ungraceful on disable step
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.ungraceful.*", map[string]string{
+						"behavior": string(awstypes.LambdaEventSourceMappingUngracefulBehaviorSkip),
+					}),
+
+					// Verify event_source_mapping entries
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				Config: testAccPlanConfig_lambdaEventSourceMapping(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role", "aws_iam_role.test", names.AttrARN),
+
+					// Verify both steps still present
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": string(awstypes.ExecutionBlockTypeLambdaEventSourceMapping),
+						names.AttrName:         "disable-esm",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": string(awstypes.ExecutionBlockTypeLambdaEventSourceMapping),
+						names.AttrName:         "enable-esm",
+					}),
+
+					// Verify timeout was updated
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  string(awstypes.EventSourceMappingActionDisable),
+						"timeout_minutes": "15",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  string(awstypes.EventSourceMappingActionEnable),
+						"timeout_minutes": "15",
+					}),
+
+					// Verify event_source_mapping entries still present
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ARCRegionSwitchClient(ctx)
@@ -2360,4 +2477,163 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 `, rName, acctest.AlternateRegion(), acctest.Region())
+}
+
+func testAccPlanConfig_lambdaEventSourceMapping(rName string, includeUngraceful bool) string {
+	timeoutMinutes := 10
+	if !includeUngraceful {
+		timeoutMinutes = 15
+	}
+
+	if includeUngraceful {
+		return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "disable-esm"
+      execution_block_type = "LambdaEventSourceMapping"
+      description          = "Disable ESM in deactivating region"
+
+      lambda_event_source_mapping_config {
+        action          = "disable"
+        timeout_minutes = %[4]d
+
+        event_source_mapping {
+          region = %[2]q
+          arn    = "arn:aws:lambda:%[2]s:123456789012:event-source-mapping:a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        }
+
+        event_source_mapping {
+          region = %[3]q
+          arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:f9e8d7c6-b5a4-3210-fedc-ba9876543210"
+        }
+
+        ungraceful {
+          behavior = "skip"
+        }
+      }
+    }
+
+    step {
+      name                 = "enable-esm"
+      execution_block_type = "LambdaEventSourceMapping"
+      description          = "Enable ESM in activating region"
+
+      lambda_event_source_mapping_config {
+        action          = "enable"
+        timeout_minutes = %[4]d
+
+        event_source_mapping {
+          region = %[2]q
+          arn    = "arn:aws:lambda:%[2]s:123456789012:event-source-mapping:a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        }
+
+        event_source_mapping {
+          region = %[3]q
+          arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:f9e8d7c6-b5a4-3210-fedc-ba9876543210"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), timeoutMinutes)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "disable-esm"
+      execution_block_type = "LambdaEventSourceMapping"
+      description          = "Disable ESM in deactivating region"
+
+      lambda_event_source_mapping_config {
+        action          = "disable"
+        timeout_minutes = %[4]d
+
+        event_source_mapping {
+          region = %[2]q
+          arn    = "arn:aws:lambda:%[2]s:123456789012:event-source-mapping:a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        }
+
+        event_source_mapping {
+          region = %[3]q
+          arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:f9e8d7c6-b5a4-3210-fedc-ba9876543210"
+        }
+      }
+    }
+
+    step {
+      name                 = "enable-esm"
+      execution_block_type = "LambdaEventSourceMapping"
+      description          = "Enable ESM in activating region"
+
+      lambda_event_source_mapping_config {
+        action          = "enable"
+        timeout_minutes = %[4]d
+
+        event_source_mapping {
+          region = %[2]q
+          arn    = "arn:aws:lambda:%[2]s:123456789012:event-source-mapping:a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        }
+
+        event_source_mapping {
+          region = %[3]q
+          arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:f9e8d7c6-b5a4-3210-fedc-ba9876543210"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), timeoutMinutes)
 }

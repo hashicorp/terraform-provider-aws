@@ -210,8 +210,9 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
 * `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `LambdaEventSourceMapping`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `Route53HealthCheck`.
 * `global_aurora_config` - Configuration for Aurora Global Database operations. See [Global Aurora Config](#global-aurora-config) below.
+* `lambda_event_source_mapping_config` - Configuration for Lambda event source mapping operations. See [Lambda Event Source Mapping Config](#lambda-event-source-mapping-config) below.
 * `name` - (Required) Name of the step.
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
 * `rds_create_cross_region_read_replica_config` - Configuration for creating cross-region RDS read replicas. See [RDS Create Cross Region Read Replica Config](#rds-create-cross-region-read-replica-config) below.
@@ -324,6 +325,24 @@ The following arguments are optional:
 ### Ungraceful Aurora
 
 * `ungraceful` - (Required) Ungraceful behavior. Valid values: `failover`.
+
+### Lambda Event Source Mapping Config
+
+* `action` - (Required) Action to perform on the event source mapping. Valid values: `enable`, `disable`.
+* `event_source_mapping` - (Required) Set of per-region event source mapping configurations. See [Event Source Mapping](#event-source-mapping) below.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [Lambda ESM Ungraceful](#lambda-esm-ungraceful) below.
+
+### Event Source Mapping
+
+* `arn` - (Required) ARN of the Lambda event source mapping.
+* `region` - (Required) AWS region where the event source mapping resides.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+
+### Lambda ESM Ungraceful
+
+* `behavior` - (Required) Behavior when running in ungraceful mode. Valid values: `skip`.
 
 ### ECS Capacity Increase Config
 
