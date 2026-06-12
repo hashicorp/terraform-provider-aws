@@ -234,7 +234,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func eventDestinationARN(ctx context.Context, c *conns.AWSClient, configurationSetName, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", configurationSetName, id))
+	return c.RegionalARN(ctx, "ses", "configuration-set/"+configurationSetName+":event-destination/"+id)
 }
 
 func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
