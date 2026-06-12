@@ -13,7 +13,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -198,7 +197,8 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestination, err := findEventDestinationByTwoPartKey(ctx, conn, configurationSetName, d.Id())
@@ -213,14 +213,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SES Configuration Set Event Destination (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("configuration-set/%s:event-destination/%s", configurationSetName, d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, eventDestinationARN(ctx, c, configurationSetName, d.Id()))
 	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(eventDestination.CloudWatchDestination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_destination: %s", err)
 	}
@@ -238,6 +231,10 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func eventDestinationARN(ctx context.Context, c *conns.AWSClient, configurationSetName, id string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", configurationSetName, id))
 }
 
 func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
