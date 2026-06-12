@@ -11,7 +11,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -75,7 +74,8 @@ func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	output, err := findReceiptRuleSetByName(ctx, conn, d.Id())
 
@@ -90,17 +90,14 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	name := aws.ToString(output.Metadata.Name)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", name),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, name))
 	d.Set("rule_set_name", name)
 
 	return diags
+}
+
+func receiptRuleSetARN(ctx context.Context, c *conns.AWSClient, name string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s", name))
 }
 
 func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
