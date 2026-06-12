@@ -129,7 +129,3 @@ func listHubContentReferences(ctx context.Context, conn *sagemaker.Client) iter.
 		}
 	}
 }
-
-type listHubContentReferenceModel struct {
-	framework.WithRegionModel
-}
