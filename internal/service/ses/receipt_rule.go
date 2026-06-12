@@ -14,7 +14,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -324,9 +323,14 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
+func receiptRuleARN(ctx context.Context, c *conns.AWSClient, ruleSetName, id string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, id))
+}
+
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	rule, err := findReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
@@ -341,14 +345,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, receiptRuleARN(ctx, c, ruleSetName, d.Id()))
 	d.Set(names.AttrEnabled, rule.Enabled)
 	d.Set("recipients", rule.Recipients)
 	d.Set("scan_enabled", rule.ScanEnabled)
