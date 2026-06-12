@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -97,7 +96,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func emailIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", id))
+	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
