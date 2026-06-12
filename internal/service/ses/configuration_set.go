@@ -13,7 +13,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -176,7 +175,8 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	input := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{
@@ -199,14 +199,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SES Configuration Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, configurationSetARN(ctx, c, d.Id()))
 	if err := d.Set("delivery_options", flattenDeliveryOptions(output.DeliveryOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting delivery_options: %s", err)
 	}
@@ -222,6 +215,10 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func configurationSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s", id))
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
