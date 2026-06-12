@@ -1110,10 +1110,13 @@ website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 		terrafmt fmt $$dir --pattern '*.markdown'; \
 	done
 
-website-tflint: tflint-init ## [CI] Website Checks / tflint
+website-tflint: tflint-init tflint-opa-tests ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
 	@exit_code=0 ; \
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	export TFLINT_OPA_POLICY_DIR ; \
 	shared_rules=( \
+		"--disable-rule=opa_deny_acmpca_deletion_time" \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
 		"--disable-rule=aws_db_instance_default_parameter_group" \
 		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
