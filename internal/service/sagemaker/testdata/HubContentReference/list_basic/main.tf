@@ -4,8 +4,8 @@
 resource "aws_sagemaker_hub_content_reference" "test" {
   count = var.resource_count
 
-  hub_name         = aws_sagemaker_hub.test.hub_name
-  hub_content_name = "${var.rName}-${count.index}"
+  hub_name                         = aws_sagemaker_hub.test.hub_name
+  hub_content_name                 = "${var.rName}-${count.index}"
   sagemaker_public_hub_content_arn = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct"
 }
 
