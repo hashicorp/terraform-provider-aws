@@ -277,11 +277,12 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, true),
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
 				),
 			},
@@ -291,30 +292,45 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, false),
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, true),
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false),
+				// All three flags off — restores the boundary case the original test had
+				// (verifies the flatten path when every interactive feature is disabled).
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
-					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled"),
-					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.studio_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -747,18 +763,19 @@ resource "aws_emrserverless_application" "test" {
 `, rName, cpu)
 }
 
-func testAccApplicationConfig_interactiveConfiguration(rName string, livyEndpointEnabled, studioEnabled bool) string {
+func testAccApplicationConfig_interactiveConfiguration(rName string, livyEndpointEnabled, sessionEnabled, studioEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-7.1.0"
+  release_label = "emr-7.13.0"
   type          = "spark"
   interactive_configuration {
     livy_endpoint_enabled = %[2]t
-    studio_enabled        = %[3]t
+    session_enabled       = %[3]t
+    studio_enabled        = %[4]t
   }
 }
-`, rName, livyEndpointEnabled, studioEnabled)
+`, rName, livyEndpointEnabled, sessionEnabled, studioEnabled)
 }
 
 func testAccApplicationConfig_maxCapacity(rName, cpu string) string {
