@@ -324,7 +324,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func receiptRuleARN(ctx context.Context, c *conns.AWSClient, ruleSetName, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, id))
+	return c.RegionalARN(ctx, "ses", "receipt-rule-set/"+ruleSetName+":receipt-rule/"+id)
 }
 
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
