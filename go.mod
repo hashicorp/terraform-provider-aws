@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.6
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.6
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.84.6
+	github.com/aws/aws-sdk-go-v2/service/eks v1.85.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.34.6
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.79.3
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.37.7
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.55.6
@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.2
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.45.4
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.8
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.12.5
