@@ -325,8 +325,44 @@ func resourceCluster() *schema.Resource {
 									Schema: map[string]*schema.Schema{
 										names.AttrGroupName: {
 											Type:     schema.TypeString,
-											Required: true,
+											Optional: true,
 											ForceNew: true,
+										},
+										"spread_level": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
+											DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+												// in some case the EKS API might not return spread_level in DescribeCluster
+												// even though the value is set in TF. In order to not force cluster delete in
+												// that case, we'll suppress diff when spread_level is ""
+												return oldValue == "" && d.Id() != ""
+											},
+										},
+									},
+								},
+							},
+							"etcd_instance_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"etcd_placement": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"spread_level": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
 										},
 									},
 								},
@@ -926,16 +962,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *schema.ResourceData) error {
+	// access_config as a whole is not always returned and
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
 	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
-	var bootstrapClusterCreatorAdminPermissions *bool
-	if v, ok := d.GetOk("access_config"); ok {
-		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
-			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+	if cluster.AccessConfig != nil {
+		var bootstrapClusterCreatorAdminPermissions *bool
+		if v, ok := d.GetOk("access_config"); ok {
+			if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
+				bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+			}
 		}
-	}
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
-		return fmt.Errorf("setting access_config: %w", err)
+		if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
+			return fmt.Errorf("setting access_config: %w", err)
+		}
 	}
 	d.Set(names.AttrARN, cluster.Arn)
 	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
@@ -1394,6 +1433,14 @@ func expandOutpostConfigRequest(tfList []any) *types.OutpostConfigRequest {
 		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacementRequest(v)
 	}
 
+	if v, ok := tfMap["etcd_instance_type"].(string); ok && v != "" {
+		outpostConfigRequest.EtcdInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["etcd_placement"].([]any); ok && len(v) > 0 {
+		outpostConfigRequest.EtcdPlacement = expandEtcdPlacementRequest(v)
+	}
+
 	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
 		outpostConfigRequest.OutpostArns = flex.ExpandStringValueSet(v)
 	}
@@ -1415,6 +1462,29 @@ func expandControlPlanePlacementRequest(tfList []any) *types.ControlPlanePlaceme
 
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["spread_level"].(string); ok && v != "" {
+		apiObject.SpreadLevel = types.SpreadLevel(v)
+	}
+
+	return apiObject
+}
+
+func expandEtcdPlacementRequest(tfList []any) *types.EtcdPlacementRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.EtcdPlacementRequest{}
+
+	if v, ok := tfMap["spread_level"].(string); ok && v != "" {
+		apiObject.SpreadLevel = types.SpreadLevel(v)
 	}
 
 	return apiObject
@@ -1708,12 +1778,14 @@ func flattenOIDC(apiObject *types.OIDC) []map[string]any {
 }
 
 func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrapClusterCreatorAdminPermissions *bool) []any {
-	if apiObject == nil {
+	if apiObject == nil && bootstrapClusterCreatorAdminPermissions == nil {
 		return nil
 	}
 
-	tfMap := map[string]any{
-		"authentication_mode": apiObject.AuthenticationMode,
+	tfMap := map[string]any{}
+
+	if apiObject != nil {
+		tfMap["authentication_mode"] = apiObject.AuthenticationMode
 	}
 
 	if bootstrapClusterCreatorAdminPermissions != nil {
@@ -1831,6 +1903,8 @@ func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []any 
 	tfMap := map[string]any{
 		"control_plane_instance_type": aws.ToString(apiObject.ControlPlaneInstanceType),
 		"control_plane_placement":     flattenControlPlanePlacementResponse(apiObject.ControlPlanePlacement),
+		"etcd_instance_type":          aws.ToString(apiObject.EtcdInstanceType),
+		"etcd_placement":              flattenEtcdPlacementResponse(apiObject.EtcdPlacement),
 		"outpost_arns":                apiObject.OutpostArns,
 	}
 
@@ -1893,6 +1967,22 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 
 	tfMap := map[string]any{
 		names.AttrGroupName: aws.ToString(apiObject.GroupName),
+	}
+
+	if apiObject.SpreadLevel != "" {
+		tfMap["spread_level"] = apiObject.SpreadLevel
+	}
+
+	return []any{tfMap}
+}
+
+func flattenEtcdPlacementResponse(apiObject *types.EtcdPlacementResponse) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"spread_level": apiObject.SpreadLevel,
 	}
 
 	return []any{tfMap}
