@@ -11,7 +11,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -75,7 +74,8 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	output, err := findActiveReceiptRuleSet(ctx, conn)
 
@@ -89,17 +89,14 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, activeReceiptRuleSetARN(ctx, c, d.Id()))
 	d.Set("rule_set_name", output.Name)
 
 	return diags
+}
+
+func activeReceiptRuleSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("receipt-rule-set/%s", id))
 }
 
 func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -116,7 +113,8 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
@@ -135,14 +133,7 @@ func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceD
 
 	d.Set("rule_set_name", response.Metadata.Name)
 
-	arnValue := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arnValue)
+	d.Set(names.AttrARN, activeReceiptRuleSetARN(ctx, c, d.Id()))
 
 	return []*schema.ResourceData{d}, nil
 }
