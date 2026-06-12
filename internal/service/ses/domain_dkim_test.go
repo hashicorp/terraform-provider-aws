@@ -64,7 +64,7 @@ func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
 				Config: testAccDomainDKIMConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainDKIMExists(ctx, t, resourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -130,7 +130,7 @@ func findIdentityMailFromDomainAttributesByIdentity(ctx context.Context, conn *s
 		return nil, err
 	}
 
-	if v, ok := output[identity]; ok {
+	if v, ok := output[identity]; ok && v.MailFromDomain != nil {
 		return &v, nil
 	}
 

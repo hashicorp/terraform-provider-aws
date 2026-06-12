@@ -109,7 +109,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, t, resourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
