@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -189,13 +190,10 @@ func (r *hubContentReferenceResource) Create(ctx context.Context, request resour
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.HubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.HubContentArn))
-	data.MinVersion = fwflex.StringToFramework(ctx, output.ReferenceMinVersion)
-	data.SageMakerPublicHubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.SageMakerPublicHubContentArn))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -222,16 +220,27 @@ func (r *hubContentReferenceResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *hubContentReferenceResource) flatten(ctx context.Context, output *sagemaker.DescribeHubContentOutput, data *hubContentReferenceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	if diags.HasError() {
+		return diags
 	}
 
 	data.HubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.HubContentArn))
 	data.MinVersion = fwflex.StringToFramework(ctx, output.ReferenceMinVersion)
 	data.SageMakerPublicHubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.SageMakerPublicHubContentArn))
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	return diags
 }
 
 func (r *hubContentReferenceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {

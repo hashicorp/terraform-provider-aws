@@ -283,7 +283,7 @@ resource "aws_sagemaker_hub_content_reference" "test" {
   hub_name                         = aws_sagemaker_hub.test.hub_name
   hub_content_name                 = %[1]q
   sagemaker_public_hub_content_arn = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct"
-  min_version                     = %[2]q
+  min_version                      = %[2]q
 }
 `, rName, minVersion))
 }
