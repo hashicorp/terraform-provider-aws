@@ -300,12 +300,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// Use AutoFlex to flatten the response
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	// Set fields that AutoFlex might not handle correctly
 	id := aws.ToString(output.DistributionTenant.Id)
 	data.ID = fwflex.StringValueToFramework(ctx, id)
@@ -344,12 +338,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			// Use AutoFlex to flatten the refreshed response
-			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 		}
 	}
@@ -380,12 +368,6 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	tenant := output.DistributionTenant
 
 	// Flatten the distribution tenant data into the model
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Use AutoFlex to flatten the response
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -475,12 +457,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				// Update the model with refreshed information
-				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
 				// Manually flatten domains and parameters
 				// Use AutoFlex to flatten the refreshed response
 				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
@@ -500,12 +476,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		// Use AutoFlex to flatten the response
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
 		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	} else {
 		// If no update was performed (e.g., tag-only changes), we still need to refresh the distribution tenant data
@@ -516,12 +486,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.DistributionTenant, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Use AutoFlex to flatten the response
 		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.DistributionTenant, &new)...)
 		if resp.Diagnostics.HasError() {
 			return

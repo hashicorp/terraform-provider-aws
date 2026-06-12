@@ -147,12 +147,6 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	// Use AutoFlex to flatten the response
-	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	// Set computed fields that need special handling
 	data.ID = fwflex.StringToFramework(ctx, tenant.Id)
 	data.ETag = fwflex.StringToFramework(ctx, etag)
