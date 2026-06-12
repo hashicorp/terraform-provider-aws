@@ -971,22 +971,25 @@ testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 
 testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
 
-testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
+testacc-tflint-dir: tflint-init tflint-opa-tests ## Run tflint on Terraform directories
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
 
 testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
 
 testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
 	@echo "make: Acceptance Test Linting (embedded) / tflint..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
+
+tflint-opa-tests: tflint-init ## Run OPA policy tests
+	@TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" .ci/opa-policies/tests/run_tests.sh
 
 tflint-init: ## Initialize tflint
 	@tflint --config .ci/.tflint.hcl --init
