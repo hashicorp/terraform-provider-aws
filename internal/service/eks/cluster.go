@@ -329,11 +329,11 @@ func resourceCluster() *schema.Resource {
 											ForceNew: true,
 										},
 										"spread_level": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ForceNew:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"host", "rack"}, false),
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
 											DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 												// in some case the EKS API might not return spread_level in DescribeCluster
 												// even though the value is set in TF. In order to not force cluster delete in
@@ -358,11 +358,11 @@ func resourceCluster() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"spread_level": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ForceNew:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"host", "rack"}, false),
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
 										},
 									},
 								},
