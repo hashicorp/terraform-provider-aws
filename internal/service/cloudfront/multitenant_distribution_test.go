@@ -181,6 +181,7 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.origin_access_control_id"),
+          resource.TestCheckResourceAttr(resourceName, "origin.0.origin_path", ""),
 				),
 			},
 			{
@@ -966,6 +967,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     id                       = aws_s3_bucket.test.bucket_regional_domain_name
     domain_name              = aws_s3_bucket.test.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.test.id
+    origin_path              = ""
 
     connection_attempts         = 3
     connection_timeout          = 10
