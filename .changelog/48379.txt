@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_sagemaker_hub_content_reference
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_hub_content_reference: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_sagemaker_hub_content_reference
+```
