@@ -1970,8 +1970,9 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 	}
 
 	if apiObject.SpreadLevel != "" {
-		tfMap["spread_level"] = string(apiObject.SpreadLevel)
+		tfMap["spread_level"] = apiObject.SpreadLevel
 	}
+
 	return []any{tfMap}
 }
 
@@ -1981,8 +1982,9 @@ func flattenEtcdPlacementResponse(apiObject *types.EtcdPlacementResponse) []any 
 	}
 
 	tfMap := map[string]any{
-		"spread_level": string(apiObject.SpreadLevel),
+		"spread_level": apiObject.SpreadLevel,
 	}
+
 	return []any{tfMap}
 }
 

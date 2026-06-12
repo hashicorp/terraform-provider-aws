@@ -70,7 +70,7 @@ This data source exports the following attributes in addition to the arguments a
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
         * `spread_level` - Placement group spread level for control plane instances.
     * `etcd_instance_type` - Amazon EC2 instance type for etcd instances.
-    * `etcd_placement` -  Placement configuration for the etcd instances.
+    * `etcd_placement` - Placement configuration for the etcd instances.
         * `spread_level` - Placement group spread level for etcd instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
