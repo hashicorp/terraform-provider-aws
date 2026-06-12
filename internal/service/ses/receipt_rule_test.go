@@ -400,7 +400,6 @@ func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
 	var rule awstypes.ReceiptRule
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
-	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -416,7 +415,7 @@ func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, t, resourceName, &rule),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRuleSet(), "aws_ses_receipt_rule_set.test"),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
