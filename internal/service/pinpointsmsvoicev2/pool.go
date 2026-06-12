@@ -45,6 +45,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	// DescribePhoneNumbers and DescribeSenderIds each cap their ID input array
+	// at 5 items per request. Larger sets must be chunked.
+	originationIdentityDescribeBatchSize = 5
+)
+
 // @FrameworkResource("aws_pinpointsmsvoicev2_pool", name="Pool")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
@@ -625,8 +631,8 @@ func groupOriginationIdentitiesByType(identities []string) (phoneARNs []string, 
 	return phoneARNs, senderRefs, unknownARN
 }
 
-// Pass the full list to avoid N DescribePhoneNumbers calls. Surface errors as
-// one diagnostic rather than attempting per-identity recovery.
+// Chunk the input to honor the DescribePhoneNumbers per-request cap on PhoneNumberIds.
+// Surface errors as one diagnostic rather than attempting per-identity recovery.
 func describePhoneIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, arns []string) (map[string]awstypes.PhoneNumberInformation, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	out := map[string]awstypes.PhoneNumberInformation{}
@@ -634,36 +640,38 @@ func describePhoneIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Clien
 		return out, diags
 	}
 
-	pages := pinpointsmsvoicev2.NewDescribePhoneNumbersPaginator(conn, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
-		PhoneNumberIds: arns,
-	})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for batch := range slices.Chunk(arns, originationIdentityDescribeBatchSize) {
+		pages := pinpointsmsvoicev2.NewDescribePhoneNumbersPaginator(conn, &pinpointsmsvoicev2.DescribePhoneNumbersInput{
+			PhoneNumberIds: batch,
+		})
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			diags.AddError(
-				"Invalid origination identity",
-				"one or more phone-number origination identities do not exist in the configured AWS account and region. Verify every phone-number ARN in `origination_identities` refers to an existing aws_pinpointsmsvoicev2_phone_number in this region.",
-			)
-			return out, diags
-		}
-		if err != nil {
-			diags.AddError(
-				"reading phone-number origination identities",
-				fmt.Sprintf("DescribePhoneNumbers failed: %s", err),
-			)
-			return out, diags
-		}
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				diags.AddError(
+					"Invalid origination identity",
+					"one or more phone-number origination identities do not exist in the configured AWS account and region. Verify every phone-number ARN in `origination_identities` refers to an existing aws_pinpointsmsvoicev2_phone_number in this region.",
+				)
+				return out, diags
+			}
+			if err != nil {
+				diags.AddError(
+					"reading phone-number origination identities",
+					fmt.Sprintf("DescribePhoneNumbers failed: %s", err),
+				)
+				return out, diags
+			}
 
-		for _, p := range page.PhoneNumbers {
-			out[aws.ToString(p.PhoneNumberArn)] = p
+			for _, p := range page.PhoneNumbers {
+				out[aws.ToString(p.PhoneNumberArn)] = p
+			}
 		}
 	}
 	return out, diags
 }
 
-// Batch-fetch SenderIdInformation for each sender ID reference. Same
-// contract as describePhoneIdentities: one diagnostic per failure mode.
+// Chunk the input to honor the DescribeSenderIds per-request cap on SenderIds.
+// Same contract as describePhoneIdentities: one diagnostic per failure mode.
 func describeSenderIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, refs []awstypes.SenderIdAndCountry) (map[string]awstypes.SenderIdInformation, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	out := map[string]awstypes.SenderIdInformation{}
@@ -671,29 +679,31 @@ func describeSenderIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Clie
 		return out, diags
 	}
 
-	pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, &pinpointsmsvoicev2.DescribeSenderIdsInput{
-		SenderIds: refs,
-	})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for batch := range slices.Chunk(refs, originationIdentityDescribeBatchSize) {
+		pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, &pinpointsmsvoicev2.DescribeSenderIdsInput{
+			SenderIds: batch,
+		})
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			diags.AddError(
-				"Invalid origination identity",
-				"one or more sender-id origination identities do not exist in the configured AWS account and region. Verify every sender-id ARN in `origination_identities` refers to an existing sender ID in this region.",
-			)
-			return out, diags
-		}
-		if err != nil {
-			diags.AddError(
-				"reading sender-id origination identities",
-				fmt.Sprintf("DescribeSenderIds failed: %s", err),
-			)
-			return out, diags
-		}
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				diags.AddError(
+					"Invalid origination identity",
+					"one or more sender-id origination identities do not exist in the configured AWS account and region. Verify every sender-id ARN in `origination_identities` refers to an existing sender ID in this region.",
+				)
+				return out, diags
+			}
+			if err != nil {
+				diags.AddError(
+					"reading sender-id origination identities",
+					fmt.Sprintf("DescribeSenderIds failed: %s", err),
+				)
+				return out, diags
+			}
 
-		for _, s := range page.SenderIds {
-			out[aws.ToString(s.SenderIdArn)] = s
+			for _, s := range page.SenderIds {
+				out[aws.ToString(s.SenderIdArn)] = s
+			}
 		}
 	}
 	return out, diags
