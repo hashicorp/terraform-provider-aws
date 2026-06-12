@@ -624,6 +624,50 @@ func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_networkType(rName, string(awstypes.NetworkTypeDualStack)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualStack)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServerlessCacheConfig_networkType(rName, string(awstypes.NetworkTypeIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -850,6 +894,17 @@ resource "aws_elasticache_serverless_cache" "test" {
   name   = %[1]q
 }
 `, rName)
+}
+
+func testAccServerlessCacheConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 3), fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine       = "valkey"
+  name         = %[1]q
+  network_type = %[2]q
+  subnet_ids   = aws_subnet.test[*].id
+}
+`, rName, networkType))
 }
 
 func testAccServerlessCacheConfig_engine(rName, engine string) string {
