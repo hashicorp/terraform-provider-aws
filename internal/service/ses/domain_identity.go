@@ -7,7 +7,6 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -98,7 +97,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func domainIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", id))
+	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }
 
 func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
