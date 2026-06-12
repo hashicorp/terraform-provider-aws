@@ -422,7 +422,7 @@ func (r *rotationResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]any{
+	tflog.Debug(ctx, "deleting SSMContacts Rotation", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
