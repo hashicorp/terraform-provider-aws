@@ -68,6 +68,10 @@ This data source exports the following attributes in addition to the arguments a
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
+        * `spread_level` - Placement group spread level for control plane instances.
+    * `etcd_instance_type` - Amazon EC2 instance type for etcd instances.
+    * `etcd_placement` -  Placement configuration for the etcd instances.
+        * `spread_level` - Placement group spread level for etcd instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `remote_network_config` - Contains remote network configuration for EKS Hybrid Nodes.

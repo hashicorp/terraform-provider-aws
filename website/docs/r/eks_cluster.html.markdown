@@ -464,8 +464,15 @@ The `outpost_config` configuration block supports the following arguments:
 * `control_plane_placement` - (Optional) An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
 The `control_plane_placement` configuration block supports the following arguments:
 
-    * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
+    * `group_name` - (Optional) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
+    * `spread_level` - (Optional) Placement group spread level for control plane instances. Valid values: `host`, `rack`.
 
+* `etcd_instance_type` - (Optional) Amazon EC2 instance type for etcd instances of your local Amazon EKS cluster on AWS Outposts.
+* `etcd_placement` - (Optional) Placement configuration for the etcd instances of your local Amazon EKS cluster on an AWS Outpost.
+The `etcd_placement` configuration block supports the following arguments:
+
+    * `spread_level` - (Optional) Placement group spread level for etcd instances. Valid values: `host`, `rack`.
+  
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
 ### storage_config
