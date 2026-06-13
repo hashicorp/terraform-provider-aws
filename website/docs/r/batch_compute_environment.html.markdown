@@ -219,6 +219,7 @@ This resource supports the following arguments:
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `type` - (Required) The type of compute environment. Valid items are `EC2`, `SPOT`, `FARGATE` or `FARGATE_SPOT`.
+* `update_to_latest_image_version` - (Optional) Whether the AMI is updated to the latest one supported by AWS Batch when an infrastructure update is performed. Only used during update operations and ignored by AWS when an AMI ID is set in `image_id`, `ec2_configuration`, or a launch template. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. Defaults to `false`.
 
 ### ec2_configuration
 
