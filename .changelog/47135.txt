@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_quicksight_custom_permissions: Add `action`, `analysis`, `automate`, `chat_agent`, `create_chat_agents`, `dashboard`, `flow`, `knowledge_base`, `perform_flow_ui_task`, `publish_without_approval`, `research`, `space`, `use_agent_web_search`, and `use_bedrock_models` to `capabilities` configuration block
+```
