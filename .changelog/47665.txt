@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_bedrock_foundation_model_agreement_offers
+```
+
+```release-note:new-resource
+aws_bedrock_foundation_model_agreement
+```
+
+```release-note:new-resource
+aws_bedrock_use_case_for_model_access
+```
+
+```release-note:new-data-source
+aws_bedrock_use_case_for_model_access
+```
