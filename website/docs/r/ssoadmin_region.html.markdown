@@ -30,6 +30,10 @@ The following arguments are required:
 * `instance_arn` - (Required, Forces new resource) ARN of the IAM Identity Center instance.
 * `region_name` - (Required, Forces new resource) Name of the additional AWS Region to add.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
