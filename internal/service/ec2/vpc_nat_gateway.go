@@ -434,7 +434,12 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	case awstypes.AvailabilityModeZonal:
 		switch awstypes.ConnectivityType(d.Get("connectivity_type").(string)) {
 		case awstypes.ConnectivityTypePrivate:
-			if d.HasChanges("secondary_private_ip_addresses") {
+			countRaw := d.GetRawConfig().GetAttr("secondary_private_ip_address_count")
+			countConfigured := countRaw.IsKnown() && !countRaw.IsNull()
+			addressesRaw := d.GetRawConfig().GetAttr("secondary_private_ip_addresses")
+			addressesConfigured := addressesRaw.IsKnown() && !addressesRaw.IsNull()
+
+			if addressesConfigured && d.HasChange("secondary_private_ip_addresses") {
 				o, n := d.GetChange("secondary_private_ip_addresses")
 				os, ns := o.(*schema.Set), n.(*schema.Set)
 
@@ -470,6 +475,57 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					}
 
 					for _, privateIP := range flex.ExpandStringValueSet(del) {
+						if _, err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
+						}
+					}
+				}
+			}
+
+			if countConfigured && d.HasChange("secondary_private_ip_address_count") {
+				o, n := d.GetChange("secondary_private_ip_address_count")
+				oldCount, newCount := o.(int), n.(int)
+
+				delta := newCount - oldCount
+
+				if delta > 0 {
+					input := &ec2.AssignPrivateNatGatewayAddressInput{
+						NatGatewayId:          aws.String(d.Id()),
+						PrivateIpAddressCount: aws.Int32(int32(delta)),
+					}
+
+					_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP address count: %s", d.Id(), err)
+					}
+
+					if _, err := waitNATGatewaySecondaryPrivateIPAddressCount(ctx, conn, d.Id(), newCount, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) secondary private IP address count (%d): %s", d.Id(), newCount, err)
+					}
+				}
+
+				if delta < 0 {
+					removeCount := -delta
+
+					sIPs, _ := d.GetChange("secondary_private_ip_addresses")
+					secondaryPrivateIPs := sIPs.(*schema.Set).List()
+
+					privateIPsToUnassign := secondaryPrivateIPs[:removeCount]
+
+					input := &ec2.UnassignPrivateNatGatewayAddressInput{
+						NatGatewayId:            aws.String(d.Id()),
+						PrivateIpAddresses:      flex.ExpandStringValueList(privateIPsToUnassign),
+						MaxDrainDurationSeconds: aws.Int32(50),
+					}
+
+					_, err := conn.UnassignPrivateNatGatewayAddress(ctx, input)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+					}
+
+					for _, privateIP := range flex.ExpandStringValueList(privateIPsToUnassign) {
 						if _, err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
 							return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
 						}
@@ -656,15 +712,18 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
 		}
 
-		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
-			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
-				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %w", err)
-				}
+		countRaw := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count")
+		countConfigured := countRaw.IsKnown() && !countRaw.IsNull()
+		addressesRaw := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses")
+		addressesConfigured := addressesRaw.IsKnown() && !addressesRaw.IsNull()
+
+		if diff.Id() != "" && countConfigured && diff.HasChange("secondary_private_ip_address_count") {
+			if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
+				return fmt.Errorf("setting secondary_private_ip_addresses to Computed: %w", err)
 			}
 		}
 
-		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {
+		if diff.Id() != "" && addressesConfigured && diff.HasChange("secondary_private_ip_addresses") {
 			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
 				return fmt.Errorf("setting secondary_private_ip_address_count to Computed: %w", err)
 			}
