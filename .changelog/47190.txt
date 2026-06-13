@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_policy: Fix infinite drift in `content` when AWS returns policy statement elements in a different order
+```
