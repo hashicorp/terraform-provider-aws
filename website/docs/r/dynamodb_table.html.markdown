@@ -403,6 +403,9 @@ The following arguments are optional:
 
 ### `global_secondary_index`
 
+* `create_async` - (Optional) Whether to return as soon as the index enters the `CREATING` state instead of waiting for it to become `ACTIVE`. Defaults to `false`. Useful when adding a GSI to a large existing table, where backfilling the index can take hours. While the index is still backfilling, other operations against the table may fail, and attempting to modify or delete the still-`CREATING` index returns an error until it becomes `ACTIVE`.
+
+    ~> **Multi-GSI limitation:** AWS DynamoDB allows only one GSI per table to be in the `CREATING` state at a time, so the provider serializes GSI creates. When multiple GSIs are added in a single apply, async-marked GSIs are processed after synchronous ones, and only the last GSI processed can actually skip the wait for `ACTIVE`. If you mark several GSIs as `create_async = true` in the same apply, all but one will still be waited on. To get the full benefit of `create_async` for several GSIs, either add them in separate applies or manage them with the [`aws_dynamodb_global_secondary_index`](dynamodb_global_secondary_index.html.markdown) resource (one resource per GSI).
 * `hash_key` - (Optional, **Deprecated**) Name of the hash key in the index; must be defined as an attribute in the resource. Mutually exclusive with `key_schema`. Use `key_schema` instead.
 * `key_schema` - (Optional) Configuration block(s) for the key schema. Mutually exclusive with `hash_key` and `range_key`. Required if `hash_key` is not specified. Supports multi-attribute keys for the [Multi-Attribute Keys design pattern](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html). See below.
 * `name` - (Required) Name of the index.
