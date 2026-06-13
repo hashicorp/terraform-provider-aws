@@ -79,8 +79,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
 				},
