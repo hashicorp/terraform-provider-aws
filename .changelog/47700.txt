@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticache_user: Retry tagging operations when the API returns `UserNotFoundFault` with `"not available for tagging"`, which is a transient state that occurs when consecutive tag operations fire while the user is still in `modifying` from the previous one.
+```
+```release-note:bug
+resource/aws_elasticache_user_group: Retry tagging operations when the API returns `UserGroupNotFoundFault` with `"not available for tagging"`, which is the equivalent transient state for user groups.
+```
