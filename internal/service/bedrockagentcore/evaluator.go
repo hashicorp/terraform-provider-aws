@@ -214,7 +214,6 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 														listvalidator.ExactlyOneOf(
-															// If another member is added to the union, this will need to be updated.
 															path.MatchRelative().AtParent().AtName("bedrock_evaluator_model_config"),
 														),
 													},
@@ -258,6 +257,12 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 																			CustomType:  fwtypes.ListOfStringType,
 																			Optional:    true,
 																			ElementType: types.StringType,
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(2500),
+																				listvalidator.ValueStringsAre(
+																					stringvalidator.LengthAtLeast(1),
+																				),
+																			},
 																		},
 																	},
 																},
@@ -287,7 +292,6 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 											listvalidator.ExactlyOneOf(
-												// If another member is added to the union, this will need to be updated.
 												path.MatchRelative().AtParent().AtName("lambda_config"),
 											),
 										},
@@ -299,7 +303,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 												},
 												"lambda_timeout_in_seconds": schema.Int32Attribute{
 													Optional: true,
-													Computed: true,
+													Computed: true, // check this in testing if it has a default
 													Validators: []validator.Int32{
 														int32validator.Between(1, 300),
 													},
