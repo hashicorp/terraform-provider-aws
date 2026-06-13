@@ -389,6 +389,19 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
+			{
+				// Removing the argument entirely must clear it on the API (not be ignored).
+				Config: testAccRestAPIConfig_binaryMediaTypesRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -2271,6 +2284,14 @@ resource "aws_api_gateway_rest_api" "test" {
   name               = %[1]q
 }
 `, rName, binaryMediaTypes1)
+}
+
+func testAccRestAPIConfig_binaryMediaTypesRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName string, binaryMediaTypes1 string, bodyBinaryMediaTypes1 string) string {
