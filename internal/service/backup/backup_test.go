@@ -19,3 +19,8 @@ func randomFrameworkName(t *testing.T) string {
 func randomReportPlanName(t *testing.T) string {
 	return fmt.Sprintf("tf_acc_test_%s", acctest.RandString(t, 7))
 }
+
+// randomTieringConfigurationName returns a resource name that matches the pattern for Tiering Configuration names
+func randomTieringConfigurationName() string {
+	return fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+}
