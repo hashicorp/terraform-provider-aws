@@ -66,6 +66,23 @@ resource "aws_bedrockagentcore_memory_strategy" "episodic" {
 }
 ```
 
+### Episodic Strategy with Reflection Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "episodic_reflection" {
+  name                      = "episodic-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "EPISODIC"
+  description               = "Episodic memory strategy with custom reflection namespace"
+  namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+
+  reflection_configuration {
+    namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}"]
+  }
+}
+```
+
 ### Custom Strategy with Semantic Override
 
 ```terraform
@@ -163,6 +180,12 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
       append_to_prompt = "Extract key events and episodes from interactions"
       model_id         = "anthropic.claude-3-haiku-20240307-v1:0"
     }
+
+    reflection {
+      append_to_prompt    = "Identify successful patterns and recurring failure modes across episodes"
+      model_id            = "anthropic.claude-3-sonnet-20240229-v1:0"
+      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}"]
+    }
   }
 }
 ```
@@ -181,6 +204,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the memory strategy.
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
+* `reflection_configuration` - (Optional) Reflection configuration for built-in `EPISODIC` strategies. Controls the namespace where reflections are written. Only valid when `type` is `EPISODIC`. See [`reflection_configuration`](#reflection_configuration) below.
 
 ### `configuration`
 
@@ -189,6 +213,7 @@ The `configuration` block supports the following:
 * `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
 * `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource.
 * `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `reflection` - (Optional) Reflection configuration for the episodic override. Only valid when `type` is `EPISODIC_OVERRIDE`. See [`reflection`](#reflection) below. Once added, this block cannot be removed without recreating the resource.
 
 ### `consolidation`
 
@@ -203,6 +228,20 @@ The `extraction` block supports the following:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for extraction processing.
 * `model_id` - (Required) ID of the foundation model to use for extraction processing.
+
+### `reflection`
+
+The `reflection` block supports the following:
+
+* `append_to_prompt` - (Required) Additional text to append to the model prompt for reflection processing.
+* `model_id` - (Required) ID of the foundation model to use for reflection processing.
+* `namespace_templates` - (Optional) Set of namespace templates where reflections are written. Can be less nested than the episodic namespaces.
+
+### `reflection_configuration`
+
+The `reflection_configuration` block supports the following:
+
+* `namespace_templates` - (Optional) Set of namespace templates where reflections are written for the built-in EPISODIC strategy. Can be less nested than the episodic namespaces.
 
 ## Attribute Reference
 
