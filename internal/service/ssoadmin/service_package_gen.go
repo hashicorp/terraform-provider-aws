@@ -123,6 +123,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newRegionResource,
+			TypeName: "aws_ssoadmin_region",
+			Name:     "Region",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newTrustedTokenIssuerResource,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
