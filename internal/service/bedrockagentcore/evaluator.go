@@ -91,9 +91,6 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"locked_for_modification": schema.BoolAttribute{
 				Computed: true,
