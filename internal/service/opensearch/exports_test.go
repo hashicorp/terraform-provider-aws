@@ -18,6 +18,7 @@ var (
 	FindAuthorizeVPCEndpointAccessByTwoPartKey = findAuthorizeVPCEndpointAccessByTwoPartKey
 	FindDomainByName                           = findDomainByName
 	FindPackageByID                            = findPackageByID
+	FindPackageByName                          = findPackageByName
 	FindPackageAssociationByTwoPartKey         = findPackageAssociationByTwoPartKey
 	FindVPCEndpointByID                        = findVPCEndpointByID
 
