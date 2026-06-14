@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -231,6 +232,11 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	resp.Diagnostics.Append(td.preserveEmptyColumnWildcardExcludedColumnNames(ctx, *planTD)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -241,6 +247,12 @@ func (r *dataCellsFilterResource) Read(ctx context.Context, req resource.ReadReq
 
 	var state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	stateTD, diags := state.TableData.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -264,6 +276,13 @@ func (r *dataCellsFilterResource) Read(ctx context.Context, req resource.ReadReq
 
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if stateTD != nil {
+		resp.Diagnostics.Append(td.preserveEmptyColumnWildcardExcludedColumnNames(ctx, *stateTD)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
@@ -312,6 +331,16 @@ func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
+		planTD, diags := plan.TableData.ToPtr(ctx)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		resp.Diagnostics.Append(td.preserveEmptyColumnWildcardExcludedColumnNames(ctx, *planTD)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 		plan.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 	}
 
@@ -431,6 +460,36 @@ type tableData struct {
 
 type columnWildcard struct {
 	ExcludedColumnNames fwtypes.SetOfString `tfsdk:"excluded_column_names"`
+}
+
+func (td *tableData) preserveEmptyColumnWildcardExcludedColumnNames(ctx context.Context, prior tableData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if td.ColumnWildcard.IsNull() || td.ColumnWildcard.IsUnknown() || prior.ColumnWildcard.IsNull() || prior.ColumnWildcard.IsUnknown() {
+		return diags
+	}
+
+	columnWildcard, d := td.ColumnWildcard.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || columnWildcard == nil {
+		return diags
+	}
+
+	priorColumnWildcard, d := prior.ColumnWildcard.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || priorColumnWildcard == nil {
+		return diags
+	}
+
+	if columnWildcard.ExcludedColumnNames.IsNull() &&
+		!priorColumnWildcard.ExcludedColumnNames.IsNull() &&
+		!priorColumnWildcard.ExcludedColumnNames.IsUnknown() &&
+		len(priorColumnWildcard.ExcludedColumnNames.Elements()) == 0 {
+		columnWildcard.ExcludedColumnNames = priorColumnWildcard.ExcludedColumnNames
+		td.ColumnWildcard = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, columnWildcard)
+	}
+
+	return diags
 }
 
 type rowFilter struct {
