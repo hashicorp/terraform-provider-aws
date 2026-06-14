@@ -194,6 +194,62 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontTrustStore_useClientCertificateOCSPEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var truststore cloudfront.GetTrustStoreOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey := "ca-bundle.pem"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustStoreConfig_useClientCertificateOCSPEndpoint(rName, objectKey, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_client_certificate_ocsp_endpoint"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ca_certificates_bundle_source",
+				},
+			},
+			{
+				Config: testAccTrustStoreConfig_useClientCertificateOCSPEndpoint(rName, objectKey, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_client_certificate_ocsp_endpoint"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontTrustStore_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var truststore cloudfront.GetTrustStoreOutput
@@ -438,6 +494,32 @@ resource "aws_cloudfront_trust_store" "test" {
   }
 }
 `, rName, key, testAccTrustStoreCertificateContent))
+}
+
+func testAccTrustStoreConfig_useClientCertificateOCSPEndpoint(rName, key string, useOCSP bool) string {
+	return acctest.ConfigCompose(testAccTrustStoreConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.id
+  key     = %[2]q
+  content = <<-EOT
+%[3]s
+EOT
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket = aws_s3_bucket.test.id
+      key    = aws_s3_object.test.key
+      region = data.aws_region.current.name
+    }
+  }
+
+  use_client_certificate_ocsp_endpoint = %[4]t
+}
+`, rName, key, testAccTrustStoreCertificateContent, useOCSP))
 }
 
 func testAccTrustStoreConfig_tags1(rName, key, tagKey1, tagValue1 string) string {
