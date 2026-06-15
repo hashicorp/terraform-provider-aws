@@ -4,6 +4,8 @@
 
 set -eo pipefail
 
+trap 'exit 130' INT TERM
+
 # This script works from stdin and expects one filename per line.
 # To call it, e.g.
 # find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) \
