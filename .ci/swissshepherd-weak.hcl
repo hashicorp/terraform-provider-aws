@@ -1590,7 +1590,6 @@ check "schema_docs" {
     "resource/aws_lakeformation_identity_center_configuration",
     "resource/aws_lakeformation_lf_tag_expression",
     "resource/aws_lakeformation_lf_tag",
-    "resource/aws_lakeformation_opt_in",
     "resource/aws_lakeformation_permissions",
     "resource/aws_lakeformation_resource_lf_tag",
     "resource/aws_lakeformation_resource_lf_tags",
