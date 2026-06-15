@@ -8,7 +8,6 @@ package opensearchserverless
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -77,7 +75,7 @@ type encryptionConfigModel struct {
 }
 
 type vectorOptionsModel struct {
-	ServerlessVectorAcceleration types.String `tfsdk:"serverless_vector_acceleration"`
+	ServerlessVectorAcceleration fwtypes.StringEnum[awstypes.ServerlessVectorAccelerationStatus] `tfsdk:"serverless_vector_acceleration"`
 }
 
 const (
@@ -373,16 +371,8 @@ func (r *collectionResource) ValidateConfig(ctx context.Context, req resource.Va
 		return
 	}
 
-	voSlice := enum.Values[awstypes.ServerlessVectorAccelerationStatus]()
-	if !slices.Contains(voSlice, vo.ServerlessVectorAcceleration.ValueString()) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("vector_options").AtListIndex(0).AtName("serverless_vector_acceleration"),
-			"Invalid serverless_vector_acceleration value",
-			fmt.Sprintf("Expected one of: %v, got: %s", voSlice, vo.ServerlessVectorAcceleration.ValueString()),
-		)
-
-		return
-	}
+	// calling ValueEnum() will trigger ValidateAttribute() on the custom type
+	_ = vo.ServerlessVectorAcceleration.ValueEnum()
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
