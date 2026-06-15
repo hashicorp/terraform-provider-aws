@@ -1780,8 +1780,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test_vpce" {
-  name        = "%[1]s-vpce"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-vpce"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "%[1]s-vpce"
@@ -1810,8 +1810,8 @@ resource "aws_vpc_endpoint" "test_cognito_idp" {
 }
 
 resource "aws_security_group" "test_runtime" {
-  name        = "%[1]s-runtime"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-runtime"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "%[1]s-runtime"
@@ -1852,14 +1852,14 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test"]
       allowed_scopes   = ["openid", "email"]
 
-	  private_endpoint {
-		managed_vpc_resource {
-		  vpc_identifier           = aws_vpc.test.id
-		  subnet_ids               = aws_subnet.test[*].id
-		  endpoint_ip_address_type = "IPV4"
-		  security_group_ids       = [aws_security_group.test_runtime.id]
-		}
-	  }
+      private_endpoint {
+        managed_vpc_resource {
+          vpc_identifier           = aws_vpc.test.id
+          subnet_ids               = aws_subnet.test[*].id
+          endpoint_ip_address_type = "IPV4"
+          security_group_ids       = [aws_security_group.test_runtime.id]
+        }
+      }
     }
   }
 
@@ -1895,15 +1895,15 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test"]
       allowed_scopes   = ["openid", "email"]
 
-	  private_endpoint {
-		managed_vpc_resource {
-		  vpc_identifier           = aws_vpc.test.id
-		  subnet_ids               = aws_subnet.test[*].id
-		  endpoint_ip_address_type = "IPV4"
-		  security_group_ids       = [aws_security_group.test_runtime.id]
+      private_endpoint {
+        managed_vpc_resource {
+          vpc_identifier           = aws_vpc.test.id
+          subnet_ids               = aws_subnet.test[*].id
+          endpoint_ip_address_type = "IPV4"
+          security_group_ids       = [aws_security_group.test_runtime.id]
           routing_domain           = aws_vpc_endpoint.test_cognito_idp.dns_entry[0].dns_name
-		}
-	  }
+        }
+      }
     }
   }
 
@@ -1939,14 +1939,14 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test"]
       allowed_scopes   = ["openid", "email"]
 
-	  private_endpoint {
-		managed_vpc_resource {
-		  vpc_identifier           = aws_vpc.test.id
-		  subnet_ids               = aws_subnet.test[*].id
-		  endpoint_ip_address_type = "IPV4"
-		  security_group_ids       = [aws_security_group.test_runtime.id]
-		}
-	  }
+      private_endpoint {
+        managed_vpc_resource {
+          vpc_identifier           = aws_vpc.test.id
+          subnet_ids               = aws_subnet.test[*].id
+          endpoint_ip_address_type = "IPV4"
+          security_group_ids       = [aws_security_group.test_runtime.id]
+        }
+      }
       private_endpoint_override {
         domain = "example.com"
         private_endpoint {
@@ -2045,11 +2045,11 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test"]
       allowed_scopes   = ["openid", "email"]
 
-	  private_endpoint {
+      private_endpoint {
         self_managed_lattice_resource {
           resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
         }
-	  }
+      }
     }
   }
 
@@ -2137,18 +2137,18 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test"]
       allowed_scopes   = ["openid", "email"]
 
-	  private_endpoint {
+      private_endpoint {
         self_managed_lattice_resource {
           resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
         }
-	  }
+      }
       private_endpoint_override {
         domain = "cognito-idp.${data.aws_region.current.region}.amazonaws.com"
-	    private_endpoint {
+        private_endpoint {
           self_managed_lattice_resource {
             resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
           }
-	    }
+        }
       }
     }
   }
