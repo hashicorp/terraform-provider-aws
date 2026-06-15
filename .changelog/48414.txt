@@ -1,0 +1,16 @@
+```release-note:new-resource
+aws_pinpointsmsvoicev2_pool
+```
+
+```release-note:new-list-resource
+aws_pinpointsmsvoicev2_pool
+```
+
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Add `force_disassociate` argument
+```
+
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Remove default for `opt_out_list_name` and `two_way_channel_enabled` to mitigate drift when managed by a phone pool.
+```
+
