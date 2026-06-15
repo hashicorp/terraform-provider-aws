@@ -33,8 +33,8 @@ This resource supports the following arguments:
 
 ### `resource_data` Block
 
-* `catalog` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment. See [Catalog](#catalog) for more details.
-* `data_cells_filter` - (Optional) Data cell filter. See [Data Cells Filter](#data-cells-filter) for more details.
+* `catalog` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment. See [`catalog` Block](#catalog-block) for more details.
+* `data_cells_filter` - (Optional) Data cell filter. See [`data_cells_filter` Block](#data_cells_filter-block) for more details.
 * `data_location` - (Optional) Location of an Amazon S3 path where permissions are granted or revoked. See [`data_location` Block](#data_location-block) for more details.
 * `database` - (Optional) Database for the resource. Unique to the Data Catalog. A database is a set of associated table definitions organized into a logical group. You can Grant and Revoke database permissions to a principal. See [`database` Block](#database-block) for more details.
 * `lf_tag` - (Optional) LF-tag key and values attached to a resource.
