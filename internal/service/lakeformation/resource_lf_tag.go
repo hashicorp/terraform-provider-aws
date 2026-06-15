@@ -407,6 +407,10 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if outputTag.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	state.LFTag = outputTag
 
