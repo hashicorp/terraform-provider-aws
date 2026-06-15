@@ -763,7 +763,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusCreating), 5),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusCreating)),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -780,7 +780,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusUpdating), 5),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusUpdating)),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -797,7 +797,7 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeStatusDeleting, awstypes.AgentRuntimeStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusReady), 5),
+		Refresh: statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusReady)),
 		Timeout: timeout,
 	}
 
@@ -809,11 +809,13 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string, retryState string, maxConsecutivePrivateEndpointErrors int) retry.StateRefreshFunc {
+func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string, retryState string) retry.StateRefreshFunc {
 	// Temporarily retry "HTTP request failed against private endpoint"
 	// responses during state polling, since they can occur as a transient
 	// eventual consistency issue while the private endpoint is still becoming
 	// reachable.
+
+	const maxConsecutivePrivateEndpointErrors = 5
 
 	//This counter is scoped to the returned refresh closure, so
 	// each waiter tracks consecutive private endpoint errors independently per
@@ -873,7 +875,7 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 			return true, smarterr.NewError(err)
 		}
 
-		return false, err
+		return false, smarterr.NewError(err)
 	})
 
 	if err != nil {

@@ -996,8 +996,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointS
 							AtSliceIndex(0).
 							AtMapKey("private_endpoint_override").
 							AtSliceIndex(0).
-							AtMapKey("domain"),
-						knownvalue.StringExact(fmt.Sprintf("cognito-idp.%s.amazonaws.com", acctest.Region())),
+							AtMapKey(names.AttrDomain),
+						knownvalue.StringExact(fmt.Sprintf("cognito-idp.%s.%s", acctest.Region(), names.PartitionForRegion(acctest.Region()).DNSSuffix())),
 					),
 					statecheck.ExpectKnownValue(resourceName,
 						tfjsonpath.New("authorizer_configuration").
