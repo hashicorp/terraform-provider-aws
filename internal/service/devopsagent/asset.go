@@ -19,14 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -323,39 +320,4 @@ type assetResourceModel struct {
 	Metadata     jsontypes.Normalized `tfsdk:"metadata"`
 }
 
-func sweepAssets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.DevOpsAgentClient(ctx)
-	var sweepResources []sweep.Sweepable
 
-	spacesInput := devopsagent.ListAgentSpacesInput{}
-	spacePages := devopsagent.NewListAgentSpacesPaginator(conn, &spacesInput)
-	for spacePages.HasMorePages() {
-		spacePage, err := spacePages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, space := range spacePage.AgentSpaces {
-			input := devopsagent.ListAssetsInput{
-				AgentSpaceId: space.AgentSpaceId,
-			}
-
-			pages := devopsagent.NewListAssetsPaginator(conn, &input)
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, v := range page.Items {
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAssetResource, client,
-						sweepfw.NewAttribute("agent_space_id", aws.ToString(space.AgentSpaceId)),
-						sweepfw.NewAttribute("asset_id", aws.ToString(v.AssetId)),
-					))
-				}
-			}
-		}
-	}
-
-	return sweepResources, nil
-}
