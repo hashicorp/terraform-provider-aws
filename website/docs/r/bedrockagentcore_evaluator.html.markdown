@@ -201,6 +201,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Bedrock AgentCore Evaluator. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_evaluator.example
+  identity = {
+    evaluator_id = "helpfulness_evaluator-abc1234567"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `evaluator_id` (String) Unique identifier of the evaluator.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Evaluator using the evaluator ID. For example:
 
 ```terraform
