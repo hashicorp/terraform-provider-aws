@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -398,6 +399,26 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
+							"private_endpoint": privateEndpointSchema(ctx),
+							"private_endpoint_override": schema.SetNestedBlock{
+								CustomType: fwtypes.NewSetNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+								Validators: []validator.Set{
+									setvalidator.SizeAtMost(5),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDomain: schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 253),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"private_endpoint": privateEndpointSchema(ctx),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -481,6 +502,289 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
+}
+
+func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"endpoint_ip_address_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+								Required:   true,
+							},
+							"routing_domain": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+								},
+							},
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								Validators: []validator.Set{
+									setvalidator.ValueStringsAre(
+										stringvalidator.RegexMatches(regexache.MustCompile(`^sg-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid Security Group ID"),
+									),
+								},
+							},
+							names.AttrSubnetIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Required:   true,
+								Validators: []validator.Set{
+									setvalidator.ValueStringsAre(
+										stringvalidator.RegexMatches(regexache.MustCompile(`^subnet-[0-9a-zA-Z]{8,17}$`), "must be a valid Subnet ID"),
+									),
+								},
+								ElementType: types.StringType,
+							},
+							names.AttrTags: tftags.TagsAttribute(),
+							"vpc_identifier": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(regexache.MustCompile(`^vpc-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid VPC ID"),
+								},
+							},
+						},
+					},
+				},
+				"self_managed_lattice_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"resource_configuration_identifier": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(regexache.MustCompile(`^((rcfg-[0-9a-z]{17})|(arn:[a-z0-9\-]+:vpc-lattice:[a-zA-Z0-9\-]+:\d{12}:resourceconfiguration/rcfg-[0-9a-z]{17}))$`), "must be a valid Resource Configuration Identifier"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *agentRuntimeResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		agentRuntimePrivateEndpointUnionValidator{},
+		agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator{},
+	}
+}
+
+var _ resource.ConfigValidator = agentRuntimePrivateEndpointUnionValidator{}
+
+type agentRuntimePrivateEndpointUnionValidator struct{}
+
+func (v agentRuntimePrivateEndpointUnionValidator) Description(_ context.Context) string {
+	return "custom_jwt_authorizer private_endpoint blocks must set exactly one of managed_vpc_resource or self_managed_lattice_resource"
+}
+
+func (v agentRuntimePrivateEndpointUnionValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v agentRuntimePrivateEndpointUnionValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config agentRuntimeResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateAgentRuntimePrivateEndpointUnion(ctx, config)...)
+}
+
+var _ resource.ConfigValidator = agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator{}
+
+type agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator struct{}
+
+func (v agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator) Description(_ context.Context) string {
+	return "custom_jwt_authorizer.private_endpoint_override.private_endpoint.managed_vpc_resource is not supported"
+}
+
+func (v agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v agentRuntimePrivateEndpointOverrideManagedVPCUnsupportedValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config agentRuntimeResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateAgentRuntimePrivateEndpointOverrideManagedVPCUnsupported(ctx, config)...)
+}
+
+func validateAgentRuntimePrivateEndpointOverrideManagedVPCUnsupported(ctx context.Context, config agentRuntimeResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if config.AuthorizerConfiguration.IsNull() || config.AuthorizerConfiguration.IsUnknown() {
+		return diags
+	}
+
+	authorizerConfiguration, d := config.AuthorizerConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || authorizerConfiguration == nil {
+		return diags
+	}
+
+	if authorizerConfiguration.CustomJWTAuthorizer.IsNull() || authorizerConfiguration.CustomJWTAuthorizer.IsUnknown() {
+		return diags
+	}
+
+	customJWTAuthorizer, d := authorizerConfiguration.CustomJWTAuthorizer.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || customJWTAuthorizer == nil {
+		return diags
+	}
+
+	if customJWTAuthorizer.PrivateEndpointOverrides.IsNull() || customJWTAuthorizer.PrivateEndpointOverrides.IsUnknown() {
+		return diags
+	}
+
+	privateEndpointOverrides, d := customJWTAuthorizer.PrivateEndpointOverrides.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	for _, override := range privateEndpointOverrides {
+		if override == nil || override.PrivateEndpoint.IsNull() || override.PrivateEndpoint.IsUnknown() {
+			continue
+		}
+
+		privateEndpoint, d := override.PrivateEndpoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() || privateEndpoint == nil {
+			return diags
+		}
+
+		if !privateEndpoint.ManagedVPCResource.IsNull() && !privateEndpoint.ManagedVPCResource.IsUnknown() {
+			diags.Append(validatordiag.InvalidAttributeValueDiagnostic(
+				path.Root("authorizer_configuration").
+					AtListIndex(0).
+					AtName("custom_jwt_authorizer").
+					AtListIndex(0).
+					AtName("private_endpoint_override"),
+				"managed_vpc_resource is not supported in private_endpoint_override.private_endpoint",
+				"configured",
+			))
+			return diags
+		}
+	}
+
+	return diags
+}
+
+func validateAgentRuntimePrivateEndpointUnion(ctx context.Context, config agentRuntimeResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if config.AuthorizerConfiguration.IsNull() || config.AuthorizerConfiguration.IsUnknown() {
+		return diags
+	}
+
+	authorizerConfiguration, d := config.AuthorizerConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || authorizerConfiguration == nil {
+		return diags
+	}
+
+	if authorizerConfiguration.CustomJWTAuthorizer.IsNull() || authorizerConfiguration.CustomJWTAuthorizer.IsUnknown() {
+		return diags
+	}
+
+	customJWTAuthorizer, d := authorizerConfiguration.CustomJWTAuthorizer.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || customJWTAuthorizer == nil {
+		return diags
+	}
+
+	if !customJWTAuthorizer.PrivateEndpoint.IsNull() && !customJWTAuthorizer.PrivateEndpoint.IsUnknown() {
+		privateEndpoint, d := customJWTAuthorizer.PrivateEndpoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() || privateEndpoint == nil {
+			return diags
+		}
+
+		diags.Append(validatePrivateEndpointUnion(
+			path.Root("authorizer_configuration").
+				AtListIndex(0).
+				AtName("custom_jwt_authorizer").
+				AtListIndex(0).
+				AtName("private_endpoint"),
+			privateEndpoint,
+		)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	if customJWTAuthorizer.PrivateEndpointOverrides.IsNull() || customJWTAuthorizer.PrivateEndpointOverrides.IsUnknown() {
+		return diags
+	}
+
+	privateEndpointOverrides, d := customJWTAuthorizer.PrivateEndpointOverrides.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	for _, override := range privateEndpointOverrides {
+		if override == nil || override.PrivateEndpoint.IsNull() || override.PrivateEndpoint.IsUnknown() {
+			continue
+		}
+
+		privateEndpoint, d := override.PrivateEndpoint.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() || privateEndpoint == nil {
+			return diags
+		}
+
+		diags.Append(validatePrivateEndpointUnion(
+			path.Root("authorizer_configuration").
+				AtListIndex(0).
+				AtName("custom_jwt_authorizer").
+				AtListIndex(0).
+				AtName("private_endpoint_override"),
+			privateEndpoint,
+		)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+func validatePrivateEndpointUnion(p path.Path, privateEndpoint *privateEndpointModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	hasManaged := !privateEndpoint.ManagedVPCResource.IsNull() && !privateEndpoint.ManagedVPCResource.IsUnknown()
+	hasSelfManaged := !privateEndpoint.SelfManagedLatticeResource.IsNull() && !privateEndpoint.SelfManagedLatticeResource.IsUnknown()
+
+	if hasManaged == hasSelfManaged {
+		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			p,
+			"Exactly one of managed_vpc_resource or self_managed_lattice_resource must be configured",
+		))
+	}
+
+	return diags
 }
 
 func (r *agentRuntimeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -667,7 +971,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusCreating), 5),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -684,7 +988,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusUpdating), 5),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -701,7 +1005,7 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeStatusDeleting, awstypes.AgentRuntimeStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntime(conn, id),
+		Refresh: statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusReady), 5),
 		Timeout: timeout,
 	}
 
@@ -713,19 +1017,44 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string, retryState string, maxConsecutivePrivateEndpointErrors int) retry.StateRefreshFunc {
+	// Temporarily retry "HTTP request failed against private endpoint"
+	// responses during state polling, since they can occur as a transient
+	// eventual consistency issue while the private endpoint is still becoming
+	// reachable.
+
+	//This counter is scoped to the returned refresh closure, so
+	// each waiter tracks consecutive private endpoint errors independently per
+	// resource.
+	consecutivePrivateEndpointErrors := 0
+
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findAgentRuntimeByID(ctx, conn, id)
+		out, err := findAgentRuntimeByIDWithoutRetry(ctx, conn, id)
 		if retry.NotFound(err) {
+			consecutivePrivateEndpointErrors = 0
 			return nil, "", nil
 		}
 
+		if isRetryableGetAgentRuntimePrivateEndpointError(err) {
+			consecutivePrivateEndpointErrors++
+			if consecutivePrivateEndpointErrors > maxConsecutivePrivateEndpointErrors {
+				return nil, "", smarterr.NewError(err)
+			}
+			return nil, retryState, nil
+		}
+
 		if err != nil {
+			consecutivePrivateEndpointErrors = 0
 			return nil, "", smarterr.NewError(err)
 		}
 
+		consecutivePrivateEndpointErrors = 0
 		return out, string(out.Status), nil
 	}
+}
+
+func isRetryableGetAgentRuntimePrivateEndpointError(err error) bool {
+	return tfawserr.ErrMessageContains(err, errCodeValidationException, "HTTP request failed against private")
 }
 
 func findAgentRuntimeByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
@@ -736,7 +1065,33 @@ func findAgentRuntimeByID(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 	return findAgentRuntime(ctx, conn, &input)
 }
 
+func findAgentRuntimeByIDWithoutRetry(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+	input := bedrockagentcorecontrol.GetAgentRuntimeInput{
+		AgentRuntimeId: aws.String(id),
+	}
+
+	return findAgentRuntimeWithoutRetry(ctx, conn, &input)
+}
+
 func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetAgentRuntimeInput) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+		return findAgentRuntimeWithoutRetry(ctx, conn, input)
+	}, func(err error) (bool, error) {
+		if isRetryableGetAgentRuntimePrivateEndpointError(err) {
+			return true, smarterr.NewError(err)
+		}
+
+		return false, err
+	})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return out, nil
+}
+
+func findAgentRuntimeWithoutRetry(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetAgentRuntimeInput) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	out, err := conn.GetAgentRuntime(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -1086,11 +1441,13 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+	AllowedAudience          fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients           fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes            fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	CustomClaim              fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	PrivateEndpoint          fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides fwtypes.SetNestedObjectValueOf[privateEndpointOverrideModel]        `tfsdk:"private_endpoint_override"`
+	DiscoveryURL             types.String                                                        `tfsdk:"discovery_url"`
 }
 
 type customJWTAuthorizerCustomClaimModel struct {
@@ -1203,4 +1560,9 @@ func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.
 
 type workloadIdentityDetailsModel struct {
 	WorkloadIdentityARN types.String `tfsdk:"workload_identity_arn"`
+}
+
+type privateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
 }
