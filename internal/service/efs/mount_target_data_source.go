@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -98,7 +97,8 @@ func dataSourceMountTarget() *schema.Resource {
 
 func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
 	input := &efs.DescribeMountTargetsInput{}
 
@@ -122,17 +122,10 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(mt.MountTargetId))
 	fsID := aws.ToString(mt.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
 	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
-	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
 	if mt.IpAddress != nil && mt.Ipv6Address != nil {
