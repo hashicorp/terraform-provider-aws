@@ -10,6 +10,8 @@ ENHANCEMENTS:
 * data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` attributes ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 * resource/aws_cloudfront_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
 * resource/aws_cloudfront_multitenant_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument ([#46421](https://github.com/hashicorp/terraform-provider-aws/issues/46421))
+* resource/aws_detective_graph: Add Resource Identity support ([#48383](https://github.com/hashicorp/terraform-provider-aws/issues/48383))
+* resource/aws_detective_organization_configuration: Add Resource Identity support ([#48383](https://github.com/hashicorp/terraform-provider-aws/issues/48383))
 * resource/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` arguments ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 * resource/aws_eks_cluster: Change `outpost_config.control_plane_placement.group_name` to Optional ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 * resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
@@ -24,6 +26,7 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Fix error when adding a `log_delivery_configuration` with `log_type = "slow-log"` while simultaneously upgrading the engine from Redis 5 to Redis 6 or Valkey 7 ([#46526](https://github.com/hashicorp/terraform-provider-aws/issues/46526))
 * resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException` errors when creating or updating `extended_s3_configuration` in AWS partitions that report unsupported `custom_time_zone` and `file_extension` attributes in a combined error message ([#48369](https://github.com/hashicorp/terraform-provider-aws/issues/48369))
 * resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with length 0` panic when importing a replicator with no replication configurations ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
+* resource/aws_ses_domain_mail_from: Correctly detect resources deleted outside of Terraform when refreshing state ([#48387](https://github.com/hashicorp/terraform-provider-aws/issues/48387))
 
 ## 6.50.0 (June 10, 2026)
 
