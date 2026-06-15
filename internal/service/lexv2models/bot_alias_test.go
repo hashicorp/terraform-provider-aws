@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -52,6 +53,56 @@ func TestAccLexV2ModelsBotAlias_basic(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsBotAlias_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var botalias lexmodelsv2.DescribeBotAliasOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_bot_alias.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBotAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccBotAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLexV2ModelsBotAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var botalias lexmodelsv2.DescribeBotAliasOutput
@@ -75,6 +126,14 @@ func TestAccLexV2ModelsBotAlias_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceBotAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -321,4 +380,39 @@ resource "aws_lexv2models_bot_alias" "test" {
   depends_on = [aws_lexv2models_bot_locale.test]
 }
 `, rName, detect))
+}
+
+func testAccBotAliasConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccBotAliasConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_bot_alias" "test" {
+  bot_id         = aws_lexv2models_bot.test.id
+  bot_alias_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_lexv2models_bot_locale.test]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccBotAliasConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccBotAliasConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_bot_alias" "test" {
+  bot_id         = aws_lexv2models_bot.test.id
+  bot_alias_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_lexv2models_bot_locale.test]
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

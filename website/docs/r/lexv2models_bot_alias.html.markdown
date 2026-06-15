@@ -74,58 +74,86 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `bot_alias_locale_settings` - (Optional) Per-locale settings that override the bot's locale defaults. See [`bot_alias_locale_settings` Block](#bot_alias_locale_settings-block) for details.
 * `bot_version` - (Optional) Version of the bot that this alias points to. When omitted, Lex creates the alias without a bot version and the alias must be updated before it can be used to converse with the bot.
+* `conversation_log_settings` - (Optional) Conversation logging configuration. See [`conversation_log_settings` Block](#conversation_log_settings-block) for details.
 * `description` - (Optional) Description of the alias.
-* `bot_alias_locale_settings` - (Optional) Per-locale settings that override the bot's locale defaults. [See below](#bot_alias_locale_settings).
-* `conversation_log_settings` - (Optional) Conversation logging configuration. [See below](#conversation_log_settings).
-* `sentiment_analysis_settings` - (Optional) Sentiment analysis configuration. [See below](#sentiment_analysis_settings).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `sentiment_analysis_settings` - (Optional) Sentiment analysis configuration. See [`sentiment_analysis_settings` Block](#sentiment_analysis_settings-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### bot_alias_locale_settings
+### `bot_alias_locale_settings` Block
 
+The `bot_alias_locale_settings` configuration block supports the following arguments:
+
+* `code_hook_specification` - (Optional) Lambda code hook to invoke for this locale. See [`code_hook_specification` Block](#code_hook_specification-block) for details.
 * `enabled` - (Required) Whether to enable the locale for this alias.
 * `locale_id` - (Required) String used to identify the locale (for example, `en_US`).
-* `code_hook_specification` - (Optional) Lambda code hook to invoke for this locale. [See below](#code_hook_specification).
 
-### code_hook_specification
+### `code_hook_specification` Block
 
-* `lambda_code_hook` - (Required) Lambda function configuration.
+The `code_hook_specification` configuration block supports the following arguments:
 
-The `lambda_code_hook` block supports:
+* `lambda_code_hook` - (Required) Lambda function configuration. See [`lambda_code_hook` Block](#lambda_code_hook-block) for details.
+
+### `lambda_code_hook` Block
+
+The `lambda_code_hook` configuration block supports the following arguments:
 
 * `code_hook_interface_version` - (Required) Version of the request-response interface that Lex uses to invoke the Lambda function.
 * `lambda_arn` - (Required) ARN of the Lambda function.
 
-### conversation_log_settings
+### `conversation_log_settings` Block
 
-At least one of `audio_log_settings` or `text_log_settings` must be configured for logging to be active.
+The `conversation_log_settings` configuration block supports the following arguments. At least one of `audio_log_settings` or `text_log_settings` must be configured for logging to be active.
 
-* `audio_log_settings` - (Optional) One or more audio log destinations. [See below](#audio_log_settings).
-* `text_log_settings` - (Optional) One or more text log destinations. [See below](#text_log_settings).
+* `audio_log_settings` - (Optional) One or more audio log destinations. See [`audio_log_settings` Block](#audio_log_settings-block) for details.
+* `text_log_settings` - (Optional) One or more text log destinations. See [`text_log_settings` Block](#text_log_settings-block) for details.
 
-### audio_log_settings
+### `audio_log_settings` Block
 
+The `audio_log_settings` configuration block supports the following arguments:
+
+* `destination` - (Required) S3 destination for audio logs. See [`audio_log_settings` `destination` Block](#audio_log_settings-destination-block) for details.
 * `enabled` - (Required) Whether to enable audio logging.
-* `destination` - (Required) S3 destination for audio logs.
 
-The `destination` block supports a single `s3_bucket` block with:
+### `audio_log_settings` `destination` Block
+
+The `destination` configuration block supports the following arguments:
+
+* `s3_bucket` - (Required) S3 bucket configuration for audio logs. See [`s3_bucket` Block](#s3_bucket-block) for details.
+
+### `s3_bucket` Block
+
+The `s3_bucket` configuration block supports the following arguments:
 
 * `kms_key_arn` - (Optional) ARN of a KMS key used to encrypt the audio log files.
 * `log_prefix` - (Required) S3 key prefix to apply to audio log files.
 * `s3_bucket_arn` - (Required) ARN of the S3 bucket where audio logs are stored.
 
-### text_log_settings
+### `text_log_settings` Block
 
+The `text_log_settings` configuration block supports the following arguments:
+
+* `destination` - (Required) CloudWatch destination for text logs. See [`text_log_settings` `destination` Block](#text_log_settings-destination-block) for details.
 * `enabled` - (Required) Whether to enable text logging.
-* `destination` - (Required) CloudWatch destination for text logs.
 
-The `destination` block supports a single `cloudwatch` block with:
+### `text_log_settings` `destination` Block
+
+The `destination` configuration block supports the following arguments:
+
+* `cloudwatch` - (Required) CloudWatch Logs configuration for text logs. See [`cloudwatch` Block](#cloudwatch-block) for details.
+
+### `cloudwatch` Block
+
+The `cloudwatch` configuration block supports the following arguments:
 
 * `cloudwatch_log_group_arn` - (Required) ARN of the CloudWatch Logs log group that receives text logs.
 * `log_prefix` - (Required) Prefix applied to the log stream name within the log group.
 
-### sentiment_analysis_settings
+### `sentiment_analysis_settings` Block
+
+The `sentiment_analysis_settings` configuration block supports the following arguments:
 
 * `detect_sentiment` - (Required) Whether to use Amazon Comprehend to detect the sentiment of user utterances.
 
