@@ -66,11 +66,16 @@ type collectionResourceModel struct {
 	TagsAll             tftags.Map                                             `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
 	Type                types.String                                           `tfsdk:"type"`
+	VectorOptions       fwtypes.ListNestedObjectValueOf[vectorOptionsModel]    `tfsdk:"vector_options"`
 }
 
 type encryptionConfigModel struct {
 	AWSOwnedKey types.Bool   `tfsdk:"aws_owned_key"`
 	KmsKeyArn   types.String `tfsdk:"kms_key_arn"`
+}
+
+type vectorOptionsModel struct {
+	ServerlessVectorAcceleration fwtypes.StringEnum[awstypes.ServerlessVectorAccelerationStatus] `tfsdk:"serverless_vector_acceleration"`
 }
 
 const (
@@ -167,6 +172,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
+			"vector_options": framework.ResourceOptionalComputedListOfObjectsAttribute[vectorOptionsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -280,7 +286,7 @@ func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.Description.Equal(state.Description) {
+	if !plan.Description.Equal(state.Description) || !plan.VectorOptions.Equal(state.VectorOptions) {
 		input := &opensearchserverless.UpdateCollectionInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
@@ -346,6 +352,27 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
+}
+
+func (r *collectionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data collectionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.VectorOptions.IsNull() || data.VectorOptions.IsUnknown() {
+		return
+	}
+
+	vo, d := data.VectorOptions.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// calling ValueEnum() will trigger ValidateAttribute() on the custom type
+	_ = vo.ServerlessVectorAcceleration.ValueEnum()
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {

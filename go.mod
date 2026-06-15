@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.26.3
+go 1.26.4
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -12,15 +12,15 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.42.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.24
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.23
+	github.com/aws/aws-sdk-go-v2/config v1.32.25
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.26
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.27
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.49.5
 	github.com/aws/aws-sdk-go-v2/service/account v1.32.4
-	github.com/aws/aws-sdk-go-v2/service/acm v1.39.6
+	github.com/aws/aws-sdk-go-v2/service/acm v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.47.6
-	github.com/aws/aws-sdk-go-v2/service/amp v1.43.5
+	github.com/aws/aws-sdk-go-v2/service/amp v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.35.6
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.6
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.6
@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.39.5
-	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.6.0
+	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.39.4
@@ -106,12 +106,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.306.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.82.4
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.84.6
+	github.com/aws/aws-sdk-go-v2/service/eks v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.34.6
@@ -125,20 +125,20 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/evs v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.34.8
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/fms v1.45.6
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.66.6
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.55.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.36.6
-	github.com/aws/aws-sdk-go-v2/service/glue v1.143.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.144.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.79.3
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.37.7
-	github.com/aws/aws-sdk-go-v2/service/iam v1.54.4
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.55.6
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.31.4
@@ -164,13 +164,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.62.4
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.55.4
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/location v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.93.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.98.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.40.1
@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.2
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.45.4
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.8
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.12.5
@@ -234,7 +234,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.7.6
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.253.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.254.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.35.6
@@ -281,7 +281,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.69.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/xray v1.37.3
-	github.com/aws/smithy-go v1.27.1
+	github.com/aws/smithy-go v1.27.2
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.8.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -325,7 +325,7 @@ require (
 	go.opentelemetry.io/otel v1.44.0
 	golang.org/x/crypto v0.53.0
 	golang.org/x/text v0.38.0
-	golang.org/x/tools v0.45.0
+	golang.org/x/tools v0.46.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
 )
 
@@ -345,7 +345,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.1.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.6 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
@@ -388,8 +388,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
-	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/mod v0.37.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

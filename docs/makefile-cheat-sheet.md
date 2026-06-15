@@ -165,6 +165,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `sweeper-check`<sup>M</sup> | Provider Checks / Sweeper Linked, Unlinked | ✔️ |  |  |
 | `sweeper-linked` | Provider Checks / Sweeper Functions Linked | ✔️ |  |  |
 | `sweeper-unlinked`<sup>D</sup> | Provider Checks / Sweeper Functions Not Linked | ✔️ |  |  |
+| `swissshepherd` | Swiss Shepherd Checks | ✔️ |  |  |
+| `swissshepherd-count` | Count all Swiss Shepherd findings | ✔️ |  |  |
+| `swissshepherd-refresh` | Run Swiss Shepherd checks and refresh schemas | ✔️ |  |  |
 | `t`<sup>D</sup> | Run acceptance tests  (similar to `testacc`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `test`<sup>D</sup> | Run unit tests (auto-detects single service or full codebase, optimizes for macOS/CrowdStrike) |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS`, `TEST_P`, `TEST_PARALLEL` |
 | `test-compile`<sup>D</sup> | Test package compilation |  |  | `GO_VER`, `K`, `PKG`, `PKG_NAME`, `TEST`, `TESTARGS` |
@@ -179,7 +182,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
-| `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
