@@ -277,7 +277,7 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 
 	// Capture before flatten so the managed certificate can be reconciled against the plan.
 	plannedCustomizations := data.Customizations
-  
+
 	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
 
 	conn := r.Meta().CloudFrontClient(ctx)
@@ -427,7 +427,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	}
 
 	plannedCustomizations := new.Customizations
-  
+
 	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
 	conn := r.Meta().CloudFrontClient(ctx)
