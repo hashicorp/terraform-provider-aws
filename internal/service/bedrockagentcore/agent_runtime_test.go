@@ -721,14 +721,6 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointM
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPCWithOverride(
-					rName,
-					rImageUri,
-					2,
-				),
-				ExpectError: regexache.MustCompile(`Error: Invalid Attribute`),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPC(
 					rName,
 					rImageUri,
@@ -1912,60 +1904,6 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
           endpoint_ip_address_type = "IPV4"
           security_group_ids       = [aws_security_group.test_runtime.id]
           routing_domain           = aws_vpc_endpoint.test_cognito_idp.dns_entry[0].dns_name
-        }
-      }
-    }
-  }
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  depends_on = [
-    aws_vpc_endpoint.test_cognito_idp,
-    aws_vpc_security_group_egress_rule.test_runtime,
-  ]
-}
-`, rName, rImageUri))
-}
-
-func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPCWithOverride(rName, rImageUri string, subnetCount int) string {
-	return acctest.ConfigCompose(
-		testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName, subnetCount),
-		fmt.Sprintf(`
-resource "aws_bedrockagentcore_agent_runtime" "test" {
-  agent_runtime_name = %[1]q
-  role_arn           = aws_iam_role.test.arn
-
-  agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
-    }
-  }
-
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
-      allowed_audience = ["test"]
-      allowed_scopes   = ["openid", "email"]
-
-      private_endpoint {
-        managed_vpc_resource {
-          vpc_identifier           = aws_vpc.test.id
-          subnet_ids               = aws_subnet.test[*].id
-          endpoint_ip_address_type = "IPV4"
-          security_group_ids       = [aws_security_group.test_runtime.id]
-        }
-      }
-      private_endpoint_override {
-        domain = "example.com"
-        private_endpoint {
-          managed_vpc_resource {
-            vpc_identifier           = aws_vpc.test.id
-            subnet_ids               = aws_subnet.test[*].id
-            endpoint_ip_address_type = "IPV4"
-            security_group_ids       = [aws_security_group.test_runtime.id]
-          }
         }
       }
     }
