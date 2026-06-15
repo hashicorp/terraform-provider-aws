@@ -337,6 +337,7 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -348,6 +349,9 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"resource_data": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceData](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"catalog":            catalogLNB,
