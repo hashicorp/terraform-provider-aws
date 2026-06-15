@@ -22,9 +22,9 @@ func Concat[V any](seqs ...iter.Seq[V]) iter.Seq[V] {
 	}
 }
 
-// Concat returns an iterator over the concatenation of the values.
-// The first non-nil error in seq is returned.
-// If seq is empty, the result is nil.
+// ConcatValuesWithError returns an iterator over the concatenation of the values from seq.
+// The first non-nil error in seq is yielded and iteration stops.
+// If seq yields no values, the returned iterator yields no values.
 func ConcatValuesWithError[S ~[]E, E any](seq iter.Seq2[S, error]) iter.Seq2[E, error] {
 	return func(yield func(E, error) bool) {
 		for s, err := range seq {
