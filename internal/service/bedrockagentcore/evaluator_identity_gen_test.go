@@ -65,10 +65,12 @@ func TestAccBedrockAgentCoreEvaluator_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "evaluator_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "evaluator_id",
 			},
 
 			// Step 3: Import block with Import ID
@@ -77,9 +79,10 @@ func TestAccBedrockAgentCoreEvaluator_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "evaluator_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
@@ -149,11 +152,12 @@ func TestAccBedrockAgentCoreEvaluator_Identity_regionOverride(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "evaluator_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "evaluator_id",
 			},
 
 			// Step 3: Import block with Import ID
@@ -166,7 +170,7 @@ func TestAccBedrockAgentCoreEvaluator_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "evaluator_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
