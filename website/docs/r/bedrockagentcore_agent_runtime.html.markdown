@@ -265,7 +265,7 @@ The `private_endpoint` block supports the following:
 The `private_endpoint_override` block supports the following:
 
 * `domain` - (Required) Domain to override with a private endpoint.
-* `private_endpoint` - (Required) Private endpoint configuration for the specified domain. See [`private_endpoint`](#private_endpoint) above for details on the configuration. Note that only `self_managed_lattice_resource` in `private_endpoint` is supported.
+* `private_endpoint` - (Required) Private endpoint configuration for the specified domain. See [`private_endpoint`](#private_endpoint) above for details on the configuration. Although both `self_managed_lattice_resource` and `managed_vpc_resource` are defined in the API model, only `self_managed_lattice_resource` is supported within `private_endpoint`. When `private_endpoint` is used in `private_endpoint_override`, the AWS API ignores `managed_vpc_resource`.
 
 See [the AWS documentation](https://docs.aws.amazon.com/ja_jp/bedrock-agentcore/latest/devguide/gateway-inbound-auth.html#gateway-inbound-auth-jwt-private-idp) for more details on private endpoint overrides.
 
