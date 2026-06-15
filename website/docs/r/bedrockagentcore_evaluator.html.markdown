@@ -39,7 +39,7 @@ resource "aws_bedrockagentcore_evaluator" "example" {
 
       model_config {
         bedrock_evaluator_model_config {
-          model_id = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+          model_id = "us.amazon.nova-2-lite-v1:0"
 
           inference_config {
             max_tokens  = 1024
@@ -81,7 +81,7 @@ resource "aws_bedrockagentcore_evaluator" "example" {
 
       model_config {
         bedrock_evaluator_model_config {
-          model_id = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+          model_id = "us.amazon.nova-2-lite-v1:0"
         }
       }
     }
