@@ -984,9 +984,10 @@ testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
 	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
 
-testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
+testacc-tflint-embedded: tflint-init tflint-opa-tests ## Run tflint on embedded Terraform configs
 	@echo "make: Acceptance Test Linting (embedded) / tflint..."
-	@find $(SVC_DIR) -type f -name '*_test.go' \
+	@export TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
 
 tflint-opa-tests: tflint-init ## Run OPA policy tests
