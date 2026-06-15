@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_runtime: Add `authorizer_configuration.custom_jwt_authorizer.private_endpoint` configuration block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_runtime: Add `authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` configuration block
+```
