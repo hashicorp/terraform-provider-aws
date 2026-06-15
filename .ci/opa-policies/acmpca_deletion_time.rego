@@ -11,7 +11,7 @@ deny_acmpca_deletion_time contains issue if {
 	attr := r.config.permanent_deletion_time_in_days
 	attr.value > 7
 
-	issue := tflint.issue("permanent_deletion_time_in_days should be 7 in acceptance tests to minimize costs", attr.range)
+	issue := tflint.issue("permanent_deletion_time_in_days should be 7 in acceptance tests", attr.range)
 }
 
 deny_acmpca_deletion_time contains issue if {
@@ -19,5 +19,5 @@ deny_acmpca_deletion_time contains issue if {
 	r := resources[_]
 	not r.config.permanent_deletion_time_in_days
 
-	issue := tflint.issue("permanent_deletion_time_in_days should be explicitly set to 7 in acceptance tests to minimize costs", r.decl_range)
+	issue := tflint.issue("permanent_deletion_time_in_days should be explicitly set to 7 in acceptance tests", r.decl_range)
 }
