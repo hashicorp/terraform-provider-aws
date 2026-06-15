@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Fix `Provider produced inconsistent final plan` errors when `secret_string` or `secret_string_wo_version` references a resource being created or replaced in the same apply
+```
+
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Fix unnecessary resource replacement when switching between `secret_string` and `secret_string_wo` (or vice versa) without changing the secret value
+```
+
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Fix eventual consistency issues on resource creation that could result in `version_stages` being empty in state
+```
+
+```release-note:bug
+data-source/aws_secretsmanager_secret_version: Fix eventual consistency issues that could result in `couldn't find resource` errors when reading a version immediately after creation
+```

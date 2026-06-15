@@ -43,67 +43,69 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"log_group_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validLogGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validLogGroupNamePrefix,
-			},
-			"retention_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.HasChange("log_group_class") {
-						return false
-					}
-					if v, ok := d.GetOk("log_group_class"); ok {
-						if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
-							return true
-						}
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_group_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validLogGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validLogGroupNamePrefix,
+				},
+				"retention_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.HasChange("log_group_class") {
+							return false
+						}
+						if v, ok := d.GetOk("log_group_class"); ok {
+							if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
+								return true
+							}
+						}
+						return false
+					},
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

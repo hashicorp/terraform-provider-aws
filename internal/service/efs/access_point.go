@@ -41,95 +41,97 @@ func resourceAccessPoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"posix_user": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"gid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"secondary_gids": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-							ForceNew: true,
-						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"posix_user": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"gid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"secondary_gids": {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								Optional: true,
+								ForceNew: true,
+							},
+							"uid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"root_directory": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"creation_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"owner_gid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"owner_uid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrPermissions: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+				"root_directory": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"creation_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"owner_gid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										"owner_uid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrPermissions: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

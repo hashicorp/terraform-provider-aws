@@ -46,538 +46,245 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 		// Order attributes to match model structures and documentation:
 		// https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html.
 		// Consciously NOT sorted alphabetically.
-		Schema: map[string]*schema.Schema{
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021.12",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2021.12",
-					"2025.11",
-				}, false),
-			},
-			"core_network_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"asn_ranges":         setOfStringRequired,
-						"inside_cidr_blocks": setOfStringOptional,
-						"vpn_ecmp_support": {
-							Type:     schema.TypeBool,
-							Default:  true,
-							Optional: true,
-						},
-						"edge_locations": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrLocation: {
-										Type:     schema.TypeString,
-										Required: true,
-										// Not all regions are valid but we will not maintain a hardcoded list
-										ValidateFunc: verify.ValidRegionName,
-									},
-									"asn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.Valid4ByteASN,
-									},
-									"inside_cidr_blocks": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "2021.12",
+					ValidateFunc: validation.StringInSlice([]string{
+						"2021.12",
+						"2025.11",
+					}, false),
+				},
+				"core_network_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"asn_ranges":         setOfStringRequired,
+							"inside_cidr_blocks": setOfStringOptional,
+							"vpn_ecmp_support": {
+								Type:     schema.TypeBool,
+								Default:  true,
+								Optional: true,
+							},
+							"edge_locations": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrLocation: {
+											Type:     schema.TypeString,
+											Required: true,
+											// Not all regions are valid but we will not maintain a hardcoded list
+											ValidateFunc: verify.ValidRegionName,
+										},
+										"asn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.Valid4ByteASN,
+										},
+										"inside_cidr_blocks": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"dns_support": {
-							Type:     schema.TypeBool,
-							Default:  true,
-							Optional: true,
-						},
-						"security_group_referencing_support": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
+							"dns_support": {
+								Type:     schema.TypeBool,
+								Default:  true,
+								Optional: true,
+							},
+							"security_group_referencing_support": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"segments": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-								"must begin with a letter and contain only alphanumeric characters"),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"edge_locations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidRegionName,
-							},
-						},
-						"isolate_attachments": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"require_attachment_acceptance": {
-							Type:     schema.TypeBool,
-							Default:  true,
-							Optional: true,
-						},
-						"deny_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"segments": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 									"must begin with a letter and contain only alphanumeric characters"),
 							},
-						},
-						"allow_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-									"must begin with a letter and contain only alphanumeric characters"),
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-						},
-					},
-				},
-			},
-			"network_function_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"require_attachment_acceptance": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"segment_actions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"share",
-								"create-route",
-								"send-via",
-								"send-to",
-								"associate-routing-policy",
-							}, false),
-						},
-						"segment": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-								"must begin with a letter and contain only alphanumeric characters"),
-						},
-						names.AttrMode: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"attachment-route",
-								"single-hop",
-								"dual-hop",
-							}, false),
-						},
-						"share_with":           setOfStringOptional,
-						"share_with_except":    setOfStringOptional,
-						"routing_policy_names": setOfStringOptional,
-						"destination_cidr_blocks": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.Any(
-									verify.ValidIPv4CIDRNetworkAddress,
-									verify.ValidIPv6CIDRNetworkAddress,
-								),
+							"edge_locations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidRegionName,
+								},
 							},
-						},
-						"destinations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.Any(
-									validation.StringInSlice([]string{
-										"blackhole",
-									}, false),
-									validation.StringMatch(regexache.MustCompile(`^attachment-[0-9a-f]{17}$`),
-										"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
-								),
+							"isolate_attachments": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
 							},
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"when_sent_to": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"segments": setOfStringOptional,
+							"require_attachment_acceptance": {
+								Type:     schema.TypeBool,
+								Default:  true,
+								Optional: true,
+							},
+							"deny_filter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+										"must begin with a letter and contain only alphanumeric characters"),
+								},
+							},
+							"allow_filter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+										"must begin with a letter and contain only alphanumeric characters"),
 								},
 							},
 						},
-						"via": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"network_function_groups": setOfStringOptional,
-									"with_edge_override": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"edge_sets": {
-													Type: schema.TypeSet,
-													Elem: &schema.Schema{
+					},
+				},
+				"network_function_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"require_attachment_acceptance": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"segment_actions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"share",
+									"create-route",
+									"send-via",
+									"send-to",
+									"associate-routing-policy",
+								}, false),
+							},
+							"segment": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+									"must begin with a letter and contain only alphanumeric characters"),
+							},
+							names.AttrMode: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"attachment-route",
+									"single-hop",
+									"dual-hop",
+								}, false),
+							},
+							"share_with":           setOfStringOptional,
+							"share_with_except":    setOfStringOptional,
+							"routing_policy_names": setOfStringOptional,
+							"destination_cidr_blocks": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.Any(
+										verify.ValidIPv4CIDRNetworkAddress,
+										verify.ValidIPv6CIDRNetworkAddress,
+									),
+								},
+							},
+							"destinations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.Any(
+										validation.StringInSlice([]string{
+											"blackhole",
+										}, false),
+										validation.StringMatch(regexache.MustCompile(`^attachment-[0-9a-f]{17}$`),
+											"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
+									),
+								},
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"when_sent_to": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"segments": setOfStringOptional,
+									},
+								},
+							},
+							"via": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_function_groups": setOfStringOptional,
+										"with_edge_override": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"edge_sets": {
 														Type: schema.TypeSet,
 														Elem: &schema.Schema{
-															Type: schema.TypeString,
+															Type: schema.TypeSet,
+															Elem: &schema.Schema{
+																Type: schema.TypeString,
+															},
 														},
+														Optional: true,
 													},
-													Optional: true,
-												},
-												"use_edge_location": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"use_edge": {
-													Type:       schema.TypeString,
-													Optional:   true,
-													Deprecated: "use_edge is deprecated. Use use_edge_location instead.",
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"edge_location_association": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"edge_location": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidRegionName,
-									},
-									"peer_edge_location": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidRegionName,
-									},
-									"routing_policy_names": setOfStringRequired,
-								},
-							},
-						},
-					},
-				},
-			},
-			"attachment_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"rule_number": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"condition_logic": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"and",
-								"or",
-							}, false),
-						},
-						"conditions": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"account-id",
-											"any",
-											"tag-value",
-											"tag-name",
-											"tag-exists",
-											"resource-id",
-											names.AttrRegion,
-											"attachment-type",
-										}, false),
-									},
-									"operator": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"equals",
-											"not-equals",
-											"contains",
-											"begins-with",
-										}, false),
-									},
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"association_method": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"tag",
-											"constant",
-										}, false),
-									},
-									"segment": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-											"must begin with a letter and contain only alphanumeric characters"),
-									},
-									"tag_value_of_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"require_acceptance": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"add_to_network_function_group": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"attachment_routing_policy_rules": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"rule_number": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"edge_locations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidRegionName,
-							},
-						},
-						"conditions": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"routing-policy-label",
-										}, false),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"associate_routing_policies": setOfStringRequired,
-								},
-							},
-						},
-					},
-				},
-			},
-			"routing_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"routing_policy_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
-									"must contain only alphanumeric characters"),
-							),
-						},
-						"routing_policy_description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"routing_policy_direction": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"inbound",
-								"outbound",
-							}, false),
-						},
-						"routing_policy_number": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 9999),
-						},
-						"routing_policy_rules": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"rule_number": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 9999),
-									},
-									"rule_definition": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"match_conditions": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	"prefix-equals",
-																	"prefix-in-cidr",
-																	"prefix-in-prefix-list",
-																	"asn-in-as-path",
-																	"community-in-list",
-																	"med-equals",
-																}, false),
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
+													"use_edge_location": {
+														Type:     schema.TypeString,
+														Optional: true,
 													},
-												},
-												"condition_logic": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"and",
-														"or",
-													}, false),
-												},
-												names.AttrAction: {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	"drop",
-																	"allow",
-																	"summarize",
-																	"prepend-asn-list",
-																	"remove-asn-list",
-																	"replace-asn-list",
-																	"add-community",
-																	"remove-community",
-																	"set-med",
-																	"set-local-preference",
-																}, false),
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+													"use_edge": {
+														Type:       schema.TypeString,
+														Optional:   true,
+														Deprecated: "use_edge is deprecated. Use use_edge_location instead.",
 													},
 												},
 											},
@@ -585,14 +292,309 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									},
 								},
 							},
+							"edge_location_association": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"edge_location": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidRegionName,
+										},
+										"peer_edge_location": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidRegionName,
+										},
+										"routing_policy_names": setOfStringRequired,
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"attachment_policies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"rule_number": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"condition_logic": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"and",
+									"or",
+								}, false),
+							},
+							"conditions": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"account-id",
+												"any",
+												"tag-value",
+												"tag-name",
+												"tag-exists",
+												"resource-id",
+												names.AttrRegion,
+												"attachment-type",
+											}, false),
+										},
+										"operator": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"equals",
+												"not-equals",
+												"contains",
+												"begins-with",
+											}, false),
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"association_method": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"tag",
+												"constant",
+											}, false),
+										},
+										"segment": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+												"must begin with a letter and contain only alphanumeric characters"),
+										},
+										"tag_value_of_key": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"require_acceptance": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"add_to_network_function_group": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"attachment_routing_policy_rules": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"rule_number": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"edge_locations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidRegionName,
+								},
+							},
+							"conditions": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"routing-policy-label",
+											}, false),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"associate_routing_policies": setOfStringRequired,
+									},
+								},
+							},
+						},
+					},
+				},
+				"routing_policies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"routing_policy_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
+										"must contain only alphanumeric characters"),
+								),
+							},
+							"routing_policy_description": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"routing_policy_direction": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"inbound",
+									"outbound",
+								}, false),
+							},
+							"routing_policy_number": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 9999),
+							},
+							"routing_policy_rules": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_number": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 9999),
+										},
+										"rule_definition": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"match_conditions": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ValidateFunc: validation.StringInSlice([]string{
+																		"prefix-equals",
+																		"prefix-in-cidr",
+																		"prefix-in-prefix-list",
+																		"asn-in-as-path",
+																		"community-in-list",
+																		"med-equals",
+																	}, false),
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+													"condition_logic": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ValidateFunc: validation.StringInSlice([]string{
+															"and",
+															"or",
+														}, false),
+													},
+													names.AttrAction: {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ValidateFunc: validation.StringInSlice([]string{
+																		"drop",
+																		"allow",
+																		"summarize",
+																		"prepend-asn-list",
+																		"remove-asn-list",
+																		"replace-asn-list",
+																		"add-community",
+																		"remove-community",
+																		"set-med",
+																		"set-local-preference",
+																	}, false),
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

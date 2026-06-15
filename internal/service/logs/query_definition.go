@@ -42,34 +42,36 @@ func resourceQueryDefinition() *schema.Resource {
 			StateContext: resourceQueryDefinitionImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
-				),
-			},
-			"log_group_names": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						validLogGroupName,
-						verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
 					),
 				},
-			},
-			"query_definition_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"query_string": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"log_group_names": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							validLogGroupName,
+							verify.ValidARN,
+						),
+					},
+				},
+				"query_definition_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"query_string": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -80,6 +80,14 @@ func TestAccS3BucketCORSConfiguration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketCorsConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_cors_configuration.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_cors_configuration.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

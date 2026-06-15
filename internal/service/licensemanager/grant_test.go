@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -113,6 +114,14 @@ func testAccGrant_disappears(t *testing.T) {
 					testAccCheckGrantExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceGrant(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

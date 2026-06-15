@@ -47,70 +47,72 @@ func resourceMetricFilter() *schema.Resource {
 		UpdateWithoutTimeout: resourceMetricFilterPut,
 		DeleteWithoutTimeout: resourceMetricFilterDelete,
 
-		Schema: map[string]*schema.Schema{
-			"apply_on_transformed_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrLogGroupName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupName,
-			},
-			"metric_transformation": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:         nullable.TypeNullableFloat,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
-						},
-						"dimensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validLogMetricFilterTransformationName,
-						},
-						names.AttrNamespace: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validLogMetricFilterTransformationName,
-						},
-						names.AttrUnit: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.StandardUnitNone,
-							ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"apply_on_transformed_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrLogGroupName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogGroupName,
+				},
+				"metric_transformation": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:         nullable.TypeNullableFloat,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+							},
+							"dimensions": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validLogMetricFilterTransformationName,
+							},
+							names.AttrNamespace: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validLogMetricFilterTransformationName,
+							},
+							names.AttrUnit: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.StandardUnitNone,
+								ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 100),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogMetricFilterName,
-			},
-			"pattern": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
-				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogMetricFilterName,
+				},
+				"pattern": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
+					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
+				},
+			}
 		},
 	}
 }

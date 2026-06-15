@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lambda_provisioned_concurrency_config: Fix `InvalidParameterValueException: Alias with weights can not be used with Provisioned Concurrency` error when updating provisioned concurrency simultaneously with alias version change
+```
+
+```release-note:bug
+resource/aws_lambda_alias: Fix plan drift caused by transient routing weights appearing in state after updating `function_version`
+```

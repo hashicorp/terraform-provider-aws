@@ -36,17 +36,19 @@ func resourceRepositoryPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceRepositoryPolicyPut,
 		DeleteWithoutTimeout: resourceRepositoryPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -109,11 +111,15 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("registry_id", output.RegistryId)
-	d.Set("repository", output.RepositoryName)
+	resourceRepositoryPolicyFlatten(d, output, policyToSet)
 
 	return diags
+}
+
+func resourceRepositoryPolicyFlatten(d *schema.ResourceData, output *ecr.GetRepositoryPolicyOutput, policy string) {
+	d.Set(names.AttrPolicy, policy)
+	d.Set("registry_id", output.RegistryId)
+	d.Set("repository", output.RepositoryName)
 }
 
 func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

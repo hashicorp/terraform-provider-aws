@@ -54,195 +54,197 @@ func resourceStackInstances() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			AttrAccounts: { // create input, read input (single account), update input, delete input
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"deployment_targets"},
-				MinItems:      1,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				AttrAccounts: { // create input, read input (single account), update input, delete input
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"deployment_targets"},
+					MinItems:      1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
+				},
+				"call_as": { // create input, read input, update input, delete input
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CallAsSelf,
+					ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
+				},
+				"deployment_targets": { // create input, update input, delete input
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_filter_type": { // create input
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+								ForceNew:      true,
+								ConflictsWith: []string{AttrAccounts},
+							},
+							AttrAccounts: { // create input
+								Type:          schema.TypeSet,
+								Optional:      true,
+								ConflictsWith: []string{AttrAccounts},
+								MinItems:      1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidAccountID,
+								},
+							},
+							"accounts_url": { // create input
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{AttrAccounts},
+								ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
+							},
+							"organizational_unit_ids": { // create input
+								Type:          schema.TypeSet,
+								Optional:      true,
+								MinItems:      1,
+								ConflictsWith: []string{AttrAccounts},
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
+								},
+							},
+						},
+					},
+					ConflictsWith: []string{AttrAccounts},
+				},
+				"operation_preferences": { // create input, update input, delete input
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"concurrency_mode": { // create input
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
+							},
+							"failure_tolerance_count": { // create input
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(0),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+							},
+							"failure_tolerance_percentage": { // create input
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(0, 100),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+							},
+							"max_concurrent_count": { // create input
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+							},
+							"max_concurrent_percentage": { // create input
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(1, 100),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+							},
+							"region_concurrency_type": { // create input
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
+							},
+							"region_order": { // create input
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+								},
+							},
+						},
+					},
+				},
+				"parameter_overrides": { // create input, update input
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				AttrRegions: { // create input - required, read input (single region), update input - required, delete input - required
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidRegionName,
+					},
+				},
+				"retain_stacks": { // delete input - required
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"stack_instance_summaries": { // read output
+					Type:     schema.TypeList,
+					Computed: true,
+					Description: "List of stack instances created from an organizational unit deployment target. " +
+						"This will only be populated when `deployment_targets` is set.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"detailed_status": { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"drift_status": { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"organizational_unit_id": { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRegion: { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"stack_id": { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"stack_set_id": { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusReason: { // read output
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"stack_set_id": { // read output
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stack_set_name": { // create input - required, read input - required, update input - required, delete input - required
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
 				},
-			},
-			"call_as": { // create input, read input, update input, delete input
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CallAsSelf,
-				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
-			},
-			"deployment_targets": { // create input, update input, delete input
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_filter_type": { // create input
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
-							ForceNew:      true,
-							ConflictsWith: []string{AttrAccounts},
-						},
-						AttrAccounts: { // create input
-							Type:          schema.TypeSet,
-							Optional:      true,
-							ConflictsWith: []string{AttrAccounts},
-							MinItems:      1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidAccountID,
-							},
-						},
-						"accounts_url": { // create input
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{AttrAccounts},
-							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
-						},
-						"organizational_unit_ids": { // create input
-							Type:          schema.TypeSet,
-							Optional:      true,
-							MinItems:      1,
-							ConflictsWith: []string{AttrAccounts},
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
-							},
-						},
-					},
-				},
-				ConflictsWith: []string{AttrAccounts},
-			},
-			"operation_preferences": { // create input, update input, delete input
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"concurrency_mode": { // create input
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
-						},
-						"failure_tolerance_count": { // create input
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(0),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
-						},
-						"failure_tolerance_percentage": { // create input
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(0, 100),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
-						},
-						"max_concurrent_count": { // create input
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(1),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
-						},
-						"max_concurrent_percentage": { // create input
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(1, 100),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
-						},
-						"region_concurrency_type": { // create input
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
-						},
-						"region_order": { // create input
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
-							},
-						},
-					},
-				},
-			},
-			"parameter_overrides": { // create input, update input
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			AttrRegions: { // create input - required, read input (single region), update input - required, delete input - required
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidRegionName,
-				},
-			},
-			"retain_stacks": { // delete input - required
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"stack_instance_summaries": { // read output
-				Type:     schema.TypeList,
-				Computed: true,
-				Description: "List of stack instances created from an organizational unit deployment target. " +
-					"This will only be populated when `deployment_targets` is set.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAccountID: { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"detailed_status": { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"drift_status": { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"organizational_unit_id": { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRegion: { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"stack_id": { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"stack_set_id": { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusReason: { // read output
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"stack_set_id": { // read output
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stack_set_name": { // create input - required, read input - required, update input - required, delete input - required
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+			}
 		},
 	}
 }

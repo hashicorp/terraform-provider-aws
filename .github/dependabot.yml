@@ -52,7 +52,6 @@ updates:
       - "/.ci/providerlint"
       - "/.ci/tools"
       - "/skaff"
-      - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

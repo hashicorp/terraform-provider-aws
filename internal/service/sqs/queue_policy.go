@@ -37,13 +37,15 @@ func resourceQueuePolicy() *schema.Resource {
 		MigrateState:  queuePolicyMigrateState,
 		SchemaVersion: 1,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"queue_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

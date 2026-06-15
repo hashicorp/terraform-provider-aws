@@ -108,6 +108,10 @@ linters:
         text: 'SA1019: tfresource.\w+ is deprecated: \w+ is an alias to a function of the same name in internal/retry which handles both Plugin SDK V2 and internal error types. For net-new usage, prefer calling retry.\w+ directly.'
       - linters:
           - staticcheck
+        path: internal/service/acm/
+        text: 'SA1019: apiObject.CertificateTransparencyLoggingPreference is deprecated'
+      - linters:
+          - staticcheck
         path: internal/service/appsync/
         text: 'SA1019: \w+\.\w+ is deprecated: (\w+) attribute is deprecated'
       - linters:
@@ -182,6 +186,10 @@ linters:
           - staticcheck
         path: internal/service/identitystore/
         text: 'SA1019: \w+.Filters is deprecated: Using filters with List\w+ API is deprecated'
+      - linters:
+          - staticcheck
+        path: internal/service/lexmodels/
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Amazon Lex V1 is deprecated. Use Amazon Lex V2 instead.'
       - linters:
           - staticcheck
         path: internal/service/neptune/

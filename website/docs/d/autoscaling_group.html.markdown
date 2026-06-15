@@ -22,8 +22,8 @@ data "aws_autoscaling_group" "foo" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Specify the exact name of the desired autoscaling group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -31,17 +31,17 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
-* `default_cool_down` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
+* `default_cooldown` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desired_capacity` - Desired size of the group.
-* `desired_capacity_type` - The unit of measurement for the value returned for `desired_capacity`.
+* `desired_capacity_type` - Unit of measurement for the value returned for `desired_capacity`.
 * `enabled_metrics` - List of metrics enabled for collection.
-* `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
+* `health_check_grace_period` - Amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
 * `instance_maintenance_policy` - Instance maintenance policy for the group.
     * `min_healthy_percentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
     * `max_healthy_percentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
-* `launch_configuration` - The name of the associated launch configuration.
+* `launch_configuration` - Name of the associated launch configuration.
 * `launch_template` - List of launch templates for the group.
     * `id` - ID of the launch template.
     * `name` - Name of the launch template.
@@ -64,7 +64,7 @@ This data source exports the following attributes in addition to the arguments a
             * `version` - Template version.
         * `override` - List of properties overriding the same properties in the launch template.
             * `instance_requirements` - List of instance requirements objects.
-                * `accelerator_count - List of objects describing the minimum and maximum number of accelerators for an instance type.
+                * `accelerator_count` - List of objects describing the minimum and maximum number of accelerators for an instance type.
                     * `min` - Minimum.
                     * `max` - Maximum.
                 * `accelerator_manufacturers` - List of accelerator manufacturer names.
@@ -111,6 +111,7 @@ This data source exports the following attributes in addition to the arguments a
                 * `version` - Template version.
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
 * `name` - Name of the Auto Scaling Group.
+* `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
 * `predicted_capacity` - Predicted capacity of the group.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
@@ -121,18 +122,15 @@ This data source exports the following attributes in addition to the arguments a
     * `value` - Value.
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
-* `termination_policies` - The termination policies for the group.
-* `traffic_source` -Traffic sources.
+* `termination_policies` - Termination policies for the group.
+* `traffic_source` - Traffic sources.
     * `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
     * `type` - Traffic source type.
 * `vpc_zone_identifier` - VPC ID for the group.
 * `warm_pool` - List of warm pool configuration objects.
     * `instance_reuse_policy` - List of instance reuse policy objects.
         * `reuse_on_scale_in` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
-    * `max_group_prepared_policy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+    * `max_group_prepared_capacity` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
     * `min_size` - Minimum number of instances to maintain in the warm pool.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
-
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.

@@ -191,6 +191,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
+		{
+			Factory:  newRepositoryPolicyResourceAsListResource,
+			TypeName: "aws_ecr_repository_policy",
+			Name:     "Repository Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("repository", true)),
+		},
 	})
 }
 

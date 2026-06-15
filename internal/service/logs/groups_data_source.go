@@ -22,21 +22,23 @@ func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"log_group_name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"log_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"log_group_name_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_group_names": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
