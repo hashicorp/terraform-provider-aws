@@ -105,7 +105,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `condition` - Lake Formation condition, which applies to permissions and opt-ins that contain an expression.
+* `condition` - Lake Formation condition, which applies to permissions and opt-ins that contain an expression. See [`condition` Block](#condition-block) for more details.
 * `last_modified` - Last modified date and time of the record.
 * `last_updated_by` - User who updated the record.
 
