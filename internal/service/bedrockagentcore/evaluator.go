@@ -48,7 +48,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_evaluator", name="Evaluator")
 // @Tags(identifierAttribute="evaluator_arn")
+// @IdentityAttribute("evaluator_id", identityDuplicateAttributes="evaluator_id")
 // @Testing(tagsTest=false)
+// @Testing(generator="randomEvaluatorName(t)")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetEvaluatorOutput")
 func newEvaluatorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &evaluatorResource{}
 
@@ -61,6 +65,7 @@ func newEvaluatorResource(_ context.Context) (resource.ResourceWithConfigure, er
 
 type evaluatorResource struct {
 	framework.ResourceWithModel[evaluatorResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -490,10 +495,6 @@ func (r *evaluatorResource) Delete(ctx context.Context, request resource.DeleteR
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, evaluatorID)
 		return
 	}
-}
-
-func (r *evaluatorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("evaluator_id"), request, response)
 }
 
 func waitEvaluatorCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetEvaluatorOutput, error) {
