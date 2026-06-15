@@ -104,7 +104,7 @@ func (r *routingRuleResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				NestedObject: schema.NestedBlockObject{
 					Validators: []validator.Object{
-						tfobjectvalidator.ExactlyOneOfChildren(
+						tfobjectvalidator.AtMostOneOfChildren(
 							path.MatchRelative().AtName("match_base_paths"),
 							path.MatchRelative().AtName("match_headers"),
 						),
