@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -41,7 +42,7 @@ func TestAccLexV2ModelsBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bot_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lex", regexache.MustCompile(`bot-alias/.+$`)),
 				),
 			},
 			{
@@ -195,7 +196,7 @@ func TestAccLexV2ModelsBotAlias_conversationLogSettings(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
 					resource.TestCheckResourceAttr(resourceName, "conversation_log_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_log_settings.0.text_log_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "conversation_log_settings.0.text_log_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_log_settings.0.text_log_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "conversation_log_settings.0.text_log_settings.0.destination.0.cloudwatch.0.cloudwatch_log_group_arn"),
 				),
 			},
@@ -224,14 +225,14 @@ func TestAccLexV2ModelsBotAlias_sentimentAnalysisSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
 					resource.TestCheckResourceAttr(resourceName, "sentiment_analysis_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sentiment_analysis_settings.0.detect_sentiment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sentiment_analysis_settings.0.detect_sentiment", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccBotAliasConfig_sentimentAnalysisSettings(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, t, resourceName, &botalias),
-					resource.TestCheckResourceAttr(resourceName, "sentiment_analysis_settings.0.detect_sentiment", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sentiment_analysis_settings.0.detect_sentiment", acctest.CtFalse),
 				),
 			},
 		},

@@ -156,7 +156,7 @@ func (r *botAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
-												"s3_bucket": schema.ListNestedBlock{
+												names.AttrS3Bucket: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3BucketLogDestinationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
@@ -165,7 +165,7 @@ func (r *botAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"kms_key_arn": schema.StringAttribute{
+															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
 															},
@@ -212,7 +212,7 @@ func (r *botAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"cloudwatch_log_group_arn": schema.StringAttribute{
+															names.AttrCloudWatchLogGroupARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Required:   true,
 															},
