@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -171,7 +170,8 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
 	ap, err := findAccessPointByID(ctx, conn, d.Id())
 
@@ -187,14 +187,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.ToString(ap.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
-	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
