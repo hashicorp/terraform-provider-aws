@@ -52,6 +52,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(generator="randomEvaluatorName(t)")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="evaluator_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetEvaluatorOutput")
 func newEvaluatorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &evaluatorResource{}
