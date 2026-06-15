@@ -24,7 +24,7 @@ resource "aws_bedrockagentcore_evaluator" "test" {
 
       model_config {
         bedrock_evaluator_model_config {
-          model_id = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+          model_id = "us.amazon.nova-2-lite-v1:0"
         }
       }
     }
