@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -536,6 +537,9 @@ func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
 									setvalidator.ValueStringsAre(
 										stringvalidator.RegexMatches(regexache.MustCompile(`^sg-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid Security Group ID"),
 									),
+								},
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.UseStateForUnknown(),
 								},
 							},
 							names.AttrSubnetIDs: schema.SetAttribute{
