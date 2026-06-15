@@ -45,24 +45,26 @@ func dataSourceGroups() *schema.Resource {
 
 func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.LogsClient(ctx)
 
-	input := cloudwatchlogs.DescribeLogGroupsInput{}
+	var input cloudwatchlogs.DescribeLogGroupsInput
 	if v, ok := d.GetOk("log_group_name_prefix"); ok {
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	output, err := findLogGroups(ctx, conn, &input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.SetId(c.Region(ctx))
 
 	var arns, logGroupNames []string
-	for _, v := range output {
-		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(v.Arn)))
-		logGroupNames = append(logGroupNames, aws.ToString(v.LogGroupName))
+	for output, err := range listLogGroupPages(ctx, conn, &input) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
+		}
+
+		for _, v := range output {
+			arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(v.Arn)))
+			logGroupNames = append(logGroupNames, aws.ToString(v.LogGroupName))
+		}
 	}
 	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)
