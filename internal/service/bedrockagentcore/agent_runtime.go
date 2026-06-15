@@ -531,6 +531,7 @@ func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
 							names.AttrSecurityGroupIDs: schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Optional:   true,
+								Computed:   true,
 								Validators: []validator.Set{
 									setvalidator.ValueStringsAre(
 										stringvalidator.RegexMatches(regexache.MustCompile(`^sg-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid Security Group ID"),
