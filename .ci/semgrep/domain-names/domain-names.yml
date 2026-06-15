@@ -22,7 +22,11 @@ rules:
         - "/internal/service/storagegateway/stored_iscsi_volume_test.go"
         - "/internal/service/transfer/access_test.go"
         - "/internal/service/transfer/server_test.go"
-        - "/internal/service/**/*_test.go"
+        - "/internal/service/bedrockagentcore/agent_runtime_test.go"
+        - "/internal/service/bedrockagentcore/gateway_target_test.go"
+        - "/internal/service/bedrockagentcore/gateway_test.go"
+        - "/internal/service/bedrockagentcore/harness_test.go"
+        - "/internal/service/bedrockagentcore/oauth2_credential_provider_test.go"
     patterns:
       - patterns:
           - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
