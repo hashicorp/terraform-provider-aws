@@ -152,6 +152,33 @@ This resource exports the following attributes in addition to the arguments abov
 * `integration_response_selection_expression` - The [integration response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-integration-response-selection-expressions) for the integration.
 
 ## Import
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apigatewayv2_integration.example
+  identity = {
+    api_id = "aabbccddee"
+    id     = "1122334"
+  }
+}
+
+resource "aws_apigatewayv2_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `api_id` (String) API identifier.
+* `id` (String) Integration identifier.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_integration` using the API identifier and integration identifier. For example:
 
@@ -168,4 +195,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration` using the API id
 % terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
 ```
 
--> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
+-> **Note:** The API Gateway managed integration created as part of [*quick_create*](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
