@@ -582,6 +582,9 @@ func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagOnDatabase {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -630,6 +633,9 @@ func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagsOnTable {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -675,6 +681,9 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
+	if tag == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
 
