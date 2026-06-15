@@ -29,7 +29,7 @@ import (
 func TestPoolValidatePhoneIdentity(t *testing.T) {
 	t.Parallel()
 
-	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:phone-number/abc"
+	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:phone-number/abc" // lintignore:AWSAT003,AWSAT005
 
 	testCases := []struct {
 		TestName      string
@@ -125,7 +125,7 @@ func TestPoolValidatePhoneIdentity(t *testing.T) {
 func TestPoolValidateSenderIdentity(t *testing.T) {
 	t.Parallel()
 
-	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:sender-id/EXAMPLE/US"
+	const identityARN = "arn:aws:sms-voice:us-east-1:111122223333:sender-id/EXAMPLE/US" // lintignore:AWSAT003,AWSAT005
 
 	testCases := []struct {
 		TestName      string
@@ -246,7 +246,7 @@ func TestAccPinpointSMSVoiceV2Pool_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.StringRegexp(
-						regexache.MustCompile(`arn:aws:sms-voice:[a-z0-9-]+:[0-9]{12}:pool/pool-.+$`))),
+						regexache.MustCompile(`arn:aws:sms-voice:[a-z0-9-]+:[0-9]{12}:pool/pool-.+$`))), // lintignore:AWSAT005
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
@@ -592,7 +592,7 @@ func TestAccPinpointSMSVoiceV2Pool_OriginationIdentities(t *testing.T) {
 				Config: testAccPoolConfig_OriginationIdentities_two(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities").AtSliceIndex(0), knownvalue.StringRegexp(regexache.MustCompile(`arn:aws:sms-voice:[a-z0-9-]+:[0-9]{12}:(phone-number|sender-id).+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities").AtSliceIndex(0), knownvalue.StringRegexp(regexache.MustCompile(`arn:aws:sms-voice:[a-z0-9-]+:[0-9]{12}:(phone-number|sender-id).+$`))), // lintignore:AWSAT005
 				},
 			},
 			{

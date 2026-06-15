@@ -49,6 +49,8 @@ const (
 	// DescribePhoneNumbers and DescribeSenderIds each cap their ID input array
 	// at 5 items per request. Larger sets must be chunked.
 	originationIdentityDescribeBatchSize = 5
+
+	originationIdentityTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_pool", name="Pool")
@@ -770,7 +772,7 @@ func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev
 
 		// AssociateOriginationIdentity call is rate-limited (1 RPS per Pool ops); wrap to handle throttles.
 		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, *awstypes.ThrottlingException](
-			ctx, 2*time.Minute,
+			ctx, originationIdentityTimeout,
 			func(ctx context.Context) (*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, error) {
 				return conn.AssociateOriginationIdentity(ctx, input)
 			},
@@ -791,7 +793,7 @@ func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoi
 			IsoCountryCode:      isoCountryCode,
 		}
 		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, *awstypes.ThrottlingException](
-			ctx, 2*time.Minute,
+			ctx, originationIdentityTimeout,
 			func(ctx context.Context) (*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, error) {
 				return conn.DisassociateOriginationIdentity(ctx, input)
 			},
