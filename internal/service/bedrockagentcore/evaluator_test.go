@@ -162,66 +162,6 @@ func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 	})
 }
 
-func testAccCheckEvaluatorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_bedrockagentcore_evaluator" {
-				continue
-			}
-
-			_, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
-			if retry.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Bedrock Agent Core Evaluator %s still exists", rs.Primary.Attributes["evaluator_id"])
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEvaluatorExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetEvaluatorOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-		resp, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
-		if err != nil {
-			return err
-		}
-
-		*v = *resp
-
-		return nil
-	}
-}
-
-func testAccPreCheckEvaluators(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-	input := bedrockagentcorecontrol.ListEvaluatorsInput{}
-
-	_, err := conn.ListEvaluators(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
@@ -415,6 +355,66 @@ func TestAccBedrockAgentCoreEvaluator_additionalModelRequestFields(t *testing.T)
 			},
 		},
 	})
+}
+
+func testAccCheckEvaluatorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_bedrockagentcore_evaluator" {
+				continue
+			}
+
+			_, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Evaluator %s still exists", rs.Primary.Attributes["evaluator_id"])
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEvaluatorExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetEvaluatorOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+
+		resp, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
+		if err != nil {
+			return err
+		}
+
+		*v = *resp
+
+		return nil
+	}
+}
+
+func testAccPreCheckEvaluators(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+
+	input := bedrockagentcorecontrol.ListEvaluatorsInput{}
+
+	_, err := conn.ListEvaluators(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccEvaluatorConfig_basic(rName string) string {
