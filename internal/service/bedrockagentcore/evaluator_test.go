@@ -55,7 +55,19 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("level"), knownvalue.StringExact("TRACE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("locked_for_modification"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("numerical"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"value": knownvalue.Float64Exact(1),
+							"label": knownvalue.StringExact("1"),
+						}),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"value": knownvalue.Float64Exact(5),
+							"label": knownvalue.StringExact("5"),
+						}),
+					})),
 				},
 			},
 			{
@@ -280,9 +292,11 @@ func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("model_id"), knownvalue.StringExact("us.amazon.nova-2-lite-v1:0")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("inference_config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"max_tokens":     knownvalue.Int32Exact(1024),
+							"temperature":    knownvalue.Float64Exact(0.7),
 							"top_p":          knownvalue.Float64Exact(0.5),
 							"stop_sequences": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("STOP")}),
 						}),
@@ -322,6 +336,7 @@ func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("code_based").AtSliceIndex(0).AtMapKey("lambda_config").AtSliceIndex(0).AtMapKey("lambda_arn"), tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`function:.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("code_based").AtSliceIndex(0).AtMapKey("lambda_config").AtSliceIndex(0).AtMapKey("lambda_timeout_in_seconds"), knownvalue.Int32Exact(120)),
 				},
 			},
@@ -535,6 +550,7 @@ resource "aws_bedrockagentcore_evaluator" "test" {
 
           inference_config {
             max_tokens     = 1024
+            temperature    = 0.7
             top_p          = 0.5
             stop_sequences = ["STOP"]
           }
