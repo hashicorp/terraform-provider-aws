@@ -443,24 +443,38 @@ make go-misspell
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
-#### terraform providers schema
+#### Swiss Shepherd
 
-This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check. In the `make` file, this is done as part of the `tfproviderdocs` target test.
+Swiss Shepherd checks provider documentation for quality and consistency against the provider's schema.
 
-#### tfproviderdocs
+The provider keeps two Swiss Shepherd configurations side by side under `.ci/`:
 
-**NOTE:** To run this test, you need Terraform installed locally. On macOS, you can use Homebrew to install Terraform:
+- `.ci/swissshepherd-weak.hcl` is the working configuration. It carries the AWS-specific type definitions and bylines plus per-resource exceptions (`ignore_*` lists) so a run against today's documentation is clean. The `swissshepherd` and `swissshepherd-refresh` targets, and CI, all use this file. New work should not grow these exception lists; fixing the underlying documentation is the goal.
+- `.ci/swissshepherd-full.hcl` carries the same type definitions but omits the per-resource exceptions, so a run reports every finding the linter can produce. The `swissshepherd-count` target uses this file. The resulting count gives a sense of how much documentation work remains before every rule can run unconditionally.
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
+Use the `swissshepherd` target to run the standard checks:
 
 ```console
-brew install terraform
+make swissshepherd
 ```
 
-This test builds the provider binary, loads the provider with Terraform, generates the provider schema, and then uses the tfproviderdocs tool to ensure the provider (via the schema) and documentation are consistent with each other.
-
-Use the `tfproviderdocs` target to run this test:
+Use the `swissshepherd-count` target to count all findings:
 
 ```console
-make tfproviderdocs
+make swissshepherd-count
+```
+
+Use the `swissshepherd-refresh` target to run checks and refresh the cached provider schema. This takes a few minutes, but only needs to be run when:
+
+- You do not yet have a cached JSON schema locally.
+- The provider's schema has changed (for example, after pulling new commits or merging `origin/main`).
+
+If a local Swiss Shepherd run reports errors that don't seem right, the cached schema is most likely stale; refreshing it usually resolves the issue. CI always builds a fresh schema, so this only affects local runs.
+
+```console
+make swissshepherd-refresh
 ```
 
 #### Sweeper Functions Not Linked

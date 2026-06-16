@@ -46,6 +46,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_account_public_access_block.example
+  identity = {
+    account_id = "123456789012"
+  }
+}
+
+resource "aws_s3_account_public_access_block" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `account_id` (String) AWS account ID.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_s3_account_public_access_block` using the AWS account ID. For example:
 
 ```terraform

@@ -193,7 +193,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories |  |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations |  |  | `K`, `PKG`, `SVC_DIR` |
 | `tflint-init` | Initialize tflint |  |  |  |
-| `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
 | `update` | Update dependencies |  |  | `GO_VER` |

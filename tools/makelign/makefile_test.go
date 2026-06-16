@@ -11,13 +11,13 @@ import (
 func TestParseTargetLine(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
-		line     string
-		wantName string
-		wantOK   bool
-		wantDoc  bool
-		wantCI   bool
+		line         string
+		wantName     string
+		wantOK       bool
+		wantDoc      bool
+		wantCI       bool
 		wantInternal bool
-		wantDesc string
+		wantDesc     string
 	}{
 		"plain target": {
 			line:     "build:",

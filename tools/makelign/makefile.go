@@ -141,9 +141,9 @@ func parseTargetLine(line string, lineNum int) (*Target, bool) {
 	}
 
 	t := &Target{
-		Name:    name,
-		HasDoc:  hasDoc,
-		Line:    lineNum,
+		Name:     name,
+		HasDoc:   hasDoc,
+		Line:     lineNum,
 		IsLegacy: strings.Contains(strings.ToLower(desc), "legacy"),
 	}
 	if hasDoc {
