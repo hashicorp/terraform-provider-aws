@@ -25,7 +25,7 @@ func TestAccBedrockAgentCoreEvaluator_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_bedrockagentcore_evaluator.test[0]"
 	resourceName2 := "aws_bedrockagentcore_evaluator.test[1]"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -87,7 +87,7 @@ func TestAccBedrockAgentCoreEvaluator_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_bedrockagentcore_evaluator.test[0]"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -158,7 +158,7 @@ func TestAccBedrockAgentCoreEvaluator_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_bedrockagentcore_evaluator.test[0]"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	identity1 := tfstatecheck.Identity()
 
