@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_bedrockagentcore_evaluator
 
-Manages an AWS Bedrock AgentCore Evaluator. An evaluator assesses agent performance using either an LLM-as-a-Judge configuration that scores agent behavior against custom instructions and a rating scale, or a code-based configuration that delegates evaluation to a customer-managed Lambda function.
+Manages an AWS Bedrock AgentCore Evaluator. An evaluator scores how an agent performs. You can configure it in one of two ways: an LLM-as-a-Judge evaluator that uses a model to score agent behavior against your instructions and a rating scale, or a code-based evaluator that runs a Lambda function you provide.
 
 ## Example Usage
 
@@ -126,14 +126,14 @@ The following arguments are optional:
 
 Exactly one of `llm_as_a_judge` or `code_based` must be specified.
 
-* `code_based` - (Optional) Code-based evaluator configuration that delegates evaluation to a customer-managed Lambda function. See [`code_based`](#code_based-block) below.
-* `llm_as_a_judge` - (Optional) LLM-as-a-Judge configuration that uses a foundation model to score agent performance. See [`llm_as_a_judge`](#llm_as_a_judge-block) below.
+* `code_based` - (Optional) Configuration that runs a Lambda function you provide to score the agent. See [`code_based`](#code_based-block) below.
+* `llm_as_a_judge` - (Optional) Configuration that uses a Bedrock model to score the agent. See [`llm_as_a_judge`](#llm_as_a_judge-block) below.
 
 ### `llm_as_a_judge` Block
 
-* `instructions` - (Required) Evaluation instructions that guide the model in assessing agent performance.
-* `model_config` - (Required) Model configuration that specifies which foundation model to use. See [`model_config`](#model_config-block) below.
-* `rating_scale` - (Required) Rating scale used to score agent performance. See [`rating_scale`](#rating_scale-block) below.
+* `instructions` - (Required) Instructions that tell the model how to score the agent.
+* `model_config` - (Required) Which Bedrock model to use. See [`model_config`](#model_config-block) below.
+* `rating_scale` - (Required) Scale used to score the agent. See [`rating_scale`](#rating_scale-block) below.
 
 ### `rating_scale` Block
 
@@ -159,8 +159,8 @@ Exactly one of `numerical` or `categorical` must be specified.
 
 ### `bedrock_evaluator_model_config` Block
 
-* `additional_model_request_fields` - (Optional) JSON-encoded additional model-specific request fields to customize model behavior beyond the standard inference configuration.
-* `inference_config` - (Optional) Inference configuration parameters that control model behavior during evaluation. See [`inference_config`](#inference_config-block) below.
+* `additional_model_request_fields` - (Optional) JSON-encoded model-specific request fields, for settings not covered by `inference_config`.
+* `inference_config` - (Optional) Settings that control how the model generates its response. See [`inference_config`](#inference_config-block) below.
 * `model_id` - (Required) Identifier of the Amazon Bedrock model to use for evaluation.
 
 ### `inference_config` Block
@@ -176,8 +176,8 @@ Exactly one of `numerical` or `categorical` must be specified.
 
 ### `lambda_config` Block
 
-* `lambda_arn` - (Required) ARN of the Lambda function that implements the evaluation logic.
-* `lambda_timeout_in_seconds` - (Optional) Timeout in seconds for the Lambda function invocation. Defaults to 60. Range 1–300.
+* `lambda_arn` - (Required) ARN of the Lambda function that runs the evaluation.
+* `lambda_timeout_in_seconds` - (Optional) Time in seconds to wait for the Lambda function before timing out. Defaults to 60. Range 1–300.
 
 ## Attribute Reference
 
@@ -186,7 +186,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_at` - Timestamp when the evaluator was created.
 * `evaluator_arn` - ARN of the evaluator.
 * `evaluator_id` - Unique identifier of the evaluator.
-* `locked_for_modification` - Whether the evaluator is locked for modification due to being referenced by active online evaluation configurations.
+* `locked_for_modification` - Whether the evaluator is locked because it is in use by an active online evaluation.
 * `status` - Current status of the evaluator.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
