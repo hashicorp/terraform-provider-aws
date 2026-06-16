@@ -372,12 +372,7 @@ func (r *evaluatorResource) Create(ctx context.Context, request resource.CreateR
 
 	evaluatorID := aws.ToString(out.EvaluatorId)
 
-	if _, err := waitEvaluatorCreated(ctx, conn, evaluatorID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, evaluatorID)
-		return
-	}
-
-	evaluator, err := findEvaluatorByID(ctx, conn, evaluatorID)
+	evaluator, err := waitEvaluatorCreated(ctx, conn, evaluatorID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, evaluatorID)
 		return
