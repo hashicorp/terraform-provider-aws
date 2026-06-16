@@ -54,7 +54,7 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("level"), knownvalue.StringExact("TRACE")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("locked_for_modification"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("numerical"), knownvalue.ListExact([]knownvalue.Check{
