@@ -60,14 +60,14 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("numerical"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"value":      knownvalue.Float64Exact(1),
-							"label":      knownvalue.StringExact("1"),
-							"definition": knownvalue.StringExact("Not helpful at all."),
+							names.AttrValue: knownvalue.Float64Exact(1),
+							"label":         knownvalue.StringExact("1"),
+							"definition":    knownvalue.StringExact("Not helpful at all."),
 						}),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"value":      knownvalue.Float64Exact(5),
-							"label":      knownvalue.StringExact("5"),
-							"definition": knownvalue.StringExact("Extremely helpful."),
+							names.AttrValue: knownvalue.Float64Exact(5),
+							"label":         knownvalue.StringExact("5"),
+							"definition":    knownvalue.StringExact("Extremely helpful."),
 						}),
 					})),
 				},
