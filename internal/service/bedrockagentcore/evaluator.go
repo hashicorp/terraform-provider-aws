@@ -50,7 +50,7 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_evaluator", name="Evaluator")
 // @Tags(identifierAttribute="evaluator_arn")
 // @IdentityAttribute("evaluator_id", identityDuplicateAttributes="evaluator_id")
-// @Testing(generator="randomEvaluatorName(t)")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="evaluator_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetEvaluatorOutput")
