@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -49,7 +50,6 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_evaluator", name="Evaluator")
 // @Tags(identifierAttribute="evaluator_arn")
 // @IdentityAttribute("evaluator_id", identityDuplicateAttributes="evaluator_id")
-// @Testing(tagsTest=false)
 // @Testing(generator="randomEvaluatorName(t)")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="evaluator_id")
@@ -76,6 +76,9 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -104,17 +107,19 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			},
 			"locked_for_modification": schema.BoolAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluatorStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"evaluator_config": schema.ListNestedBlock{
@@ -605,7 +610,6 @@ type evaluatorResourceModel struct {
 	Tags                  tftags.Map                                            `tfsdk:"tags"`
 	TagsAll               tftags.Map                                            `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                        `tfsdk:"timeouts"`
-	UpdatedAt             timetypes.RFC3339                                     `tfsdk:"updated_at"`
 }
 
 type evaluatorConfigModel struct {
