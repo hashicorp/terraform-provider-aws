@@ -189,7 +189,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `locked_for_modification` - Whether the evaluator is locked for modification due to being referenced by active online evaluation configurations.
 * `status` - Current status of the evaluator.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `updated_at` - Timestamp when the evaluator was last updated.
 
 ## Timeouts
 
