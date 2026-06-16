@@ -16,6 +16,16 @@ Terraform resource for managing an AWS Lake Formation Opt In.
 
 ```terraform
 resource "aws_lakeformation_opt_in" "example" {
+  principal {
+    data_lake_principal_identifier = aws_iam_role.example.arn
+  }
+
+  resource_data {
+    database {
+      name       = aws_glue_catalog_database.example.name
+      catalog_id = data.aws_caller_identity.current.account_id
+    }
+  }
 }
 ```
 
