@@ -338,6 +338,7 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
