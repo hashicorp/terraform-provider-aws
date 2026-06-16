@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -27,7 +26,7 @@ import (
 func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,7 +86,7 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -123,7 +122,7 @@ func TestAccBedrockAgentCoreEvaluator_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -223,14 +222,10 @@ func testAccPreCheckEvaluators(ctx context.Context, t *testing.T) {
 	}
 }
 
-func randomEvaluatorName(t *testing.T) string {
-	return strings.ReplaceAll(fmt.Sprintf("tf_acc_test_%s", acctest.RandString(t, 10)), "-", "_")
-}
-
 func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -279,7 +274,7 @@ func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -323,7 +318,7 @@ func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -360,7 +355,7 @@ func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -389,7 +384,7 @@ func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 func TestAccBedrockAgentCoreEvaluator_additionalModelRequestFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
