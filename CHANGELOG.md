@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
 * resource/aws_msk_replicator: Add Resource Identity support ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `destination_metrics_configuration` and `source_metrics_configuration` blocks ([#48303](https://github.com/hashicorp/terraform-provider-aws/issues/48303))
+* resource/aws_opensearchserverless_collection: Add `vector_options.serverless_vector_acceleration` argument ([#47018](https://github.com/hashicorp/terraform-provider-aws/issues/47018))
 
 BUG FIXES:
 

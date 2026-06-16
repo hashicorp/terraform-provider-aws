@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.75.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.69.4
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.22.6
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.42.6
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.59.6
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.62.7
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.39.5
@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/mgn v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/mgn v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.8.7
 	github.com/aws/aws-sdk-go-v2/service/mq v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5
@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.114.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.28.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.119.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.119.3
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.63.3
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.40.6
@@ -275,10 +275,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/waf v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.31.4
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.72.4
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.37.6
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/xray v1.37.3
 	github.com/aws/smithy-go v1.27.2
