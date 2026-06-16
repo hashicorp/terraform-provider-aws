@@ -271,7 +271,7 @@ func checkOrdering(in *Inputs) []Finding {
 				Severity: SevWarn,
 				Code:     "cheatsheet-order",
 				File:     in.CheatSheetPath,
-				Line:     in.CheatSheet[i].Line,
+				Line:     in.CheatSheet[i-1].Line,
 				Message: fmt.Sprintf(
 					"cheat sheet is not alphabetized: %q comes before %q",
 					names[i-1], names[i],
