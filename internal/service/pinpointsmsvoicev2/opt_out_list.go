@@ -75,7 +75,7 @@ func (r *optOutListResource) Create(ctx context.Context, request resource.Create
 
 	name := data.OptOutListName.ValueString()
 	input := &pinpointsmsvoicev2.CreateOptOutListInput{
-		ClientToken:    aws.String(create.RandomId(ctx)),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		OptOutListName: aws.String(name),
 		Tags:           getTagsIn(ctx),
 	}

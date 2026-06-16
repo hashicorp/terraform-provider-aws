@@ -126,7 +126,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
-		ClientToken:        aws.String(create.RandomId(ctx)),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		GatewayARN:         aws.String(d.Get("gateway_arn").(string)),
 		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		Tags:               getTagsIn(ctx),

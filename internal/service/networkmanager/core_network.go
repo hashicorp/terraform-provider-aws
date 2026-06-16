@@ -173,7 +173,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := networkmanager.CreateCoreNetworkInput{
-		ClientToken:     aws.String(create.RandomId(ctx)),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
 	}
@@ -534,7 +534,7 @@ func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Cl
 	}
 
 	inputPCNP := networkmanager.PutCoreNetworkPolicyInput{
-		ClientToken:    aws.String(create.RandomId(ctx)),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		CoreNetworkId:  aws.String(coreNetworkID),
 		PolicyDocument: aws.String(document),
 	}

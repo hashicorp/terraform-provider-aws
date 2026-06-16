@@ -112,7 +112,7 @@ func (r *securityPolicyResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.RandomId(ctx))
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateSecurityPolicy(ctx, &input)
 
@@ -185,7 +185,7 @@ func (r *securityPolicyResource) Update(ctx context.Context, request resource.Up
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.RandomId(ctx))
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		output, err := conn.UpdateSecurityPolicy(ctx, &input)
@@ -214,7 +214,7 @@ func (r *securityPolicyResource) Delete(ctx context.Context, request resource.De
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteSecurityPolicyInput{
-		ClientToken: aws.String(create.RandomId(ctx)),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Type:        data.Type.ValueEnum(),
 	}

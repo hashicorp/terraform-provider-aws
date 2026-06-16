@@ -122,7 +122,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input.ClientToken = aws.String(create.RandomId(ctx))
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgentAlias(ctx, &input)

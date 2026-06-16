@@ -376,7 +376,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := fis.CreateExperimentTemplateInput{
 		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
-		ClientToken:      aws.String(create.RandomId(ctx)),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
 		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),

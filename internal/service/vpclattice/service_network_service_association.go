@@ -103,7 +103,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := vpclattice.CreateServiceNetworkServiceAssociationInput{
-		ClientToken:              aws.String(create.RandomId(ctx)),
+		ClientToken:              aws.String(create.UniqueId(ctx)),
 		ServiceIdentifier:        aws.String(d.Get("service_identifier").(string)),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
 		Tags:                     getTagsIn(ctx),

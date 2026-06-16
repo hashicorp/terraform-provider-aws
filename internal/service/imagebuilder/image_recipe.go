@@ -256,7 +256,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageRecipeInput{
-		ClientToken: aws.String(create.RandomId(ctx)),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 

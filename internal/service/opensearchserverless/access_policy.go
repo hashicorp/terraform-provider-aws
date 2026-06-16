@@ -112,7 +112,7 @@ func (r *accessPolicyResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.RandomId(ctx))
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateAccessPolicy(ctx, &input)
 
@@ -185,7 +185,7 @@ func (r *accessPolicyResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(create.RandomId(ctx))
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		output, err := conn.UpdateAccessPolicy(ctx, &input)
@@ -214,7 +214,7 @@ func (r *accessPolicyResource) Delete(ctx context.Context, request resource.Dele
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteAccessPolicyInput{
-		ClientToken: aws.String(create.RandomId(ctx)),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Type:        data.Type.ValueEnum(),
 	}
