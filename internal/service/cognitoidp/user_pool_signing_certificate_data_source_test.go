@@ -47,7 +47,7 @@ resource "aws_cognito_identity_provider" "test" {
   provider_type = "SAML"
 
   provider_details = {
-    MetadataFile          = templatefile("./test-fixtures/saml-metadata.xml.tpl", {entity_id = %[2]q})
+    MetadataFile          = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
     SSORedirectBindingURI = "%[2]s/idp/endpoint/HttpRedirect"
   }
 
