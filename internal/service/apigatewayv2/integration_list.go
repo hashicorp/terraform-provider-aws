@@ -36,6 +36,7 @@ type integrationListResource struct {
 }
 
 type integrationListResourceModel struct {
+	framework.WithRegionModel
 	ApiId types.String `tfsdk:"api_id"`
 }
 

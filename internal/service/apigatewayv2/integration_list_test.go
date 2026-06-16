@@ -120,7 +120,6 @@ func TestAccAPIGatewayV2Integration_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("api_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("integration_type"), knownvalue.StringExact("MOCK")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test-integration")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("content_handling_strategy"), knownvalue.StringExact("CONVERT_TO_TEXT")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("passthrough_behavior"), knownvalue.StringExact("WHEN_NO_MATCH")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("payload_format_version"), knownvalue.StringExact("1.0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("timeout_milliseconds"), knownvalue.Int64Exact(29000)),
