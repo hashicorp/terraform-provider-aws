@@ -436,6 +436,10 @@ lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
 
+makefile-lint: prereq-go ## Makefile alignment check
+	@echo "make: Makefile Linting / alignment check..."
+	@cd tools/makelign && $(GO_VER) run . ../..
+
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
@@ -1013,6 +1017,7 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./tools/makelign && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1205,6 +1210,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	install \
 	lint \
 	lint-fix \
+	makefile-lint \
 	misspell \
 	modern-check \
 	modern-fix \
