@@ -15,6 +15,7 @@ on:
       - .github/workflows/website.yml
       - .ci/.markdownlinkcheck.json
       - .ci/.tflint.hcl
+      - .ci/opa-policies/**
       - .ci/tools/go.mod
       - .markdownlint.yml
       - website/docs/**
@@ -26,6 +27,9 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
@@ -116,6 +120,7 @@ jobs:
       - run: terrafmt diff ./website --check --pattern '*.markdown'
 
   tflint:
+    needs: tflint-opa-policy-tests
     runs-on: custom-ubuntu-22.04-xl
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -150,6 +155,7 @@ jobs:
 
             # Configure the rules for tflint.
             shared_rules=(
+                "--disable-rule=opa_deny_acmpca_deletion_time"
                 "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
                 "--disable-rule=aws_db_instance_default_parameter_group"
                 "--disable-rule=aws_elasticache_cluster_default_parameter_group"
@@ -194,3 +200,5 @@ jobs:
           find ./website/docs -type f -name '*.markdown' | \
             sort -u | \
             parallel -j 16 --halt soon,fail=1 validate_file {}
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies
