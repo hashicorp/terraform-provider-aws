@@ -166,7 +166,6 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-
 			"network_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.NetworkType](),
 				Optional:   true,
@@ -176,7 +175,6 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-
 			"reader_endpoint": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
