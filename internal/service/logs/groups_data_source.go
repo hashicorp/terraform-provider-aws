@@ -56,15 +56,14 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.SetId(c.Region(ctx))
 
 	var arns, logGroupNames []string
-	for output, err := range listLogGroupPages(ctx, conn, &input) {
+	for output, err := range listLogGroups(ctx, conn, &input) {
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
 		}
 
-		for _, v := range output {
-			arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(v.Arn)))
-			logGroupNames = append(logGroupNames, aws.ToString(v.LogGroupName))
-		}
+		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(output.Arn)))
+		logGroupNames = append(logGroupNames, aws.ToString(output.LogGroupName))
+
 	}
 	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)
