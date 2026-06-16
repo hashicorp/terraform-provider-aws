@@ -255,7 +255,7 @@ func statusHub(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 	}
 }
 
-func statusHubContent(conn *sagemaker.Client, hubName, hubContentName string) retry.StateRefreshFunc {
+func statusHubContentReference(conn *sagemaker.Client, hubName, hubContentName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findHubContentByName(ctx, conn, hubName, hubContentName, awstypes.HubContentTypeModelReference)
 

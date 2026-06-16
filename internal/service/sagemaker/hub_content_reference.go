@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_sagemaker_hub_content_reference", name="Hub Content Reference")
 // @Tags(identifierAttribute="hub_content_arn")
+// Both hub_content_arn and sagemaker_public_hub_content_arn are stripped ARNs. AWS APIs append the min_version at the end of both of them. The ListTags API expects the hub_content_arn to not contain this min_version.
 // @IdentityAttribute("hub_name")
 // @IdentityAttribute("hub_content_name")
 // @ImportIDHandler("hubContentReferenceImportID")
@@ -49,14 +50,14 @@ func newHubContentReferenceResource(_ context.Context) (resource.ResourceWithCon
 	r := &hubContentReferenceResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
+	r.SetDefaultUpdateTimeout(15 * time.Minute)
 	r.SetDefaultDeleteTimeout(15 * time.Minute)
 
 	return r, nil
 }
 
 const (
-	ResNameHubContentReference     = "Hub Content Reference"
-	hubContentReferenceIDPartCount = 2
+	ResNameHubContentReference = "Hub Content Reference"
 )
 
 type hubContentReferenceResource struct {
@@ -79,7 +80,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			"hub_content_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Computed:    true,
-				Description: "ARN of the hub content reference.",
+				Description: "ARN of the hub content reference (without version suffix). The min_version is stripped off from the end of this ARN to make it usable to list tags.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -101,7 +102,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			"hub_content_status": schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.HubContentStatus](),
 				Computed:    true,
-				Description: "Status of the hub content reference.",
+				Description: "Status of the hub content reference. Valid values include `Available`, `Importing`, `Deleting`, `ImportFailed`, `DeleteFailed`.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -129,7 +130,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			},
 			"min_version": schema.StringAttribute{
 				Optional:    true,
-				Description: "Minimum version of the hub content to reference. Use \"1.0.0\" to support all versions.",
+				Description: "Minimum version of the hub content to reference. Use \"1.0.0\" to support all versions. Changing this value to an empty string forces replacement of the resource.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(
 						func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
@@ -145,7 +146,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			"sagemaker_public_hub_content_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
-				Description: "ARN of the public JumpStart hub content to reference.",
+				Description: "ARN of the public SageMaker JumpStart hub content to reference. The ARN must not include a version suffix.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -156,6 +157,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -264,6 +266,17 @@ func (r *hubContentReferenceResource) Update(ctx context.Context, request resour
 		_, err := conn.UpdateHubContentReference(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.HubContentName.ValueString())
+			return
+		}
+
+		output, err := waitHubContentReferenceAvailable(ctx, conn, new.HubName.ValueString(), new.HubContentName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.HubContentName.ValueString())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &new))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}

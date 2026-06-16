@@ -54,7 +54,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `hub_arn` - ARN of the private SageMaker Hub that contains the content reference.
-* `hub_content_arn` - ARN of the hub content reference (without version suffix).
+* `hub_content_arn` - ARN of the hub content reference (without version suffix). The min_version is stripped off from the end of this ARN to make it usable to list tags.
 * `hub_content_status` - Status of the hub content reference. Valid values include `Available`, `Importing`, `Deleting`, `ImportFailed`, `DeleteFailed`.
 * `hub_content_version` - Version of the hub content reference.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

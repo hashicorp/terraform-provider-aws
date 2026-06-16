@@ -684,7 +684,7 @@ func waitHubContentReferenceAvailable(ctx context.Context, conn *sagemaker.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.HubContentStatusImporting, awstypes.HubContentStatusPendingImport),
 		Target:  enum.Slice(awstypes.HubContentStatusAvailable),
-		Refresh: statusHubContent(conn, hubName, hubContentName),
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
 		Timeout: timeout,
 	}
 
@@ -705,7 +705,7 @@ func waitHubContentReferenceDeleted(ctx context.Context, conn *sagemaker.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.HubContentStatusDeleting, awstypes.HubContentStatusPendingDelete),
 		Target:  []string{},
-		Refresh: statusHubContent(conn, hubName, hubContentName),
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
 		Timeout: timeout,
 	}
 
