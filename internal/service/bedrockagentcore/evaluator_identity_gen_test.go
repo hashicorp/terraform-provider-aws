@@ -27,7 +27,7 @@ func TestAccBedrockAgentCoreEvaluator_Identity_basic(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -115,7 +115,7 @@ func TestAccBedrockAgentCoreEvaluator_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
