@@ -1381,8 +1381,8 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType := "m5d.large"
-
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -1393,9 +1393,9 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_instance_type", etcdInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
 				),
 			},
@@ -1414,8 +1414,8 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType := "m5d.large"
-
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -1426,11 +1426,12 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				Config: testAccClusterConfig_outpostPlacement(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_instance_type", etcdInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_placement.#", "1"),
 				),
 			},
 			{
@@ -2564,20 +2565,19 @@ data "aws_outposts_outpost" "test" {
   id = "op-XXXXXXXX"
 }
 
-data "aws_subnets" test {
-  filter {
-    name   = "outpost-arn"
-    values = [data.aws_outposts_outpost.test.arn]
-  }
-}
-
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-    control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "r7izde.4xlarge"
+    etcd_instance_type          = "r7izde.4xlarge"
     outpost_arns                = [data.aws_outposts_outpost.test.arn]
+  }
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
   }
 
   remote_network_config {
@@ -2589,7 +2589,7 @@ resource "aws_eks_cluster" "test" {
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))
@@ -2601,17 +2601,8 @@ data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
 
-data "aws_outposts_outposts" "test" {}
-
 data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
-}
-
-data "aws_subnets" test {
-  filter {
-    name   = "outpost-arn"
-    values = [data.aws_outposts_outpost.test.arn]
-  }
+  id = "op-XXXXXXXX"
 }
 
 resource "aws_placement_group" "test" {
@@ -2624,17 +2615,27 @@ resource "aws_eks_cluster" "test" {
   role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-    control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "r7izde.4xlarge"
     control_plane_placement {
-      group_name = aws_placement_group.test.name
+      spread_level = "host"
+    }
+    etcd_instance_type = "r7izde.4xlarge"
+    etcd_placement {
+      spread_level = "host"
     }
     outpost_arns = [data.aws_outposts_outpost.test.arn]
+  }
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
   }
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))

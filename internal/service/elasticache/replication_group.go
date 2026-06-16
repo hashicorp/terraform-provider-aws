@@ -982,7 +982,40 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 					input.Engine = aws.String(engineRedis)
 				}
 			}
-			requestUpdate = true
+			if d.HasChange("log_delivery_configuration") {
+				_, n := d.GetChange("log_delivery_configuration")
+				nSet, ok := n.(*schema.Set)
+				if ok && checkIfLogTypeSlowLog(nSet.List()) &&
+					checkIfEngineSupportsSlowLog(input.Engine, input.EngineVersion) {
+					// log_type slow-log is supported in redis >= 6.0 and valkey >= 7.x .
+					// Apply the engine/engine_version change in a separate ModifyReplicationGroup
+					// call so that it completes before the subsequent update that adds the
+					// slow-log log_delivery_configuration. ApplyImmediately must be true here
+					// regardless of the user's apply_immediately setting; otherwise the engine
+					// upgrade is deferred to the next maintenance window and the immediately
+					// following log_delivery_configuration modification would fail because the
+					// running engine still does not support slow-log delivery.
+					engineVersionInput := elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						Engine:             input.Engine,
+						EngineVersion:      input.EngineVersion,
+						ReplicationGroupId: aws.String(d.Id()),
+					}
+					updateFuncs = append(updateFuncs, func() error {
+						_, err := conn.ModifyReplicationGroup(ctx, &engineVersionInput)
+						if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+							return nil
+						}
+
+						if err != nil {
+							return fmt.Errorf("modifying ElastiCache Replication Group (%s) engine version: %w", d.Id(), err)
+						}
+						return nil
+					})
+				}
+			} else {
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange("ip_discovery") {
@@ -1683,6 +1716,30 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 		}
 	}
 	return nil
+}
+
+func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
+	versionStr := aws.ToString(engineVersion)
+	major, _, _ := strings.Cut(versionStr, ".")
+	majorVersion, err := strconv.Atoi(major)
+	if err != nil {
+		return false
+	}
+	return (majorVersion >= 6 && aws.ToString(engine) == engineRedis) ||
+		(majorVersion >= 7 && aws.ToString(engine) == engineValkey)
+}
+
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
+	logTypeSlowLogExists := false
+
+	for _, current := range currentLogDeliveryConfig {
+		logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
+		if logDeliveryConfigurationRequest.LogType == awstypes.LogTypeSlowLog {
+			logTypeSlowLogExists = true
+			break
+		}
+	}
+	return logTypeSlowLogExists
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
