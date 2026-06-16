@@ -62,7 +62,7 @@ This resource supports the following arguments:
 ### `database` Block
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `name` - (Required) Name of the database resource.Unique to the Data Catalog.
+* `name` - (Required) Name of the database resource. Unique to the Data Catalog.
 
 ### `lf_tag` Block
 
@@ -73,13 +73,13 @@ This resource supports the following arguments:
 ### `lf_tag_expression` Block
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `name` - (Required) Name of the LF-Tag expression to grand permissions on.
+* `name` - (Required) Name of the LF-Tag expression to grant permissions on.
 
 ### `lf_tag_policy` Block
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 * `expression` - (Optional) List of LF-tag conditions or a saved expression that apply to the resource's LF-Tag policy.
-* `expression_name` - (Required) If provided, permissions are granted to the Data Catalog resources whose assigned LF-Tags match the expression body of the saved expression under the provided ExpressionName .
+* `expression_name` - (Optional) Name of the saved expression to match. If provided, permissions are granted to the Data Catalog resources whose assigned LF-Tags match the expression body of the saved expression under the provided expression name.
 * `resource_type` - (Required) Resource type for which the LF-tag policy applies.
 
 ### `table` Block
