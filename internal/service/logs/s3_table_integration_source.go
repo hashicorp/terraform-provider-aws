@@ -271,7 +271,7 @@ func listS3TableIntegrationSourcePages(ctx context.Context, conn *cloudwatchlogs
 	return func(yield func([]awstypes.S3TableIntegrationSource, error) bool) {
 		pages := cloudwatchlogs.NewListSourcesForS3TableIntegrationPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
 				yield(nil, fmt.Errorf("listing CloudWatch Logs S3TableIntegrationSources: %w", err))
 				return
