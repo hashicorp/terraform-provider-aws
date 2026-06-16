@@ -292,8 +292,10 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 									"lambda_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEvaluatorConfigModel](ctx),
 										Validators: []validator.List{
-											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("lambda_config"),
+											),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
