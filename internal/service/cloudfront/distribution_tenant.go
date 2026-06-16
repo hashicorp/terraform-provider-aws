@@ -391,9 +391,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
 	conn := r.Meta().CloudFrontClient(ctx)
-
 	id := fwflex.StringValueFromFramework(ctx, new.ID)
+
 	var output *cloudfront.UpdateDistributionTenantOutput
+	var err error
 
 	// Check if configuration changed (excluding tags)
 	if !new.ConnectionGroupID.Equal(old.ConnectionGroupID) ||
@@ -413,7 +414,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		input.Id = aws.String(id)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-		_, err := conn.UpdateDistributionTenant(ctx, &input)
+		output, err = conn.UpdateDistributionTenant(ctx, &input)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
