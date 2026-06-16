@@ -364,7 +364,7 @@ func (r *evaluatorResource) Create(ctx context.Context, request resource.CreateR
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.EvaluatorName.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.EvaluatorName.ValueString())
 		return
 	}
 
