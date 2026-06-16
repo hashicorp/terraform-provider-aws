@@ -374,7 +374,7 @@ func TestAccBedrockAgentCoreEvaluator_additionalModelRequestFields(t *testing.T)
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("additional_model_request_fields"), knownvalue.StringExact(`{"top_k":50}`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("additional_model_request_fields"), knownvalue.StringExact(`{"inferenceConfig":{"topK":50}}`)),
 				},
 			},
 			{
@@ -559,7 +559,7 @@ resource "aws_bedrockagentcore_evaluator" "test" {
       model_config {
         bedrock_evaluator_model_config {
           model_id                        = "us.amazon.nova-2-lite-v1:0"
-          additional_model_request_fields = jsonencode({ top_k = 50 })
+          additional_model_request_fields = jsonencode({ inferenceConfig = { topK = 50 } })
         }
       }
     }
