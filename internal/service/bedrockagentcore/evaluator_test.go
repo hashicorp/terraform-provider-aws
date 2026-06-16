@@ -51,6 +51,7 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`evaluator/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName)),
@@ -60,12 +61,14 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("numerical"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"value": knownvalue.Float64Exact(1),
-							"label": knownvalue.StringExact("1"),
+							"value":      knownvalue.Float64Exact(1),
+							"label":      knownvalue.StringExact("1"),
+							"definition": knownvalue.StringExact("Not helpful at all."),
 						}),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"value": knownvalue.Float64Exact(5),
-							"label": knownvalue.StringExact("5"),
+							"value":      knownvalue.Float64Exact(5),
+							"label":      knownvalue.StringExact("5"),
+							"definition": knownvalue.StringExact("Extremely helpful."),
 						}),
 					})),
 				},
@@ -248,13 +251,16 @@ func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("categorical"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"label": knownvalue.StringExact("POSITIVE"),
+							"label":      knownvalue.StringExact("POSITIVE"),
+							"definition": knownvalue.StringExact("Friendly, helpful tone."),
 						}),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"label": knownvalue.StringExact("NEUTRAL"),
+							"label":      knownvalue.StringExact("NEUTRAL"),
+							"definition": knownvalue.StringExact("Neutral or terse tone."),
 						}),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"label": knownvalue.StringExact("NEGATIVE"),
+							"label":      knownvalue.StringExact("NEGATIVE"),
+							"definition": knownvalue.StringExact("Unhelpful or dismissive tone."),
 						}),
 					})),
 				},
