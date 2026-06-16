@@ -78,7 +78,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			"evaluator_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), "must begin with a letter and contain only alphanumeric characters and underscores, up to 48 characters"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -383,7 +383,7 @@ func (r *evaluatorResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *evaluatorResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
