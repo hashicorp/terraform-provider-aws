@@ -25,7 +25,7 @@ func TestAccBedrockAgentCoreEvaluator_tags(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -219,7 +219,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_null(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -287,7 +287,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_emptyMap(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -343,7 +343,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_addOnUpdate(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -429,7 +429,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -527,7 +527,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -674,7 +674,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_EmptyTag_OnUpdate_replace(t *testing.
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -770,7 +770,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_providerOnly(t *testing.T
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -963,7 +963,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_nonOverlapping(t *testing
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1133,7 +1133,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_overlapping(t *testing.T)
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1319,7 +1319,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_updateToProviderOnly(t *t
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1415,7 +1415,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_updateToResourceOnly(t *t
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1510,7 +1510,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_emptyResourceTag(t *testi
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1582,7 +1582,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_emptyProviderOnlyTag(t *t
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1646,7 +1646,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_nullOverlappingResourceTa
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1721,7 +1721,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_DefaultTags_nullNonOverlappingResourc
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1798,7 +1798,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1859,7 +1859,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_ComputedTag_OnUpdate_add(t *testing.T
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1962,7 +1962,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_ComputedTag_OnUpdate_replace(t *testi
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2055,7 +2055,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_IgnoreTags_Overlap_defaultTag(t *test
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2221,7 +2221,7 @@ func TestAccBedrockAgentCoreEvaluator_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 
 	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
-	rName := randomEvaluatorName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
