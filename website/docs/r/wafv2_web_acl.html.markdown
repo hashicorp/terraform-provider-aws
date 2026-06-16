@@ -466,6 +466,7 @@ This resource supports the following arguments:
 * `data_protection_config` - (Optional) Specifies data protection to apply to the web request data for the web ACL. This is a web ACL level data protection option. See [`data_protection_config`](#data_protection_config-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
+* `monetization_config` - (Optional) Specifies the monetization configuration for the web ACL. Provide this when any rule in the web ACL uses the `monetize` action. See [`monetization_config`](#monetization_config-block) below for details.
 * `name` - (Optional, Forces new resource) Friendly name of the WebACL. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -550,6 +551,7 @@ The `action` block supports the following arguments:
 * `captcha` - (Optional) Instructs AWS WAF to run a Captcha check against the web request. See [`captcha`](#captcha-block) below for details.
 * `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [`challenge`](#challenge-block) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [`count`](#count-block) below for details.
+* `monetize` - (Optional) Instructs AWS WAF to monetize the web request, charging per request according to the web ACL [`monetization_config`](#monetization_config-block). See [`monetize`](#monetize-block) below for details.
 
 ### `override_action` Block
 
@@ -589,6 +591,12 @@ The `challenge` block supports the following arguments:
 The `count` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [`custom_request_handling`](#custom_request_handling-block) below for details.
+
+### `monetize` Block
+
+The `monetize` block supports the following arguments:
+
+* `price_multiplier` - (Optional) Integer multiplier applied to the base price defined in the web ACL [`monetization_config`](#monetization_config-block) when charging for a matching request. Expressed as a string. Valid values are `1` to `100` (for example, `"5"`).
 
 ### `custom_request_handling` Block
 
@@ -1083,6 +1091,34 @@ The `challenge_config` block supports the following arguments:
 The `immunity_time_property` block supports the following arguments:
 
 * `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
+### `monetization_config` Block
+
+The `monetization_config` block supports the following arguments:
+
+* `crypto_config` - (Optional) Cryptocurrency payment configuration for the web ACL. See [`crypto_config`](#crypto_config-block) below for details.
+* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`.
+
+### `crypto_config` Block
+
+The `crypto_config` block supports the following arguments:
+
+* `payment_network` - (Required) Blockchain payment networks configured to receive payments. You can specify 1 to 2 networks. See [`payment_network`](#payment_network-block) below for details.
+
+### `payment_network` Block
+
+The `payment_network` block supports the following arguments:
+
+* `chain` - (Required) Blockchain network used for settlement. Valid values are `BASE`, `SOLANA`, `BASE_SEPOLIA`, and `SOLANA_DEVNET`.
+* `prices` - (Required) Price configuration for this payment network. Currently supports a single price entry. See [`prices`](#prices-block) below for details.
+* `wallet_address` - (Required) Payee wallet address on the specified blockchain that receives payments.
+
+### `prices` Block
+
+The `prices` block supports the following arguments:
+
+* `amount` - (Required) Base price amount per request, expressed as a decimal string with up to 3 decimal places. Minimum `0.001`, maximum `999999999.999` (for example, `"0.001"`).
+* `currency` - (Required) Currency of the price amount. Valid value is `USDC`.
 
 ### `request_body` Block
 
