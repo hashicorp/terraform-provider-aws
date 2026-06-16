@@ -9,6 +9,11 @@ rules:
       include:
         - "/internal/service"
       exclude:
+        - "/internal/service/bedrockagentcore/agent_runtime_test.go"
+        - "/internal/service/bedrockagentcore/gateway_target_test.go"
+        - "/internal/service/bedrockagentcore/gateway_test.go"
+        - "/internal/service/bedrockagentcore/harness_test.go"
+        - "/internal/service/bedrockagentcore/oauth2_credential_provider_test.go"
         - "/internal/service/firehose/delivery_stream_test.go"
         - "/internal/service/fsx/windows_file_system_test.go"
         - "/internal/service/iam/openid_connect_provider_test.go"
@@ -22,11 +27,6 @@ rules:
         - "/internal/service/storagegateway/stored_iscsi_volume_test.go"
         - "/internal/service/transfer/access_test.go"
         - "/internal/service/transfer/server_test.go"
-        - "/internal/service/bedrockagentcore/agent_runtime_test.go"
-        - "/internal/service/bedrockagentcore/gateway_target_test.go"
-        - "/internal/service/bedrockagentcore/gateway_test.go"
-        - "/internal/service/bedrockagentcore/harness_test.go"
-        - "/internal/service/bedrockagentcore/oauth2_credential_provider_test.go"
         # TODO: Remove the following exclusions once the domain names are fixed
         - "/internal/service/datasync/location_azure_blob_test.go"
         - "/internal/service/ec2/verifiedaccess_instance_test.go"
