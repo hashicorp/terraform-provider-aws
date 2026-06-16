@@ -703,6 +703,13 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 	})
 }
 
+// This test occasionally fails with a "CREATE_FAILED" status. In such cases,
+// the failureReason returned by the GetAgentRuntime API is:
+//
+//	"An internal error occurred while processing your request."
+//
+// Re-running the test typically succeeds, suggesting that this is a
+// transient service-side issue rather than a problem with the provider code.
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointManagedVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -874,6 +881,13 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointM
 	})
 }
 
+// This test occasionally fails with a "CREATE_FAILED" status. In such cases,
+// the failureReason returned by the GetAgentRuntime API is:
+//
+//	"An internal error occurred while processing your request."
+//
+// Re-running the test typically succeeds, suggesting that this is a
+// transient service-side issue rather than a problem with the provider code.
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointSelfManagedLattice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
