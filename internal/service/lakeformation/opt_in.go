@@ -539,7 +539,7 @@ func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -573,7 +573,7 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
