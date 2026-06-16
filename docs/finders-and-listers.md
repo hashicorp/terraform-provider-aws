@@ -205,5 +205,137 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 }
 ```
 
+##### Notes
+
 * Checking for AWS resource-not-found errors and mapping to `retry.NotFound` errors is done at the lowest level (closest to the `Describe` API call).
 * Checking for logical deletion (e.g checking a resource's current status) is done at the highest level (closest to the resource's Read handler).
+
+## Listers
+
+A resource's _lister_ is the function called by a list resource's List handler to return an iterable sequence of resources.
+
+For example
+
+```go
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		var input cloudwatchlogs.DescribeLogGroupsInput
+		for output, err := range listLogGroups(ctx, conn, &input) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			...
+		}
+	}
+```
+
+### Implementation Patterns
+
+```go
+import (
+	"context"
+	"iter"
+
+	...
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+)
+
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogGroup, error] {
+	return tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, input, optFns...))
+}
+
+func listLogGroupPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {
+	return func(yield func([]awstypes.LogGroup, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
+				return
+			}
+
+			if !yield(page.LogGroups, nil) {
+				return
+			}
+		}
+	}
+}
+```
+
+##### Notes
+
+* Specific AWS errors are not checked.
+* AWS APIs returns "pages" of resources, so the lower level function returns a sequences of pages (Go slices).
+* The higher level function calls `tfiter.ConcatValuesWithError` on the lower level function to return a sequence of resources.
+
+## Finders On Listers
+
+If the AWS type returned in the lister's resource sequence is the same as that returned by a finder then the finder should be implemented on top of the lister.
+
+```go
+func findS3TableIntegrationSourceByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, integrationARN, identifier string) (*awstypes.S3TableIntegrationSource, error) {
+	input := cloudwatchlogs.ListSourcesForS3TableIntegrationInput{
+		IntegrationArn: aws.String(integrationARN),
+	}
+
+	return findS3TableIntegrationSource(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.S3TableIntegrationSource) bool {
+		return aws.ToString(v.Identifier) == identifier
+	}))
+}
+
+func findS3TableIntegrationSource(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, optFns ...tfslices.FinderOptionsFunc[awstypes.S3TableIntegrationSource]) (*awstypes.S3TableIntegrationSource, error) {
+	output, err := findS3TableIntegrationSources(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findS3TableIntegrationSources(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, optFns ...tfslices.FinderOptionsFunc[awstypes.S3TableIntegrationSource]) ([]awstypes.S3TableIntegrationSource, error) {
+	output, err := tfslices.CollectAndConcatWithError(listS3TableIntegrationSourcePages(ctx, conn, input), optFns...)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeValidationException, "Integration not found") || tfawserr.ErrMessageContains(err, errCodeValidationException, "Invalid integration ARN") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listS3TableIntegrationSourcePages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.S3TableIntegrationSource, error] {
+	return func(yield func([]awstypes.S3TableIntegrationSource, error) bool) {
+		pages := cloudwatchlogs.NewListSourcesForS3TableIntegrationPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs S3TableIntegrationSources: %w", err))
+				return
+			}
+
+			if !yield(page.Sources, nil) {
+				return
+			}
+		}
+	}
+}
+
+func listS3TableIntegrationSources(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.ListSourcesForS3TableIntegrationInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.S3TableIntegrationSource, error] {
+	return tfiter.ConcatValuesWithError(listS3TableIntegrationSourcePages(ctx, conn, input, optFns...))
+}
+```
+
+##### Notes
+
+* Checking for AWS resource-not-found errors and mapping to `retry.NotFound` errors continues to be done in the lowest level finder.
+* The lowest level finder calls `tfslices.CollectAndConcatWithError` on the higher level lister to return a slice of resources.
+* Options, such as for filtering, can be passed to `tfslices.CollectAndConcatWithError`.
