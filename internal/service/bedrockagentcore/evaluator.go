@@ -292,10 +292,8 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 									"lambda_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEvaluatorConfigModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												path.MatchRelative().AtParent().AtName("lambda_config"),
-											),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -305,7 +303,7 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 												},
 												"lambda_timeout_in_seconds": schema.Int32Attribute{
 													Optional: true,
-													Computed: true, // check this in testing if it has a default
+													Computed: true,
 													Validators: []validator.Int32{
 														int32validator.Between(1, 300),
 													},
@@ -483,7 +481,11 @@ func (r *evaluatorResource) Delete(ctx context.Context, request resource.DeleteR
 		EvaluatorId: aws.String(evaluatorID),
 	}
 
-	_, err := conn.DeleteEvaluator(ctx, &input)
+	// The service rejects concurrent modifications of an evaluator with a
+	// ConflictException, which is transient. Retry until it succeeds.
+	_, err := tfresource.RetryWhenIsA[*bedrockagentcorecontrol.DeleteEvaluatorOutput, *awstypes.ConflictException](ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (*bedrockagentcorecontrol.DeleteEvaluatorOutput, error) {
+		return conn.DeleteEvaluator(ctx, &input)
+	})
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
