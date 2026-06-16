@@ -27,4 +27,5 @@ resource "aws_bedrockagentcore_evaluator" "test" {
       }
     }
   }
+{{- template "tags" . }}
 }
