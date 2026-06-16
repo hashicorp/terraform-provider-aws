@@ -95,7 +95,7 @@ func WithSuffix(suffix string) NameGeneratorOptionsFunc {
 
 // NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
 func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
-	g := &nameGenerator{defaultPrefix: UniqueIdPrefix}
+	g := &nameGenerator{defaultPrefix: UniqueIDPrefix}
 
 	for _, optFn := range optFns {
 		optFn(g)
@@ -114,5 +114,5 @@ func (g *nameGenerator) Generate(ctx context.Context) string {
 	if g.configuredPrefix != "" {
 		prefix = g.configuredPrefix
 	}
-	return prefixedUniqueId(ctx, prefix) + g.suffix
+	return prefixedUniqueID(ctx, prefix, hexLower) + g.suffix
 }
