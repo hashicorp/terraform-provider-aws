@@ -298,7 +298,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// Use create response directly - no extra read needed
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -339,12 +338,10 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			// Update the data model with refreshed information
 			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
-
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 		}
 	}
@@ -374,13 +371,10 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 
 	tenant := output.DistributionTenant
 
-	// Flatten the distribution tenant data into the model
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -409,8 +403,8 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		!new.Enabled.Equal(old.Enabled) ||
 		!new.ManagedCertificateRequest.Equal(old.ManagedCertificateRequest) ||
 		!new.Parameters.Equal(old.Parameters) {
-		input := &cloudfront.UpdateDistributionTenantInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		var input cloudfront.UpdateDistributionTenantInput
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -419,7 +413,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		input.Id = aws.String(id)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-		_, err := conn.UpdateDistributionTenant(ctx, input)
+		_, err := conn.UpdateDistributionTenant(ctx, &input)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
@@ -432,7 +426,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			}
 
 			input.IfMatch = aws.String(etag)
-			output, err = conn.UpdateDistributionTenant(ctx, input)
+			output, err = conn.UpdateDistributionTenant(ctx, &input)
 		}
 
 		if err != nil {
@@ -469,13 +463,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				// Manually flatten domains and parameters
-				// Use AutoFlex to flatten the refreshed response
 				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
 				if resp.Diagnostics.HasError() {
 					return
 				}
-
 				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 			}
 		}
@@ -502,7 +493,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
 	}
 
@@ -767,11 +757,11 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {
-		mcInput := &cloudfront.GetManagedCertificateDetailsInput{
+		input := cloudfront.GetManagedCertificateDetailsInput{
 			Identifier: aws.String(id),
 		}
 
-		mcOutput, err := conn.GetManagedCertificateDetails(ctx, mcInput)
+		output, err := conn.GetManagedCertificateDetails(ctx, &input)
 		if errs.IsA[*awstypes.EntityNotFound](err) {
 			// No managed certificate found - domains are covered by existing certs
 			return nil, nil
@@ -781,9 +771,9 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 		}
 
 		// Check certificate status
-		switch mcOutput.ManagedCertificateDetails.CertificateStatus {
+		switch output.ManagedCertificateDetails.CertificateStatus {
 		case awstypes.ManagedCertificateStatusIssued:
-			return mcOutput, nil
+			return output, nil
 
 		case awstypes.ManagedCertificateStatusPendingValidation:
 			// Certificate still being validated, continue waiting
@@ -791,7 +781,7 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 			continue
 
 		default:
-			return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate failed with status: %s", id, mcOutput.ManagedCertificateDetails.CertificateStatus)
+			return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate failed with status: %s", id, output.ManagedCertificateDetails.CertificateStatus)
 		}
 	}
 
@@ -816,7 +806,7 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	// Update distribution tenant with managed certificate ARN
-	updateInput := &cloudfront.UpdateDistributionTenantInput{
+	input := cloudfront.UpdateDistributionTenantInput{
 		Id:      dtOutput.DistributionTenant.Id,
 		IfMatch: freshOutput.ETag,
 		Customizations: &awstypes.Customizations{
@@ -827,13 +817,13 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	// Copy other required fields from current distribution tenant
-	updateInput.ConnectionGroupId = dtOutput.DistributionTenant.ConnectionGroupId
-	updateInput.DistributionId = dtOutput.DistributionTenant.DistributionId
-	updateInput.Domains = convertDomainResultsToDomainItems(dtOutput.DistributionTenant.Domains)
-	updateInput.Enabled = dtOutput.DistributionTenant.Enabled
-	updateInput.Parameters = dtOutput.DistributionTenant.Parameters
+	input.ConnectionGroupId = dtOutput.DistributionTenant.ConnectionGroupId
+	input.DistributionId = dtOutput.DistributionTenant.DistributionId
+	input.Domains = convertDomainResultsToDomainItems(dtOutput.DistributionTenant.Domains)
+	input.Enabled = dtOutput.DistributionTenant.Enabled
+	input.Parameters = dtOutput.DistributionTenant.Parameters
 
-	_, err = conn.UpdateDistributionTenant(ctx, updateInput)
+	_, err = conn.UpdateDistributionTenant(ctx, &input)
 	if err != nil {
 		return fmt.Errorf("updating CloudFront Distribution Tenant (%s) with managed certificate: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
 	}
