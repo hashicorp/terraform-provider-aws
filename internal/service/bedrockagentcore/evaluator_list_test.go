@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -52,11 +54,11 @@ func TestAccBedrockAgentCoreEvaluator_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`evaluator/.+`))),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName+"_0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("evaluator_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("evaluator_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`evaluator/.+`))),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName+"_1")),
 				},
 			},
@@ -116,7 +118,7 @@ func TestAccBedrockAgentCoreEvaluator_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`evaluator/.+`))),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName+"_0")),
 				},
 			},
@@ -136,7 +138,7 @@ func TestAccBedrockAgentCoreEvaluator_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_evaluator.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_evaluator.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"_0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_evaluator.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("evaluator_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("evaluator_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`evaluator/.+`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("evaluator_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("evaluator_name"), knownvalue.StringExact(rName+"_0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("level"), knownvalue.StringExact("TRACE")),
