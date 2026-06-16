@@ -567,6 +567,14 @@ func TestAccS3Bucket_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -675,7 +683,7 @@ func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName), // nosemgrep:disappears-expect-resource-action
 					testAccCheckBucketCreateViaCloudFormation(ctx, t, bucketName, &stackID),
 				),
 			},

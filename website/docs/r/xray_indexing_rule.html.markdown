@@ -31,8 +31,8 @@ resource "aws_xray_indexing_rule" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) Indexing rule name.
-* `rule` - (Required) Rule configuration. See [`rule` Block](#rule-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule` - (Required) Rule configuration. See [`rule` Block](#rule-block) below.
 
 ### `rule` Block
 
@@ -45,11 +45,12 @@ The `rule` block supports:
 The `probabilistic` block supports:
 
 * `desired_sampling_percentage` - (Required) Configured sampling percentage of traceIds.
-* `actual_sampling_percentage` - (Computed) Applied sampling percentage of traceIds.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `rule[*].probabilistic[*].actual_sampling_percentage` - Applied sampling percentage of traceIds.
 
 ## Import
 

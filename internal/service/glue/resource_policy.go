@@ -38,13 +38,15 @@ func resourceResourcePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionMustExist),
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"enable_hybrid": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EnableHybridValues](),
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enable_hybrid": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EnableHybridValues](),
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }

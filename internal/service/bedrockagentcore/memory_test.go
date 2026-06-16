@@ -194,6 +194,89 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_indexedKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrKey), knownvalue.StringExact("customer_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("STRING")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrKey), knownvalue.StringExact("score")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrType), knownvalue.StringExact("NUMBER")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_streamDeliveryResources(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("data_stream_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("content_configuration").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("MEMORY_RECORDS")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckMemoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -312,6 +395,74 @@ resource "aws_bedrockagentcore_memory" "test" {
   name                      = %[1]q
   event_expiry_duration     = 7
   memory_execution_role_arn = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccMemoryConfig_indexedKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                  = %[1]q
+  event_expiry_duration = 7
+
+  indexed_key {
+    key  = "customer_id"
+    type = "STRING"
+  }
+
+  indexed_key {
+    key  = "score"
+    type = "NUMBER"
+  }
+}
+`, rName)
+}
+
+func testAccMemoryConfig_streamDeliveryResources(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 1
+}
+
+resource "aws_iam_role_policy" "test_kinesis" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords",
+        "kinesis:DescribeStream",
+        "kinesis:DescribeStreamSummary",
+        "kinesis:ListShards",
+      ]
+      Resource = aws_kinesis_stream.test.arn
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_memory" "test" {
+  name                      = %[1]q
+  event_expiry_duration     = 7
+  memory_execution_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test_kinesis]
+
+  stream_delivery_resources {
+    resource {
+      kinesis {
+        data_stream_arn = aws_kinesis_stream.test.arn
+
+        content_configuration {
+          type  = "MEMORY_RECORDS"
+          level = "METADATA_ONLY"
+        }
+      }
+    }
+  }
 }
 `, rName))
 }

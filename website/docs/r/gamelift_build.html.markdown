@@ -36,8 +36,6 @@ This resource supports the following arguments:
 * `version` - (Optional) Version that is associated with this build.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested Fields
-
 #### `storage_location`
 
 * `bucket` - (Required) Name of your S3 bucket.

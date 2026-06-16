@@ -23,41 +23,43 @@ func dataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customRequiredFiltersSchema(),
-			"routes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_cidr_block": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"prefix_list_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"transit_gateway_route_table_announcement_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customRequiredFiltersSchema(),
+				"routes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination_cidr_block": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"prefix_list_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"transit_gateway_route_table_announcement_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				"transit_gateway_route_table_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }

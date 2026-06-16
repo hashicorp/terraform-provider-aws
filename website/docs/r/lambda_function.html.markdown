@@ -581,7 +581,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_durable_function"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   memory_size   = 512
   timeout       = 30
 
@@ -643,9 +643,6 @@ resource "aws_lambda_capacity_provider" "example" {
 ```
 
 See [the `aws_lambda_capacity_provider` resource](lambda_capacity_provider.html) for more details, such as configuring instance requirements and the scaling policy.
-
-## Specifying the Deployment Package
-
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
 
 Once you have created your deployment package you can specify it either directly as a local file (using the `filename` argument) or indirectly via Amazon S3 (using the `s3_bucket`, `s3_key` and `s3_object_version` arguments). When providing the deployment package via S3 it may be useful to use [the `aws_s3_object` resource](s3_object.html) to upload it.
