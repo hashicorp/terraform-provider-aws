@@ -73,6 +73,16 @@ type evaluatorResource struct {
 func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 200),
+				},
+			},
 			"evaluator_arn": framework.ARNAttributeComputedOnly(),
 			"evaluator_id":  framework.IDAttribute(),
 			"evaluator_name": schema.StringAttribute{
@@ -84,30 +94,16 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 200),
-				},
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			"level": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluatorLevel](),
 				Required:   true,
 			},
-			names.AttrKMSKeyARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-			},
 			"locked_for_modification": schema.BoolAttribute{
 				Computed: true,
-			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluatorStatus](),
@@ -115,6 +111,10 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"evaluator_config": schema.ListNestedBlock{
@@ -125,159 +125,6 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"llm_as_a_judge": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[llmAsAJudgeEvaluatorConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("llm_as_a_judge"),
-									path.MatchRelative().AtParent().AtName("code_based"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"instructions": schema.StringAttribute{
-										Required:  true,
-										Sensitive: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"rating_scale": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[ratingScaleModel](ctx),
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"numerical": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[numericalScaleDefinitionModel](ctx),
-													Validators: []validator.List{
-														listvalidator.ExactlyOneOf(
-															path.MatchRelative().AtParent().AtName("numerical"),
-															path.MatchRelative().AtParent().AtName("categorical"),
-														),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"definition": schema.StringAttribute{
-																Required: true,
-															},
-															names.AttrValue: schema.Float64Attribute{
-																Required: true,
-																Validators: []validator.Float64{
-																	float64validator.AtLeast(0),
-																},
-															},
-															"label": schema.StringAttribute{
-																Required: true,
-																Validators: []validator.String{
-																	stringvalidator.LengthBetween(1, 100),
-																},
-															},
-														},
-													},
-												},
-												"categorical": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[categoricalScaleDefinitionModel](ctx),
-													Validators: []validator.List{
-														listvalidator.ExactlyOneOf(
-															path.MatchRelative().AtParent().AtName("numerical"),
-															path.MatchRelative().AtParent().AtName("categorical"),
-														),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"definition": schema.StringAttribute{
-																Required: true,
-															},
-															"label": schema.StringAttribute{
-																Required: true,
-																Validators: []validator.String{
-																	stringvalidator.LengthBetween(1, 100),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"model_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[evaluatorModelConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"bedrock_evaluator_model_config": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEvaluatorModelConfigModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-														listvalidator.ExactlyOneOf(
-															path.MatchRelative().AtParent().AtName("bedrock_evaluator_model_config"),
-														),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"model_id": schema.StringAttribute{
-																Required: true,
-															},
-															"additional_model_request_fields": schema.StringAttribute{
-																CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-																Optional:   true,
-															},
-														},
-														Blocks: map[string]schema.Block{
-															"inference_config": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConfigurationModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		"max_tokens": schema.Int32Attribute{
-																			Optional: true,
-																			Validators: []validator.Int32{
-																				int32validator.AtLeast(1),
-																			},
-																		},
-																		"temperature": schema.Float64Attribute{
-																			Optional: true,
-																			Validators: []validator.Float64{
-																				float64validator.Between(0, 1),
-																			},
-																		},
-																		"top_p": schema.Float64Attribute{
-																			Optional: true,
-																			Validators: []validator.Float64{
-																				float64validator.Between(0, 1),
-																			},
-																		},
-																		"stop_sequences": schema.ListAttribute{
-																			CustomType:  fwtypes.ListOfStringType,
-																			Optional:    true,
-																			ElementType: types.StringType,
-																			Validators: []validator.List{
-																				listvalidator.SizeAtMost(2500),
-																				listvalidator.ValueStringsAre(
-																					stringvalidator.LengthAtLeast(1),
-																				),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
 						"code_based": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[codeBasedEvaluatorConfigModel](ctx),
 							Validators: []validator.List{
@@ -308,6 +155,159 @@ func (r *evaluatorResource) Schema(ctx context.Context, request resource.SchemaR
 													Computed: true,
 													Validators: []validator.Int32{
 														int32validator.Between(1, 300),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"llm_as_a_judge": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[llmAsAJudgeEvaluatorConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("llm_as_a_judge"),
+									path.MatchRelative().AtParent().AtName("code_based"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"instructions": schema.StringAttribute{
+										Required:  true,
+										Sensitive: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"model_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[evaluatorModelConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"bedrock_evaluator_model_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEvaluatorModelConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("bedrock_evaluator_model_config"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"additional_model_request_fields": schema.StringAttribute{
+																CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																Optional:   true,
+															},
+															"model_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"inference_config": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"max_tokens": schema.Int32Attribute{
+																			Optional: true,
+																			Validators: []validator.Int32{
+																				int32validator.AtLeast(1),
+																			},
+																		},
+																		"stop_sequences": schema.ListAttribute{
+																			CustomType:  fwtypes.ListOfStringType,
+																			Optional:    true,
+																			ElementType: types.StringType,
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(2500),
+																				listvalidator.ValueStringsAre(
+																					stringvalidator.LengthAtLeast(1),
+																				),
+																			},
+																		},
+																		"temperature": schema.Float64Attribute{
+																			Optional: true,
+																			Validators: []validator.Float64{
+																				float64validator.Between(0, 1),
+																			},
+																		},
+																		"top_p": schema.Float64Attribute{
+																			Optional: true,
+																			Validators: []validator.Float64{
+																				float64validator.Between(0, 1),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"rating_scale": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[ratingScaleModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"categorical": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[categoricalScaleDefinitionModel](ctx),
+													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("numerical"),
+															path.MatchRelative().AtParent().AtName("categorical"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"definition": schema.StringAttribute{
+																Required: true,
+															},
+															"label": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 100),
+																},
+															},
+														},
+													},
+												},
+												"numerical": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[numericalScaleDefinitionModel](ctx),
+													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("numerical"),
+															path.MatchRelative().AtParent().AtName("categorical"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"definition": schema.StringAttribute{
+																Required: true,
+															},
+															"label": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 100),
+																},
+															},
+															names.AttrValue: schema.Float64Attribute{
+																Required: true,
+																Validators: []validator.Float64{
+																	float64validator.AtLeast(0),
+																},
+															},
+														},
 													},
 												},
 											},
