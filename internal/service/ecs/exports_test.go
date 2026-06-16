@@ -18,6 +18,7 @@ var (
 	ResourceTaskSet                  = resourceTaskSet
 
 	ClusterNameFromARN                      = clusterNameFromARN
+	DaemonCapacityProviderARNsEqual         = daemonCapacityProviderARNsEqual
 	DaemonNameFromARN                       = daemonNameFromARN
 	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindClusterByNameOrARN                  = findClusterByNameOrARN
