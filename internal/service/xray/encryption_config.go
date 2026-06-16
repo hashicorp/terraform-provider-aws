@@ -37,17 +37,19 @@ func resourceEncryptionConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceEncryptionPutConfig,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+				},
+			}
 		},
 	}
 }

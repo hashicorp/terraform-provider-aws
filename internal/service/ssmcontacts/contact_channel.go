@@ -33,42 +33,44 @@ func ResourceContactChannel() *schema.Resource {
 		UpdateWithoutTimeout: resourceContactChannelUpdate,
 		DeleteWithoutTimeout: resourceContactChannelDelete,
 
-		Schema: map[string]*schema.Schema{
-			"activation_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"contact_id": {
-				ForceNew: true,
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"delivery_address": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"simple_address": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"activation_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"contact_id": {
+					ForceNew: true,
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"delivery_address": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"simple_address": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrType: {
-				ForceNew: true,
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrType: {
+					ForceNew: true,
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

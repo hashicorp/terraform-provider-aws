@@ -52,93 +52,95 @@ func resourceGlobalCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
-			},
-			"engine_lifecycle_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"global_cluster_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"global_cluster_members": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"db_cluster_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_writer": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
+				},
+				"engine_lifecycle_support": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"global_cluster_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				"global_cluster_members": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"db_cluster_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"is_writer": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				RequiredWith: []string{names.AttrForceDestroy},
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"global_cluster_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_db_cluster_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrForceDestroy},
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

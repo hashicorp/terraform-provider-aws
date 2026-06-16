@@ -334,6 +334,8 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 
 	gateway, err := waitGatewayCreated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
@@ -464,6 +466,12 @@ func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.
 	}
 
 	for v, err := range listGatewayTargets(ctx, conn, &input) {
+		// Can't use error unwrapping because ultimately the error may be smithy.GenericAPIError.
+		// if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}

@@ -23,31 +23,33 @@ func dataSourceOrganizationalUnitDescendantOrganizationalUnits() *schema.Resourc
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitDescendantOrganizationalUnitsRead,
 
-		Schema: map[string]*schema.Schema{
-			"children": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"children": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"parent_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

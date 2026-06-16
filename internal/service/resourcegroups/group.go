@@ -45,73 +45,75 @@ func resourceGroup() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrParameters: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrParameters: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_query": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"query": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      types.QueryTypeTagFilters10,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.QueryTypeTagFilters10), false),
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_query": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"query": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      types.QueryTypeTagFilters10,
+								ValidateFunc: validation.StringInSlice(enum.Slice(types.QueryTypeTagFilters10), false),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

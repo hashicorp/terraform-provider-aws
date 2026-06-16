@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,49 +24,51 @@ func dataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "arn is deprecated. Use secret_arn instead.",
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secret_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"secret_binary": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"secret_string": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"version_stage": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  secretVersionStageCurrent,
-			},
-			"version_stages": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "arn is deprecated. Use secret_arn instead.",
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secret_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"secret_binary": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"secret_string": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"version_stage": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  secretVersionStageCurrent,
+				},
+				"version_stages": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -91,7 +94,16 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	id := secretVersionCreateResourceID(secretID, version)
-	output, err := findSecretVersion(ctx, conn, input)
+	// Secrets Manager has eventual-consistency windows for both the version's
+	// existence and for staging-label propagation across backend replicas.
+	// When this data source is read in the same plan as a freshly-created
+	// version, the lookup (especially by stage) may briefly return
+	// NotFound. Retry within the standard propagation timeout to handle
+	// this; genuinely-missing resources will still surface an error after
+	// the timeout elapses.
+	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
+		return findSecretVersion(ctx, conn, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", id, err)

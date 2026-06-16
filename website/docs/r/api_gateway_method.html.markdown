@@ -32,7 +32,7 @@ resource "aws_api_gateway_method" "MyDemoMethod" {
 }
 ```
 
-## Usage with Cognito User Pool Authorizer
+### Usage with Cognito User Pool Authorizer
 
 ```terraform
 variable "cognito_user_pool_name" {}
