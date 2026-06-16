@@ -8,7 +8,6 @@ package bedrockagentcore_test
 import (
 	"testing"
 
-	bedrockagentcorecontrol "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +24,6 @@ import (
 func TestAccBedrockAgentCoreEvaluator_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v bedrockagentcorecontrol.GetEvaluatorOutput
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 	rName := randomWithPrefixAndUnderscore(t)
 
@@ -45,7 +43,7 @@ func TestAccBedrockAgentCoreEvaluator_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &v),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("evaluator_id"), resourceName, tfjsonpath.New("evaluator_id"), compare.ValuesSame()),
