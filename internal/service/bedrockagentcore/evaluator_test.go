@@ -25,7 +25,6 @@ import (
 
 func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -42,7 +41,7 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -85,7 +84,6 @@ func TestAccBedrockAgentCoreEvaluator_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -102,7 +100,7 @@ func TestAccBedrockAgentCoreEvaluator_disappears(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceEvaluator, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -121,7 +119,6 @@ func TestAccBedrockAgentCoreEvaluator_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -138,7 +135,7 @@ func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_description(rName, "desc1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
@@ -147,7 +144,7 @@ func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_description(rName, "desc2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,7 +161,6 @@ func TestAccBedrockAgentCoreEvaluator_description(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -181,7 +177,7 @@ func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_categorical(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("categorical"), knownvalue.ListExact([]knownvalue.Check{
@@ -213,7 +209,6 @@ func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -230,7 +225,7 @@ func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_inferenceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("model_id"), knownvalue.StringExact("us.amazon.nova-2-lite-v1:0")),
@@ -257,7 +252,6 @@ func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -274,7 +268,7 @@ func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_codeBased(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("code_based").AtSliceIndex(0).AtMapKey("lambda_config").AtSliceIndex(0).AtMapKey("lambda_arn"), tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`function:.+`))),
@@ -294,7 +288,6 @@ func TestAccBedrockAgentCoreEvaluator_codeBased(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -311,7 +304,7 @@ func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 			{
 				Config: testAccEvaluatorConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), tfknownvalue.RegionalARNRegexp("kms", regexache.MustCompile(`key/.+`))),
@@ -323,7 +316,6 @@ func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 
 func TestAccBedrockAgentCoreEvaluator_additionalModelRequestFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	var evaluator bedrockagentcorecontrol.GetEvaluatorOutput
 	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_evaluator.test"
 
@@ -340,7 +332,7 @@ func TestAccBedrockAgentCoreEvaluator_additionalModelRequestFields(t *testing.T)
 			{
 				Config: testAccEvaluatorConfig_additionalModelRequestFields(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("additional_model_request_fields"), knownvalue.StringExact(`{"inferenceConfig":{"topK":50}}`)),
@@ -382,7 +374,7 @@ func testAccCheckEvaluatorDestroy(ctx context.Context, t *testing.T) resource.Te
 	}
 }
 
-func testAccCheckEvaluatorExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetEvaluatorOutput) resource.TestCheckFunc {
+func testAccCheckEvaluatorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -391,14 +383,8 @@ func testAccCheckEvaluatorExists(ctx context.Context, t *testing.T, n string, v 
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
-		if err != nil {
-			return err
-		}
-
-		*v = *resp
-
-		return nil
+		_, err := tfbedrockagentcore.FindEvaluatorByID(ctx, conn, rs.Primary.Attributes["evaluator_id"])
+		return err
 	}
 }
 
