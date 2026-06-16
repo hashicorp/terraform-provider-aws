@@ -316,13 +316,12 @@ func (r *hubContentReferenceResource) Delete(ctx context.Context, request resour
 	}
 }
 
-// stripARNVersion removes the version suffix from a SageMaker ARN
+var versionSuffix = regexache.MustCompile(`/\d+\.\d+\.\d+$`)
+
+// stripARNVersion removes the semantic version suffix from a SageMaker hub content ARN.
+// If no version suffix is present, the ARN is returned unchanged.
 func stripARNVersion(arn *string) *string {
-	s := aws.ToString(arn)
-	if i := strings.LastIndex(s, "/"); i >= 0 {
-		s = s[:i]
-	}
-	return aws.String(s)
+	return aws.String(versionSuffix.ReplaceAllString(aws.ToString(arn), ""))
 }
 
 const hubContentReferenceImportIDSeparator = intflex.ResourceIdSeparator

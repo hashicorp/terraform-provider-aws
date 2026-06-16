@@ -316,3 +316,34 @@ resource "aws_sagemaker_hub_content_reference" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
+func TestStripARNVersion(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want string
+	}{
+		{
+			name: "ARN with version suffix is stripped",
+			arn:  "arn:aws:sagemaker:us-east-1:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct/1.0.0", //lintignore:AWSAT003,AWSAT005
+			want: "arn:aws:sagemaker:us-east-1:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct",       //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			name: "ARN without version suffix is returned unchanged",
+			arn:  "arn:aws:sagemaker:us-east-1:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct", //lintignore:AWSAT003,AWSAT005
+			want: "arn:aws:sagemaker:us-east-1:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsagemaker.StripARNVersion(&tt.arn); *got != tt.want {
+				t.Errorf("StripARNVersion(%q) = %q, want %q", tt.arn, *got, tt.want)
+			}
+		})
+	}
+}

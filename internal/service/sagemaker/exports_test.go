@@ -153,4 +153,6 @@ var (
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
+
+	StripARNVersion = stripARNVersion
 )
