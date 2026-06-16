@@ -123,10 +123,10 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
-	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
+	if err := d.Set("posix_user", flattenPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
-	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
+	if err := d.Set("root_directory", flattenRootDirectory(ap.RootDirectory)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
 
