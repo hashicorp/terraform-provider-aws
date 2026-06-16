@@ -234,8 +234,17 @@ func TestAccBedrockAgentCoreEvaluator_categorical(t *testing.T) {
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("categorical").AtSliceIndex(0).AtMapKey("label"), knownvalue.StringExact("POSITIVE")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("categorical").AtSliceIndex(2).AtMapKey("label"), knownvalue.StringExact("NEGATIVE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("rating_scale").AtSliceIndex(0).AtMapKey("categorical"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"label": knownvalue.StringExact("POSITIVE"),
+						}),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"label": knownvalue.StringExact("NEUTRAL"),
+						}),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"label": knownvalue.StringExact("NEGATIVE"),
+						}),
+					})),
 				},
 			},
 			{
@@ -271,9 +280,13 @@ func TestAccBedrockAgentCoreEvaluator_inferenceConfig(t *testing.T) {
 					testAccCheckEvaluatorExists(ctx, t, resourceName, &evaluator),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("inference_config").AtSliceIndex(0).AtMapKey("max_tokens"), knownvalue.Int32Exact(1024)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("inference_config").AtSliceIndex(0).AtMapKey("top_p"), knownvalue.Float64Exact(0.5)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("inference_config").AtSliceIndex(0).AtMapKey("stop_sequences"), knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("STOP")})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluator_config").AtSliceIndex(0).AtMapKey("llm_as_a_judge").AtSliceIndex(0).AtMapKey("model_config").AtSliceIndex(0).AtMapKey("bedrock_evaluator_model_config").AtSliceIndex(0).AtMapKey("inference_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"max_tokens":     knownvalue.Int32Exact(1024),
+							"top_p":          knownvalue.Float64Exact(0.5),
+							"stop_sequences": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("STOP")}),
+						}),
+					})),
 				},
 			},
 			{
