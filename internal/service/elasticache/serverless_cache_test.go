@@ -32,7 +32,10 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -75,7 +78,10 @@ func TestAccElastiCacheServerlessCache_basicValkey(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -117,7 +123,10 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -163,7 +172,10 @@ func TestAccElastiCacheServerlessCache_fullRedis(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -204,7 +216,10 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroup(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -247,7 +262,10 @@ func TestAccElastiCacheServerlessCache_updateWithUserGroupRemoval(t *testing.T) 
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -341,7 +359,10 @@ func TestAccElastiCacheServerlessCache_fullValkey(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -384,7 +405,10 @@ func TestAccElastiCacheServerlessCache_description(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -448,7 +472,10 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 	var v awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -579,7 +606,10 @@ func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 	var v awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -635,7 +665,10 @@ func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 	var v awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -679,7 +712,10 @@ func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 	var v awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -738,7 +774,10 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
@@ -790,7 +829,10 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
   }
 `
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
