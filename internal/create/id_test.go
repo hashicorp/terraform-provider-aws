@@ -30,13 +30,13 @@ func TestUniqueId(t *testing.T) {
 		}
 
 		if !strings.HasPrefix(id, UniqueIDPrefix) {
-			t.Fatalf("Random ID didn't have terraform- prefix! %s", id)
+			t.Fatalf("Unique ID didn't have terraform- prefix! %s", id)
 		}
 
 		random := strings.TrimPrefix(id, UniqueIDPrefix)
 
 		if len(random) != UniqueIDSuffixLength {
-			t.Fatalf("RandomId is out of sync with UniqueIDSuffixLength, post-prefix part has wrong length! %s", random)
+			t.Fatalf("UniqueId is out of sync with UniqueIDSuffixLength, post-prefix part has wrong length! %s", random)
 		}
 
 		if !allB62.MatchString(random) {
@@ -88,9 +88,9 @@ func TestUniqueId_VCR(t *testing.T) {
 
 			// test with a new source and the same seed to confirm it gives the same results
 			ctx = vcr.NewContext(ctx, mathrand.NewSource(testCase.seed))
-			randomId := UniqueId(ctx)
-			if testCase.expected != randomId {
-				t.Errorf("RandomId = %v, does not match %s", randomId, testCase.expected)
+			uniqueId2 := UniqueId(ctx)
+			if testCase.expected != uniqueId2 {
+				t.Errorf("UniqueId (repeat) = %v, does not match %s", uniqueId2, testCase.expected)
 			}
 		})
 	}
