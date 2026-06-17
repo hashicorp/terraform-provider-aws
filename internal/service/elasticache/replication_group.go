@@ -789,14 +789,6 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("automatic_failover_enabled", true)
 	default:
 		log.Printf("Unknown AutomaticFailover state %q", string(rgp.AutomaticFailover))
-		afValue := d.Get("automatic_failover_enabled")
-		if rawConfig := d.GetRawConfig(); !rawConfig.IsNull() && rawConfig.IsKnown() {
-			rawAF := rawConfig.GetAttr("automatic_failover_enabled")
-			if rawAF.IsKnown() && !rawAF.IsNull() && rawAF.Type() == cty.Bool {
-				afValue = rawAF.True()
-			}
-		}
-		d.Set("automatic_failover_enabled", afValue)
 	}
 
 	switch rgp.MultiAZ {
