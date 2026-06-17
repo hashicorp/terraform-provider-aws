@@ -7,7 +7,9 @@ package devopsagent
 var (
 	ResourceAgentSpace = newAgentSpaceResource
 	ResourceAsset      = newAssetResource
+	ResourceAssetFile  = newAssetFileResource
 
-	FindAgentSpaceByID = findAgentSpaceByID
-	FindAssetByID      = findAssetByID
+	FindAgentSpaceByID  = findAgentSpaceByID
+	FindAssetByID       = findAssetByID
+	FindAssetFileByPath = findAssetFileByPath
 )

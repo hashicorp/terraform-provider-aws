@@ -49,6 +49,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				ImportID:      assetImportID{},
 			},
 		},
+		{
+			Factory:  newAssetFileResource,
+			TypeName: "aws_devopsagent_asset_file",
+			Name:     "Asset File",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+				inttypes.StringIdentityAttribute(names.AttrPath, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assetFileImportID{},
+			},
+		},
 	}
 }
 
