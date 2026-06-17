@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_opensearchserverless_access_policy", name="Access Policy)
+// @FrameworkResource("aws_opensearchserverless_access_policy", name="Access Policy")
 // @IdentityAttribute("name")
 // @IdentityAttribute("type")
 // @ImportIDHandler("accessPolicyImportID", setIDAttribute=true)

@@ -253,8 +253,8 @@ resource "aws_lb_listener_rule" "transform" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }

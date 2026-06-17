@@ -138,9 +138,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -245,7 +245,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
 	cd skaff && $$gover mod tidy && cd .. ; \
@@ -269,16 +268,7 @@ deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 
 docs: docs-link-check docs-markdown-lint docs-misspell ## [CI] Run all CI documentation checks
 
-docs-check: ## Check provider documentation (Legacy, use caution)
-	@echo "make: Legacy target, use caution..."
-	@tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-		-provider-name=aws \
-		-require-resource-subcategory
+docs-check: swissshepherd ## Alias to swissshepherd
 
 docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
@@ -321,8 +311,9 @@ docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
 	@misspell -error -source text docs/
 
-examples-tflint: tflint-init ## [CI] Examples Checks / tflint
+examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" \
 	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
@@ -819,6 +810,19 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 	[ $$count -eq 0 ] || \
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
+swissshepherd: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Running Swiss Shepherd checks (config: .ci/swissshepherd-weak.hcl)..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl
+
+swissshepherd-count: ## [CI] Run Swiss Shepherd checks
+	@echo "make: Counting all Swiss Shepherd findings (config: .ci/swissshepherd-full.hcl)..."
+	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
+
+swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
+	@echo "make: Refreshing Swiss Shepherd schemas (config: .ci/swissshepherd-weak.hcl)..."
+	@echo "make: This will take a while..."
+	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
+
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -968,57 +972,34 @@ testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 
 testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
 
-testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
+testacc-tflint-dir: tflint-init tflint-opa-tests ## Run tflint on Terraform directories
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
 
 testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
 
-testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
+testacc-tflint-embedded: tflint-init tflint-opa-tests ## Run tflint on embedded Terraform configs
 	@echo "make: Acceptance Test Linting (embedded) / tflint..."
-	@find $(SVC_DIR) -type f -name '*_test.go' \
+	@export TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
+
+tflint-opa-tests: tflint-init ## Run OPA policy tests
+	@TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" .ci/opa-policies/tests/run_tests.sh
 
 tflint-init: ## Initialize tflint
 	@tflint --config .ci/.tflint.hcl --init
 
-tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
-	@echo "make: Provider Checks / tfproviderdocs..."
-	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
-	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
-	echo 'data "aws_partition" "example" {}' > example.tf ; \
-	terraform init -plugin-dir terraform-plugin-dir ; \
-	mkdir -p terraform-providers-schema ; \
-	terraform providers schema -json > terraform-providers-schema/schema.json ; \
-	tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
-		-provider-source registry.terraform.io/hashicorp/aws \
-		-providers-schema-json terraform-providers-schema/schema.json \
-		-require-resource-subcategory \
-		-ignore-cdktf-missing-files \
-		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
-		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
-		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
-		-enable-enhanced-region-check
-
-tfsdk2fw: prereq-go ## Install tfsdk2fw
-	@echo "make: Installing tfsdk2fw..."
-	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
@@ -1037,7 +1018,6 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1131,10 +1111,13 @@ website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 		terrafmt fmt $$dir --pattern '*.markdown'; \
 	done
 
-website-tflint: tflint-init ## [CI] Website Checks / tflint
+website-tflint: tflint-init tflint-opa-tests ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
 	@exit_code=0 ; \
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	export TFLINT_OPA_POLICY_DIR ; \
 	shared_rules=( \
+		"--disable-rule=opa_deny_acmpca_deletion_time" \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
 		"--disable-rule=aws_db_instance_default_parameter_group" \
 		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
@@ -1263,6 +1246,9 @@ yamllint: ## [CI] YAML Linting / yamllint
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
+	swissshepherd \
+	swissshepherd-count \
+	swissshepherd-refresh \
 	t \
 	test \
 	test-compile \
@@ -1279,8 +1265,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-tflint-embedded \
 	terraform-fmt \
 	tflint-init \
-	tfproviderdocs \
-	tfsdk2fw \
 	tools \
 	ts \
 	update \

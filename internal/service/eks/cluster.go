@@ -83,313 +83,168 @@ func resourceCluster() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.AuthenticationMode](),
-						},
-						"bootstrap_cluster_creator_admin_permissions": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_self_managed_addons": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-			"certificate_authority": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.AuthenticationMode](),
+							},
+							"bootstrap_cluster_creator_admin_permissions": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_self_managed_addons": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  true,
+				},
+				"certificate_authority": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						"node_pools": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+					},
+				},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"node_pools": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(nodePoolType_Values(), false),
+								},
+							},
+							"node_role_arn": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(nodePoolType_Values(), false),
-							},
-						},
-						"node_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"control_plane_scaling_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tier": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.ProvisionedControlPlaneTier](),
-						},
-					},
-				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enabled_cluster_log_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.LogType](),
-				},
-			},
-			"encryption_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ConflictsWith: []string{"outpost_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"provider": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						names.AttrResources: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(resources_Values(), false),
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"force_update_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"identity": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"oidc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+				"control_plane_scaling_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tier": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ProvisionedControlPlaneTier](),
 							},
 						},
 					},
 				},
-			},
-			"kubernetes_network_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"outpost_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"elastic_load_balancing": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"ip_family": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.IpFamily](),
-						},
-						"service_ipv4_cidr": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.IsCIDRNetwork(12, 24),
-								validateIPv4CIDRPrivateRange,
-							),
-						},
-						"service_ipv6_cidr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enabled_cluster_log_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.LogType](),
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			"outpost_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ConflictsWith: []string{"encryption_config", "kubernetes_network_config", "remote_network_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"control_plane_instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"control_plane_placement": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrGroupName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"outpost_arns": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"platform_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"remote_network_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"outpost_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"remote_node_networks": {
-							Type:     schema.TypeList,
-							MinItems: 1,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												verify.ValidIPv4CIDRNetworkAddress,
-												validateIPv4CIDRPrivateRange,
-											),
+				"encryption_config": {
+					Type:          schema.TypeList,
+					MaxItems:      1,
+					Optional:      true,
+					ConflictsWith: []string{"outpost_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"provider": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key_arn": {
+											Type:     schema.TypeString,
+											Required: true,
 										},
 									},
 								},
 							},
+							names.AttrResources: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(resources_Values(), false),
+								},
+							},
 						},
-						"remote_pod_networks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												verify.ValidIPv4CIDRNetworkAddress,
-												validateIPv4CIDRPrivateRange,
-											),
+					},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"force_update_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"identity": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"oidc": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
 									},
 								},
@@ -397,125 +252,307 @@ func resourceCluster() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"storage_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"block_storage": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
+				"kubernetes_network_config": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"outpost_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"elastic_load_balancing": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"ip_family": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.IpFamily](),
+							},
+							"service_ipv4_cidr": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.IsCIDRNetwork(12, 24),
+									validateIPv4CIDRPrivateRange,
+								),
+							},
+							"service_ipv6_cidr": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				"outpost_config": {
+					Type:          schema.TypeList,
+					MaxItems:      1,
+					Optional:      true,
+					ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"control_plane_instance_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"control_plane_placement": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrGroupName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"spread_level": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
+											DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+												// in some case the EKS API might not return spread_level in DescribeCluster
+												// even though the value is set in TF. In order to not force cluster delete in
+												// that case, we'll suppress diff when spread_level is ""
+												return oldValue == "" && d.Id() != ""
+											},
+										},
+									},
+								},
+							},
+							"etcd_instance_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"etcd_placement": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"spread_level": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.SpreadLevel](),
+										},
+									},
+								},
+							},
+							"outpost_arns": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"platform_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"remote_network_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"remote_node_networks": {
+								Type:     schema.TypeList,
+								MinItems: 1,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cidrs": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													verify.ValidIPv4CIDRNetworkAddress,
+													validateIPv4CIDRPrivateRange,
+												),
+											},
+										},
+									},
+								},
+							},
+							"remote_pod_networks": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cidrs": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													verify.ValidIPv4CIDRNetworkAddress,
+													validateIPv4CIDRPrivateRange,
+												),
+											},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"upgrade_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"support_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.SupportType](),
-						},
-					},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_security_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"endpoint_private_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"endpoint_public_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"public_access_cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"storage_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"block_storage": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
 							},
 						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"upgrade_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"support_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.SupportType](),
+							},
 						},
 					},
 				},
-			},
-			"zonal_shift_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cluster_security_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"endpoint_private_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"endpoint_public_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"public_access_cidrs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidCIDRNetworkAddress,
+								},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				"zonal_shift_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -925,16 +962,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *schema.ResourceData) error {
+	// access_config as a whole is not always returned and
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
 	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
-	var bootstrapClusterCreatorAdminPermissions *bool
-	if v, ok := d.GetOk("access_config"); ok {
-		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
-			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+	if cluster.AccessConfig != nil {
+		var bootstrapClusterCreatorAdminPermissions *bool
+		if v, ok := d.GetOk("access_config"); ok {
+			if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
+				bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+			}
 		}
-	}
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
-		return fmt.Errorf("setting access_config: %w", err)
+		if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
+			return fmt.Errorf("setting access_config: %w", err)
+		}
 	}
 	d.Set(names.AttrARN, cluster.Arn)
 	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
@@ -971,8 +1011,10 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *sche
 		return fmt.Errorf("setting outpost_config: %w", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
-	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
-		return fmt.Errorf("setting remote_network_config: %w", err)
+	if cluster.RemoteNetworkConfig != nil {
+		if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+			return fmt.Errorf("setting remote_network_config: %w", err)
+		}
 	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
@@ -1391,6 +1433,14 @@ func expandOutpostConfigRequest(tfList []any) *types.OutpostConfigRequest {
 		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacementRequest(v)
 	}
 
+	if v, ok := tfMap["etcd_instance_type"].(string); ok && v != "" {
+		outpostConfigRequest.EtcdInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["etcd_placement"].([]any); ok && len(v) > 0 {
+		outpostConfigRequest.EtcdPlacement = expandEtcdPlacementRequest(v)
+	}
+
 	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
 		outpostConfigRequest.OutpostArns = flex.ExpandStringValueSet(v)
 	}
@@ -1412,6 +1462,29 @@ func expandControlPlanePlacementRequest(tfList []any) *types.ControlPlanePlaceme
 
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["spread_level"].(string); ok && v != "" {
+		apiObject.SpreadLevel = types.SpreadLevel(v)
+	}
+
+	return apiObject
+}
+
+func expandEtcdPlacementRequest(tfList []any) *types.EtcdPlacementRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.EtcdPlacementRequest{}
+
+	if v, ok := tfMap["spread_level"].(string); ok && v != "" {
+		apiObject.SpreadLevel = types.SpreadLevel(v)
 	}
 
 	return apiObject
@@ -1705,12 +1778,14 @@ func flattenOIDC(apiObject *types.OIDC) []map[string]any {
 }
 
 func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrapClusterCreatorAdminPermissions *bool) []any {
-	if apiObject == nil {
+	if apiObject == nil && bootstrapClusterCreatorAdminPermissions == nil {
 		return nil
 	}
 
-	tfMap := map[string]any{
-		"authentication_mode": apiObject.AuthenticationMode,
+	tfMap := map[string]any{}
+
+	if apiObject != nil {
+		tfMap["authentication_mode"] = apiObject.AuthenticationMode
 	}
 
 	if bootstrapClusterCreatorAdminPermissions != nil {
@@ -1759,11 +1834,16 @@ func flattenVPCConfigResponse(apiObject *types.VpcConfigResponse) []map[string]a
 		return []map[string]any{}
 	}
 
+	securityGroupIds := apiObject.SecurityGroupIds
+	if securityGroupIds == nil {
+		securityGroupIds = []string{}
+	}
+
 	tfMap := map[string]any{
 		"cluster_security_group_id": aws.ToString(apiObject.ClusterSecurityGroupId),
 		"endpoint_private_access":   apiObject.EndpointPrivateAccess,
 		"endpoint_public_access":    apiObject.EndpointPublicAccess,
-		names.AttrSecurityGroupIDs:  apiObject.SecurityGroupIds,
+		names.AttrSecurityGroupIDs:  securityGroupIds,
 		names.AttrSubnetIDs:         apiObject.SubnetIds,
 		"public_access_cidrs":       apiObject.PublicAccessCidrs,
 		names.AttrVPCID:             aws.ToString(apiObject.VpcId),
@@ -1823,6 +1903,8 @@ func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []any 
 	tfMap := map[string]any{
 		"control_plane_instance_type": aws.ToString(apiObject.ControlPlaneInstanceType),
 		"control_plane_placement":     flattenControlPlanePlacementResponse(apiObject.ControlPlanePlacement),
+		"etcd_instance_type":          aws.ToString(apiObject.EtcdInstanceType),
+		"etcd_placement":              flattenEtcdPlacementResponse(apiObject.EtcdPlacement),
 		"outpost_arns":                apiObject.OutpostArns,
 	}
 
@@ -1885,6 +1967,22 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 
 	tfMap := map[string]any{
 		names.AttrGroupName: aws.ToString(apiObject.GroupName),
+	}
+
+	if apiObject.SpreadLevel != "" {
+		tfMap["spread_level"] = apiObject.SpreadLevel
+	}
+
+	return []any{tfMap}
+}
+
+func flattenEtcdPlacementResponse(apiObject *types.EtcdPlacementResponse) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"spread_level": apiObject.SpreadLevel,
 	}
 
 	return []any{tfMap}

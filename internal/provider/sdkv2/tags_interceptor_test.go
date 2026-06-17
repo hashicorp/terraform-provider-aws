@@ -123,6 +123,12 @@ func (d *resourceData) GetRawConfig() cty.Value {
 
 func (d *resourceData) GetRawPlan() cty.Value {
 	return cty.ObjectVal(map[string]cty.Value{
+		// `tags` is set from the user's configuration, while `tags_all` is
+		// computed (unknown) in the plan when, for example, an empty string
+		// tag value forces tags_all to be re-computed.
+		"tags": cty.MapVal(map[string]cty.Value{
+			"tag1": cty.StringVal("value1"),
+		}),
 		"tags_all": cty.MapVal(map[string]cty.Value{
 			"tag1": cty.UnknownVal(cty.String),
 		}),

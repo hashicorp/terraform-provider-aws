@@ -24,37 +24,39 @@ func dataSourceSDK() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSDKRead,
 
-		Schema: map[string]*schema.Schema{
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sdk_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"java", "javascript", "android", "objectivec", "swift", "ruby"}, false),
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sdk_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"java", "javascript", "android", "objectivec", "swift", "ruby"}, false),
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

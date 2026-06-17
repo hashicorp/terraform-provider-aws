@@ -38,8 +38,6 @@ This resource supports the following arguments:
   with ASCII characters) that you want to search for in web requests,
   the location in requests that you want to search, and other settings.
 
-## Nested blocks
-
 ### `byte_match_tuples`
 
 #### Arguments
@@ -69,8 +67,6 @@ This resource supports the following arguments:
   e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
-
-## Remarks
 
 ## Attribute Reference
 

@@ -47,34 +47,36 @@ func resourceVolumeAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDeviceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"force_detach": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stop_instance_before_detaching": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDeviceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"force_detach": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"stop_instance_before_detaching": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

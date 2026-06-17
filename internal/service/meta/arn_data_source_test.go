@@ -27,7 +27,8 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 				Config: testAccARNDataSourceConfig_basic(arn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "account", acctest.Ct12Digit),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, arn),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrARN, arn),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, "eu-west-1"), // lintignore:AWSAT003
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "db:mysql-db"),
@@ -52,7 +53,8 @@ func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
 				Config: testAccARNDataSourceConfig_basic(arn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "account", ""),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, arn),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrARN, arn),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "my_corporate_bucket/Development/*"),
