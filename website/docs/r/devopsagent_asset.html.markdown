@@ -12,7 +12,7 @@ Manages an AWS DevOps Agent Asset. Assets represent operational knowledge artifa
 
 ## Example Usage
 
-### Basic Skill
+### Simple Skill with Inline Content
 
 ```terraform
 resource "aws_devopsagent_agent_space" "example" {
@@ -28,6 +28,47 @@ resource "aws_devopsagent_asset" "example" {
   metadata = jsonencode({
     name        = "rds-performance-investigation"
     description = "Investigation procedures for RDS performance issues."
+    agent_types = ["GENERIC"]
+  })
+}
+```
+
+### Skill from a Local File
+
+```terraform
+resource "aws_devopsagent_agent_space" "example" {
+  name = "example-space"
+}
+
+resource "aws_devopsagent_asset" "example" {
+  agent_space_id = aws_devopsagent_agent_space.example.agent_space_id
+  asset_type     = "skill"
+  filename       = "${path.module}/skills/SKILL.md"
+  content_path   = "SKILL.md"
+
+  metadata = jsonencode({
+    name        = "rds-performance-investigation"
+    description = "Investigation procedures for RDS performance issues."
+    agent_types = ["GENERIC"]
+  })
+}
+```
+
+### Complex Skill from a Zip Bundle
+
+When a skill includes multiple files (e.g., a `SKILL.md` plus reference material in a `references/` directory), upload the content as a zip file. The `content_path` attribute is ignored for zip uploads — file paths are taken from the archive structure.
+
+```terraform
+resource "aws_devopsagent_agent_space" "example" {
+  name = "example-space"
+}
+
+resource "aws_devopsagent_asset" "complex_skill" {
+  agent_space_id = aws_devopsagent_agent_space.example.agent_space_id
+  asset_type     = "skill"
+  filename       = "${path.module}/skills/rds-investigation.zip"
+
+  metadata = jsonencode({
     agent_types = ["GENERIC"]
   })
 }
@@ -52,6 +93,27 @@ resource "aws_devopsagent_asset" "example" {
 }
 ```
 
+### Attachment from a Local File
+
+```terraform
+resource "aws_devopsagent_agent_space" "example" {
+  name = "example-space"
+}
+
+resource "aws_devopsagent_asset" "topology_diagram" {
+  agent_space_id = aws_devopsagent_agent_space.example.agent_space_id
+  asset_type     = "attachment"
+  filename       = "${path.module}/diagrams/topology.png"
+  content_path   = "topology.png"
+
+  metadata = jsonencode({
+    filename  = "topology.png"
+    extension = "png"
+    size      = 184320
+  })
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -61,9 +123,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `content_body` - (Optional) Text content of the asset file (UTF-8). Mutually exclusive with binary content.
-* `content_path` - (Optional) Path of the file within the asset (e.g., `SKILL.md`). Defaults to `SKILL.md` if not specified.
-* `metadata` - (Optional) JSON-encoded metadata object describing the asset. The required keys depend on the `asset_type`. See the [AWS documentation](https://docs.aws.amazon.com/devopsagent/latest/userguide/about-aws-devops-agent-managing-assets.html) for details on metadata keys for each asset type.
+* `content_body` - (Optional) Inline text content of the asset file (UTF-8). Mutually exclusive with `filename`. Used for simple single-file assets where the content can be expressed as a string.
+* `content_path` - (Optional) Path of the file within the asset (e.g., `SKILL.md`, `references/guide.md`). Used with both `content_body` and non-zip `filename` uploads. Ignored for `.zip` file uploads (paths come from the archive structure). Defaults to the base filename when using `filename`, or `SKILL.md` when using `content_body` without specifying this attribute.
+* `filename` - (Optional) Path to a local file to upload as the asset content. Mutually exclusive with `content_body`. For `.zip` files, the content is uploaded as a zip bundle containing multiple files. For all other file types, the content is uploaded as a single file.
+* `metadata` - (Optional) JSON-encoded metadata object describing the asset. The required keys depend on the `asset_type`. For zip bundle skills, `name` and `description` are extracted from the `SKILL.md` frontmatter and any values supplied here are ignored. See the [AWS documentation](https://docs.aws.amazon.com/devopsagent/latest/userguide/about-aws-devops-agent-managing-assets.html) for details on metadata keys for each asset type.
 
 ## Attribute Reference
 

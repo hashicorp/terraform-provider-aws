@@ -6,34 +6,45 @@ package devopsagent
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_devopsagent_asset", name="Asset")
 // @IdentityAttribute("agent_space_id")
 // @IdentityAttribute("asset_id")
+// @ImportIDHandler("assetImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsagent;devopsagent.GetAssetOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc=testAccAssetImportStateIDFunc)
+// @Testing(importStateIdAttribute="asset_id")
+// @Testing(importIgnore="content_body;content_path;metadata")
 func newAssetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &assetResource{}, nil
 }
@@ -70,14 +81,14 @@ func (r *assetResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"asset_version": schema.Int32Attribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.UseStateForUnknown(),
-				},
 			},
 			"content_body": schema.StringAttribute{
 				Optional: true,
 			},
 			"content_path": schema.StringAttribute{
+				Optional: true,
+			},
+			"filename": schema.StringAttribute{
 				Optional: true,
 			},
 			"metadata": schema.StringAttribute{
@@ -104,7 +115,7 @@ func (r *assetResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	// Set metadata if provided.
 	if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
-		doc, err := jsonToDocument(plan.Metadata.ValueString())
+		doc, err := tfsmithy.DocumentFromJSONString(plan.Metadata.ValueString(), document.NewLazyDocument)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.AssetType.ValueString())
 			return
@@ -112,8 +123,16 @@ func (r *assetResource) Create(ctx context.Context, req resource.CreateRequest, 
 		input.Metadata = doc
 	}
 
-	// Set content — single text file upload.
-	if !plan.ContentBody.IsNull() && !plan.ContentBody.IsUnknown() {
+	// Set content — either from inline content_body or from a local file via filename.
+	// These are mutually exclusive.
+	if !plan.Filename.IsNull() && !plan.Filename.IsUnknown() {
+		content, err := buildContentFromFile(plan.Filename.ValueString(), plan.ContentPath)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.AssetType.ValueString())
+			return
+		}
+		input.Content = content
+	} else if !plan.ContentBody.IsNull() && !plan.ContentBody.IsUnknown() {
 		path := "SKILL.md"
 		if !plan.ContentPath.IsNull() && !plan.ContentPath.IsUnknown() {
 			path = plan.ContentPath.ValueString()
@@ -184,14 +203,9 @@ func (r *assetResource) flatten(_ context.Context, out *devopsagent.GetAssetOutp
 	state.AssetType = types.StringPointerValue(out.Asset.AssetType)
 	state.AssetVersion = types.Int32PointerValue(out.Asset.Version)
 
-	if out.Asset.Metadata != nil {
-		metaJSON, err := documentToJSON(out.Asset.Metadata)
-		if err != nil {
-			diags.AddError("reading asset metadata", err.Error())
-			return diags
-		}
-		state.Metadata = jsontypes.NewNormalizedValue(metaJSON)
-	}
+	// metadata is not read back from the API. The API adds server-managed defaults
+	// (skill_type, status) that would cause spurious diffs since metadata is Optional-only.
+	// The user's configured value is preserved in state.
 
 	return diags
 }
@@ -213,10 +227,13 @@ func (r *assetResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	needsUpdate := false
 
+	// Copy version from state — will be overwritten if an update occurs.
+	plan.AssetVersion = state.AssetVersion
+
 	if !plan.Metadata.Equal(state.Metadata) {
 		needsUpdate = true
 		if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
-			doc, err := jsonToDocument(plan.Metadata.ValueString())
+			doc, err := tfsmithy.DocumentFromJSONString(plan.Metadata.ValueString(), document.NewLazyDocument)
 			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.AssetID.ValueString())
 				return
@@ -225,9 +242,16 @@ func (r *assetResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	if !plan.ContentBody.Equal(state.ContentBody) {
+	if !plan.ContentBody.Equal(state.ContentBody) || !plan.Filename.Equal(state.Filename) {
 		needsUpdate = true
-		if !plan.ContentBody.IsNull() && !plan.ContentBody.IsUnknown() {
+		if !plan.Filename.IsNull() && !plan.Filename.IsUnknown() {
+			content, err := buildContentFromFile(plan.Filename.ValueString(), plan.ContentPath)
+			if err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.AssetID.ValueString())
+				return
+			}
+			input.Content = content
+		} else if !plan.ContentBody.IsNull() && !plan.ContentBody.IsUnknown() {
 			path := "SKILL.md"
 			if !plan.ContentPath.IsNull() && !plan.ContentPath.IsUnknown() {
 				path = plan.ContentPath.ValueString()
@@ -285,6 +309,41 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
+// buildContentFromFile reads a local file and returns the appropriate AssetContent union.
+// For .zip files, it uses AssetContentMemberZip. For all other files, it uses
+// AssetContentMemberFile with the content_path as the path within the asset (defaulting
+// to the base filename if content_path is not set).
+func buildContentFromFile(filename string, contentPath types.String) (awstypes.AssetContent, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("reading file %q: %w", filename, err)
+	}
+
+	ext := strings.ToLower(filepath.Ext(filename))
+	if ext == ".zip" {
+		return &awstypes.AssetContentMemberZip{
+			Value: awstypes.AssetZipContent{
+				ZipFile: data,
+			},
+		}, nil
+	}
+
+	// Non-zip file: determine the path within the asset.
+	path := filepath.Base(filename)
+	if !contentPath.IsNull() && !contentPath.IsUnknown() {
+		path = contentPath.ValueString()
+	}
+
+	return &awstypes.AssetContentMemberFile{
+		Value: awstypes.AssetFileContent{
+			Path: aws.String(path),
+			Body: &awstypes.AssetFileBodyMemberBytes{
+				Value: data,
+			},
+		},
+	}, nil
+}
+
 func findAssetByID(ctx context.Context, conn *devopsagent.Client, agentSpaceID, assetID string) (*devopsagent.GetAssetOutput, error) {
 	input := devopsagent.GetAssetInput{
 		AgentSpaceId: aws.String(agentSpaceID),
@@ -293,7 +352,7 @@ func findAssetByID(ctx context.Context, conn *devopsagent.Client, agentSpaceID, 
 
 	out, err := conn.GetAsset(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -317,7 +376,24 @@ type assetResourceModel struct {
 	AssetVersion types.Int32          `tfsdk:"asset_version"`
 	ContentBody  types.String         `tfsdk:"content_body"`
 	ContentPath  types.String         `tfsdk:"content_path"`
+	Filename     types.String         `tfsdk:"filename"`
 	Metadata     jsontypes.Normalized `tfsdk:"metadata"`
 }
 
+var _ inttypes.ImportIDParser = assetImportID{}
 
+type assetImportID struct{}
+
+func (assetImportID) Parse(id string) (string, map[string]any, error) {
+	agentSpaceID, assetID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <agent-space-id>"+intflex.ResourceIdSeparator+"<asset-id>", id)
+	}
+
+	result := map[string]any{
+		"agent_space_id": agentSpaceID,
+		"asset_id":       assetID,
+	}
+
+	return id, result, nil
+}
