@@ -40,55 +40,57 @@ func resourcePermission() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "events:PutEvents",
-				ValidateFunc: validatePermissionAction,
-			},
-			names.AttrCondition: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "events:PutEvents",
+					ValidateFunc: validatePermissionAction,
+				},
+				names.AttrCondition: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
 						},
 					},
 				},
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusName,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validatePermissionPrincipal,
-			},
-			"statement_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validatePermissionStatementID,
-			},
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusName,
+					Default:      DefaultEventBusName,
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validatePermissionPrincipal,
+				},
+				"statement_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validatePermissionStatementID,
+				},
+			}
 		},
 	}
 }

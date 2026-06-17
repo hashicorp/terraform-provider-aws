@@ -10,6 +10,9 @@ description: |-
 
 Lists ECS (Elastic Container) Service resources.
 
+Does not include Services creating using Express Mode.
+Use `ecs_express_gateway_service` instead.
+
 ## Example Usage
 
 ```terraform

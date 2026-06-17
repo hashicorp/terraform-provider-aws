@@ -229,14 +229,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . }}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . }}
 						),
@@ -349,14 +349,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . -}}
 						),
@@ -486,14 +486,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
@@ -601,14 +601,14 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),

@@ -17,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -48,7 +49,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					checkResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -319,6 +320,14 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -348,7 +357,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -377,7 +386,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -422,6 +431,65 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkInterface_enaSrdSpecification(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_udp_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_udp_specification.0.ena_srd_udp_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "0"),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1585,6 +1653,104 @@ func testAccVPCNetworkInterfaceConfig_attachment(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance     = aws_instance.test.id
+    device_index = 1
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.8xlarge", "m6in.8xlarge", "r6in.8xlarge"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance     = aws_instance.test.id
+    device_index = 1
+  }
+
+  ena_srd_specification {
+    ena_srd_enabled = %[2]t
+
+    ena_srd_udp_specification {
+      ena_srd_udp_enabled = %[3]t
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enaSrdEnabled, enaSrdUdpEnabled))
+}
+
+func testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.8xlarge", "m6in.8xlarge", "r6in.8xlarge"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {

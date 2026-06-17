@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpc: Automatically detect and remove GuardDuty-managed VPC endpoints and security groups during `terraform destroy` when they block VPC deletion
+```
+
+```release-note:enhancement
+resource/aws_subnet: Automatically detect and dissociate GuardDuty-managed VPC endpoints during `terraform destroy` when they block subnet deletion
+```

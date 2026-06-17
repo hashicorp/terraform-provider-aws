@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -22,7 +23,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	var channel awstypes.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 
@@ -67,7 +68,7 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,7 +99,7 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -129,7 +130,7 @@ func TestAccPinpointEmailChannel_orchestrationSendingRoleARN(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,7 +160,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	var channel awstypes.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -175,6 +176,14 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEmailChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -188,7 +197,7 @@ func testAccCheckEmailChannelExists(ctx context.Context, t *testing.T, n string,
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint Email Channel with that application ID exists")
+			return fmt.Errorf("No End User Messaging Email Channel with that application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -224,7 +233,7 @@ func testAccCheckEmailChannelDestroy(ctx context.Context, t *testing.T) resource
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint Email Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Email Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

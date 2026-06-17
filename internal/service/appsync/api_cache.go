@@ -38,37 +38,39 @@ func resourceAPICache() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_caching_behavior": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
-			},
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"ttl": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_caching_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
+				},
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"at_rest_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"ttl": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
+				},
+			}
 		},
 	}
 }

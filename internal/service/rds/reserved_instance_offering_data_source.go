@@ -29,44 +29,46 @@ func dataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReservedOfferingRead,
 
-		Schema: map[string]*schema.Schema{
-			"currency_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"Partial Upfront",
-					"All Upfront",
-					"No Upfront",
-				}, false),
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"currency_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"fixed_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"offering_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"offering_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"Partial Upfront",
+						"All Upfront",
+						"No Upfront",
+					}, false),
+				},
+				"product_description": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
