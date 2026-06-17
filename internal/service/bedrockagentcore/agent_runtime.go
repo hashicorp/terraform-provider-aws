@@ -376,7 +376,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 																	Optional: true,
 																	Validators: []validator.String{
 																		stringvalidator.LengthBetween(1, 255),
-																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-:]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																	},
 																},
 																"match_value_string_list": schema.SetAttribute{
@@ -385,7 +385,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 																	Validators: []validator.Set{
 																		setvalidator.ValueStringsAre(
 																			stringvalidator.LengthBetween(1, 255),
-																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-:]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																		),
 																	},
 																},

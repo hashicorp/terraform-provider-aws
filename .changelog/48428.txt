@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_agent_runtime: Allow `:` (colon) in the `match_value_string` and `match_value_string_list` attributes of `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` — the AWS API, Console, and Cognito all accept these (e.g. `custom:role`, `<group>:<permission>` claim values), but the provider's regex previously rejected them, blocking IaC-managed deployments. Matches the existing `inbound_token_claim_name` regex on the same block.
+```
