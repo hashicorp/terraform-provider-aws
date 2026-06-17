@@ -3,6 +3,7 @@
 NOTES:
 
 * resource/aws_cloudfront_distribution_tenant: When using `managed_certificate_request`, managed certificate issuance uses a fixed 3-hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version. ([#47839](https://github.com/hashicorp/terraform-provider-aws/issues/47839))
+* resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. All configurations using `kms_key_arn` should be updated to use the `server_side_encryption_kms_key_id` attribute instead. ([#48441](https://github.com/hashicorp/terraform-provider-aws/issues/48441))
 * resource/aws_eks_cluster: Because we cannot easily test the behavior of `outpost_config`, the changes are best effort and we ask for community help in testing ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 
 FEATURES:
@@ -33,6 +34,7 @@ BUG FIXES:
 * resource/aws_acm_certificate: Correctly updates `subject_alternative_names` for Imported certificates ([#48362](https://github.com/hashicorp/terraform-provider-aws/issues/48362))
 * resource/aws_acmpca_certificate_authority: Prevents hang when trying to create resources over the quota limit. ([#48365](https://github.com/hashicorp/terraform-provider-aws/issues/48365))
 * resource/aws_cloudfront_distribution_tenant: Configured operation timeouts are now correctly honored, preventing potential indefinite hangs ([#47839](https://github.com/hashicorp/terraform-provider-aws/issues/47839))
+* resource/aws_dms_s3_endpoint: Fix perpetual diff when `kms_key_arn` is set but not returned by the API for S3 engine endpoints. ([#48441](https://github.com/hashicorp/terraform-provider-aws/issues/48441))
 * resource/aws_elasticache_replication_group: Fix error when adding a `log_delivery_configuration` with `log_type = "slow-log"` while simultaneously upgrading the engine from Redis 5 to Redis 6 or Valkey 7 ([#46526](https://github.com/hashicorp/terraform-provider-aws/issues/46526))
 * resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException` errors when creating or updating `extended_s3_configuration` in AWS partitions that report unsupported `custom_time_zone` and `file_extension` attributes in a combined error message ([#48369](https://github.com/hashicorp/terraform-provider-aws/issues/48369))
 * resource/aws_lakeformation_opt_in: Fix handling of out-of-band deletion of linked resource ([#48416](https://github.com/hashicorp/terraform-provider-aws/issues/48416))
