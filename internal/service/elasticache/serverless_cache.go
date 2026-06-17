@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -398,42 +399,45 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	// ModifyServerlessCache only supports one field modification per API call.
 	// Each changed field must be sent in a separate request.
+	// The name attribute requires replacement, so old.ServerlessCacheName == new.ServerlessCacheName.
+	name := new.ID.ValueString()
+	timeout := r.UpdateTimeout(ctx, new.Timeouts)
 
 	if !new.Description.Equal(old.Description) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 			Description:         new.Description.ValueStringPointer(),
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	if !new.DailySnapshotTime.Equal(old.DailySnapshotTime) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 			DailySnapshotTime:   new.DailySnapshotTime.ValueStringPointer(),
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	if !new.SnapshotRetentionLimit.Equal(old.SnapshotRetentionLimit) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName:    new.ServerlessCacheName.ValueStringPointer(),
 			SnapshotRetentionLimit: aws.Int32(int32(new.SnapshotRetentionLimit.ValueInt64())),
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 		}
 		if new.CacheUsageLimits.IsNull() {
@@ -456,28 +460,28 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 				return
 			}
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 		}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new.SecurityGroupIDs, &input.SecurityGroupIds)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	if !new.UserGroupID.Equal(old.UserGroupID) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 		}
 		if new.UserGroupID.IsNull() {
@@ -485,7 +489,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		} else {
 			input.UserGroupId = new.UserGroupID.ValueStringPointer()
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -493,7 +497,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	// Engine and MajorEngineVersion must be sent together when engine changes.
 	if !new.Engine.Equal(old.Engine) || !new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
-		input := &elasticache.ModifyServerlessCacheInput{
+		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 		}
 		if !new.Engine.Equal(old.Engine) {
@@ -511,12 +515,14 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			// Only major_engine_version changed, engine stays the same.
 			input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
 		}
-		updateServerlessCache(ctx, conn, response, input, old.ServerlessCacheName.ValueString(), new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
+	// AWS returns null values for certain values that are available on redis/valkey only.
+	// Always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", old.ID.ValueString()), err.Error())
@@ -531,16 +537,20 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func updateServerlessCache(ctx context.Context, conn *elasticache.Client, response *resource.UpdateResponse, input *elasticache.ModifyServerlessCacheInput, oldServerlessCacheName string, newId string, timout time.Duration) {
+func updateServerlessCache(ctx context.Context, conn *elasticache.Client, name string, input *elasticache.ModifyServerlessCacheInput, timeout time.Duration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if _, err := conn.ModifyServerlessCache(ctx, input); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", newId), err.Error())
-		return
+		diags.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", name), err.Error())
+		return diags
 	}
 
-	if _, err := waitServerlessCacheAvailable(ctx, conn, oldServerlessCacheName, timout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", newId), err.Error())
-		return
+	if _, err := waitServerlessCacheAvailable(ctx, conn, name, timeout); err != nil {
+		diags.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", name), err.Error())
+		return diags
 	}
+
+	return diags
 }
 
 func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
