@@ -5,6 +5,11 @@ NOTES:
 * resource/aws_cloudfront_distribution_tenant: When using `managed_certificate_request`, managed certificate issuance uses a fixed 3-hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version. ([#47839](https://github.com/hashicorp/terraform-provider-aws/issues/47839))
 * resource/aws_eks_cluster: Because we cannot easily test the behavior of `outpost_config`, the changes are best effort and we ask for community help in testing ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 
+FEATURES:
+
+* **New List Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
+* **New Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
+
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` attributes ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
@@ -15,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` arguments ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 * resource/aws_eks_cluster: Change `outpost_config.control_plane_placement.group_name` to Optional ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 * resource/aws_elasticache_replication_group: Add `durability` argument ([#48254](https://github.com/hashicorp/terraform-provider-aws/issues/48254))
+* resource/aws_elasticache_serverless_cache: Add `network_type` argument ([#48371](https://github.com/hashicorp/terraform-provider-aws/issues/48371))
 * resource/aws_msk_replicator: Add Resource Identity support ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `destination_metrics_configuration` and `source_metrics_configuration` blocks ([#48303](https://github.com/hashicorp/terraform-provider-aws/issues/48303))
 * resource/aws_opensearchserverless_collection: Add `vector_options.serverless_vector_acceleration` argument ([#47018](https://github.com/hashicorp/terraform-provider-aws/issues/47018))
@@ -26,6 +32,8 @@ BUG FIXES:
 * resource/aws_cloudfront_distribution_tenant: Configured operation timeouts are now correctly honored, preventing potential indefinite hangs ([#47839](https://github.com/hashicorp/terraform-provider-aws/issues/47839))
 * resource/aws_elasticache_replication_group: Fix error when adding a `log_delivery_configuration` with `log_type = "slow-log"` while simultaneously upgrading the engine from Redis 5 to Redis 6 or Valkey 7 ([#46526](https://github.com/hashicorp/terraform-provider-aws/issues/46526))
 * resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException` errors when creating or updating `extended_s3_configuration` in AWS partitions that report unsupported `custom_time_zone` and `file_extension` attributes in a combined error message ([#48369](https://github.com/hashicorp/terraform-provider-aws/issues/48369))
+* resource/aws_lakeformation_opt_in: Fix handling of out-of-band deletion of linked resource ([#48416](https://github.com/hashicorp/terraform-provider-aws/issues/48416))
+* resource/aws_lakeformation_opt_in: Prevent crash by making the `principal` block required ([#48416](https://github.com/hashicorp/terraform-provider-aws/issues/48416))
 * resource/aws_lakeformation_resource_lf_tag: Prevent crash when processing null tag values during read operations ([#48417](https://github.com/hashicorp/terraform-provider-aws/issues/48417))
 * resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with length 0` panic when importing a replicator with no replication configurations ([#48338](https://github.com/hashicorp/terraform-provider-aws/issues/48338))
 * resource/aws_ses_domain_mail_from: Correctly detect resources deleted outside of Terraform when refreshing state ([#48387](https://github.com/hashicorp/terraform-provider-aws/issues/48387))

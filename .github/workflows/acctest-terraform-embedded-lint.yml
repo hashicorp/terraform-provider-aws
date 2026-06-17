@@ -11,6 +11,8 @@ on:
     paths:
       - .github/workflows/acctest-terraform-embedded-lint.yml
       - .ci/.tflint.hcl
+      - .ci/.tflint_opa.hcl
+      - .ci/opa-policies/**
       - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
       - go.sum
@@ -23,6 +25,9 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
@@ -46,6 +51,7 @@ jobs:
 
   tflint:
     name: Validate Acceptance Test Terraform
+    needs: tflint-opa-policy-tests
     runs-on: custom-ubuntu-22.04-xl
     strategy:
       matrix:
@@ -81,3 +87,5 @@ jobs:
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
             | .ci/scripts/validate-terraform.sh
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

@@ -74,6 +74,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newEvaluatorResource,
+			TypeName: "aws_bedrockagentcore_evaluator",
+			Name:     "Evaluator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluator_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
+				inttypes.WithIdentityDuplicateAttrs("evaluator_id"),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",
@@ -192,6 +207,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newEvaluatorResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_evaluator",
+			Name:     "Evaluator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluator_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
+				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
+		},
 		{
 			Factory:  newHarnessResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_harness",
