@@ -93,7 +93,7 @@ func WithSuffix(suffix string) NameGeneratorOptionsFunc {
 	}
 }
 
-// NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
+// NewNameGenerator returns a new name generator from the specified variadic list of functional options.
 func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
 	g := &nameGenerator{defaultPrefix: UniqueIDPrefix}
 
