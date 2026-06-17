@@ -87,10 +87,8 @@ func resourceS3Endpoint() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 					Deprecated:   "kms_key_arn is deprecated. Use server_side_encryption_kms_key_id instead.",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						/*
-							This attribute is not used when S3 engine is specified.
-							When it is set in config we can ignore the diff because it will not be returned by the API for this engine type.
-						*/
+						// This attribute is not used when S3 engine is specified.
+						// When it is set in config we can ignore the diff because it will not be returned by the API for this engine type.
 						return old == "" && new != ""
 					},
 				},

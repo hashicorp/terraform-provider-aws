@@ -872,22 +872,8 @@ func testAccS3EndpointConfig_kmsKeyARN(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description         = %[1]q
-  enable_key_rotation = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = %[1]q
-    Statement = [{
-      Sid    = %[1]q
-      Effect = "Allow"
-      Principal = {
-        AWS = "*"
-      }
-      Action   = "kms:*"
-      Resource = "*"
-    }]
-  })
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dms_s3_endpoint" "test" {
