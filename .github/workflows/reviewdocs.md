@@ -91,7 +91,7 @@ For each incorrect feature documentation:
 
 ### 5. Create Issue
 
-If you have any documentation review commenys:
+If you have any documentation review comments:
 
 1. **Call the safe-outputs create-issue tool** to create an issue
 2. **Include in the issue description**:
