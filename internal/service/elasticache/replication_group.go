@@ -517,7 +517,6 @@ func resourceReplicationGroup() *schema.Resource {
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			replicationGroupValidateAutomaticFailoverNumCacheClusters,
-			replicationGroupSuppressAutomaticFailoverForGlobalMember,
 		),
 	}
 }
@@ -1694,41 +1693,6 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
 }
 
-func replicationGroupSuppressAutomaticFailoverForGlobalMember(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-	if diff.Id() == "" || !diff.HasChange("automatic_failover_enabled") {
-		return nil
-	}
-
-	if v, ok := diff.Get("global_replication_group_id").(string); ok && v != "" {
-		if err := diff.Clear("automatic_failover_enabled"); err != nil {
-			return err
-		}
-		return nil
-	}
-	if oldGRG, _ := diff.GetChange("global_replication_group_id"); oldGRG != nil {
-		if v, ok := oldGRG.(string); ok && v != "" {
-			if err := diff.Clear("automatic_failover_enabled"); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
-
-	if meta != nil {
-		conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-		rgp, err := findReplicationGroupByID(ctx, conn, diff.Id())
-		if err == nil && rgp != nil &&
-			rgp.GlobalReplicationGroupInfo != nil &&
-			rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil &&
-			aws.ToString(rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId) != "" {
-			if err := diff.Clear("automatic_failover_enabled"); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
 	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
@@ -1752,7 +1716,7 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 	belongs := ok && val.(string) != ""
 
 	if belongs {
-		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName} {
+		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName, "automatic_failover_enabled"} {
 			if diff.HasChange(attr) {
 				old, _ := diff.GetChange(attr)
 				if err := diff.SetNew(attr, old); err != nil {
