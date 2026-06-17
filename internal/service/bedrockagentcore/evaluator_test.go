@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -302,13 +303,35 @@ func TestAccBedrockAgentCoreEvaluator_kmsKey(t *testing.T) {
 		CheckDestroy:             testAccCheckEvaluatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEvaluatorConfig_kmsKey(rName),
+				Config: testAccEvaluatorConfig_kmsKey(rName, "aws_kms_key.test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEvaluatorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), tfknownvalue.RegionalARNRegexp("kms", regexache.MustCompile(`key/.+`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), "aws_kms_key.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
+			},
+			{
+				Config: testAccEvaluatorConfig_kmsKey(rName, "aws_kms_key.test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEvaluatorExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), "aws_kms_key.test2", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "evaluator_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "evaluator_id",
 			},
 		},
 	})
@@ -602,17 +625,22 @@ resource "aws_bedrockagentcore_evaluator" "test" {
 `, rName))
 }
 
-func testAccEvaluatorConfig_kmsKey(rName string) string {
+func testAccEvaluatorConfig_kmsKey(rName, kmsKeyResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Test key for %[1]s"
   deletion_window_in_days = 7
 }
 
+resource "aws_kms_key" "test2" {
+  description             = "Test key 2 for %[1]s"
+  deletion_window_in_days = 7
+}
+
 resource "aws_bedrockagentcore_evaluator" "test" {
   evaluator_name = %[1]q
   level          = "TRACE"
-  kms_key_arn    = aws_kms_key.test.arn
+  kms_key_arn    = %[2]s.arn
 
   evaluator_config {
     llm_as_a_judge {
@@ -639,7 +667,7 @@ resource "aws_bedrockagentcore_evaluator" "test" {
     }
   }
 }
-`, rName)
+`, rName, kmsKeyResourceName)
 }
 
 func testAccEvaluatorConfig_lambda(rName string) string {
