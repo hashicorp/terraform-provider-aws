@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @FrameworkResource("aws_bedrock_foundation_model_agreement", name="Foundation Model Agreement")
 // @IdentityAttribute("model_id")
 // @Testing(importIgnore="offer_token")
 // @Testing(hasNoPreExistingResource=true)
@@ -42,7 +43,6 @@ import (
 // @Testing(generator=false)
 // @Testing(preCheck="testAccPreCheckFoundationModelAgreement")
 // @Testing(preCheck="testAccPreCheckFoundationModelUseCase")
-// @FrameworkResource("aws_bedrock_foundation_model_agreement", name="Foundation Model Agreement")
 func newFoundationModelAgreementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &foundationModelAgreementResource{}
 
@@ -112,11 +112,6 @@ func (r *foundationModelAgreementResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithIgnoredFieldNamesAppend("ModelID")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitFoundationModelAgreementCreated(ctx, conn, plan.ModelID.ValueString(), createTimeout)
 	if err != nil {
@@ -150,11 +145,6 @@ func (r *foundationModelAgreementResource) Read(ctx context.Context, req resourc
 	if out != nil && out.AgreementAvailability != nil && out.AgreementAvailability.Status == awstypes.AgreementStatusNotAvailable {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(errors.New("agreement not available")))
 		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("ModelID")))
-	if resp.Diagnostics.HasError() {
 		return
 	}
 

@@ -29,7 +29,7 @@ func TestAccBedrockFoundationModelAgreementOffersDataSource_basic(t *testing.T) 
 			{
 				Config: testAccFoundationModelAgreementOffersDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+					resource.TestCheckNoResourceAttr(dataSourceName, "offer_type"),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "offers.#", 0),
 					resource.TestCheckResourceAttrSet(dataSourceName, "offers.0.offer_token"),
 				),
@@ -55,14 +55,14 @@ func TestAccBedrockFoundationModelAgreementOffersDataSource_offerType(t *testing
 			{
 				Config: testAccFoundationModelAgreementOffersDataSourceConfig_offerType("ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "offer_type", "ALL"),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "offers.#", 0),
 				),
 			},
 			{
 				Config: testAccFoundationModelAgreementOffersDataSourceConfig_offerType("PUBLIC"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "offer_type", "PUBLIC"),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "offers.#", 0),
 				),
 			},
@@ -72,21 +72,21 @@ func TestAccBedrockFoundationModelAgreementOffersDataSource_offerType(t *testing
 
 func testAccFoundationModelAgreementOffersDataSourceConfig_basic() string {
 	return `
-data "aws_bedrock_foundation_models" "test" {}
-
 data "aws_bedrock_foundation_model_agreement_offers" "test" {
   model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
 }
+
+data "aws_bedrock_foundation_models" "test" {}
 `
 }
 
 func testAccFoundationModelAgreementOffersDataSourceConfig_offerType(offerType string) string {
 	return fmt.Sprintf(`
-data "aws_bedrock_foundation_models" "test" {}
-
 data "aws_bedrock_foundation_model_agreement_offers" "test" {
   model_id   = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
   offer_type = "%s"
 }
+
+data "aws_bedrock_foundation_models" "test" {}
 `, offerType)
 }

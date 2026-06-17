@@ -20,7 +20,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_bedrock_foundation_model_agreement_offers", name="Foundation Model Agreement Offers")
@@ -39,7 +38,6 @@ type foundationModelAgreementOffersDataSource struct {
 func (d *foundationModelAgreementOffersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"model_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -81,14 +79,11 @@ func (d *foundationModelAgreementOffersDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type foundationModelAgreementOffersDataSourceModel struct {
 	framework.WithRegionModel
-	ID        types.String                                               `tfsdk:"id"`
 	OfferType fwtypes.StringEnum[awstypes.OfferType]                     `tfsdk:"offer_type"`
 	ModelID   types.String                                               `tfsdk:"model_id"`
 	Offers    fwtypes.ListNestedObjectValueOf[foundationModelOfferModel] `tfsdk:"offers"`

@@ -127,10 +127,11 @@ resource "aws_bedrock_use_case_for_model_access" "test" {
 
 func testAccUseCaseForModelAccessConfig_createImport() string {
 	return `
-data "aws_bedrock_use_case_for_model_access" "test" {
-}
 resource "aws_bedrock_use_case_for_model_access" "test" {
   form_data = data.aws_bedrock_use_case_for_model_access.test.form_data
+}
+
+data "aws_bedrock_use_case_for_model_access" "test" {
 }
 `
 }

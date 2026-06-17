@@ -26,9 +26,9 @@ import (
 )
 
 // @FrameworkResource("aws_bedrock_use_case_for_model_access", name="Use Case For Model Access")
+// @Region(global=true)
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
-// @Region(global=true)
 // @Testing(generator=false)
 // @Testing(importStateIdAttribute="account_id")
 // @Testing(preCheck="testAccPreCheckFoundationModelUseCase")

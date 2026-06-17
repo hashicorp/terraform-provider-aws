@@ -44,8 +44,8 @@ func testAccBedrockFoundationModelAgreement_basic(t *testing.T) {
 				Config: testAccFoundationModelAgreementConfig_basic(modelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFoundationModelAgreementExists(ctx, t, resourceName, &foundationmodelagreement),
-					resource.TestCheckResourceAttrSet(resourceName, "model_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "offer_token"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_id", "data.aws_bedrock_foundation_model_agreement_offers.test", "model_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "offer_token", "data.aws_bedrock_foundation_model_agreement_offers.test", "offers[0].offer_token"),
 				),
 			},
 			{
@@ -86,6 +86,9 @@ func testAccBedrockFoundationModelAgreement_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -189,11 +192,6 @@ func testAccPreCheckFoundationModelAgreement(ctx context.Context, t *testing.T) 
 
 func testAccFoundationModelAgreementConfig_basic(modelId string) string {
 	return fmt.Sprintf(`
-data "aws_bedrock_foundation_model_agreement_offers" "test" {
-  model_id   = "%[1]s"
-  offer_type = "PUBLIC"
-}
-
 resource "aws_bedrock_foundation_model_agreement" "test" {
   model_id    = "%[1]s"
   offer_token = data.aws_bedrock_foundation_model_agreement_offers.test.offers[0].offer_token
@@ -201,6 +199,11 @@ resource "aws_bedrock_foundation_model_agreement" "test" {
   lifecycle {
     ignore_changes = [offer_token]
   }
+}
+
+data "aws_bedrock_foundation_model_agreement_offers" "test" {
+  model_id   = "%[1]s"
+  offer_type = "PUBLIC"
 }
 `, modelId)
 }
