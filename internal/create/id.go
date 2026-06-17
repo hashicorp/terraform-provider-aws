@@ -71,7 +71,7 @@ func generateID(alphabet string, length int) (string, error) {
 	i := 0
 	for i < length {
 		// crypto/rand.Read returns nil on Go 1.24+ (or the program crashes).
-		rand.Read(buf) // nolint:errcheck
+		rand.Read(buf) //nolint:errcheck
 		for _, b := range buf {
 			if int(b) >= limit {
 				continue // reject to keep the distribution uniform
