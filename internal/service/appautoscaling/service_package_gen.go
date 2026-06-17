@@ -93,6 +93,20 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			}),
 		},
+		{
+			Factory:  newTargetResourceAsListResource,
+			TypeName: "aws_appautoscaling_target",
+			Name:     "Target",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_namespace", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("scalable_dimension", true),
+			}),
+		},
 	})
 }
 

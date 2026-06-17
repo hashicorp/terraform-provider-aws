@@ -164,15 +164,8 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, t.ScalableTargetARN)
-	d.Set(names.AttrMaxCapacity, t.MaxCapacity)
-	d.Set("min_capacity", t.MinCapacity)
-	d.Set(names.AttrResourceID, t.ResourceId)
-	d.Set(names.AttrRoleARN, t.RoleARN)
-	d.Set("scalable_dimension", t.ScalableDimension)
-	d.Set("service_namespace", t.ServiceNamespace)
-	if err := d.Set("suspended_state", flattenSuspendedState(t.SuspendedState)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting suspended_state: %s", err)
+	if err := resourceTargetFlatten(t, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -271,6 +264,21 @@ func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 	}
 
 	return target, nil
+}
+
+func resourceTargetFlatten(target *awstypes.ScalableTarget, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, target.ScalableTargetARN)
+	d.Set(names.AttrMaxCapacity, target.MaxCapacity)
+	d.Set("min_capacity", target.MinCapacity)
+	d.Set(names.AttrResourceID, target.ResourceId)
+	d.Set(names.AttrRoleARN, target.RoleARN)
+	d.Set("scalable_dimension", target.ScalableDimension)
+	d.Set("service_namespace", target.ServiceNamespace)
+	if err := d.Set("suspended_state", flattenSuspendedState(target.SuspendedState)); err != nil {
+		return fmt.Errorf("setting suspended_state: %w", err)
+	}
+
+	return nil
 }
 
 func targetParseImportID(id string) ([]string, error) {
