@@ -5,6 +5,11 @@ NOTES:
 * resource/aws_cloudfront_distribution_tenant: When using `managed_certificate_request`, managed certificate issuance uses a fixed 3-hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version. ([#47839](https://github.com/hashicorp/terraform-provider-aws/issues/47839))
 * resource/aws_eks_cluster: Because we cannot easily test the behavior of `outpost_config`, the changes are best effort and we ask for community help in testing ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
 
+FEATURES:
+
+* **New List Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
+* **New Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
+
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` attributes ([#48367](https://github.com/hashicorp/terraform-provider-aws/issues/48367))
