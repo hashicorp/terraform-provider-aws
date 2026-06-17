@@ -79,6 +79,7 @@ func (d *vpcEndpointConnectionsDataSource) Read(ctx context.Context, request dat
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenVPCEndpointConnectionModels(ctx context.Context, conns []awstypes.VpcEndpointConnection) (fwtypes.ListNestedObjectValueOf[vpcEndpointConnectionModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -97,6 +98,7 @@ func flattenVPCEndpointConnectionModels(ctx context.Context, conns []awstypes.Vp
 	return result, diags
 }
 
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenVPCEndpointConnectionModel(ctx context.Context, conn awstypes.VpcEndpointConnection) (vpcEndpointConnectionModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var model vpcEndpointConnectionModel

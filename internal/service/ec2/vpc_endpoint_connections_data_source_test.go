@@ -28,10 +28,10 @@ func TestAccVPCEndpointConnectionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "connections.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceName, "connections.0.vpc_endpoint_id", "aws_vpc_endpoint.test", "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "connections.0.vpc_endpoint_owner", "data.aws_caller_identity.alternate", "account_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "connections.0.vpc_endpoint_id", "aws_vpc_endpoint.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "connections.0.vpc_endpoint_owner", "data.aws_caller_identity.alternate", names.AttrAccountID),
 					resource.TestCheckResourceAttr(datasourceName, "connections.0.vpc_endpoint_state", "available"),
 					resource.TestCheckResourceAttrSet(datasourceName, "connections.0.creation_timestamp"),
 					resource.TestCheckResourceAttr(datasourceName, "connections.0.network_load_balancer_arns.#", "1"),
