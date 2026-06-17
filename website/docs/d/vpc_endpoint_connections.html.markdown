@@ -20,18 +20,16 @@ data "aws_vpc_endpoint_connections" "example" {
 }
 ```
 
-### Listing Pending Connections
+### Listing Pending Connections Using Filter
 
 ```terraform
 data "aws_vpc_endpoint_connections" "pending" {
   vpc_endpoint_service_id = aws_vpc_endpoint_service.example.id
-}
 
-output "pending_endpoint_ids" {
-  value = [
-    for conn in data.aws_vpc_endpoint_connections.pending.connections :
-    conn.vpc_endpoint_id if conn.vpc_endpoint_state == "pendingAcceptance"
-  ]
+  filter {
+    name   = "vpc-endpoint-state"
+    values = ["pendingAcceptance"]
+  }
 }
 ```
 
@@ -41,6 +39,14 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_service_id` - (Required) ID of the VPC Endpoint Service.
+* `filter` - (Optional) Configuration block(s) for filtering. [Filter blocks are documented below](#filter-block).
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter field. Valid values for `aws_vpc_endpoint_connections` include `service-id`, `vpc-endpoint-owner`, and `vpc-endpoint-state`.
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 

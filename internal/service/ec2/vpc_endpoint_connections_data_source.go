@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -20,6 +19,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_vpc_endpoint_connections", name="VPC Endpoint Connections")
@@ -39,6 +39,9 @@ func (d *vpcEndpointConnectionsDataSource) Schema(ctx context.Context, request d
 				Required: true,
 			},
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrFilter: customFiltersBlock(ctx),
+		},
 	}
 }
 
@@ -51,10 +54,13 @@ func (d *vpcEndpointConnectionsDataSource) Read(ctx context.Context, request dat
 
 	conn := d.Meta().EC2Client(ctx)
 
+	filters := newAttributeFilterList(map[string]string{
+		"service-id": data.VPCEndpointServiceID.ValueString(),
+	})
+	filters = append(filters, newCustomFilterListFramework(ctx, data.Filters)...)
+
 	input := ec2.DescribeVpcEndpointConnectionsInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"service-id": data.VPCEndpointServiceID.ValueString(),
-		}),
+		Filters: filters,
 	}
 
 	output, err := findVPCEndpointConnections(ctx, conn, &input)
@@ -127,7 +133,7 @@ func flattenVPCEndpointConnectionModel(ctx context.Context, conn awstypes.VpcEnd
 	m := kvTags.Map()
 	elements := make(map[string]attr.Value, len(m))
 	for k, v := range m {
-		elements[k] = types.StringValue(aws.ToString(v))
+		elements[k] = types.StringValue(v)
 	}
 	tagMap, d := tftags.NewMapValue(elements)
 	diags.Append(d...)
@@ -139,6 +145,7 @@ func flattenVPCEndpointConnectionModel(ctx context.Context, conn awstypes.VpcEnd
 type vpcEndpointConnectionsDataSourceModel struct {
 	framework.WithRegionModel
 	Connections          fwtypes.ListNestedObjectValueOf[vpcEndpointConnectionModel] `tfsdk:"connections"`
+	Filters              customFilters                                                `tfsdk:"filter"`
 	VPCEndpointServiceID types.String                                                `tfsdk:"vpc_endpoint_service_id"`
 }
 
