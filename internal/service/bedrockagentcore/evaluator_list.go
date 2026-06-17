@@ -66,18 +66,21 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 			arn := aws.ToString(item.EvaluatorArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			output, err := findEvaluatorByID(ctx, conn, evaluatorID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
 			result := request.NewListResult(ctx)
 
 			var data evaluatorResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+				if request.IncludeResource {
+					output, err := findEvaluatorByID(ctx, conn, evaluatorID)
+					if err != nil {
+						smerr.AddError(ctx, &result.Diagnostics, err, smerr.ID, evaluatorID)
+						return
+					}
+
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+				} else {
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data))
+				}
 				if result.Diagnostics.HasError() {
 					return
 				}
