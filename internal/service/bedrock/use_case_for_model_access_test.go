@@ -115,7 +115,7 @@ func testAccUseCaseForModelAccessConfig_basic() string {
 resource "aws_bedrock_use_case_for_model_access" "test" {
   form_data = jsonencode({
     "companyName"         = "AWS Provider",
-    "companyWebsite"      = "https://www.test.com",
+    "companyWebsite"      = "https://www.bedrock.test",
     "intendedUsers"       = "0",
     "industryOption"      = "Energy",
     "otherIndustryOption" = "",
