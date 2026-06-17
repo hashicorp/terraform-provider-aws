@@ -145,7 +145,7 @@ func flattenVPCEndpointConnectionModel(ctx context.Context, conn awstypes.VpcEnd
 type vpcEndpointConnectionsDataSourceModel struct {
 	framework.WithRegionModel
 	Connections          fwtypes.ListNestedObjectValueOf[vpcEndpointConnectionModel] `tfsdk:"connections"`
-	Filters              customFilters                                                `tfsdk:"filter"`
+	Filters              customFilters                                               `tfsdk:"filter"`
 	VPCEndpointServiceID types.String                                                `tfsdk:"vpc_endpoint_service_id"`
 }
 
