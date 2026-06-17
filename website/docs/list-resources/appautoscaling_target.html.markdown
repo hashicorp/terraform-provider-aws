@@ -26,5 +26,5 @@ list "aws_appautoscaling_target" "example" {
 
 This list resource supports the following arguments:
 
-* `service_namespace` - (Required) Namespace of the AWS service that owns the scalable target. Valid values are documented in the AWS [`DescribeScalableTargets`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_DescribeScalableTargets.html) API reference.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `service_namespace` - (Required) Namespace of the AWS service that owns the scalable target. Valid values: `appstream`, `cassandra`, `comprehend`, `custom-resource`, `dynamodb`, `ec2`, `ecs`, `elasticache`, `elasticmapreduce`, `kafka`, `lambda`, `neptune`, `rds`, `sagemaker`, `workspaces`.
