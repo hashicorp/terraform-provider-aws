@@ -22,6 +22,32 @@ data "aws_s3_bucket_notification" "example" {
 }
 ```
 
+### Conditionally Subscribe via EventBridge
+
+When the bucket forwards events to [Amazon EventBridge](../r/s3_bucket_notification.html.markdown#emit-events-to-eventbridge), independent consumers can subscribe with their own `aws_cloudwatch_event_rule` resources. Use this data source to subscribe only when EventBridge is in fact enabled on the bucket.
+
+```terraform
+data "aws_s3_bucket_notification" "shared" {
+  bucket = "shared-bucket"
+}
+
+resource "aws_cloudwatch_event_rule" "s3_object_created" {
+  count       = data.aws_s3_bucket_notification.shared.eventbridge ? 1 : 0
+  name        = "shared-bucket-object-created"
+  description = "S3 object-created events from the shared bucket."
+
+  event_pattern = jsonencode({
+    source        = ["aws.s3"]
+    "detail-type" = ["Object Created"]
+    detail = {
+      bucket = {
+        name = [data.aws_s3_bucket_notification.shared.bucket]
+      }
+    }
+  })
+}
+```
+
 ## Argument Reference
 
 This data source supports the following arguments:
