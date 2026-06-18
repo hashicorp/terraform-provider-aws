@@ -50,3 +50,37 @@ data "aws_s3_bucket_notification" "test" {
 `,
 	)
 }
+
+func TestAccS3BucketNotificationDataSource_eventbridge(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_bucket_notification.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketNotificationDataSourceConfig_eventbridge(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "eventbridge", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "topic.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccBucketNotificationDataSourceConfig_eventbridge(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketNotificationConfig_eventBridge(rName),
+		`
+data "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket_notification.test.bucket
+}
+`,
+	)
+}
