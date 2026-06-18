@@ -7,6 +7,7 @@ package appflow
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -1384,7 +1385,9 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		if v, ok := d.GetOk("flow_status"); ok {
 			flowStatus := types.FlowStatus(v.(string))
 			if flowStatus == types.FlowStatusActive {
-				resourceFlowStart(ctx, d, meta)
+				if err := resourceFlowStart(ctx, d, meta); err != nil {
+					return sdkdiag.AppendErrorf(diags, "%s", err)
+				}
 			}
 		}
 	}
@@ -1392,9 +1395,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) error {
 	name := d.Get(names.AttrName).(string)
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
@@ -1404,10 +1405,10 @@ func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	_, err := conn.StartFlow(ctx, startFlowInput)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Activating AppFlow Flow (%s): %s", name, err)
+		return fmt.Errorf("Activating AppFlow Flow (%s): %s", name, err)
 	}
 
-	return append(diags, resourceFlowRead(ctx, d, meta)...)
+	return nil
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1470,9 +1471,13 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 				flowStatus := types.FlowStatus(v.(string))
 				switch flowStatus {
 				case types.FlowStatusActive:
-					resourceFlowStart(ctx, d, meta)
+					if err := resourceFlowStart(ctx, d, meta); err != nil {
+						return sdkdiag.AppendErrorf(diags, "%s", err)
+					}
 				case types.FlowStatusSuspended:
-					resourceFlowStop(ctx, d, meta)
+					if err := resourceFlowStop(ctx, d, meta); err != nil {
+						return sdkdiag.AppendErrorf(diags, "%s", err)
+					}
 				}
 			}
 		}
@@ -1481,9 +1486,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) error {
 	name := d.Get(names.AttrName).(string)
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
@@ -1493,10 +1496,10 @@ func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	_, err := conn.StopFlow(ctx, stopFlowInput)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Suspending AppFlow Flow (%s): %s", name, err)
+		return fmt.Errorf("Suspending AppFlow Flow (%s): %s", name, err)
 	}
 
-	return append(diags, resourceFlowRead(ctx, d, meta)...)
+	return nil
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
