@@ -4,7 +4,6 @@
 package s3_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -42,11 +41,12 @@ func TestAccS3BucketNotificationDataSource_basic(t *testing.T) {
 }
 
 func testAccBucketNotificationDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return acctest.ConfigCompose(
+		testAccBucketNotificationConfig_lambdaFunction(rName),
+		`
 data "aws_s3_bucket_notification" "test" {
   bucket = aws_s3_bucket_notification.test.bucket
 }
-`, testAccBucketNotificationConfig_lambdaFunction(rName))
+`,
+	)
 }
