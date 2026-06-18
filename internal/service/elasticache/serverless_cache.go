@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -400,15 +401,18 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	// ModifyServerlessCache only supports one field modification per API call.
 	// Each changed field must be sent in a separate request.
 	// The name attribute requires replacement, so old.ServerlessCacheName == new.ServerlessCacheName.
+	// Track a single overall deadline so that the configured update timeout
+	// caps the total wall-clock time across all per-field API calls, rather
+	// than each call independently using the full timeout.
 	name := new.ID.ValueString()
-	timeout := r.UpdateTimeout(ctx, new.Timeouts)
+	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
 	if !new.Description.Equal(old.Description) {
 		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 			Description:         new.Description.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -419,7 +423,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
 			DailySnapshotTime:   new.DailySnapshotTime.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -430,7 +434,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			ServerlessCacheName:    new.ServerlessCacheName.ValueStringPointer(),
 			SnapshotRetentionLimit: aws.Int32(int32(new.SnapshotRetentionLimit.ValueInt64())),
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -460,7 +464,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 				return
 			}
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -474,7 +478,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -489,7 +493,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		} else {
 			input.UserGroupId = new.UserGroupID.ValueStringPointer()
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -515,7 +519,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			// Only major_engine_version changed, engine stays the same.
 			input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
 		}
-		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, timeout)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
