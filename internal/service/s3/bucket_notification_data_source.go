@@ -5,6 +5,7 @@ package s3
 
 import (
 	"context"
+	"strings"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -163,13 +164,15 @@ func bucketNotificationFilterRulePrefixSuffix(filter *awstypes.NotificationConfi
 		return "", ""
 	}
 	var prefix, suffix string
+	// AWS returns "Prefix"/"Suffix" with title case while the SDK enum
+	// constants are lowercase, so normalize before matching.
 	for _, rule := range filter.Key.FilterRules {
-		switch rule.Name {
-		case awstypes.FilterRuleNamePrefix:
+		switch strings.ToLower(string(rule.Name)) {
+		case string(awstypes.FilterRuleNamePrefix):
 			if rule.Value != nil {
 				prefix = *rule.Value
 			}
-		case awstypes.FilterRuleNameSuffix:
+		case string(awstypes.FilterRuleNameSuffix):
 			if rule.Value != nil {
 				suffix = *rule.Value
 			}
