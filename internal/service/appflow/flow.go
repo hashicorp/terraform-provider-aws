@@ -1405,7 +1405,7 @@ func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) er
 
 	_, err := conn.StartFlow(ctx, startFlowInput)
 	if err != nil {
-		return fmt.Errorf("Activating AppFlow Flow (%s): %s", name, err)
+		return fmt.Errorf("Activating AppFlow Flow (%s): %w", name, err)
 	}
 
 	return nil
@@ -1496,7 +1496,7 @@ func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) err
 
 	_, err := conn.StopFlow(ctx, stopFlowInput)
 	if err != nil {
-		return fmt.Errorf("Suspending AppFlow Flow (%s): %s", name, err)
+		return fmt.Errorf("Suspending AppFlow Flow (%s): %w", name, err)
 	}
 
 	return nil
