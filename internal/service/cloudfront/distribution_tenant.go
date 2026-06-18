@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDistributionTenantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &distributionTenantResource{}
 
