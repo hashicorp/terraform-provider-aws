@@ -27,9 +27,9 @@ data "aws_organizations_organizational_unit" "ou" {
 
 The following arguments are required:
 
-* `parent_id` - (Required) Parent ID of the organizational unit.
-
 * `name` - (Required) Name of the organizational unit
+
+* `parent_id` - (Required) Parent ID of the organizational unit.
 
 ## Attribute Reference
 

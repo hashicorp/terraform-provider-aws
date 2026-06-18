@@ -71,8 +71,8 @@ This resource exports the following attributes in addition to the arguments abov
     * `id` - Identifier of the root.
     * `name` - Name of the root.
     * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
-        * `name` - Name of the policy type.
         * `status` - Status of the policy type as it relates to the associated root.
+        * `type` - Type of the policy.
 
 ## Import
 

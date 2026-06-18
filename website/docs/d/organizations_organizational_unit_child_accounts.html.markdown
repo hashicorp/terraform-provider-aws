@@ -24,7 +24,7 @@ data "aws_organizations_organizational_unit_child_accounts" "accounts" {
 
 This data source supports the following arguments:
 
-* `parent_id` - (Required) The parent ID of the accounts.
+* `parent_id` - (Required) Parent ID of the accounts.
 
 ## Attribute Reference
 
