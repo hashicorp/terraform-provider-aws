@@ -7,6 +7,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -63,100 +64,33 @@ func (d *bucketNotificationDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	data.EventBridge = types.BoolValue(output.EventBridgeConfiguration != nil)
-
-	lambdaFunction, diags := flattenBucketNotificationLambdaFunctions(ctx, output.LambdaFunctionConfigurations)
-	resp.Diagnostics.Append(diags...)
-	queue, diags := flattenBucketNotificationQueues(ctx, output.QueueConfigurations)
-	resp.Diagnostics.Append(diags...)
-	topic, diags := flattenBucketNotificationTopics(ctx, output.TopicConfigurations)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(flattenBucketNotificationDataSourceModel(ctx, output, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.LambdaFunction = lambdaFunction
-	data.Queue = queue
-	data.Topic = topic
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type bucketNotificationDataSourceModel struct {
-	framework.WithRegionModel
-	Bucket         types.String                                                           `tfsdk:"bucket"`
-	EventBridge    types.Bool                                                             `tfsdk:"eventbridge"`
-	LambdaFunction fwtypes.ListNestedObjectValueOf[bucketNotificationLambdaFunctionModel] `tfsdk:"lambda_function"`
-	Queue          fwtypes.ListNestedObjectValueOf[bucketNotificationQueueModel]          `tfsdk:"queue"`
-	Topic          fwtypes.ListNestedObjectValueOf[bucketNotificationTopicModel]          `tfsdk:"topic"`
-}
-
-type bucketNotificationLambdaFunctionModel struct {
-	Events            fwtypes.SetOfString `tfsdk:"events"`
-	FilterPrefix      types.String        `tfsdk:"filter_prefix"`
-	FilterSuffix      types.String        `tfsdk:"filter_suffix"`
-	ID                types.String        `tfsdk:"id"`
-	LambdaFunctionARN types.String        `tfsdk:"lambda_function_arn"`
-}
-
-type bucketNotificationQueueModel struct {
-	Events       fwtypes.SetOfString `tfsdk:"events"`
-	FilterPrefix types.String        `tfsdk:"filter_prefix"`
-	FilterSuffix types.String        `tfsdk:"filter_suffix"`
-	ID           types.String        `tfsdk:"id"`
-	QueueARN     types.String        `tfsdk:"queue_arn"`
-}
-
-type bucketNotificationTopicModel struct {
-	Events       fwtypes.SetOfString `tfsdk:"events"`
-	FilterPrefix types.String        `tfsdk:"filter_prefix"`
-	FilterSuffix types.String        `tfsdk:"filter_suffix"`
-	ID           types.String        `tfsdk:"id"`
-	TopicARN     types.String        `tfsdk:"topic_arn"`
-}
-
-func flattenBucketNotificationLambdaFunctions(ctx context.Context, in []awstypes.LambdaFunctionConfiguration) (fwtypes.ListNestedObjectValueOf[bucketNotificationLambdaFunctionModel], diag.Diagnostics) {
-	out := make([]*bucketNotificationLambdaFunctionModel, 0, len(in))
-	for _, c := range in {
-		prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-		out = append(out, &bucketNotificationLambdaFunctionModel{
-			Events:            fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events)),
-			FilterPrefix:      types.StringValue(prefix),
-			FilterSuffix:      types.StringValue(suffix),
-			ID:                types.StringPointerValue(c.Id),
-			LambdaFunctionARN: types.StringPointerValue(c.LambdaFunctionArn),
-		})
+// flattenBucketNotificationDataSourceModel maps the GetBucketNotificationConfiguration
+// API output onto the data source model. Split out from Read so it can be unit tested
+// against synthesized AWS output without standing up an acceptance test.
+//
+// AutoFlex does the bulk of the work, given one hint: WithFieldNameSuffix("Configurations")
+// lets it match LambdaFunctionConfigurations / QueueConfigurations / TopicConfigurations
+// against the singular nested-block names in the model. AutoFlex then dispatches to
+// the per-destination model's Flatten method (Flattener interface) for fields it can't
+// infer from struct shape — the FilterRules{Name,Value} pivot into filter_prefix /
+// filter_suffix. EventBridge presence-as-bool is patched here because the top model
+// does not need a custom Flattener for that one field.
+func flattenBucketNotificationDataSourceModel(ctx context.Context, output *s3.GetBucketNotificationConfigurationOutput, data *bucketNotificationDataSourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, output, data, fwflex.WithFieldNameSuffix("Configurations"))...)
+	if diags.HasError() {
+		return diags
 	}
-	return fwtypes.NewListNestedObjectValueOfSlice(ctx, out, nil)
-}
-
-func flattenBucketNotificationQueues(ctx context.Context, in []awstypes.QueueConfiguration) (fwtypes.ListNestedObjectValueOf[bucketNotificationQueueModel], diag.Diagnostics) {
-	out := make([]*bucketNotificationQueueModel, 0, len(in))
-	for _, c := range in {
-		prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-		out = append(out, &bucketNotificationQueueModel{
-			Events:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events)),
-			FilterPrefix: types.StringValue(prefix),
-			FilterSuffix: types.StringValue(suffix),
-			ID:           types.StringPointerValue(c.Id),
-			QueueARN:     types.StringPointerValue(c.QueueArn),
-		})
-	}
-	return fwtypes.NewListNestedObjectValueOfSlice(ctx, out, nil)
-}
-
-func flattenBucketNotificationTopics(ctx context.Context, in []awstypes.TopicConfiguration) (fwtypes.ListNestedObjectValueOf[bucketNotificationTopicModel], diag.Diagnostics) {
-	out := make([]*bucketNotificationTopicModel, 0, len(in))
-	for _, c := range in {
-		prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-		out = append(out, &bucketNotificationTopicModel{
-			Events:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events)),
-			FilterPrefix: types.StringValue(prefix),
-			FilterSuffix: types.StringValue(suffix),
-			ID:           types.StringPointerValue(c.Id),
-			TopicARN:     types.StringPointerValue(c.TopicArn),
-		})
-	}
-	return fwtypes.NewListNestedObjectValueOfSlice(ctx, out, nil)
+	data.EventBridge = types.BoolValue(output.EventBridgeConfiguration != nil)
+	return diags
 }
 
 func bucketNotificationFilterRulePrefixSuffix(filter *awstypes.NotificationConfigurationFilter) (string, string) {
@@ -187,4 +121,106 @@ func eventsToStrings(events []awstypes.Event) []string {
 		out[i] = string(e)
 	}
 	return out
+}
+
+type bucketNotificationDataSourceModel struct {
+	framework.WithRegionModel
+	Bucket         types.String                                                           `tfsdk:"bucket"`
+	EventBridge    types.Bool                                                             `tfsdk:"eventbridge"`
+	LambdaFunction fwtypes.ListNestedObjectValueOf[bucketNotificationLambdaFunctionModel] `tfsdk:"lambda_function"`
+	Queue          fwtypes.ListNestedObjectValueOf[bucketNotificationQueueModel]          `tfsdk:"queue"`
+	Topic          fwtypes.ListNestedObjectValueOf[bucketNotificationTopicModel]          `tfsdk:"topic"`
+}
+
+type bucketNotificationLambdaFunctionModel struct {
+	Events            fwtypes.SetOfString `tfsdk:"events"`
+	FilterPrefix      types.String        `tfsdk:"filter_prefix"`
+	FilterSuffix      types.String        `tfsdk:"filter_suffix"`
+	ID                types.String        `tfsdk:"id"`
+	LambdaFunctionARN types.String        `tfsdk:"lambda_function_arn"`
+}
+
+func (m *bucketNotificationLambdaFunctionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var c awstypes.LambdaFunctionConfiguration
+	switch t := v.(type) {
+	case awstypes.LambdaFunctionConfiguration:
+		c = t
+	case *awstypes.LambdaFunctionConfiguration:
+		if t == nil {
+			return diags
+		}
+		c = *t
+	default:
+		return diags
+	}
+	m.ID = types.StringPointerValue(c.Id)
+	m.LambdaFunctionARN = types.StringPointerValue(c.LambdaFunctionArn)
+	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
+	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
+	m.FilterPrefix = types.StringValue(prefix)
+	m.FilterSuffix = types.StringValue(suffix)
+	return diags
+}
+
+type bucketNotificationQueueModel struct {
+	Events       fwtypes.SetOfString `tfsdk:"events"`
+	FilterPrefix types.String        `tfsdk:"filter_prefix"`
+	FilterSuffix types.String        `tfsdk:"filter_suffix"`
+	ID           types.String        `tfsdk:"id"`
+	QueueARN     types.String        `tfsdk:"queue_arn"`
+}
+
+func (m *bucketNotificationQueueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var c awstypes.QueueConfiguration
+	switch t := v.(type) {
+	case awstypes.QueueConfiguration:
+		c = t
+	case *awstypes.QueueConfiguration:
+		if t == nil {
+			return diags
+		}
+		c = *t
+	default:
+		return diags
+	}
+	m.ID = types.StringPointerValue(c.Id)
+	m.QueueARN = types.StringPointerValue(c.QueueArn)
+	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
+	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
+	m.FilterPrefix = types.StringValue(prefix)
+	m.FilterSuffix = types.StringValue(suffix)
+	return diags
+}
+
+type bucketNotificationTopicModel struct {
+	Events       fwtypes.SetOfString `tfsdk:"events"`
+	FilterPrefix types.String        `tfsdk:"filter_prefix"`
+	FilterSuffix types.String        `tfsdk:"filter_suffix"`
+	ID           types.String        `tfsdk:"id"`
+	TopicARN     types.String        `tfsdk:"topic_arn"`
+}
+
+func (m *bucketNotificationTopicModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var c awstypes.TopicConfiguration
+	switch t := v.(type) {
+	case awstypes.TopicConfiguration:
+		c = t
+	case *awstypes.TopicConfiguration:
+		if t == nil {
+			return diags
+		}
+		c = *t
+	default:
+		return diags
+	}
+	m.ID = types.StringPointerValue(c.Id)
+	m.TopicARN = types.StringPointerValue(c.TopicArn)
+	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
+	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
+	m.FilterPrefix = types.StringValue(prefix)
+	m.FilterSuffix = types.StringValue(suffix)
+	return diags
 }
