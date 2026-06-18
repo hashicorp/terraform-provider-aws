@@ -7,6 +7,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -64,7 +65,7 @@ func (d *bucketNotificationDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	resp.Diagnostics.Append(flattenBucketNotificationDataSourceModel(ctx, output, &data)...)
+	resp.Diagnostics.Append(bucketNotificationDataSourceFlatten(ctx, output, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -72,18 +73,18 @@ func (d *bucketNotificationDataSource) Read(ctx context.Context, req datasource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// flattenBucketNotificationDataSourceModel maps the GetBucketNotificationConfiguration
-// API output onto the data source model. Split out from Read so it can be unit tested
-// against synthesized AWS output without standing up an acceptance test.
+// bucketNotificationDataSourceFlatten maps the GetBucketNotificationConfiguration
+// API output onto the data source model. Split out from Read so it can be
+// reasoned about (and unit tested) without standing up an acceptance test.
 //
 // AutoFlex does the bulk of the work, given one hint: WithFieldNameSuffix("Configurations")
 // lets it match LambdaFunctionConfigurations / QueueConfigurations / TopicConfigurations
 // against the singular nested-block names in the model. AutoFlex then dispatches to
-// the per-destination model's Flatten method (Flattener interface) for fields it can't
-// infer from struct shape — the FilterRules{Name,Value} pivot into filter_prefix /
-// filter_suffix. EventBridge presence-as-bool is patched here because the top model
-// does not need a custom Flattener for that one field.
-func flattenBucketNotificationDataSourceModel(ctx context.Context, output *s3.GetBucketNotificationConfigurationOutput, data *bucketNotificationDataSourceModel) diag.Diagnostics {
+// each per-destination model's Flatten method (Flattener interface) for the
+// FilterRules{Name,Value} pivot into filter_prefix / filter_suffix. EventBridge
+// presence-as-bool is patched here since it's a single field that doesn't justify a
+// custom Flattener on the top model.
+func bucketNotificationDataSourceFlatten(ctx context.Context, output *s3.GetBucketNotificationConfigurationOutput, data *bucketNotificationDataSourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, output, data, fwflex.WithFieldNameSuffix("Configurations"))...)
 	if diags.HasError() {
@@ -103,13 +104,9 @@ func bucketNotificationFilterRulePrefixSuffix(filter *awstypes.NotificationConfi
 	for _, rule := range filter.Key.FilterRules {
 		switch strings.ToLower(string(rule.Name)) {
 		case string(awstypes.FilterRuleNamePrefix):
-			if rule.Value != nil {
-				prefix = *rule.Value
-			}
+			prefix = aws.ToString(rule.Value)
 		case string(awstypes.FilterRuleNameSuffix):
-			if rule.Value != nil {
-				suffix = *rule.Value
-			}
+			suffix = aws.ToString(rule.Value)
 		}
 	}
 	return prefix, suffix
@@ -142,16 +139,16 @@ type bucketNotificationLambdaFunctionModel struct {
 
 func (m *bucketNotificationLambdaFunctionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var c awstypes.LambdaFunctionConfiguration
+	var c *awstypes.LambdaFunctionConfiguration
 	switch t := v.(type) {
 	case awstypes.LambdaFunctionConfiguration:
-		c = t
+		c = &t
 	case *awstypes.LambdaFunctionConfiguration:
-		if t == nil {
-			return diags
-		}
-		c = *t
+		c = t
 	default:
+		return diags
+	}
+	if c == nil {
 		return diags
 	}
 	m.ID = types.StringPointerValue(c.Id)
@@ -173,16 +170,16 @@ type bucketNotificationQueueModel struct {
 
 func (m *bucketNotificationQueueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var c awstypes.QueueConfiguration
+	var c *awstypes.QueueConfiguration
 	switch t := v.(type) {
 	case awstypes.QueueConfiguration:
-		c = t
+		c = &t
 	case *awstypes.QueueConfiguration:
-		if t == nil {
-			return diags
-		}
-		c = *t
+		c = t
 	default:
+		return diags
+	}
+	if c == nil {
 		return diags
 	}
 	m.ID = types.StringPointerValue(c.Id)
@@ -204,16 +201,16 @@ type bucketNotificationTopicModel struct {
 
 func (m *bucketNotificationTopicModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var c awstypes.TopicConfiguration
+	var c *awstypes.TopicConfiguration
 	switch t := v.(type) {
 	case awstypes.TopicConfiguration:
-		c = t
+		c = &t
 	case *awstypes.TopicConfiguration:
-		if t == nil {
-			return diags
-		}
-		c = *t
+		c = t
 	default:
+		return diags
+	}
+	if c == nil {
 		return diags
 	}
 	m.ID = types.StringPointerValue(c.Id)
