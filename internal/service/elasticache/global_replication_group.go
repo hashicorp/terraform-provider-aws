@@ -443,10 +443,9 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("global_node_groups", flattenGlobalNodeGroups(globalReplicationGroup.GlobalNodeGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_node_groups: %s", err)
 	}
+
 	d.Set("num_node_groups", len(globalReplicationGroup.GlobalNodeGroups))
-
 	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
-
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
 	return diags
