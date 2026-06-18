@@ -1276,6 +1276,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-tflint-dir-fix \
 	testacc-tflint-embedded \
 	tflint-init \
+	tflint-opa-tests \
 	tools \
 	ts \
 	update \
