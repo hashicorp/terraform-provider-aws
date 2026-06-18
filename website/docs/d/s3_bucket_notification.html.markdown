@@ -48,6 +48,84 @@ resource "aws_cloudwatch_event_rule" "s3_object_created" {
 }
 ```
 
+### Read Existing Notifications and Re-emit Them
+
+The S3 [`PutBucketNotificationConfiguration`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html) API replaces the entire notification configuration on every call, so a single `aws_s3_bucket_notification` resource owns the bucket. To preserve notifications already on the bucket — or to mirror one bucket's configuration onto another — read them with this data source and pass them through `dynamic` blocks. The data source's output shape matches the resource's input shape, so each block forwards directly.
+
+```terraform
+data "aws_s3_bucket_notification" "existing" {
+  bucket = aws_s3_bucket.example.id
+}
+
+resource "aws_s3_bucket_notification" "example" {
+  bucket      = aws_s3_bucket.example.id
+  eventbridge = data.aws_s3_bucket_notification.existing.eventbridge
+
+  dynamic "lambda_function" {
+    for_each = data.aws_s3_bucket_notification.existing.lambda_function
+    content {
+      id                  = lambda_function.value.id
+      lambda_function_arn = lambda_function.value.lambda_function_arn
+      events              = lambda_function.value.events
+      filter_prefix       = lambda_function.value.filter_prefix
+      filter_suffix       = lambda_function.value.filter_suffix
+    }
+  }
+
+  dynamic "queue" {
+    for_each = data.aws_s3_bucket_notification.existing.queue
+    content {
+      id            = queue.value.id
+      queue_arn     = queue.value.queue_arn
+      events        = queue.value.events
+      filter_prefix = queue.value.filter_prefix
+      filter_suffix = queue.value.filter_suffix
+    }
+  }
+
+  dynamic "topic" {
+    for_each = data.aws_s3_bucket_notification.existing.topic
+    content {
+      id            = topic.value.id
+      topic_arn     = topic.value.topic_arn
+      events        = topic.value.events
+      filter_prefix = topic.value.filter_prefix
+      filter_suffix = topic.value.filter_suffix
+    }
+  }
+}
+```
+
+To add a new rule alongside existing ones, exclude IDs your resource owns from the iteration to avoid duplicates, and declare those rules separately:
+
+```terraform
+resource "aws_s3_bucket_notification" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  dynamic "lambda_function" {
+    for_each = [
+      for f in data.aws_s3_bucket_notification.existing.lambda_function : f
+      if f.id != "my-team-rule"
+    ]
+    content {
+      id                  = lambda_function.value.id
+      lambda_function_arn = lambda_function.value.lambda_function_arn
+      events              = lambda_function.value.events
+      filter_prefix       = lambda_function.value.filter_prefix
+      filter_suffix       = lambda_function.value.filter_suffix
+    }
+  }
+
+  lambda_function {
+    id                  = "my-team-rule"
+    lambda_function_arn = aws_lambda_function.mine.arn
+    events              = ["s3:ObjectRemoved:*"]
+  }
+}
+```
+
+~> **Note:** The S3 API has no per-rule mutation primitive and no compare-and-swap, so two `terraform apply` runs from different state files writing to the same bucket can still race. For independent consumers of one bucket, [EventBridge](../r/s3_bucket_notification.html.markdown#emit-events-to-eventbridge) is generally a better fit.
+
 ## Argument Reference
 
 This data source supports the following arguments:
