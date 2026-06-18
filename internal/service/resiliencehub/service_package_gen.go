@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newAppVersionResource,
+			TypeName: "aws_resiliencehub_app_version",
+			Name:     "App Version",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResiliencyPolicyResource,
 			TypeName: "aws_resiliencehub_resiliency_policy",
 			Name:     "Resiliency Policy",
