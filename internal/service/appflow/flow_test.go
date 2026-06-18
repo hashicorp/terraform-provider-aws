@@ -313,7 +313,7 @@ func TestAccAppFlowFlow_createWithActiveFlowStatus(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 	description := "test description"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

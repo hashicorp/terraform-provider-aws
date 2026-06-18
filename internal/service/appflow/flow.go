@@ -727,7 +727,7 @@ func resourceFlow() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringInSlice([]string{string(types.FlowStatusActive), string(types.FlowStatusSuspended)}, false),
+					ValidateFunc: validation.StringInSlice(enum.Slice(types.FlowStatusActive, types.FlowStatusSuspended), false),
 				},
 				"kms_arn": {
 					Type:         schema.TypeString,
