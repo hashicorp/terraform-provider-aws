@@ -1870,6 +1870,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// resiliencehubv2
+
+				"resiliencehubv2": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// resourceexplorer2
 
 				"resourceexplorer2": {
