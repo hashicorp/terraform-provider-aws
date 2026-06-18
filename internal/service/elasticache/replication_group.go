@@ -100,7 +100,7 @@ func resourceReplicationGroup() *schema.Resource {
 				"automatic_failover_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Computed: true,
+					Default:  false,
 				},
 				"cluster_enabled": {
 					Type:     schema.TypeBool,
