@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -8,22 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -32,7 +31,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -67,7 +66,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 func testAccGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -75,7 +74,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -87,7 +86,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 				Config: testAccGrantAccepterConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
-					acctest.CheckResourceDisappears(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappearsWithProvider(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,38 +101,26 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
+		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
-		out, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("GrantAccepter %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant_accepter" {
 				continue
 			}
 
-			_, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
+			_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -141,7 +128,7 @@ func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.T
 				return err
 			}
 
-			return fmt.Errorf("License Manager GrantAccepter %s still exists", rs.Primary.ID)
+			return fmt.Errorf("License Manager Grant Accepter %s still exists", rs.Primary.ID)
 		}
 
 		return nil

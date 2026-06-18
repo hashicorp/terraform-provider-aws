@@ -1,12 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,80 +16,82 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_rule_group_association")
-func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_rule_group_association", name="Firewall Rule Group Association")
+func dataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"firewall_rule_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"firewall_rule_group_association_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"managed_owner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modification_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mutation_protection": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusMessage: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creator_request_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_rule_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_rule_group_association_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"managed_owner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"modification_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mutation_protection": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusMessage: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	id := d.Get("firewall_rule_group_association_id").(string)
-	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, id)
+	ruleGroupAssociation, err := findFirewallRuleGroupAssociationByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
+	d.SetId(aws.ToString(ruleGroupAssociation.Id))
 	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
 	d.Set(names.AttrCreationTime, ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)

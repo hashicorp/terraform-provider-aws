@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -17,24 +19,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Default AutoScaling Configuration Version")
-func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
+// @FrameworkResource("aws_apprunner_default_auto_scaling_configuration_version", name="Default AutoScaling Configuration Version")
+func newDefaultAutoScalingConfigurationVersionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultAutoScalingConfigurationVersionResource{}
 
 	return r, nil
 }
 
 type defaultAutoScalingConfigurationVersionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[defaultAutoScalingConfigurationVersionResourceModel]
+	framework.WithNoOpDelete
 	framework.WithImportByID
-}
-
-func (r *defaultAutoScalingConfigurationVersionResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_default_auto_scaling_configuration_version"
 }
 
 func (r *defaultAutoScalingConfigurationVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -51,9 +50,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Schema(ctx context.Cont
 
 func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -67,16 +64,14 @@ func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Cont
 	}
 
 	// Set values for unknowns.
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -85,7 +80,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 
 	output, err := findDefaultAutoScalingConfigurationSummary(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -105,9 +100,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 
 func (r *defaultAutoScalingConfigurationVersionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new defaultAutoScalingConfigurationVersionResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -121,10 +114,6 @@ func (r *defaultAutoScalingConfigurationVersionResource) Update(ctx context.Cont
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
-}
-
-func (*defaultAutoScalingConfigurationVersionResource) Delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse) {
-	// NoOp.
 }
 
 func findDefaultAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Client) (*awstypes.AutoScalingConfigurationSummary, error) {
@@ -150,6 +139,7 @@ func putDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Cli
 }
 
 type defaultAutoScalingConfigurationVersionResourceModel struct {
+	framework.WithRegionModel
 	AutoScalingConfigurationARN fwtypes.ARN  `tfsdk:"auto_scaling_configuration_arn"`
 	ID                          types.String `tfsdk:"id"`
 }

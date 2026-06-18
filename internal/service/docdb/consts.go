@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -59,6 +59,18 @@ const (
 )
 
 const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
+	}
+}
+
+const (
 	storageTypeIOpt1    = "iopt1"
 	storageTypeStandard = "standard"
 )
@@ -67,5 +79,17 @@ func storageType_Values() []string {
 	return []string{
 		storageTypeIOpt1,
 		storageTypeStandard,
+	}
+}
+
+const (
+	restoreTypeCopyOnWrite = "copy-on-write"
+	restoreTypeFullCopy    = "full-copy"
+)
+
+func restoreType_Values() []string {
+	return []string{
+		restoreTypeCopyOnWrite,
+		restoreTypeFullCopy,
 	}
 }

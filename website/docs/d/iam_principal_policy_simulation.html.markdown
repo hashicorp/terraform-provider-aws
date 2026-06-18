@@ -49,7 +49,7 @@ data "aws_iam_principal_policy_simulation" "s3_object_access" {
 If you intend to use this data source to quickly raise an error when the given credentials are insufficient then you must use [`depends_on`](https://www.terraform.io/language/meta-arguments/depends_on) inside any resource which would require those credentials, to ensure that the policy check will run first:
 
 ```terraform
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = "my-test-bucket"
   # ...
 
@@ -145,7 +145,7 @@ When using `aws_iam_principal_policy_simulation` to test the effect of a policy 
 
 ## Argument Reference
 
-The following arguments are required for any principal policy simulation:
+This data source supports the following arguments:
 
 * `action_names` (Required) - A set of IAM action names to run simulations for. Each entry in this set adds an additional hypothetical request to the simulation.
 

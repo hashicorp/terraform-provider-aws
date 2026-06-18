@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package shield
 
@@ -16,29 +18,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Proactive Engagement")
+// @FrameworkResource("aws_shield_proactive_engagement", name="Proactive Engagement")
 func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &proactiveEngagementResource{}, nil
 }
 
 type proactiveEngagementResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[proactiveEngagementResourceModel]
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -109,7 +107,7 @@ func (r *proactiveEngagementResource) Create(ctx context.Context, request resour
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(updateEmergencyContactSettings(ctx, conn, &data)...)
 	if response.Diagnostics.HasError() {
@@ -136,7 +134,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 	subscription, err := findSubscription(ctx, conn)
 
 	if err == nil && subscription.ProactiveEngagementStatus == "" {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	var emergencyContacts []awstypes.EmergencyContact
@@ -145,7 +143,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		emergencyContacts, err = findEmergencyContactSettings(ctx, conn)
 	}
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -158,7 +156,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust[emergencyContactModel](ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
+	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
 		return emergencyContactModel{
 			ContactNotes: fwflex.StringToFramework(ctx, apiObject.ContactNotes),
 			EmailAddress: fwflex.StringToFramework(ctx, apiObject.EmailAddress),
@@ -303,8 +301,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -313,7 +310,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 	}
 
 	if output == nil || len(output.EmergencyContactList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmergencyContactList, nil
@@ -326,8 +323,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -336,7 +332,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 	}
 
 	if output == nil || output.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Subscription, nil

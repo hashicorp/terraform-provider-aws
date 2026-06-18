@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -6,10 +6,22 @@ package connect_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.ConnectServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"flagged for an excessive number of creation and deletion attempts",
+	)
+}
+
+// Serialized acceptance tests due to Connect account limits (max 2 parallel tests).
 func TestAccConnect_serial(t *testing.T) {
 	t.Parallel()
 
@@ -42,10 +54,15 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":    testAccHoursOfOperationDataSource_name,
 		},
 		"Instance": {
-			acctest.CtBasic:    testAccInstance_basic,
-			"directory":        testAccInstance_directory,
-			"saml":             testAccInstance_saml,
-			"dataSource_basic": testAccInstanceDataSource_basic,
+			acctest.CtBasic:                     testAccInstance_basic,
+			"directory":                         testAccInstance_directory,
+			"saml":                              testAccInstance_saml,
+			"dataSource_basic":                  testAccInstanceDataSource_basic,
+			"tags":                              testAccInstance_tags,
+			"identityBasic":                     testAccConnectInstance_Identity_basic,
+			"identityExistingResource":          testAccConnectInstance_Identity_ExistingResource_basic,
+			"identityExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange,
+			"identityRegionOverride":            testAccConnectInstance_Identity_regionOverride,
 		},
 		"InstanceStorageConfig": {
 			acctest.CtBasic:                             testAccInstanceStorageConfig_basic,
@@ -69,12 +86,20 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_basic":   testAccLambdaFunctionAssociationDataSource_basic,
 		},
 		"PhoneNumber": {
-			acctest.CtBasic:      testAccPhoneNumber_basic,
-			acctest.CtDisappears: testAccPhoneNumber_disappears,
-			"tags":               testAccPhoneNumber_tags,
-			"description":        testAccPhoneNumber_description,
-			"prefix":             testAccPhoneNumber_prefix,
-			"targetARN":          testAccPhoneNumber_targetARN,
+			acctest.CtBasic:                     testAccPhoneNumber_basic,
+			acctest.CtDisappears:                testAccPhoneNumber_disappears,
+			"tags":                              testAccPhoneNumber_tags,
+			"description":                       testAccPhoneNumber_description,
+			"prefix":                            testAccPhoneNumber_prefix,
+			"targetARN":                         testAccPhoneNumber_targetARN,
+			"identityBasic":                     testAccConnectPhoneNumber_Identity_basic,
+			"identityExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource_basic,
+			"identityExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange,
+			"identityRegionOverride":            testAccConnectPhoneNumber_Identity_regionOverride,
+		},
+		"PhoneNumberContactFlowAssociation": {
+			acctest.CtBasic:      testAccPhoneNumberContactFlowAssociation_basic,
+			acctest.CtDisappears: testAccPhoneNumberContactFlowAssociation_disappears,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
@@ -103,6 +128,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtDisappears:           testAccRoutingProfile_disappears,
 			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
+			"crossChannelBehavior":         testAccRoutingProfile_crossChannelBehavior,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
 			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,

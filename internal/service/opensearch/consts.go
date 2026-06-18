@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -10,5 +10,5 @@ import (
 const (
 	// OpenSearch sometimes needs a longer IAM propagation time than most services,
 	// especially with acceptance tests
-	propagationTimeout = 10 * time.Minute
+	propagationTimeout = 30 * time.Minute
 )

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexmodels
 
@@ -8,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,100 +18,102 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_bot")
-func DataSourceBot() *schema.Resource {
+// @SDKDataSource("aws_lex_bot", name="Bot")
+func dataSourceBot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"child_directed": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"detect_sentiment": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_model_improvements": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"failure_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"idle_session_ttl_in_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"locale": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validBotName,
-			},
-			"nlu_intent_confidence_threshold": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      BotVersionLatest,
-				ValidateFunc: validBotVersion,
-			},
-			"voice_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"child_directed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"detect_sentiment": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_model_improvements": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"failure_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"idle_session_ttl_in_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"locale": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validBotName,
+				},
+				"nlu_intent_confidence_threshold": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      BotVersionLatest,
+					ValidateFunc: validBotVersion,
+				},
+				"voice_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	version := d.Get(names.AttrVersion).(string)
-	output, err := FindBotVersionByName(ctx, conn, name, version)
+	output, err := findBotVersionByName(ctx, conn, name, version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Bot (%s/%s): %s", name, version, err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", name),
 	}
 	d.Set(names.AttrARN, arn.String())

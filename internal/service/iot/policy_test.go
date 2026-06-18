@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -8,43 +8,43 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct1),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -59,21 +59,29 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 func TestAccIoTPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourcePolicy(), resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourcePolicy(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -83,20 +91,20 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 func TestAccIoTPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -108,8 +116,8 @@ func TestAccIoTPolicy_tags(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -117,8 +125,8 @@ func TestAccIoTPolicy_tags(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -129,21 +137,21 @@ func TestAccIoTPolicy_tags(t *testing.T) {
 func TestAccIoTPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct1),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
 				),
 			},
 			{
@@ -153,10 +161,10 @@ func TestAccIoTPolicy_update(t *testing.T) {
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct2),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
 				),
 			},
 		},
@@ -166,85 +174,85 @@ func TestAccIoTPolicy_update(t *testing.T) {
 func TestAccIoTPolicy_prune(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct1),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1}),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"1"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct2),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2}),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"1", "2"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct3),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2, acctest.Ct3}),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "3"),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"1", "2", "3"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct4),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2, acctest.Ct3, acctest.Ct4}),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", "4"),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"1", "2", "3", "4"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "5"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2, acctest.Ct3, acctest.Ct4, "5"}),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"1", "2", "3", "4", "5"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "6"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct2, acctest.Ct3, acctest.Ct4, "5", "6"}),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"2", "3", "4", "5", "6"}),
 				),
 			},
 			{
 				// lintignore:AWSAT005
-				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
+				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "7"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct3, acctest.Ct4, "5", "6", "7"}),
+					testAccCheckPolicyVersionIDs(ctx, t, resourceName, []string{"3", "4", "5", "6", "7"}),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_policy" {
@@ -253,7 +261,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiot.FindPolicyByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -268,14 +276,14 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		output, err := tfiot.FindPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -289,14 +297,14 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iot.GetPolicyOut
 	}
 }
 
-func testAccCheckPolicyVersionIDs(ctx context.Context, n string, want []string) resource.TestCheckFunc {
+func testAccCheckPolicyVersionIDs(ctx context.Context, t *testing.T, n string, want []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		output, err := tfiot.FindPolicyVersionsByName(ctx, conn, rs.Primary.ID)
 
@@ -304,8 +312,8 @@ func testAccCheckPolicyVersionIDs(ctx context.Context, n string, want []string) 
 			return err
 		}
 
-		got := tfslices.ApplyToAll(output, func(v *iot.PolicyVersion) string {
-			return aws.StringValue(v.VersionId)
+		got := tfslices.ApplyToAll(output, func(v awstypes.PolicyVersion) string {
+			return aws.ToString(v.VersionId)
 		})
 
 		if !cmp.Equal(got, want, cmpopts.SortSlices(func(i, j string) bool {

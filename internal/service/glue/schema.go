@@ -1,21 +1,27 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,91 +29,91 @@ import (
 
 // @SDKResource("aws_glue_schema", name="Schema")
 // @Tags(identifierAttribute="arn")
-func ResourceSchema() *schema.Resource {
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue;glue.GetSchemaOutput")
+func resourceSchema() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchemaCreate,
 		ReadWithoutTimeout:   resourceSchemaRead,
 		UpdateWithoutTimeout: resourceSchemaUpdate,
 		DeleteWithoutTimeout: resourceSchemaDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			"registry_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"registry_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest_schema_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"next_schema_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"schema_checkpoint": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"compatibility": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(glue.Compatibility_Values(), false),
-			},
-			"data_format": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(glue.DataFormat_Values(), false),
-			},
-			"schema_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 170000),
-					validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""),
-				),
-			},
-			"schema_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#-]+$`), ""),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				"registry_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"registry_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"latest_schema_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"next_schema_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"schema_checkpoint": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"compatibility": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Compatibility](),
+				},
+				"data_format": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataFormat](),
+				},
+				"schema_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 170000),
+						validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""),
+					),
+				},
+				"schema_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#-]+$`), ""),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
-		DataFormat:       aws.String(d.Get("data_format").(string)),
+		DataFormat:       awstypes.DataFormat(d.Get("data_format").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -120,15 +126,15 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("compatibility"); ok {
-		input.Compatibility = aws.String(v.(string))
+		input.Compatibility = awstypes.Compatibility(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Schema: %s", input)
-	output, err := conn.CreateSchemaWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Glue Schema: %+v", input)
+	output, err := conn.CreateSchema(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Schema: %s", err)
 	}
-	d.SetId(aws.StringValue(output.SchemaArn))
+	d.SetId(aws.ToString(output.SchemaArn))
 
 	_, err = waitSchemaAvailable(ctx, conn, d.Id())
 	if err != nil {
@@ -138,13 +144,13 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := FindSchemaByID(ctx, conn, d.Id())
+	output, err := findSchemaByID(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -158,7 +164,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	arn := aws.StringValue(output.SchemaArn)
+	arn := aws.ToString(output.SchemaArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("schema_name", output.SchemaName)
@@ -170,7 +176,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("registry_name", output.RegistryName)
 	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
-	schemeDefOutput, err := FindSchemaVersionByID(ctx, conn, d.Id())
+	schemeDefOutput, err := findSchemaVersionByID(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Schema Definition (%s): %s", d.Id(), err)
 	}
@@ -180,14 +186,14 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
-		SchemaVersionNumber: &glue.SchemaVersionNumber{
-			LatestVersion: aws.Bool(true),
+		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
+			LatestVersion: true,
 		},
 	}
 	update := false
@@ -198,13 +204,13 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("compatibility") {
-		input.Compatibility = aws.String(d.Get("compatibility").(string))
+		input.Compatibility = awstypes.Compatibility(d.Get("compatibility").(string))
 		update = true
 	}
 
 	if update {
 		log.Printf("[DEBUG] Updating Glue Schema: %#v", input)
-		_, err := conn.UpdateSchemaWithContext(ctx, input)
+		_, err := conn.UpdateSchema(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Schema (%s): %s", d.Id(), err)
 		}
@@ -221,7 +227,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
-		_, err := conn.RegisterSchemaVersionWithContext(ctx, defInput)
+		_, err := conn.RegisterSchemaVersion(ctx, defInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Schema Definition (%s): %s", d.Id(), err)
 		}
@@ -235,18 +241,18 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
 	}
 
-	_, err := conn.DeleteSchemaWithContext(ctx, input)
+	_, err := conn.DeleteSchema(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Schema (%s): %s", d.Id(), err)
@@ -254,11 +260,136 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	_, err = waitSchemaDeleted(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Schema (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaOutput, error) {
+	input := &glue.GetSchemaInput{
+		SchemaId: createSchemaID(id),
+	}
+
+	output, err := conn.GetSchema(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// statusSchema fetches the Schema and its Status
+func statusSchema(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const schemaStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findSchemaByID(ctx, conn, id)
+
+		if err != nil {
+			return nil, schemaStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, schemaStatusUnknown, nil
+		}
+
+		return output, string(output.SchemaStatus), nil
+	}
+}
+
+func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaStatusPending),
+		Target:  enum.Slice(awstypes.SchemaStatusAvailable),
+		Refresh: statusSchema(conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaStatusDeleting),
+		Target:  []string{},
+		Refresh: statusSchema(conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaVersionOutput, error) {
+	input := &glue.GetSchemaVersionInput{
+		SchemaId: createSchemaID(id),
+		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
+			LatestVersion: true,
+		},
+	}
+
+	output, err := conn.GetSchemaVersion(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// statusSchemaVersion fetches the Schema Version and its Status
+func statusSchemaVersion(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const schemaVersionStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findSchemaVersionByID(ctx, conn, id)
+
+		if err != nil {
+			return nil, schemaVersionStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, schemaVersionStatusUnknown, nil
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaVersionOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaVersionStatusPending),
+		Target:  enum.Slice(awstypes.SchemaVersionStatusAvailable),
+		Refresh: statusSchemaVersion(conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaVersionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

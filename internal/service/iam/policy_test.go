@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -10,40 +10,39 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	expectedPolicyText := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("policy/%s", rName)),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "iam", "policy/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "attachment_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "attachment_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
 				),
 			},
@@ -59,19 +58,19 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 func TestAccIAMPolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -87,36 +86,69 @@ func TestAccIAMPolicy_description(t *testing.T) {
 func TestAccIAMPolicy_whitespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_whitespace(rName, "", "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccPolicyConfig_whitespace(rName, " ", "", ""),
-				PlanOnly: true,
+				Config: testAccPolicyConfig_whitespace(rName, " ", "", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", ""),
-				PlanOnly: true,
+				Config: testAccPolicyConfig_whitespace(rName, " ", "\n", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", " "),
-				PlanOnly: true,
+				Config: testAccPolicyConfig_whitespace(rName, " ", "\n", " "),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccPolicyConfig_whitespace(rName, " \n", "\n", "\t "),
-				PlanOnly: true,
+				Config: testAccPolicyConfig_whitespace(rName, " \n", "\n", "\t "),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -125,21 +157,29 @@ func TestAccIAMPolicy_whitespace(t *testing.T) {
 func TestAccIAMPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourcePolicy(), resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -151,16 +191,16 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	var out awstypes.Policy
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
@@ -176,19 +216,19 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 func TestAccIAMPolicy_path(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_path(rName, "/path1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path1/"),
 				),
 			},
@@ -204,16 +244,16 @@ func TestAccIAMPolicy_path(t *testing.T) {
 func TestAccIAMPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	policy1 := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
 	policy2 := `{"Statement":[{"Action":["ec2:*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyConfig_basic(rName, "not-json"),
@@ -222,14 +262,14 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy1),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy2),
 				),
 			},
@@ -246,21 +286,26 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 func TestAccIAMPolicy_diffs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out awstypes.Policy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_diffs(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -269,63 +314,40 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 			},
 			{
 				Config: testAccPolicyConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, ""),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -333,13 +355,13 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 
 func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyConfig_policyDuplicateKeys(rName),
@@ -349,18 +371,94 @@ func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
+// TestAccIAMPolicy_malformedCondition verifies that malformed policy content
+// that is stored in state does not prevent subsequent plan and apply operations
+// from proceeding.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39833
+func TestAccIAMPolicy_malformedCondition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+	expectedPolicyText1 := `{"Statement":[{"Action":["s3:ListBucket"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+	expectedPolicyText2 := `{"Statement":[{"Action":["s3:ListBucket"],"Condition":{"StringLike":["demo-prefix/"]}",Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+	expectedPolicyText3 := `{"Statement":[{"Action":["s3:ListBucket"],"Condition":{"StringLike":{"s3:prefix":["demo-prefix/"]}},"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_MalformedCondition_setup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText1),
+				),
+			},
+			{
+				Config:      testAccPolicyConfig_MalformedCondition_failure(rName),
+				ExpectError: regexache.MustCompile(`MalformedPolicyDocument: Syntax errors in policy`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					// Because this is a Plugin SDK V2-based resource, the malformed content
+					// is stored in state despite the failed update.
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText2),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_MalformedCondition_fix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out1, out2 awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &out1),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_delayAfterCreation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &out2),
+					testAccVerifyLatestPolicyId(&out1, &out2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -374,9 +472,9 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy)
 	}
 }
 
-func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy" {
@@ -385,7 +483,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -400,11 +498,24 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func testAccVerifyLatestPolicyId(before *awstypes.Policy, after *awstypes.Policy) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before == nil || after == nil {
+			return fmt.Errorf("No IAM Policy ID is set")
+		}
+
+		if before.DefaultVersionId == after.DefaultVersionId {
+			return fmt.Errorf("Policy not updated")
+		}
+		return nil
+	}
+}
+
 func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description = %q
-  name        = %q
+  description = %[1]q
+  name        = %[2]q
 
   policy = <<EOF
 {
@@ -427,7 +538,7 @@ EOF
 func testAccPolicyConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -473,7 +584,7 @@ EOF
 func testAccPolicyConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name_prefix = %q
+  name_prefix = %[1]q
 
   policy = <<EOF
 {
@@ -496,8 +607,8 @@ EOF
 func testAccPolicyConfig_path(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
-  path = %q
+  name = %[1]q
+  path = %[2]q
 
   policy = <<EOF
 {
@@ -520,13 +631,13 @@ EOF
 func testAccPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name   = %q
-  policy = %q
+  name   = %[1]q
+  policy = %[2]q
 }
 `, rName, policy)
 }
 
-func testAccPolicyConfig_diffs(rName string, tags string) string {
+func testAccPolicyConfig_diffs(rName, tags string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -599,7 +710,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -617,6 +728,102 @@ resource "aws_iam_policy" "test" {
           "s3:versionid": "abc123"
         }
       }
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_setup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_failure(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+        "Condition" : {
+          "StringLike" : ["demo-prefix/"]
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_fix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+        "Condition" : {
+          "StringLike" : {
+            "s3:prefix" : ["demo-prefix/"]
+          }
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_delayAfterCreation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name                              = %[1]q
+  delay_after_policy_creation_in_ms = 3000
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*",
+        "ec2:Get*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
     }
   ]
 }

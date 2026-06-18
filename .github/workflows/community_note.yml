@@ -1,0 +1,87 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Community Note
+
+on:
+  pull_request_target:
+    types:
+      - opened
+
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  add_note:
+    name: Add Note
+    env:
+      AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+      GH_CLI_SUBCOMMAND: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+      ITEM_TYPE: ${{ github.event_name == 'issues' && 'Issue' || 'Pull Request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: First Interaction Check
+        id: first_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          echo "contributions=$(gh $GH_CLI_SUBCOMMAND list --repo hashicorp/terraform-provider-aws --state all --json url --jq '.[].url' --author $AUTHOR | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: First Interaction Snippet
+        if: steps.first_check.outputs.contributions == 0
+        shell: bash
+        run: |
+          echo "Welcome @$AUTHOR :wave:
+
+          It looks like this is your first $ITEM_TYPE submission to the Terraform AWS Provider repository. Thank you very much for taking the time to do so, and welcome to the community! :tada:
+
+          ---
+          " >> note.md
+
+      - name: Community Note Snippet
+        shell: bash
+        run: |
+          echo "### Community Guidelines
+
+          This comment is added to every new $ITEM_TYPE to provide quick reference to how the Terraform AWS Provider is maintained. Please review the information below, and thank you for contributing to the community that keeps the provider thriving! :rocket:
+
+          #### Voting for Prioritization
+
+          * Please vote on this $ITEM_TYPE by adding a :+1: [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize it.
+          * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for additional information on how the maintainers handle prioritization.
+          * Please **do not** leave "+1" or other comments that do not add relevant new information or questions; they generate extra noise for others following the $ITEM_TYPE and do not help prioritize the request.
+          " >> note.md
+
+      - name: Issue Volunteer Snippet
+        if: github.event_name == 'issues'
+        shell: bash
+        run: |
+          echo "### Volunteering to Work on This Issue
+
+          * If you are interested in working on this issue, please leave a comment.
+          * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+          * For new resources and data sources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate scaffolding with comments detailing common expectations.
+          " >> note.md
+
+      - name: Pull Request Authors Snippet
+        if: github.event_name == 'pull_request_target'
+        shell: bash
+        run: |
+          echo "### Pull Request Authors
+
+          * Review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) relating to the type of change you are making to ensure all of the necessary steps have been taken.
+          * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.
+          " >> note.md
+
+      - name: Post Comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url ||  github.event.pull_request.html_url }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND comment $ISSUE_URL --body-file note.md

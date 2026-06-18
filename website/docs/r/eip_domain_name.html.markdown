@@ -35,6 +35,7 @@ resource "aws_eip_domain_name" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Required) The allocation ID.
 * `domain_name` - (Required) The domain name to modify for the IP address.
 
@@ -51,3 +52,20 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `10m`)
 - `update` - (Default `10m`)
 - `delete` - (Default `10m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a static reverse DNS record to an Elastic IP addresses using their association IDs. For example:
+
+```terraform
+import {
+  to = aws_eip_domain_name.test
+  id = "eipassoc-ab12c345"
+}
+```
+
+Using `terraform import`, import a static reverse DNS record to an Elastic IP addresses using their association IDs. For example:
+
+```console
+% terraform import aws_eip_domain_name.test eipassoc-ab12c345
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,10 +15,10 @@ import (
 
 func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-basic")
+	stackName := acctest.RandomWithPrefix(t, "tf-acc-ds-basic")
 	resourceName := "data.aws_cloudformation_stack.network"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,15 +26,15 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 			{
 				Config: testAccStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "6"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Form the Cloud"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "meh"),
 				),
@@ -103,10 +102,10 @@ data "aws_cloudformation_stack" "network" {
 
 func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 	ctx := acctest.Context(t)
-	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-yaml")
+	stackName := acctest.RandomWithPrefix(t, "tf-acc-ds-yaml")
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -114,15 +113,15 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 			{
 				Config: testAccStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "6"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Form the Cloud"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "meh"),
 				),

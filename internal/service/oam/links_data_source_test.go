@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -8,22 +8,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
+func testAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_links.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -36,8 +31,8 @@ func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/+.`)),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/.+$`)),
 				),
 			},
 		},
@@ -67,7 +62,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -89,15 +84,17 @@ resource "aws_oam_sink_policy" "test" {
 }
 
 resource "aws_oam_link" "test" {
-  depends_on = [aws_oam_sink_policy.test]
-
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_links "test" {

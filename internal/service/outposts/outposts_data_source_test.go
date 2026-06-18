@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package outposts_test
@@ -17,7 +17,7 @@ func TestAccOutpostsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outposts.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,11 +40,11 @@ func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["arns.#"]; v == acctest.Ct0 {
+		if v := rs.Primary.Attributes["arns.#"]; v == "0" {
 			return fmt.Errorf("expected at least one arns result, got none")
 		}
 
-		if v := rs.Primary.Attributes["ids.#"]; v == acctest.Ct0 {
+		if v := rs.Primary.Attributes["ids.#"]; v == "0" {
 			return fmt.Errorf("expected at least one ids result, got none")
 		}
 

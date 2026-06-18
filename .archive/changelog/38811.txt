@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_datazone_domain: Add `skip_deletion_protection` attribute
+```
+
+```release-note:new-resource
+aws_datazone_environment
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -9,56 +9,55 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_endpointBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_uri", regexache.MustCompile("output")),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_upload_mode", "EndOfJob"),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_type", "ml.t3.medium"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -72,22 +71,22 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_appSpecificationOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_appSpecificationOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.0.environment.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.0.environment.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.0.environment.foo", "bar"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_app_specification.0.record_preprocessor_source_uri", regexache.MustCompile("pre.sh")),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_app_specification.0.post_analytics_processor_source_uri", regexache.MustCompile("post.sh")),
@@ -104,24 +103,24 @@ func TestAccSageMakerDataQualityJobDefinition_appSpecificationOptional(t *testin
 
 func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_baselineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.0.constraints_resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.0.constraints_resource.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_baseline_config.0.constraints_resource.0.s3_uri", regexache.MustCompile("constraints")),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.0.statistics_resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.0.statistics_resource.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_baseline_config.0.statistics_resource.0.s3_uri", regexache.MustCompile("statistics")),
 				),
 			},
@@ -136,24 +135,24 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexache.MustCompile("captured")),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 				),
 			},
 			{
@@ -167,22 +166,22 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_batchTransformCSVHeader(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformCSVHeader(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.0.header", acctest.CtTrue),
 				),
 			},
@@ -197,22 +196,22 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformCSVHeader(t *testing
 
 func TestAccSageMakerDataQualityJobDefinition_batchTransformJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 				),
 			},
 			{
@@ -226,24 +225,24 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJSON(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_batchTransformJSONLine(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformJSONLine(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexache.MustCompile("captured")),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.0.line", acctest.CtTrue),
 				),
 			},
@@ -258,21 +257,21 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJSONLine(t *testing.
 
 func TestAccSageMakerDataQualityJobDefinition_batchTransformOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.local_path", "/opt/ml/processing/local_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.s3_data_distribution_type", "ShardedByS3Key"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.s3_input_mode", "Pipe"),
@@ -289,21 +288,21 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformOptional(t *testing.
 
 func TestAccSageMakerDataQualityJobDefinition_endpointOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_endpointOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.local_path", "/opt/ml/processing/local_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "ShardedByS3Key"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_input_mode", "Pipe"),
@@ -320,20 +319,20 @@ func TestAccSageMakerDataQualityJobDefinition_endpointOptional(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_outputConfigKMSKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_outputConfigKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_output_config.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -348,22 +347,22 @@ func TestAccSageMakerDataQualityJobDefinition_outputConfigKMSKeyID(t *testing.T)
 
 func TestAccSageMakerDataQualityJobDefinition_outputConfigOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_outputConfigOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.local_path", "/opt/ml/processing/local_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_upload_mode", "Continuous"),
 				),
@@ -379,21 +378,21 @@ func TestAccSageMakerDataQualityJobDefinition_outputConfigOptional(t *testing.T)
 
 func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKMSKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_resources.0.cluster_config.0.volume_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -408,20 +407,20 @@ func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKMSKeyID(t *test
 
 func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_stoppingCondition(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "600"),
 				),
 			},
@@ -436,23 +435,23 @@ func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_networkConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_networkConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.subnets.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.subnets.#", "1"),
 				),
 			},
 			{
@@ -466,20 +465,20 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfig(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_networkConfigTrafficEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_networkConfigTrafficEncryption(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_inter_container_traffic_encryption", acctest.CtTrue),
 				),
 			},
@@ -494,20 +493,20 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigTrafficEncryption(t *
 
 func TestAccSageMakerDataQualityJobDefinition_networkConfigEnableNetworkIsolation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_networkConfigEnableNetworkIsolation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_network_isolation", acctest.CtTrue),
 				),
 			},
@@ -522,20 +521,20 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigEnableNetworkIsolatio
 
 func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -547,8 +546,8 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDataQualityJobDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -556,8 +555,8 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 			{
 				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -567,31 +566,38 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 
 func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
+					testAccCheckDataQualityJobDefinitionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_data_quality_job_definition.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_data_quality_job_definition.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_data_quality_job_definition" {
@@ -600,7 +606,7 @@ func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.T
 
 			_, err := tfsagemaker.FindDataQualityJobDefinitionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -608,24 +614,22 @@ func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Data Quality Job Definition (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Data Quality Job Definition (%s) still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Data Quality Job Definition ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		_, err := tfsagemaker.FindDataQualityJobDefinitionByName(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -776,6 +780,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   }
 
   data_capture_config {
+    enable_capture              = true
     initial_sampling_percentage = 100
 
     destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
@@ -1129,6 +1134,7 @@ func testAccDataQualityJobDefinitionConfig_outputConfigKMSKeyID(rName string) st
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
@@ -1205,6 +1211,7 @@ func testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKMSKeyID(rName stri
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {

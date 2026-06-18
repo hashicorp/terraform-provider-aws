@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -18,7 +18,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_received_licenses.test"
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -26,7 +26,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReceivedLicensesDataSourceConfig_arns(licenseARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
 				),
 			},
 		},
@@ -37,7 +37,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_licensemanager_received_licenses.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +45,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_empty(t *testing.T) {
 			{
 				Config: testAccReceivedLicensesDataSourceConfig_empty(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", "0"),
 				),
 			},
 		},

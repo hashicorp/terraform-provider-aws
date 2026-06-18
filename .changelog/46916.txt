@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.api_gateway` configuration block
+```

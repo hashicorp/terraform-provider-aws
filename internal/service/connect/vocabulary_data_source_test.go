@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,12 +17,12 @@ func testAccVocabularyDataSource_vocabularyID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_vocabulary.test"
 	datasourceName := "data.aws_connect_vocabulary.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,12 +52,12 @@ func testAccVocabularyDataSource_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_vocabulary.test"
 	datasourceName := "data.aws_connect_vocabulary.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,7 +82,7 @@ func testAccVocabularyDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccVocabularyBaseDataSourceConfig(rName, rName2 string) string {
+func testAccVocabularyDataSourceConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -107,7 +106,7 @@ resource "aws_connect_vocabulary" "test" {
 
 func testAccVocabularyDataSourceConfig_id(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseDataSourceConfig(rName, rName2),
+		testAccVocabularyDataSourceConfig_base(rName, rName2),
 		`
 data "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
@@ -118,7 +117,7 @@ data "aws_connect_vocabulary" "test" {
 
 func testAccVocabularyDataSourceConfig_name(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseDataSourceConfig(rName, rName2),
+		testAccVocabularyDataSourceConfig_base(rName, rName2),
 		`
 data "aws_connect_vocabulary" "test" {
   instance_id = aws_connect_instance.test.id

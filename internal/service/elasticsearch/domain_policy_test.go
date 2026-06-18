@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,8 +17,8 @@ import (
 
 func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
-	ri := sdkacctest.RandInt()
+	var domain awstypes.ElasticsearchDomainStatus
+	ri := acctest.RandInt(t)
 	policy := `{
     "Version": "2012-10-17",
     "Statement": [
@@ -50,20 +49,20 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 }`
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_elasticsearch_domain.example", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition(ctx), awsClient.AccountID(ctx), awsClient.Region(ctx))
 						if err != nil {
 							return err
 						}

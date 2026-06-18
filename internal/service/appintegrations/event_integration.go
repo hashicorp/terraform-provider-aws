@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appintegrations
 
@@ -12,22 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appintegrations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appintegrations_event_integration", name="Event Integration")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appintegrations;appintegrations.GetEventIntegrationOutput")
-func ResourceEventIntegration() *schema.Resource {
+func resourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventIntegrationCreate,
 		ReadWithoutTimeout:   resourceEventIntegrationRead,
@@ -36,61 +36,62 @@ func ResourceEventIntegration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"eventbridge_bus": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
-			},
-			"event_filter": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSource: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^aws\.partner\/.*$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"eventbridge_bus": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+				},
+				"event_filter": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSource: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^aws\.partner\/.*$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateEventIntegrationInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
-		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
+		EventFilter:    expandEventFilter(d.Get("event_filter").([]any)),
 		Name:           aws.String(name),
 		Tags:           getTagsIn(ctx),
 	}
@@ -116,16 +117,17 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Id()
 
-	resp, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
+	input := appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	resp, err := conn.GetEventIntegration(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppIntegrations Event Integration (%s) not found, removing from state", d.Id())
@@ -155,7 +157,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
@@ -163,10 +165,11 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	name := d.Id()
 
 	if d.HasChange(names.AttrDescription) {
-		_, err := conn.UpdateEventIntegration(ctx, &appintegrations.UpdateEventIntegrationInput{
+		input := appintegrations.UpdateEventIntegrationInput{
 			Name:        aws.String(name),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-		})
+		}
+		_, err := conn.UpdateEventIntegration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventIntegration (%s): %s", d.Id(), err)
@@ -176,16 +179,17 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Id()
 
-	_, err := conn.DeleteEventIntegration(ctx, &appintegrations.DeleteEventIntegrationInput{
+	input := appintegrations.DeleteEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteEventIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -198,12 +202,12 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandEventFilter(eventFilter []interface{}) *awstypes.EventFilter {
+func expandEventFilter(eventFilter []any) *awstypes.EventFilter {
 	if len(eventFilter) == 0 || eventFilter[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := eventFilter[0].(map[string]interface{})
+	tfMap, ok := eventFilter[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -215,14 +219,14 @@ func expandEventFilter(eventFilter []interface{}) *awstypes.EventFilter {
 	return result
 }
 
-func flattenEventFilter(eventFilter *awstypes.EventFilter) []interface{} {
+func flattenEventFilter(eventFilter *awstypes.EventFilter) []any {
 	if eventFilter == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		names.AttrSource: aws.ToString(eventFilter.Source),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

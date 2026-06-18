@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -11,13 +11,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +61,7 @@ func testAccAPNSVoIPSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAc
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -95,23 +94,36 @@ func testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testA
 	return &conf
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSVoIPSandboxChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSVoIPSandboxChannel_basicCertificate,
+		"basicToken":       testAccAPNSVoIPSandboxChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.APNSVoipSandboxChannelResponse
+	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 
 	configuration := testAccAPNSVoIPSandboxChannelCertConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPSandboxChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPSandboxChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -123,30 +135,30 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPSandboxChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPSandboxChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
+func testAccAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.APNSVoipSandboxChannelResponse
+	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 
 	configuration := testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPSandboxChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPSandboxChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -158,14 +170,14 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPSandboxChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPSandboxChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAPNSVoIPSandboxChannelExists(ctx context.Context, n string, channel *pinpoint.APNSVoipSandboxChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSVoIPSandboxChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.APNSVoipSandboxChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,22 +185,44 @@ func testAccCheckAPNSVoIPSandboxChannelExists(ctx context.Context, n string, cha
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs Voip Sandbox Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNS VoIP Sandbox Channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
-		// Check if the app exists
-		params := &pinpoint.GetApnsVoipSandboxChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetApnsVoipSandboxChannelWithContext(ctx, params)
+		output, err := tfpinpoint.FindAPNSVoIPSandboxChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*channel = *output.APNSVoipSandboxChannelResponse
+		*channel = *output
+
+		return nil
+	}
+}
+
+func testAccCheckAPNSVoIPSandboxChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_apns_voip_sandbox_channel" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindAPNSVoIPSandboxChannelByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("End User Messaging APNS VoIP Sandbox Channel %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -224,31 +258,4 @@ resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {
   token_key_id = %s
 }
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
-}
-
-func testAccCheckAPNSVoIPSandboxChannelDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_apns_voip_sandbox_channel" {
-				continue
-			}
-
-			// Check if the channel exists
-			params := &pinpoint.GetApnsVoipSandboxChannelInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetApnsVoipSandboxChannelWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("APNs Voip Sandbox Channel exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

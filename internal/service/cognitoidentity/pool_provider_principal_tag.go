@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidentity
 
@@ -36,35 +38,37 @@ func resourcePoolProviderPrincipalTag() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 55),
-					validation.StringMatch(regexache.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
-				),
-			},
-			"identity_provider_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-				),
-			},
-			"principal_tags": tftags.TagsSchema(),
-			"use_defaults": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 55),
+						validation.StringMatch(regexache.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
+					),
+				},
+				"identity_provider_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+					),
+				},
+				"principal_tags": tftags.TagsSchema(),
+				"use_defaults": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }
 
-func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Print("[DEBUG] Creating Cognito Identity Provider Principal Tags")
@@ -78,7 +82,7 @@ func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("principal_tags"); ok {
-		params.PrincipalTags = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		params.PrincipalTags = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("use_defaults"); ok {
@@ -95,7 +99,7 @@ func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourcePoolProviderPrincipalTagRead(ctx, d, meta)...)
 }
 
-func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
@@ -106,10 +110,11 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
-	ret, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+	input := cognitoidentity.GetPrincipalTagAttributeMapInput{
 		IdentityProviderName: aws.String(providerName),
 		IdentityPoolId:       aws.String(poolId),
-	})
+	}
+	ret, err := conn.GetPrincipalTagAttributeMap(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id())
@@ -132,7 +137,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Provider Principal Tags")
@@ -148,7 +153,7 @@ func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChanges("principal_tags", "use_defaults") {
-		params.PrincipalTags = flex.ExpandStringValueMap(d.Get("principal_tags").(map[string]interface{}))
+		params.PrincipalTags = flex.ExpandStringValueMap(d.Get("principal_tags").(map[string]any))
 		params.UseDefaults = aws.Bool(d.Get("use_defaults").(bool))
 
 		_, err = conn.SetPrincipalTagAttributeMap(ctx, params)
@@ -160,7 +165,7 @@ func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourcePoolProviderPrincipalTagRead(ctx, d, meta)...)
 }
 
-func resourcePoolProviderPrincipalTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolProviderPrincipalTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider Principal Tags: %s", d.Id())

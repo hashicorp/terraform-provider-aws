@@ -1,0 +1,38 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: testcase-missing-context
+    languages: [go]
+    message: "Acceptance tests must create a context with acctest.Context(t)"
+    severity: ERROR
+    patterns:
+      - pattern: |
+          func $FUNC($T *testing.T) {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^[Tt]estAcc
+      - pattern-either:
+          - pattern: |
+              func $FUNC($T *testing.T) {
+                ...
+                acctest.Test(...)
+                ...
+              }
+          - pattern: |
+              func $FUNC($T *testing.T) {
+                ...
+                acctest.ParallelTest(...)
+                ...
+              }
+      - pattern-not: |
+          func $FUNC($T *testing.T) {
+            ...
+            acctest.Context(...)
+            ...
+          }
+    paths:
+      include:
+        - "**/*_test.go"

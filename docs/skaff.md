@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provider Scaffolding (skaff)
 
 `skaff` is a Terraform AWS Provider scaffolding command line tool.
@@ -10,8 +13,8 @@ These files are heavily commented with instructions, serving as the best way to 
     * Resource, data source, or function?
     * [Name it](naming.md).
     !!! tip
-        Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework (e.g. the default `skaff` settings).
-        See [AWS Go SDK Versions](aws-go-sdk-versions.md), [Terraform Plugin Development Packages](terraform-plugin-development-packages.md), and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+        Net-new resources should be implemented with Terraform Plugin Framework (i.e. the default `skaff` settings).
+        See [Terraform Plugin Development Packages](terraform-plugin-development-packages.md) and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
 1. Use `skaff` to generate provider code.
 1. Go through the generated code, customizing as necessary.
 1. Run, test, refine.
@@ -28,12 +31,13 @@ These files are heavily commented with instructions, serving as the best way to 
     ```
 
 1. Change into the appropriate directory.
-    - For resources and data sources, this is the service directory where the new entity will reside, e.g. `internal/service/mq`.
+    - For resources, data sources, ephemeral resources, and list resources this is the service directory where the new entity will reside, e.g. `internal/service/mq`.
     - For functions, this is `internal/functions`.
-1. Generate the resource, data source or function. For example,
+1. Generate the code scaffolding. For example,
     - `skaff resource --name BrokerReboot`.
     - `skaff datasource --name IAMRole`.
     - `skaff function --name ARNParse`.
+    - `skaff list --name EBSVolume`.
 
 To get help, enter `skaff` without arguments.
 
@@ -46,14 +50,18 @@ skaff --help
 ```
 
 ```
+Create scaffolding for the Terraform AWS Provider
+
 Usage:
   skaff [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   datasource  Create scaffolding for a data source
+  ephemeral   Create scaffolding for an ephemeral resource
   function    Create scaffolding for a function
   help        Help about any command
+  list        Create scaffolding for a list resource
   resource    Create scaffolding for a resource
 
 Flags:
@@ -62,7 +70,7 @@ Flags:
 
 ### Autocompletion
 
-Generate the autocompletion script for `skaff` for the specified shell
+Generate the autocompletion script for `skaff` for the specified shell.
 
 ```console
 skaff completion --help
@@ -80,13 +88,11 @@ Available Commands:
 
 Flags:
   -h, --help   help for completion
-
-Use "skaff completion [command] --help" for more information about a command
 ```
 
 ### Data Source
 
-Create scaffolding for a data source
+Create scaffolding for a data source.
 
 ```console
 skaff datasource --help
@@ -104,9 +110,29 @@ Flags:
   -h, --help               help for datasource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
+```
+
+### Ephemeral Resource
+
+Create scaffolding for an ephemeral resource.
+
+```console
+% skaff ephemeral --help
+```
+
+```
+Create scaffolding for an ephemeral resource
+
+Usage:
+  skaff ephemeral [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -h, --help               help for ephemeral
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
 ```
 
 ### Function
@@ -132,9 +158,32 @@ Flags:
   -s, --snakename string     if skaff doesn't get it right, explicitly give name in snake case (e.g., arn_build)
 ```
 
+### List Resource
+
+Create scaffolding for a list resource.
+
+```console
+% skaff list --help
+```
+
+```
+Create scaffolding for a list resource
+
+Usage:
+  skaff list [flags]
+
+Flags:
+  -c, --clear-comments     do not include instructional comments in source
+  -f, --force              force creation, overwriting existing files
+  -p, --framework          use scaffolding for resources written using framework
+  -h, --help               help for list
+  -n, --name string        name of the entity
+  -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
+```
+
 ### Resource
 
-Create scaffolding for a resource
+Create scaffolding for a resource.
 
 ```console
 skaff resource --help
@@ -152,7 +201,5 @@ Flags:
   -h, --help               help for resource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```

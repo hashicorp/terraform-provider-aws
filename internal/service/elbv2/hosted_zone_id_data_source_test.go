@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -14,7 +14,7 @@ import (
 
 func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -22,7 +22,7 @@ func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", names.AttrID, tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", names.AttrID, tfelbv2.HostedZoneIDPerRegionALBMap[acctest.Region()]),
 				),
 			},
 			{
@@ -34,7 +34,7 @@ func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_explicitNetwork,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", names.AttrID, tfelbv2.HostedZoneIdPerRegionNLBMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", names.AttrID, tfelbv2.HostedZoneIDPerRegionNLBMap[acctest.Region()]),
 				),
 			},
 			{

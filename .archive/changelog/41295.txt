@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_vpclattice_service_network: Fix regression resulting in `AccessDeniedError` attempting to list tags
+```
+
+```release-note:bug
+data-source/aws_vpclattice_service: Fix regression resulting in `AccessDeniedError` attempting to list tags
+```

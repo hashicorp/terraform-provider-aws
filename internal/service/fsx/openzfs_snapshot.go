@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -9,21 +11,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,54 +49,52 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 			Read:   schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 203),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"volume_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(23, 23),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 203),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"volume_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(23, 23),
+				},
+			}
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateSnapshotInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		Tags:               getTagsIn(ctx),
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
 	}
 
-	output, err := conn.CreateSnapshotWithContext(ctx, input)
+	output, err := conn.CreateSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx OpenZFS Snapshot: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Snapshot.SnapshotId))
+	d.SetId(aws.ToString(output.Snapshot.SnapshotId))
 
 	if _, err := waitSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) create: %s", d.Id(), err)
@@ -103,13 +103,13 @@ func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,13 +130,13 @@ func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateSnapshotInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			SnapshotId:         aws.String(d.Id()),
 		}
 
@@ -144,7 +144,7 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		_, err := conn.UpdateSnapshotWithContext(ctx, input)
+		_, err := conn.UpdateSnapshot(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
@@ -158,16 +158,16 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	log.Printf("[INFO] Deleting FSx Snapshot: %s", d.Id())
-	_, err := conn.DeleteSnapshotWithContext(ctx, &fsx.DeleteSnapshotInput{
+	_, err := conn.DeleteSnapshot(ctx, &fsx.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+	if errs.IsA[*awstypes.SnapshotNotFound](err) {
 		return diags
 	}
 
@@ -182,60 +182,56 @@ func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func findSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+func findSnapshotByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
-		SnapshotIds: aws.StringSlice([]string{id}),
+		SnapshotIds: []string{id},
 	}
 
-	return findSnapshot(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
+	return findSnapshot(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Snapshot]())
 }
 
-func findSnapshot(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*fsx.Snapshot]) (*fsx.Snapshot, error) {
+func findSnapshot(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*awstypes.Snapshot]) (*awstypes.Snapshot, error) {
 	output, err := findSnapshots(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*fsx.Snapshot]) ([]*fsx.Snapshot, error) {
-	var output []*fsx.Snapshot
+func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*awstypes.Snapshot]) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
 
-	err := conn.DescribeSnapshotsPagesWithContext(ctx, input, func(page *fsx.DescribeSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := fsx.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.Snapshots {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.SnapshotNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Snapshots {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshot(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -243,24 +239,24 @@ func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRe
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Lifecycle), nil
+		return output, string(output.Lifecycle), nil
 	}
 }
 
-func waitSnapshotCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.SnapshotLifecycleCreating, fsx.SnapshotLifecyclePending},
-		Target:  []string{fsx.SnapshotLifecycleAvailable},
-		Refresh: statusSnapshot(ctx, conn, id),
+		Pending: enum.Slice(awstypes.SnapshotLifecycleCreating, awstypes.SnapshotLifecyclePending),
+		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -269,20 +265,20 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.FSx, id string, timeout 
 	return nil, err
 }
 
-func waitSnapshotUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.SnapshotLifecyclePending},
-		Target:  []string{fsx.SnapshotLifecycleAvailable},
-		Refresh: statusSnapshot(ctx, conn, id),
+		Pending: enum.Slice(awstypes.SnapshotLifecyclePending),
+		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -291,20 +287,20 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout 
 	return nil, err
 }
 
-func waitSnapshotDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.SnapshotLifecyclePending, fsx.SnapshotLifecycleDeleting},
+		Pending: enum.Slice(awstypes.SnapshotLifecyclePending, awstypes.SnapshotLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package secretsmanager
 
@@ -19,49 +21,51 @@ func dataSourceRandomPassword() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRandomPasswordRead,
 
-		Schema: map[string]*schema.Schema{
-			"exclude_characters": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"exclude_lowercase": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"exclude_numbers": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"exclude_punctuation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"exclude_uppercase": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"include_space": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"password_length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  32,
-			},
-			"require_each_included_type": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"random_password": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"exclude_characters": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"exclude_lowercase": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"exclude_numbers": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"exclude_punctuation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"exclude_uppercase": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"include_space": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"password_length": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  32,
+				},
+				"require_each_included_type": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"random_password": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 

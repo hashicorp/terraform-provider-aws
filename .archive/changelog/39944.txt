@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_record: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `geolocation_routing_policy` is empty
+```

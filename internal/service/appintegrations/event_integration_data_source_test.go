@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appintegrations_test
@@ -8,25 +8,27 @@ import (
 	"os"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppIntegrationsEventIntegrationDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_appintegrations_event_integration.test"
-	datasourceName := "data.aws_appintegrations_event_integration.test"
+	dataSourceName := "data.aws_appintegrations_event_integration.test"
 
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	sourceName := os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppIntegrationsEndpointID)
@@ -37,15 +39,16 @@ func TestAccAppIntegrationsEventIntegrationDataSource_name(t *testing.T) {
 			{
 				Config: testAccEventIntegrationDataSourceConfig_Name(rName, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.#", resourceName, "event_filter.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.0.source", resourceName, "event_filter.0.source"),
-					resource.TestCheckResourceAttrPair(datasourceName, "eventbridge_bus", resourceName, "eventbridge_bus"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "event_filter.#", resourceName, "event_filter.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "event_filter.0.source", resourceName, "event_filter.0.source"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "eventbridge_bus", resourceName, "eventbridge_bus"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -60,10 +63,6 @@ resource "aws_appintegrations_event_integration" "test" {
 
   event_filter {
     source = %[2]q
-  }
-
-  tags = {
-    "Key1" = "Value1"
   }
 }
 `, rName, sourceName)

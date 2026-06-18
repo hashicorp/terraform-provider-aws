@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acmpca
 
@@ -10,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,126 +24,131 @@ import (
 
 // @SDKDataSource("aws_acmpca_certificate_authority", name="Certificate Authority")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func dataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_signing_request": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_storage_security_standard": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_after": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_before": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
-			"revocation_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
-						"crl_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"custom_cname": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"expiration_in_days": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrS3BucketName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"s3_object_acl": {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_signing_request": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_storage_security_standard": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_after": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_before": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
+				"revocation_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
+							"crl_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"custom_cname": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"custom_path": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"expiration_in_days": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrS3BucketName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"s3_object_acl": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
-						"ocsp_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"ocsp_custom_cname": {
-										Type:     schema.TypeString,
-										Computed: true,
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
+							"ocsp_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"ocsp_custom_cname": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"serial": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"serial": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get(names.AttrARN).(string)
-	input := &acmpca.DescribeCertificateAuthorityInput{
+	input := acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	certificateAuthority, err := findCertificateAuthority(ctx, conn, input)
+	certificateAuthority, err := findCertificateAuthority(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
@@ -159,9 +167,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
+	getCACertInput := acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &getCACertInput)
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
@@ -176,13 +185,20 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
-	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+	// Attempt to get the CSR (if permitted).
+	getCACSRInput := acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &getCACSRInput)
 
-	// Returned when in PENDING_CERTIFICATE status
-	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+	switch {
+	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
+		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+		// arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority does not include acm-pca:GetCertificateAuthorityCsr.
+	case errs.IsA[*types.InvalidStateException](err):
+		// Returned when in PENDING_CERTIFICATE status
+		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 

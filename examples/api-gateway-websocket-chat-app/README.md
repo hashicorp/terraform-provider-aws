@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # API Gateway WebSocket Chat Application
 
 This example demonstrates how to create a simple chat application using [API Gateway's WebSocket-based API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) features.

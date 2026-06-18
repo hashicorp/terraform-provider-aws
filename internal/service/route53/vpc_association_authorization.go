@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -8,51 +10,61 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_vpc_association_authorization", name="VPC Association Authorization")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("vpc_id")
+// @ImportIDHandler("vpcAssociationAuthorizationImportID")
+// @Testing(useAlternateAccount=true)
+// @Testing(preIdentityVersion="v6.45.0")
 func resourceVPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAssociationAuthorizationCreate,
 		ReadWithoutTimeout:   resourceVPCAssociationAuthorizationRead,
 		DeleteWithoutTimeout: resourceVPCAssociationAuthorizationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_region": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpc_region": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -65,7 +77,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
 		VPC: &awstypes.VPC{
 			VPCId:     aws.String(d.Get(names.AttrVPCID).(string)),
-			VPCRegion: awstypes.VPCRegion(meta.(*conns.AWSClient).Region),
+			VPCRegion: awstypes.VPCRegion(meta.(*conns.AWSClient).Region(ctx)),
 		},
 	}
 
@@ -73,7 +85,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		input.VPC.VPCRegion = awstypes.VPCRegion(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateVPCAssociationAuthorization(ctx, input)
 	})
 
@@ -97,9 +109,13 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpc, err := findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	// InvalidPaginationToken errors can manifest when many authorization resources are
+	// managed concurrently. Retry these errors for a short duration.
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
+		return findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 VPC Association Authorization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,9 +125,8 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCID, vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
-	d.Set("zone_id", zoneID)
+	output := outputRaw.(*awstypes.VPC)
+	resourceVPCAssociationAuthorizationFlatten(d, zoneID, output)
 
 	return diags
 }
@@ -126,7 +141,7 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[INFO] Deleting Route53 VPC Association Authorization: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.DeleteVPCAssociationAuthorization(ctx, &route53.DeleteVPCAssociationAuthorizationInput{
 			HostedZoneId: aws.String(zoneID),
 			VPC: &awstypes.VPC{
@@ -147,6 +162,12 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
+func resourceVPCAssociationAuthorizationFlatten(d *schema.ResourceData, zoneID string, vpc *awstypes.VPC) {
+	d.Set(names.AttrVPCID, vpc.VPCId)
+	d.Set("vpc_region", vpc.VPCRegion)
+	d.Set("zone_id", zoneID)
+}
+
 const vpcAssociationAuthorizationResourceIDSeparator = ":"
 
 func vpcAssociationAuthorizationCreateResourceID(zoneID, vpcID string) string {
@@ -164,6 +185,26 @@ func vpcAssociationAuthorizationParseResourceID(id string) (string, string, erro
 	}
 
 	return parts[0], parts[1], nil
+}
+
+type vpcAssociationAuthorizationImportID struct{}
+
+func (vpcAssociationAuthorizationImportID) Create(d *schema.ResourceData) string {
+	return vpcAssociationAuthorizationCreateResourceID(d.Get("zone_id").(string), d.Get(names.AttrVPCID).(string))
+}
+
+func (vpcAssociationAuthorizationImportID) Parse(id string) (string, map[string]any, error) {
+	zoneID, vpcID, err := vpcAssociationAuthorizationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"zone_id":       zoneID,
+		names.AttrVPCID: vpcID,
+	}
+
+	return id, result, nil
 }
 
 func findVPCAssociationAuthorizationByTwoPartKey(ctx context.Context, conn *route53.Client, zoneID, vpcID string) (*awstypes.VPC, error) {
@@ -205,8 +246,7 @@ func findVPCAssociationAuthorizations(ctx context.Context, conn *route53.Client,
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 

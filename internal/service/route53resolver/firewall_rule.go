@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -9,22 +11,26 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_resolver_firewall_rule")
-func ResourceFirewallRule() *schema.Resource {
+// @SDKResource("aws_route53_resolver_firewall_rule", name="Firewall Rule")
+func resourceFirewallRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleCreate,
 		ReadWithoutTimeout:   resourceFirewallRuleRead,
@@ -35,76 +41,120 @@ func ResourceFirewallRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.Action_Values(), false),
-			},
-			"block_override_dns_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.BlockOverrideDnsType_Values(), false),
-			},
-			"block_override_domain": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"block_override_ttl": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 604800),
-			},
-			"block_response": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.BlockResponse_Values(), false),
-			},
-			"firewall_domain_list_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"firewall_rule_group_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Action](),
+				},
+				"block_override_dns_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BlockOverrideDnsType](),
+				},
+				"block_override_domain": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"block_override_ttl": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 604800),
+				},
+				"block_response": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BlockResponse](),
+				},
+				"confidence_threshold": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ConfidenceThreshold](),
+					ConflictsWith:    []string{"firewall_domain_list_id"},
+				},
+				"dns_threat_protection": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsThreatProtection](),
+					ConflictsWith:    []string{"firewall_domain_list_id"},
+				},
+				"firewall_domain_list_id": {
+					Type:          schema.TypeString,
+					ForceNew:      true,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(1, 64),
+					ConflictsWith: []string{"dns_threat_protection", "confidence_threshold"},
+				},
+				"firewall_domain_redirection_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.FirewallDomainRedirectionActionInspectRedirectionDomain,
+					ValidateDiagFunc: enum.Validate[awstypes.FirewallDomainRedirectionAction](),
+				},
+				"firewall_rule_group_id": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"firewall_threat_protection_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"q_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
+		CustomizeDiff: firewallRuleCustomizeDiff,
 	}
 }
 
-func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallRuleInput{
-		Action:               aws.String(d.Get(names.AttrAction).(string)),
-		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
-		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-		FirewallDomainListId: aws.String(firewallDomainListID),
-		Name:                 aws.String(name),
-		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
+		Action:              awstypes.Action(d.Get(names.AttrAction).(string)),
+		CreatorRequestId:    aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
+		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
+		Name:                aws.String(name),
+		Priority:            aws.Int32(int32(d.Get(names.AttrPriority).(int))),
+	}
+
+	// Standard rule (domain list-based)
+	if v, ok := d.GetOk("firewall_domain_list_id"); ok {
+		input.FirewallDomainListId = aws.String(v.(string))
+		input.FirewallDomainRedirectionAction = awstypes.FirewallDomainRedirectionAction(d.Get("firewall_domain_redirection_action").(string))
+	}
+
+	// Advanced rule (DNS threat protection)
+	if v, ok := d.GetOk("dns_threat_protection"); ok {
+		input.DnsThreatProtection = awstypes.DnsThreatProtection(v.(string))
+	}
+
+	if v, ok := d.GetOk("confidence_threshold"); ok {
+		input.ConfidenceThreshold = awstypes.ConfidenceThreshold(v.(string))
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
-		input.BlockOverrideDnsType = aws.String(v.(string))
+		input.BlockOverrideDnsType = awstypes.BlockOverrideDnsType(v.(string))
 	}
 
 	if v, ok := d.GetOk("block_override_domain"); ok {
@@ -112,37 +162,48 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("block_override_ttl"); ok {
-		input.BlockOverrideTtl = aws.Int64(int64(v.(int)))
+		input.BlockOverrideTtl = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("block_response"); ok {
-		input.BlockResponse = aws.String(v.(string))
+		input.BlockResponse = awstypes.BlockResponse(v.(string))
 	}
 
-	_, err := conn.CreateFirewallRuleWithContext(ctx, input)
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateFirewallRule(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Rule (%s): %s", name, err)
 	}
 
-	d.SetId(ruleID)
+	// Set the resource ID based on rule type
+	if output.FirewallRule.FirewallThreatProtectionId != nil {
+		// Advanced rule
+		d.SetId(firewallRuleCreateResourceID(firewallRuleGroupID, aws.ToString(output.FirewallRule.FirewallThreatProtectionId)))
+	} else {
+		// Standard rule
+		d.SetId(firewallRuleCreateResourceID(firewallRuleGroupID, aws.ToString(output.FirewallRule.FirewallDomainListId)))
+	}
 
 	return append(diags, resourceFirewallRuleRead(ctx, d, meta)...)
 }
 
-func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
+	firewallRuleGroupID, ruleIdentifier, err := firewallRuleParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	firewallRule, err := FindFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, firewallDomainListID)
+	firewallRule, err := findFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, ruleIdentifier)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,34 +218,51 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("block_override_domain", firewallRule.BlockOverrideDomain)
 	d.Set("block_override_ttl", firewallRule.BlockOverrideTtl)
 	d.Set("block_response", firewallRule.BlockResponse)
-	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
+	d.Set("confidence_threshold", firewallRule.ConfidenceThreshold)
+	d.Set("dns_threat_protection", firewallRule.DnsThreatProtection)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
+	d.Set("firewall_domain_redirection_action", firewallRule.FirewallDomainRedirectionAction)
+	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
+	d.Set("firewall_threat_protection_id", firewallRule.FirewallThreatProtectionId)
 	d.Set(names.AttrName, firewallRule.Name)
 	d.Set(names.AttrPriority, firewallRule.Priority)
+	d.Set("q_type", firewallRule.Qtype)
 
 	return diags
 }
 
-func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
+	firewallRuleGroupID, ruleIdentifier, err := firewallRuleParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &route53resolver.UpdateFirewallRuleInput{
-		Action:               aws.String(d.Get(names.AttrAction).(string)),
-		FirewallDomainListId: aws.String(firewallDomainListID),
-		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-		Name:                 aws.String(d.Get(names.AttrName).(string)),
-		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
+		Action:              awstypes.Action(d.Get(names.AttrAction).(string)),
+		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
+		Name:                aws.String(d.Get(names.AttrName).(string)),
+		Priority:            aws.Int32(int32(d.Get(names.AttrPriority).(int))),
+	}
+
+	// Standard rule (domain list-based)
+	if v, ok := d.GetOk("firewall_domain_list_id"); ok {
+		input.FirewallDomainListId = aws.String(v.(string))
+	}
+
+	// Advanced rule (DNS threat protection)
+	if v, ok := d.GetOk("firewall_threat_protection_id"); ok {
+		input.FirewallThreatProtectionId = aws.String(v.(string))
+	} else if _, ok := d.GetOk("dns_threat_protection"); ok {
+		// Use the identifier from the resource ID for advanced rules
+		input.FirewallThreatProtectionId = aws.String(ruleIdentifier)
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
-		input.BlockOverrideDnsType = aws.String(v.(string))
+		input.BlockOverrideDnsType = awstypes.BlockOverrideDnsType(v.(string))
 	}
 
 	if v, ok := d.GetOk("block_override_domain"); ok {
@@ -192,14 +270,22 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("block_override_ttl"); ok {
-		input.BlockOverrideTtl = aws.Int64(int64(v.(int)))
+		input.BlockOverrideTtl = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("block_response"); ok {
-		input.BlockResponse = aws.String(v.(string))
+		input.BlockResponse = awstypes.BlockResponse(v.(string))
 	}
 
-	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
+	if v, ok := d.GetOk("firewall_domain_redirection_action"); ok {
+		input.FirewallDomainRedirectionAction = awstypes.FirewallDomainRedirectionAction(v.(string))
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	_, err = conn.UpdateFirewallRule(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
@@ -208,23 +294,41 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceFirewallRuleRead(ctx, d, meta)...)
 }
 
-func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
+	firewallRuleGroupID, ruleIdentifier, err := firewallRuleParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
-	_, err = conn.DeleteFirewallRuleWithContext(ctx, &route53resolver.DeleteFirewallRuleInput{
-		FirewallDomainListId: aws.String(firewallDomainListID),
-		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-	})
+	input := &route53resolver.DeleteFirewallRuleInput{
+		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
+	}
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+	// Standard rule (domain list-based)
+	if v, ok := d.GetOk("firewall_domain_list_id"); ok {
+		input.FirewallDomainListId = aws.String(v.(string))
+	}
+
+	// Advanced rule (DNS threat protection)
+	if v, ok := d.GetOk("firewall_threat_protection_id"); ok {
+		input.FirewallThreatProtectionId = aws.String(v.(string))
+	} else if _, ok := d.GetOk("dns_threat_protection"); ok {
+		// Use the identifier from the resource ID for advanced rules
+		input.FirewallThreatProtectionId = aws.String(ruleIdentifier)
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
+	_, err = conn.DeleteFirewallRule(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -235,75 +339,102 @@ func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
+func findFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Client, firewallRuleGroupID, ruleIdentifier string) (*awstypes.FirewallRule, error) {
+	input := route53resolver.ListFirewallRulesInput{
+		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
+	}
+	output, err := findFirewallRules(ctx, conn, &input, func(v *awstypes.FirewallRule) bool {
+		// Match standard rules by firewall_domain_list_id
+		if aws.ToString(v.FirewallDomainListId) == ruleIdentifier {
+			return true
+		}
+		// Match advanced rules by firewall_threat_protection_id
+		if aws.ToString(v.FirewallThreatProtectionId) == ruleIdentifier {
+			return true
+		}
+		return false
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFirewallRules(ctx context.Context, conn *route53resolver.Client, input *route53resolver.ListFirewallRulesInput, f tfslices.Predicate[*awstypes.FirewallRule]) ([]awstypes.FirewallRule, error) {
+	var output []awstypes.FirewallRule
+
+	pages := route53resolver.NewListFirewallRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.FirewallRules {
+			if f(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
 const firewallRuleIDSeparator = ":"
 
-func FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID string) string {
+func firewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID string) string {
 	parts := []string{firewallRuleGroupID, firewallDomainListID}
 	id := strings.Join(parts, firewallRuleIDSeparator)
 
 	return id
 }
 
-func FirewallRuleParseResourceID(id string) (string, string, error) {
+func firewallRuleParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, firewallRuleIDSeparator, 2)
 
 	if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected firewall_rule_group_id%[2]sfirewall_domain_list_id", id, firewallRuleIDSeparator)
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected firewall_rule_group_id%[2]srule_identifier", id, firewallRuleIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID, firewallDomainListID string) (*route53resolver.FirewallRule, error) {
-	output, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
-		return aws.StringValue(rule.FirewallDomainListId) == firewallDomainListID
-	})
+var firewallRuleCustomizeDiff = customdiff.All(
+	func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		// Use GetRawConfig to check if attributes are set in the configuration,
+		// regardless of whether their values are known yet (e.g., references to other resources)
+		rawConfig := d.GetRawConfig()
+		domainListVal := rawConfig.GetAttr("firewall_domain_list_id")
+		threatProtectionVal := rawConfig.GetAttr("dns_threat_protection")
+		confidenceThresholdVal := rawConfig.GetAttr("confidence_threshold")
 
-	if err != nil {
-		return nil, err
-	}
+		hasDomainList := !domainListVal.IsNull()
+		hasThreatProtection := !threatProtectionVal.IsNull()
+		hasConfidenceThreshold := !confidenceThresholdVal.IsNull()
 
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(firewallRuleGroupID)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, firewallRuleGroupID)
-	}
-
-	return output[0], nil
-}
-
-func findFirewallRules(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID string, f func(*route53resolver.FirewallRule) bool) ([]*route53resolver.FirewallRule, error) {
-	input := &route53resolver.ListFirewallRulesInput{
-		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
-	}
-	var output []*route53resolver.FirewallRule
-
-	err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		// Must have either firewall_domain_list_id OR (dns_threat_protection AND confidence_threshold)
+		if !hasDomainList && !hasThreatProtection {
+			return fmt.Errorf("one of firewall_domain_list_id or dns_threat_protection must be specified")
 		}
 
-		for _, v := range page.FirewallRules {
-			if f(v) {
-				output = append(output, v)
-			}
+		// For advanced rules, both dns_threat_protection and confidence_threshold are required
+		if hasThreatProtection && !hasConfidenceThreshold {
+			return fmt.Errorf("confidence_threshold is required when dns_threat_protection is specified")
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if hasConfidenceThreshold && !hasThreatProtection {
+			return fmt.Errorf("dns_threat_protection is required when confidence_threshold is specified")
 		}
-	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
+		return nil
+	},
+)

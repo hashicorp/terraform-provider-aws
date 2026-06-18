@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,22 +17,24 @@ import (
 
 func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
-	ri := sdkacctest.RandString(10)
+	var domain awstypes.DomainStatus
+	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
+	// Satisfy the pw requirements
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInboundConnectionAccepterConfig(name),
+				Config: testAccInboundConnectionAccepterConfig(name, pw),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
@@ -47,33 +49,41 @@ func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 
 func TestAccOpenSearchInboundConnectionAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
-	ri := sdkacctest.RandString(10)
+	var domain awstypes.DomainStatus
+	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
+	// Satisfy the pw requirements
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInboundConnectionAccepterConfig(name),
+				Config: testAccInboundConnectionAccepterConfig(name, pw),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccInboundConnectionAccepterConfig(name string) string {
-	// Satisfy the pw requirements
-	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
+func testAccInboundConnectionAccepterConfig(name, pw string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "domain_1" {
   domain_name = "%s-1"

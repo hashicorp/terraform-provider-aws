@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package evidently
 
@@ -23,10 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +40,8 @@ func ResourceFeature() *schema.Resource {
 		UpdateWithoutTimeout: resourceFeatureUpdate,
 		DeleteWithoutTimeout: resourceFeatureDelete,
 
+		DeprecationMessage: "This resource is deprecated. Use AWS AppConfig feature flags instead.",
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -49,159 +52,160 @@ func ResourceFeature() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_variation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 160),
-			},
-			"entity_overrides": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 512),
-					validation.MapValueLenBetween(1, 127),
-					validation.MapValueMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"evaluation_rules": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_variation": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 160),
+				},
+				"entity_overrides": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.MapKeyLenBetween(1, 512),
+						validation.MapValueLenBetween(1, 127),
+						validation.MapValueMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"evaluation_rules": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"evaluation_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
-				),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
-					// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
-					return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+				"evaluation_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"value_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"variations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-							),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bool_value": {
-										Type:         nullable.TypeNullableBool,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableBool,
-										// unable to index parent list
-										// ConflictsWith: []string{"double_value", "long_value", "string_value"},
-									},
-									"double_value": {
-										Type:     nullable.TypeNullableFloat,
-										Optional: true,
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "long_value", "string_value"},
-									},
-									"long_value": {
-										Type:     nullable.TypeNullableInt,
-										Optional: true,
-										// values in ValidateFunc results in overflows
-										// ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "double_value", "string_value"},
-									},
-									"string_value": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "double_value", "long_value"},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				"project": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
+					),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
+						// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
+						return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"value_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"variations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 127),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bool_value": {
+											Type:         nullable.TypeNullableBool,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableBool,
+											// unable to index parent list
+											// ConflictsWith: []string{"double_value", "long_value", "string_value"},
+										},
+										"double_value": {
+											Type:     nullable.TypeNullableFloat,
+											Optional: true,
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "long_value", "string_value"},
+										},
+										"long_value": {
+											Type:     nullable.TypeNullableInt,
+											Optional: true,
+											// values in ValidateFunc results in overflows
+											// ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "double_value", "string_value"},
+										},
+										"string_value": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "double_value", "long_value"},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -223,7 +227,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	if v := d.Get("entity_overrides").(map[string]interface{}); len(v) > 0 {
+	if v := d.Get("entity_overrides").(map[string]any); len(v) > 0 {
 		input.EntityOverrides = flex.ExpandStringValueMap(v)
 	}
 
@@ -248,7 +252,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
-func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -261,7 +265,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	feature, err := FindFeatureWithProjectNameorARN(ctx, conn, featureName, projectNameOrARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -296,7 +300,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -308,7 +312,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &evidently.UpdateFeatureInput{
 			DefaultVariation:   aws.String(d.Get("default_variation").(string)),
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
-			EntityOverrides:    flex.ExpandStringValueMap(d.Get("entity_overrides").(map[string]interface{})),
+			EntityOverrides:    flex.ExpandStringValueMap(d.Get("entity_overrides").(map[string]any)),
 			EvaluationStrategy: awstypes.FeatureEvaluationStrategy(d.Get("evaluation_strategy").(string)),
 			Feature:            aws.String(name),
 			Project:            aws.String(project),
@@ -338,7 +342,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
-func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -377,7 +381,7 @@ func FeatureParseID(id string) (string, string, error) {
 	return featureName, projectNameOrARN, nil
 }
 
-func expandVariations(variations []interface{}) []awstypes.VariationConfig {
+func expandVariations(variations []any) []awstypes.VariationConfig {
 	if len(variations) == 0 {
 		return nil
 	}
@@ -385,25 +389,25 @@ func expandVariations(variations []interface{}) []awstypes.VariationConfig {
 	variationsFormatted := make([]awstypes.VariationConfig, len(variations))
 
 	for i, variation := range variations {
-		variationsFormatted[i] = expandVariation(variation.(map[string]interface{}))
+		variationsFormatted[i] = expandVariation(variation.(map[string]any))
 	}
 
 	return variationsFormatted
 }
 
-func expandVariation(variation map[string]interface{}) awstypes.VariationConfig {
+func expandVariation(variation map[string]any) awstypes.VariationConfig {
 	return awstypes.VariationConfig{
 		Name:  aws.String(variation[names.AttrName].(string)),
-		Value: expandValue(variation[names.AttrValue].([]interface{})),
+		Value: expandValue(variation[names.AttrValue].([]any)),
 	}
 }
 
-func expandValue(value []interface{}) awstypes.VariableValue {
+func expandValue(value []any) awstypes.VariableValue {
 	if len(value) == 0 || value[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := value[0].(map[string]interface{})
+	tfMap, ok := value[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -431,14 +435,14 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 	return result
 }
 
-func flattenVariations(apiObject []awstypes.Variation) []interface{} {
+func flattenVariations(apiObject []awstypes.Variation) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	variationsFormatted := []interface{}{}
+	variationsFormatted := []any{}
 	for _, variation := range apiObject {
-		variationFormatted := map[string]interface{}{
+		variationFormatted := map[string]any{
 			names.AttrName:  aws.ToString(variation.Name),
 			names.AttrValue: flattenValue(variation.Value),
 		}
@@ -447,12 +451,12 @@ func flattenVariations(apiObject []awstypes.Variation) []interface{} {
 	return variationsFormatted
 }
 
-func flattenValue(apiObject awstypes.VariableValue) []interface{} {
+func flattenValue(apiObject awstypes.VariableValue) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	// only one of these values should be set at a time
 	switch v := apiObject.(type) {
@@ -466,17 +470,17 @@ func flattenValue(apiObject awstypes.VariableValue) []interface{} {
 		m["string_value"] = v.Value
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []interface{} {
+func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	evaluationRulesFormatted := []interface{}{}
+	evaluationRulesFormatted := []any{}
 	for _, evaluationRule := range apiObject {
-		evaluationRuleFormatted := map[string]interface{}{
+		evaluationRuleFormatted := map[string]any{
 			names.AttrName: aws.ToString(evaluationRule.Name),
 			names.AttrType: aws.ToString(evaluationRule.Type),
 		}
@@ -485,7 +489,7 @@ func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []interface{} {
 	return evaluationRulesFormatted
 }
 
-func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes.VariationConfig) {
+func VariationChanges(o, n any) (remove []string, addOrUpdate []awstypes.VariationConfig) {
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -498,12 +502,12 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 
 	om := make(map[string]awstypes.VariationConfig, os.Len())
 	for _, raw := range os.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		om[param[names.AttrName].(string)] = expandVariation(param)
 	}
 	nm := make(map[string]awstypes.VariationConfig, len(addOrUpdate))
 	for _, raw := range ns.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		nm[param[names.AttrName].(string)] = expandVariation(param)
 	}
 
@@ -518,7 +522,6 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 	// remove is a list of strings
 	remove = make([]string, 0)
 	for k := range om {
-		k := k
 		if _, ok := nm[k]; !ok {
 			remove = append(remove, k)
 		}

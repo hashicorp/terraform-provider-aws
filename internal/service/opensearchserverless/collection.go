@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -13,95 +16,127 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Collection")
+// @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
-func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := resourceCollection{}
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
+// @Testing(preIdentityVersion="v6.28.0")
+// @Testing(tagsTest=false)
+func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := collectionResource{}
+
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
 	return &r, nil
 }
 
-type resourceCollectionData struct {
-	ARN                types.String   `tfsdk:"arn"`
-	CollectionEndpoint types.String   `tfsdk:"collection_endpoint"`
-	DashboardEndpoint  types.String   `tfsdk:"dashboard_endpoint"`
-	Description        types.String   `tfsdk:"description"`
-	ID                 types.String   `tfsdk:"id"`
-	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
-	Name               types.String   `tfsdk:"name"`
-	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
-	Tags               types.Map      `tfsdk:"tags"`
-	TagsAll            types.Map      `tfsdk:"tags_all"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Type               types.String   `tfsdk:"type"`
+type collectionResourceModel struct {
+	framework.WithRegionModel
+	ARN                 types.String                                           `tfsdk:"arn"`
+	CollectionEndpoint  types.String                                           `tfsdk:"collection_endpoint"`
+	CollectionGroupName types.String                                           `tfsdk:"collection_group_name"`
+	DashboardEndpoint   types.String                                           `tfsdk:"dashboard_endpoint"`
+	Description         types.String                                           `tfsdk:"description"`
+	EncryptionConfig    fwtypes.ListNestedObjectValueOf[encryptionConfigModel] `tfsdk:"encryption_config"`
+	ID                  types.String                                           `tfsdk:"id"`
+	KmsKeyARN           types.String                                           `tfsdk:"kms_key_arn"`
+	Name                types.String                                           `tfsdk:"name"`
+	StandbyReplicas     types.String                                           `tfsdk:"standby_replicas"`
+	Tags                tftags.Map                                             `tfsdk:"tags"`
+	TagsAll             tftags.Map                                             `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
+	Type                types.String                                           `tfsdk:"type"`
+	VectorOptions       fwtypes.ListNestedObjectValueOf[vectorOptionsModel]    `tfsdk:"vector_options"`
+}
+
+type encryptionConfigModel struct {
+	AWSOwnedKey types.Bool   `tfsdk:"aws_owned_key"`
+	KmsKeyArn   types.String `tfsdk:"kms_key_arn"`
+}
+
+type vectorOptionsModel struct {
+	ServerlessVectorAcceleration fwtypes.StringEnum[awstypes.ServerlessVectorAccelerationStatus] `tfsdk:"serverless_vector_acceleration"`
 }
 
 const (
 	ResNameCollection = "Collection"
 )
 
-type resourceCollection struct {
-	framework.ResourceWithConfigure
+type collectionResource struct {
+	framework.ResourceWithModel[collectionResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
-func (r *resourceCollection) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_collection"
-}
-
-func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"collection_group_name": schema.StringAttribute{
+				Description: "Name of the collection group to associate with this collection.",
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 32),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
+						`must start with any lower case letter and can include any lower case letter, number, or "-"`),
+				},
+			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the collection.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"encryption_config": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigModel](ctx, 1, nil, listplanmodifier.RequiresReplace(), listplanmodifier.UseStateForUnknown()),
+			names.AttrID:        framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Computed: true,
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the collection.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -112,8 +147,9 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"standby_replicas": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -125,8 +161,9 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -135,6 +172,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
+			"vector_options": framework.ResourceOptionalComputedListOfObjectsAttribute[vectorOptionsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -145,8 +183,8 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceCollectionData
+func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -164,7 +202,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(create.UniqueId(ctx))
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateCollection(ctx, in)
@@ -195,45 +233,60 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	if state.EncryptionConfig.IsNull() || state.EncryptionConfig.IsUnknown() {
+		state.EncryptionConfig = fwtypes.NewListNestedObjectValueOfNull[encryptionConfigModel](ctx)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if state.EncryptionConfig.IsNull() || state.EncryptionConfig.IsUnknown() {
+		state.EncryptionConfig = fwtypes.NewListNestedObjectValueOfNull[encryptionConfigModel](ctx)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceCollectionData
+	var plan, state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Description.Equal(state.Description) {
+	if !plan.Description.Equal(state.Description) || !plan.VectorOptions.Equal(state.VectorOptions) {
 		input := &opensearchserverless.UpdateCollectionInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
@@ -242,7 +295,7 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		input.ClientToken = aws.String(id.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateCollection(ctx, input)
 
@@ -264,18 +317,18 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.DeleteCollection(ctx, &opensearchserverless.DeleteCollectionInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Id:          aws.String(state.ID.ValueString()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
+		Id:          state.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -301,19 +354,32 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
+func (r *collectionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data collectionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-func (r *resourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	if data.VectorOptions.IsNull() || data.VectorOptions.IsUnknown() {
+		return
+	}
+
+	vo, d := data.VectorOptions.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// calling ValueEnum() will trigger ValidateAttribute() on the custom type
+	_ = vo.ServerlessVectorAcceleration.ValueEnum()
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
 		Target:     enum.Slice(awstypes.CollectionStatusActive),
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -322,6 +388,10 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
+		if output.Status == awstypes.CollectionStatusFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
 		return output, err
 	}
 
@@ -332,7 +402,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -341,17 +411,21 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
+		if output.Status == awstypes.CollectionStatusFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCollection(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

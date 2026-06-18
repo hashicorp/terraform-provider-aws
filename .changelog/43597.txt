@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_wafv2_web_acl: Add `resource_arn` argument to enable finding web ACLs by resource ARN
+```
+
+```release-note:enhancement
+data-source/aws_wafv2_web_acl: Add support for `CLOUDFRONT` `scope` web ACLs using `resource_arn`
+```

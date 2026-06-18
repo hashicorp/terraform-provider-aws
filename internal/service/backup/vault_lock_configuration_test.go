@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,19 +22,19 @@ func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vault backup.DescribeBackupVaultOutput
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_lock_configuration.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", acctest.Ct3),
+					testAccCheckVaultLockConfigurationExists(ctx, t, resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_retention_days", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "min_retention_days", "7"),
 				),
@@ -55,37 +54,45 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vault backup.DescribeBackupVaultOutput
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_lock_configuration.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultLockConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultLockConfiguration(), resourceName),
+					testAccCheckVaultLockConfigurationExists(ctx, t, resourceName, &vault),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVaultLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVaultLockConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault_lock_configuration" {
 				continue
 			}
 
-			_, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -100,26 +107,22 @@ func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVaultLockConfigurationExists(ctx context.Context, name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultLockConfigurationExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
-
-		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}

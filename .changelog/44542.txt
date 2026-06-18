@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway_route_table_propagation.test: Fix bug causing `inconsistent final plan` errors
+```

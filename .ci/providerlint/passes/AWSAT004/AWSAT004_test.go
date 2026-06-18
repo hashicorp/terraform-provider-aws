@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package AWSAT004_test
 
 import (
@@ -10,5 +13,5 @@ import (
 
 func TestAWSAT004(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, AWSAT004.Analyzer, "a")
+	analysistest.Run(t, testdata, AWSAT004.Analyzer, "testdata/src/a")
 }

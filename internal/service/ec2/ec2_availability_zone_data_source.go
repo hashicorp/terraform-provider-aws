@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -27,68 +29,70 @@ func dataSourceAvailabilityZone() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"all_availability_zones": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_border_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"opt_in_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"zone_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"all_availability_zones": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"group_long_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_border_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"opt_in_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"zone_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAvailabilityZonesInput{}
+	input := ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
 		input.AllAvailabilityZones = aws.Bool(v.(bool))
@@ -102,13 +106,13 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.ZoneNames = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -117,7 +121,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.Filters = nil
 	}
 
-	az, err := findAvailabilityZone(ctx, conn, input)
+	az, err := findAvailabilityZone(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))
@@ -133,13 +137,13 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(az.ZoneName))
 	d.Set(names.AttrGroupName, az.GroupName)
+	d.Set("group_long_name", az.GroupLongName)
 	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
-	d.Set(names.AttrRegion, az.RegionName)
 	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)

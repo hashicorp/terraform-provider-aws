@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
@@ -40,5 +40,11 @@ func PredicateEquals[T comparable](v T) Predicate[T] {
 func PredicateTrue[T any]() Predicate[T] {
 	return func(T) bool {
 		return true
+	}
+}
+
+func PredicateValue[T any](predicate Predicate[*T]) Predicate[T] {
+	return func(v T) bool {
+		return predicate(&v)
 	}
 }

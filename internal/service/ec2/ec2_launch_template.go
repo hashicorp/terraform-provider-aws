@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -7,17 +9,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,6 +35,10 @@ import (
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(idAttrDuplicates="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.LaunchTemplate")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
@@ -42,917 +46,1038 @@ func resourceLaunchTemplate() *schema.Resource {
 		UpdateWithoutTimeout: resourceLaunchTemplateUpdate,
 		DeleteWithoutTimeout: resourceLaunchTemplateDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"block_device_mappings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ebs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
-										Type:             nullable.TypeNullableBool,
-										Optional:         true,
-										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-									},
-									names.AttrEncrypted: {
-										Type:             nullable.TypeNullableBool,
-										Optional:         true,
-										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-									},
-									names.AttrIOPS: {
-										Type:     schema.TypeInt,
-										Computed: true,
-										Optional: true,
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrSnapshotID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrThroughput: {
-										Type:         schema.TypeInt,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
-									},
-									names.AttrVolumeSize: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrVolumeType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"block_device_mappings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ebs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDeleteOnTermination: {
+											Type:             nullable.TypeNullableBool,
+											Optional:         true,
+											DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+											ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+										},
+										names.AttrEncrypted: {
+											Type:             nullable.TypeNullableBool,
+											Optional:         true,
+											DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+											ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+										},
+										names.AttrIOPS: {
+											Type:     schema.TypeInt,
+											Computed: true,
+											Optional: true,
+										},
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Optional: true,
+											// Allow empty string for backwards compatibility with verify.ValidARN.
+											ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+												validation.StringIsEmpty,
+												verify.ValidKMSKeyID,
+											),
+										},
+										names.AttrSnapshotID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrThroughput: {
+											Type:         schema.TypeInt,
+											Computed:     true,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(125, 2000),
+										},
+										"volume_initialization_rate": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(100, 300),
+										},
+										names.AttrVolumeSize: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrVolumeType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+										},
 									},
 								},
 							},
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"capacity_reservation_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_reservation_preference": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
-						},
-						"capacity_reservation_target": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_reservation_id": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arn"},
-									},
-									"capacity_reservation_resource_group_arn": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ValidateFunc:  verify.ValidARN,
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"},
-									},
-								},
+							"no_device": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
 					},
 				},
-			},
-			"cpu_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amd_sev_snp": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AmdSevSnpSpecification](),
-						},
-						"core_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"threads_per_core": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"credit_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu_credits": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
-						},
-					},
-				},
-			},
-			"default_version": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"update_default_version"},
-				ValidateFunc:  validation.IntAtLeast(1),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"disable_api_stop": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"disable_api_termination": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"ebs_optimized": {
-				Type:             nullable.TypeNullableBool,
-				Optional:         true,
-				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-			},
-			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"hibernation_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configured": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"iam_instance_profile.0.name"},
-							ValidateFunc:  verify.ValidARN,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"instance_initiated_shutdown_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ShutdownBehavior](),
-			},
-			"instance_market_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"market_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MarketType](),
-						},
-						"spot_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"block_duration_minutes": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntDivisibleBy(60),
-									},
-									"instance_interruption_behavior": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.InstanceInterruptionBehavior](),
-									},
-									"max_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"spot_instance_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.SpotInstanceType](),
-									},
-									"valid_until": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IsRFC3339Time,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"instance_requirements": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accelerator_count": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"accelerator_manufacturers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				"capacity_reservation_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_reservation_preference": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 							},
-						},
-						"accelerator_names": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
-							},
-						},
-						"accelerator_total_memory_mib": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"accelerator_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
-							},
-						},
-						"allowed_instance_types": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							MaxItems:      400,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{"instance_requirements.0.excluded_instance_types"},
-						},
-						"bare_metal": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
-						},
-						"baseline_ebs_bandwidth_mbps": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"burstable_performance": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
-						},
-						"cpu_manufacturers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
-							},
-						},
-						"excluded_instance_types": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							MaxItems:      400,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{"instance_requirements.0.allowed_instance_types"},
-						},
-						"instance_generations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
-							},
-						},
-						"local_storage": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
-						},
-						"local_storage_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
-							},
-						},
-						"memory_gib_per_vcpu": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-								},
-							},
-						},
-						"memory_mib": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"network_bandwidth_gbps": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-								},
-							},
-						},
-						"network_interface_count": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"on_demand_max_price_percentage_over_lowest_price": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"require_hibernate_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"spot_max_price_percentage_over_lowest_price": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"total_local_storage_gb": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: verify.FloatGreaterThan(0.0),
-									},
-								},
-							},
-						},
-						"vcpu_count": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									names.AttrMin: {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+							"capacity_reservation_target": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_reservation_id": {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arn"},
+										},
+										"capacity_reservation_resource_group_arn": {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ValidateFunc:  verify.ValidARN,
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-				ConflictsWith: []string{names.AttrInstanceType},
-			},
-			names.AttrInstanceType: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"instance_requirements"},
-			},
-			"kernel_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"license_specification": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"license_configuration_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"cpu_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amd_sev_snp": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AmdSevSnpSpecification](),
+							},
+							"core_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"nested_virtualization": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NestedVirtualizationSpecification](),
+							},
+							"threads_per_core": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"maintenance_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_recovery": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateAutoRecoveryState](),
-						},
-					},
-				},
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataEndpointState](),
-						},
-						"http_protocol_ipv6": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataProtocolIpv6](),
-						},
-						"http_put_response_hop_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 64),
-						},
-						"http_tokens": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateHttpTokensState](),
-						},
-						"instance_metadata_tags": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataTagsState](),
-						},
-					},
-				},
-			},
-			"monitoring": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  verify.ValidLaunchTemplateName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  verify.ValidLaunchTemplateName,
-			},
-			"network_interfaces": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"associate_carrier_ip_address": {
-							Type:             nullable.TypeNullableBool,
-							Optional:         true,
-							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-						},
-						"associate_public_ip_address": {
-							Type:             nullable.TypeNullableBool,
-							Optional:         true,
-							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-						},
-						names.AttrDeleteOnTermination: {
-							Type:             nullable.TypeNullableBool,
-							Optional:         true,
-							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"interface_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
-						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"ipv4_addresses": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				"credit_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cpu_credits": {
 								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(cpuCredits_Values(), false),
+							},
+						},
+					},
+				},
+				"default_version": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"update_default_version"},
+					ValidateFunc:  validation.IntAtLeast(1),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"disable_api_stop": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"disable_api_termination": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"ebs_optimized": {
+					Type:             nullable.TypeNullableBool,
+					Optional:         true,
+					DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+					ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+				},
+				"enclave_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"hibernation_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configured": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"iam_instance_profile": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"iam_instance_profile.0.name"},
+								ValidateFunc:  verify.ValidARN,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"instance_initiated_shutdown_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ShutdownBehavior](),
+				},
+				"instance_market_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"market_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MarketType](),
+							},
+							"spot_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"block_duration_minutes": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntDivisibleBy(60),
+										},
+										"instance_interruption_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InstanceInterruptionBehavior](),
+										},
+										"max_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"spot_instance_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SpotInstanceType](),
+										},
+										"valid_until": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IsRFC3339Time,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"instance_requirements": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_count": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"accelerator_manufacturers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
+								},
+							},
+							"accelerator_names": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
+								},
+							},
+							"accelerator_total_memory_mib": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"accelerator_types": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
+								},
+							},
+							"allowed_instance_types": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								MaxItems:      400,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"instance_requirements.0.excluded_instance_types"},
+							},
+							"bare_metal": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
+							},
+							"baseline_ebs_bandwidth_mbps": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"burstable_performance": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
+							},
+							"cpu_manufacturers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
+								},
+							},
+							"excluded_instance_types": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								MaxItems:      400,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"instance_requirements.0.allowed_instance_types"},
+							},
+							"instance_generations": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
+								},
+							},
+							"local_storage": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
+							},
+							"local_storage_types": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
+								},
+							},
+							"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"instance_requirements.0.spot_max_price_percentage_over_lowest_price"},
+							},
+							"memory_gib_per_vcpu": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+									},
+								},
+							},
+							"memory_mib": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"network_bandwidth_gbps": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+									},
+								},
+							},
+							"network_interface_count": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"on_demand_max_price_percentage_over_lowest_price": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"require_hibernate_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"spot_max_price_percentage_over_lowest_price": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"instance_requirements.0.max_spot_price_as_percentage_of_optimal_on_demand_price"},
+							},
+							"total_local_storage_gb": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: verify.FloatGreaterThan(0.0),
+										},
+									},
+								},
+							},
+							"vcpu_count": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrMin: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+						},
+					},
+					ConflictsWith: []string{names.AttrInstanceType},
+				},
+				names.AttrInstanceType: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"instance_requirements"},
+				},
+				"kernel_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"latest_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"license_specification": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"license_configuration_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"maintenance_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_recovery": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateAutoRecoveryState](),
+							},
+						},
+					},
+				},
+				"metadata_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataEndpointState](),
+							},
+							"http_protocol_ipv6": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataProtocolIpv6](),
+							},
+							"http_put_response_hop_limit": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(1, 64),
+							},
+							"http_tokens": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateHttpTokensState](),
+							},
+							"instance_metadata_tags": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LaunchTemplateInstanceMetadataTagsState](),
+							},
+						},
+					},
+				},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  verify.ValidLaunchTemplateName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  verify.ValidLaunchTemplateName,
+				},
+				"network_interfaces": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"associate_carrier_ip_address": {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							},
+							"associate_public_ip_address": {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							},
+							"connection_tracking_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tcp_established_timeout": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(60, 432000),
+										},
+										"udp_stream_timeout": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(60, 180),
+										},
+										"udp_timeout": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(30, 60),
+										},
+									},
+								},
+							},
+							names.AttrDeleteOnTermination: {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"ena_srd_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ena_srd_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"ena_srd_udp_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ena_srd_udp_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"interface_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice([]string{"efa", "efa-only", "interface"}, false),
+							},
+							"ipv4_address_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"ipv4_addresses": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPv4Address,
+								},
+							},
+							"ipv4_prefix_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"ipv4_prefixes": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+								},
+							},
+							"ipv6_address_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"ipv6_addresses": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPv6Address,
+								},
+							},
+							"ipv6_prefix_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"ipv6_prefixes": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+								},
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"primary_ipv6": {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							},
+							"private_ip_address": {
+								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: validation.IsIPv4Address,
 							},
-						},
-						"ipv4_prefix_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"ipv4_prefixes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
-						"ipv6_address_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"ipv6_addresses": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPv6Address,
+					},
+				},
+				"network_performance_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bandwidth_weighting": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
 							},
 						},
-						"ipv6_prefix_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"ipv6_prefixes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+					},
+				},
+				"placement": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"affinity": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"group_id": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"placement.0.group_name"},
+							},
+							names.AttrGroupName: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"placement.0.group_id"},
+							},
+							"host_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"host_resource_group_arn": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"placement.0.host_id"},
+								ValidateFunc:  verify.ValidARN,
+							},
+							"partition_number": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"spread_domain": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"tenancy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.Tenancy](),
 							},
 						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"private_ip_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv4Address,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Optional: true,
+					},
+				},
+				"private_dns_name_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_resource_name_dns_aaaa_record": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_resource_name_dns_a_record": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"hostname_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
+							},
 						},
 					},
 				},
-			},
-			"placement": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"affinity": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrGroupName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"host_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"host_resource_group_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"placement.0.host_id"},
-							ValidateFunc:  verify.ValidARN,
-						},
-						"partition_number": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"spread_domain": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"tenancy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Tenancy](),
+				"ram_disk_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"secondary_interfaces": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"interface_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SecondaryInterfaceType](),
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"private_ip_address_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"private_ip_addresses": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPv4Address,
+								},
+							},
+							"secondary_subnet_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"private_dns_name_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_resource_name_dns_aaaa_record": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_resource_name_dns_a_record": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"hostname_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
+				"security_group_names": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{names.AttrVPCSecurityGroupIDs},
+				},
+				"tag_specifications": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
+							},
+							names.AttrTags: tftags.TagsSchema(),
 						},
 					},
 				},
-			},
-			"ram_disk_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"security_group_names": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrVPCSecurityGroupIDs},
-			},
-			"tag_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
-						},
-						names.AttrTags: tftags.TagsSchema(),
-					},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_default_version": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"default_version"},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_default_version": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"default_version"},
-			},
-			"user_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"security_group_names"},
+				"user_data": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"security_group_names"},
+				},
+			}
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    launchTemplateSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: launchTemplateStateUpgradeV0,
+				Version: 0,
 			},
 		},
 
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
 					case "name", "name_prefix", "description":
@@ -963,7 +1088,7 @@ func resourceLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
 					case "name", "name_prefix", "description", "default_version", "update_default_version":
@@ -974,20 +1099,19 @@ func resourceLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(id.UniqueId()),
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := ec2.CreateLaunchTemplateInput{
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LaunchTemplateName: aws.String(name),
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeLaunchTemplate),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1000,10 +1124,13 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := conn.CreateLaunchTemplate(ctx, input)
-
+	output, err := conn.CreateLaunchTemplate(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
+	}
+
+	if err := waitLaunchTemplateReady(ctx, conn, name, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.LaunchTemplate.LaunchTemplateId))
@@ -1011,13 +1138,14 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
 }
 
-func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	lt, err := findLaunchTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1027,21 +1155,23 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	version := strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10)
+	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	if err := resourceLaunchTemplateFlatten(ctx, conn, c, lt, ltv, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setTagsOut(ctx, lt.Tags)
+
+	return diags
+}
+
+func resourceLaunchTemplateFlatten(ctx context.Context, conn *ec2.Client, c *conns.AWSClient, lt *awstypes.LaunchTemplate, ltv *awstypes.LaunchTemplateVersion, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, aws.ToString(lt.LaunchTemplateId)))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
@@ -1049,15 +1179,13 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
-	setTagsOutV2(ctx, lt.Tags)
-
-	return diags
+	return nil
 }
 
-func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1070,8 +1198,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
-		"elastic_gpu_specifications",
-		"elastic_inference_accelerator",
 		"enclave_options",
 		"hibernation_options",
 		"iam_instance_profile",
@@ -1086,9 +1212,11 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"metadata_options",
 		"monitoring",
 		"network_interfaces",
+		"network_performance_options",
 		"placement",
 		"private_dns_name_options",
 		"ram_disk_id",
+		"secondary_interfaces",
 		"security_group_names",
 		"tag_specifications",
 		"user_data",
@@ -1097,8 +1225,8 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	latestVersion := int64(d.Get("latest_version").(int))
 
 	if d.HasChanges(updateKeys...) {
-		input := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(id.UniqueId()),
+		input := ec2.CreateLaunchTemplateVersionInput{
+			ClientToken:      aws.String(create.UniqueId(ctx)),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1112,8 +1240,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		output, err := conn.CreateLaunchTemplateVersion(ctx, input)
-
+		output, err := conn.CreateLaunchTemplateVersion(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s) Version: %s", d.Id(), err)
 		}
@@ -1122,34 +1249,38 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
-		input := &ec2.ModifyLaunchTemplateInput{
+		input := ec2.ModifyLaunchTemplateInput{
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
 		if d.Get("update_default_version").(bool) {
-			input.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+			input.DefaultVersion = flex.Int64ValueToString(latestVersion)
 		} else if d.HasChange("default_version") {
-			input.DefaultVersion = aws.String(strconv.Itoa(d.Get("default_version").(int)))
+			input.DefaultVersion = flex.IntValueToString(d.Get("default_version").(int))
 		}
 
-		_, err := conn.ModifyLaunchTemplate(ctx, input)
-
+		_, err := conn.ModifyLaunchTemplate(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
 	}
 
+	if err := waitLaunchTemplateReady(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
 }
 
-func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
-	_, err := conn.DeleteLaunchTemplate(ctx, &ec2.DeleteLaunchTemplateInput{
+	input := ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLaunchTemplate(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound) {
 		return diags
@@ -1176,28 +1307,27 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.InstanceType = awstypes.InstanceType(v)
 	}
 
-	if v, ok := d.GetOk("block_device_mappings"); ok && len(v.([]interface{})) > 0 {
-		apiObject.BlockDeviceMappings = expandLaunchTemplateBlockDeviceMappingRequests(v.([]interface{}))
+	if v, ok := d.GetOk("block_device_mappings"); ok && len(v.([]any)) > 0 {
+		apiObject.BlockDeviceMappings = expandLaunchTemplateBlockDeviceMappingRequests(v.([]any))
 	}
 
-	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CapacityReservationSpecification = expandLaunchTemplateCapacityReservationSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CapacityReservationSpecification = expandLaunchTemplateCapacityReservationSpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("cpu_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CpuOptions = expandLaunchTemplateCPUOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cpu_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CpuOptions = expandLaunchTemplateCPUOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
 
 			if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
-				apiObject.CreditSpecification = expandCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+				apiObject.CreditSpecification = expandCreditSpecificationRequest(v.([]any)[0].(map[string]any))
 			}
 		}
 	}
@@ -1214,32 +1344,24 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
-	if v, ok := d.GetOk("elastic_gpu_specifications"); ok && len(v.([]interface{})) > 0 {
-		apiObject.ElasticGpuSpecifications = expandElasticGpuSpecifications(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("elastic_inference_accelerator"); ok && len(v.([]interface{})) > 0 {
-		apiObject.ElasticInferenceAccelerators = expandLaunchTemplateElasticInferenceAccelerators(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("enclave_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("enclave_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		apiObject.EnclaveOptions = &awstypes.LaunchTemplateEnclaveOptionsRequest{
 			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		}
 	}
 
-	if v, ok := d.GetOk("hibernation_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("hibernation_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		apiObject.HibernationOptions = &awstypes.LaunchTemplateHibernationOptionsRequest{
 			Configured: aws.Bool(tfMap["configured"].(bool)),
 		}
 	}
 
-	if v, ok := d.GetOk("iam_instance_profile"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.IamInstanceProfile = expandLaunchTemplateIAMInstanceProfileSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("iam_instance_profile"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.IamInstanceProfile = expandLaunchTemplateIAMInstanceProfileSpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("image_id"); ok {
@@ -1250,12 +1372,12 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.InstanceInitiatedShutdownBehavior = awstypes.ShutdownBehavior(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.InstanceMarketOptions = expandLaunchTemplateInstanceMarketOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.InstanceMarketOptions = expandLaunchTemplateInstanceMarketOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("instance_requirements"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.InstanceRequirements = expandInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("instance_requirements"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.InstanceRequirements = expandInstanceRequirementsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("kernel_id"); ok {
@@ -1270,44 +1392,52 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.LicenseSpecifications = expandLaunchTemplateLicenseConfigurationRequests(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.MaintenanceOptions = expandLaunchTemplateInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.MaintenanceOptions = expandLaunchTemplateInstanceMaintenanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		apiObject.Monitoring = &awstypes.LaunchTemplatesMonitoringRequest{
 			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		}
 	}
 
-	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]interface{})) > 0 {
-		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]interface{}))
+	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]any)) > 0 {
+		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]any))
 	}
 
-	if v, ok := d.GetOk("placement"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Placement = expandLaunchTemplatePlacementRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.PrivateDnsNameOptions = expandLaunchTemplatePrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.Placement = expandLaunchTemplatePlacementRequest(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.PrivateDnsNameOptions = expandLaunchTemplatePrivateDNSNameOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("ram_disk_id"); ok {
 		apiObject.RamDiskId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("secondary_interfaces"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.SecondaryInterfaces = expandLaunchTemplateSecondaryInterfacesRequests(v.([]any))
+	}
+
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("tag_specifications"); ok && len(v.([]interface{})) > 0 {
-		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]interface{}))
+	if v, ok := d.GetOk("tag_specifications"); ok && len(v.([]any)) > 0 {
+		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -1317,11 +1447,11 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 	return apiObject, nil
 }
 
-func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{}) awstypes.LaunchTemplateBlockDeviceMappingRequest {
+func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]any) awstypes.LaunchTemplateBlockDeviceMappingRequest {
 	apiObject := awstypes.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ebs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
@@ -1339,7 +1469,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 	return apiObject
 }
 
-func expandLaunchTemplateBlockDeviceMappingRequests(tfList []interface{}) []awstypes.LaunchTemplateBlockDeviceMappingRequest {
+func expandLaunchTemplateBlockDeviceMappingRequests(tfList []any) []awstypes.LaunchTemplateBlockDeviceMappingRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1347,7 +1477,7 @@ func expandLaunchTemplateBlockDeviceMappingRequests(tfList []interface{}) []awst
 	var apiObjects []awstypes.LaunchTemplateBlockDeviceMappingRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1359,7 +1489,7 @@ func expandLaunchTemplateBlockDeviceMappingRequests(tfList []interface{}) []awst
 	return apiObjects
 }
 
-func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateEbsBlockDeviceRequest {
+func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]any) *awstypes.LaunchTemplateEbsBlockDeviceRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1390,6 +1520,10 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *aw
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["volume_initialization_rate"].(int); ok && v != 0 {
+		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
@@ -1401,7 +1535,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateCapacityReservationSpecificationRequest {
+func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[string]any) *awstypes.LaunchTemplateCapacityReservationSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1412,14 +1546,14 @@ func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[strin
 		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateCpuOptionsRequest {
+func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateCpuOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1434,6 +1568,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *awstyp
 		apiObject.CoreCount = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["nested_virtualization"].(string); ok && v != "" {
+		apiObject.NestedVirtualization = awstypes.NestedVirtualizationSpecification(v)
+	}
+
 	if v, ok := tfMap["threads_per_core"].(int); ok && v != 0 {
 		apiObject.ThreadsPerCore = aws.Int32(int32(v))
 	}
@@ -1441,67 +1579,7 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandElasticGpuSpecification(tfMap map[string]interface{}) awstypes.ElasticGpuSpecification {
-	apiObject := awstypes.ElasticGpuSpecification{}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandElasticGpuSpecifications(tfList []interface{}) []awstypes.ElasticGpuSpecification {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.ElasticGpuSpecification
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, expandElasticGpuSpecification(tfMap))
-	}
-
-	return apiObjects
-}
-
-func expandLaunchTemplateElasticInferenceAccelerator(tfMap map[string]interface{}) awstypes.LaunchTemplateElasticInferenceAccelerator {
-	apiObject := awstypes.LaunchTemplateElasticInferenceAccelerator{}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandLaunchTemplateElasticInferenceAccelerators(tfList []interface{}) []awstypes.LaunchTemplateElasticInferenceAccelerator {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.LaunchTemplateElasticInferenceAccelerator
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, expandLaunchTemplateElasticInferenceAccelerator(tfMap))
-	}
-
-	return apiObjects
-}
-
-func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateIamInstanceProfileSpecificationRequest {
+func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string]any) *awstypes.LaunchTemplateIamInstanceProfileSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1519,7 +1597,7 @@ func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string
 	return apiObject
 }
 
-func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateInstanceMarketOptionsRequest {
+func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateInstanceMarketOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1530,22 +1608,22 @@ func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface
 		apiObject.MarketType = awstypes.MarketType(v)
 	}
 
-	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SpotOptions = expandLaunchTemplateSpotMarketOptionsRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["spot_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SpotOptions = expandLaunchTemplateSpotMarketOptionsRequest(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.InstanceRequirementsRequest {
+func expandInstanceRequirementsRequest(tfMap map[string]any) *awstypes.InstanceRequirementsRequest {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.InstanceRequirementsRequest{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_count"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
@@ -1556,8 +1634,8 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.I
 		apiObject.AcceleratorNames = flex.ExpandStringyValueSet[awstypes.AcceleratorName](v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
@@ -1572,8 +1650,8 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.I
 		apiObject.BareMetal = awstypes.BareMetal(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -1600,20 +1678,24 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.I
 		apiObject.LocalStorageTypes = flex.ExpandStringyValueSet[awstypes.LocalStorageType](v)
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"].(int); ok && v != 0 {
+		apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_mib"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_bandwidth_gbps"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["network_interface_count"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["on_demand_max_price_percentage_over_lowest_price"].(int); ok && v != 0 {
@@ -1628,18 +1710,18 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *awstypes.I
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["total_local_storage_gb"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VCpuCount = expandVCPUCountRangeRequest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vcpu_count"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VCpuCount = expandVCPUCountRangeRequest(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAcceleratorCountRequest(tfMap map[string]interface{}) *awstypes.AcceleratorCountRequest {
+func expandAcceleratorCountRequest(tfMap map[string]any) *awstypes.AcceleratorCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1659,7 +1741,7 @@ func expandAcceleratorCountRequest(tfMap map[string]interface{}) *awstypes.Accel
 	return apiObject
 }
 
-func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.AcceleratorTotalMemoryMiBRequest {
+func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]any) *awstypes.AcceleratorTotalMemoryMiBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1679,7 +1761,7 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *awsty
 	return apiObject
 }
 
-func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *awstypes.BaselineEbsBandwidthMbpsRequest {
+func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]any) *awstypes.BaselineEbsBandwidthMbpsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1699,7 +1781,7 @@ func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *awstypes.MemoryGiBPerVCpuRequest {
+func expandMemoryGiBPerVCPURequest(tfMap map[string]any) *awstypes.MemoryGiBPerVCpuRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1719,7 +1801,7 @@ func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *awstypes.Memor
 	return apiObject
 }
 
-func expandMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.MemoryMiBRequest {
+func expandMemoryMiBRequest(tfMap map[string]any) *awstypes.MemoryMiBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1739,7 +1821,7 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.MemoryMiBReq
 	return apiObject
 }
 
-func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *awstypes.NetworkBandwidthGbpsRequest {
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]any) *awstypes.NetworkBandwidthGbpsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1759,7 +1841,7 @@ func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *awstypes.N
 	return apiObject
 }
 
-func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *awstypes.NetworkInterfaceCountRequest {
+func expandNetworkInterfaceCountRequest(tfMap map[string]any) *awstypes.NetworkInterfaceCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1779,7 +1861,7 @@ func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *awstypes.TotalLocalStorageGBRequest {
+func expandTotalLocalStorageGBRequest(tfMap map[string]any) *awstypes.TotalLocalStorageGBRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1799,7 +1881,7 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *awstypes.To
 	return apiObject
 }
 
-func expandVCPUCountRangeRequest(tfMap map[string]interface{}) *awstypes.VCpuCountRangeRequest {
+func expandVCPUCountRangeRequest(tfMap map[string]any) *awstypes.VCpuCountRangeRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1819,7 +1901,7 @@ func expandVCPUCountRangeRequest(tfMap map[string]interface{}) *awstypes.VCpuCou
 	return apiObject
 }
 
-func expandLaunchTemplateSpotMarketOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateSpotMarketOptionsRequest {
+func expandLaunchTemplateSpotMarketOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateSpotMarketOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1851,7 +1933,7 @@ func expandLaunchTemplateSpotMarketOptionsRequest(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandLaunchTemplateLicenseConfigurationRequest(tfMap map[string]interface{}) awstypes.LaunchTemplateLicenseConfigurationRequest {
+func expandLaunchTemplateLicenseConfigurationRequest(tfMap map[string]any) awstypes.LaunchTemplateLicenseConfigurationRequest {
 	apiObject := awstypes.LaunchTemplateLicenseConfigurationRequest{}
 
 	if v, ok := tfMap["license_configuration_arn"].(string); ok && v != "" {
@@ -1861,7 +1943,7 @@ func expandLaunchTemplateLicenseConfigurationRequest(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []awstypes.LaunchTemplateLicenseConfigurationRequest {
+func expandLaunchTemplateLicenseConfigurationRequests(tfList []any) []awstypes.LaunchTemplateLicenseConfigurationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1869,7 +1951,7 @@ func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []aw
 	var apiObjects []awstypes.LaunchTemplateLicenseConfigurationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1881,7 +1963,7 @@ func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []aw
 	return apiObjects
 }
 
-func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateInstanceMetadataOptionsRequest {
+func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateInstanceMetadataOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1911,7 +1993,7 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 	return apiObject
 }
 
-func expandLaunchTemplateInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplateInstanceMaintenanceOptionsRequest {
+func expandLaunchTemplateInstanceMaintenanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateInstanceMaintenanceOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1925,7 +2007,7 @@ func expandLaunchTemplateInstanceMaintenanceOptionsRequest(tfMap map[string]inte
 	return apiObject
 }
 
-func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[string]interface{}) awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
+func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	apiObject := awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
 	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).ValueBool(); !null {
@@ -1934,6 +2016,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).ValueBool(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["connection_tracking_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v[0].(map[string]any))
 	}
 
 	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
@@ -1946,6 +2032,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, ok := tfMap["device_index"].(int); ok {
 		apiObject.DeviceIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["ena_srd_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdSpecification = expandEnaSrdSpecificationRequest(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
@@ -2008,6 +2098,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
+	if v, null, _ := nullable.Bool(tfMap["primary_ipv6"].(string)).ValueBool(); !null {
+		apiObject.PrimaryIpv6 = aws.Bool(v)
+	}
+
 	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		for _, v := range v.List() {
 			apiObject.Groups = append(apiObject.Groups, v.(string))
@@ -2021,7 +2115,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 	return apiObject
 }
 
-func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []interface{}) []awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
+func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []any) []awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2029,7 +2123,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	var apiObjects []awstypes.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2041,7 +2135,79 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	return apiObjects
 }
 
-func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplatePlacementRequest {
+func expandLaunchTemplateSecondaryInterfacesRequests(tfList []any) []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap))
+	}
+
+	return apiObjects
+}
+
+func expandLaunchTemplateInstanceSecondaryInterfaceSpecificationRequest(tfMap map[string]any) awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest {
+	apiObject := awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest{}
+
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
+		apiObject.DeleteOnTermination = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["device_index"].(int); ok {
+		apiObject.DeviceIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
+		apiObject.InterfaceType = awstypes.SecondaryInterfaceType(v)
+	}
+
+	if v, ok := tfMap["network_card_index"].(int); ok {
+		apiObject.NetworkCardIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["private_ip_address_count"].(int); ok && v != 0 {
+		apiObject.PrivateIpAddressCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["private_ip_addresses"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PrivateIpAddresses = tfslices.ApplyToAll(flex.ExpandStringValueSet(v), func(v string) awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest {
+			return awstypes.SecondaryInterfacePrivateIpAddressSpecificationRequest{
+				PrivateIpAddress: aws.String(v),
+			}
+		})
+	}
+
+	if v, ok := tfMap["secondary_subnet_id"].(string); ok && v != "" {
+		apiObject.SecondarySubnetId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateNetworkPerformanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateNetworkPerformanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LaunchTemplateNetworkPerformanceOptionsRequest{}
+
+	if v, ok := tfMap["bandwidth_weighting"].(string); ok && v != "" {
+		apiObject.BandwidthWeighting = awstypes.InstanceBandwidthWeighting(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.LaunchTemplatePlacementRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2054,6 +2220,10 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *awstype
 
 	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := tfMap["group_id"].(string); ok && v != "" {
+		apiObject.GroupId = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
@@ -2083,7 +2253,7 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func expandLaunchTemplatePrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *awstypes.LaunchTemplatePrivateDnsNameOptionsRequest {
+func expandLaunchTemplatePrivateDNSNameOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplatePrivateDnsNameOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2100,23 +2270,23 @@ func expandLaunchTemplatePrivateDNSNameOptionsRequest(tfMap map[string]interface
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[string]interface{}) awstypes.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[string]any) awstypes.LaunchTemplateTagSpecificationRequest {
 	apiObject := awstypes.LaunchTemplateTagSpecificationRequest{}
 
 	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
 		apiObject.ResourceType = awstypes.ResourceType(v)
 	}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-			apiObject.Tags = TagsV2(v)
+			apiObject.Tags = svcTags(v)
 		}
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequests(ctx context.Context, tfList []interface{}) []awstypes.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequests(ctx context.Context, tfList []any) []awstypes.LaunchTemplateTagSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2124,7 +2294,7 @@ func expandLaunchTemplateTagSpecificationRequests(ctx context.Context, tfList []
 	var apiObjects []awstypes.LaunchTemplateTagSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2143,14 +2313,14 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		return fmt.Errorf("setting block_device_mappings: %w", err)
 	}
 	if apiObject.CapacityReservationSpecification != nil {
-		if err := d.Set("capacity_reservation_specification", []interface{}{flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject.CapacityReservationSpecification)}); err != nil {
+		if err := d.Set("capacity_reservation_specification", []any{flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject.CapacityReservationSpecification)}); err != nil {
 			return fmt.Errorf("setting capacity_reservation_specification: %w", err)
 		}
 	} else {
 		d.Set("capacity_reservation_specification", nil)
 	}
 	if apiObject.CpuOptions != nil {
-		if err := d.Set("cpu_options", []interface{}{flattenLaunchTemplateCPUOptions(apiObject.CpuOptions)}); err != nil {
+		if err := d.Set("cpu_options", []any{flattenLaunchTemplateCPUOptions(apiObject.CpuOptions)}); err != nil {
 			return fmt.Errorf("setting cpu_options: %w", err)
 		}
 	} else {
@@ -2158,13 +2328,12 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	}
 	if apiObject.CreditSpecification != nil && instanceType != "" {
 		instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 		if err != nil {
 			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 		}
 
 		if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
-			if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
+			if err := d.Set("credit_specification", []any{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
 				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		}
@@ -2172,40 +2341,34 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	d.Set("disable_api_stop", apiObject.DisableApiStop)
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
-		d.Set("ebs_optimized", strconv.FormatBool(aws.ToBool(apiObject.EbsOptimized)))
+		d.Set("ebs_optimized", flex.BoolToStringValue(apiObject.EbsOptimized))
 	} else {
 		d.Set("ebs_optimized", "")
 	}
-	if err := d.Set("elastic_gpu_specifications", flattenElasticGpuSpecificationResponses(apiObject.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("setting elastic_gpu_specifications: %w", err)
-	}
-	if err := d.Set("elastic_inference_accelerator", flattenLaunchTemplateElasticInferenceAcceleratorResponses(apiObject.ElasticInferenceAccelerators)); err != nil {
-		return fmt.Errorf("setting elastic_inference_accelerator: %w", err)
-	}
 	if apiObject.EnclaveOptions != nil {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrEnabled: aws.ToBool(apiObject.EnclaveOptions.Enabled),
 		}
 
-		if err := d.Set("enclave_options", []interface{}{tfMap}); err != nil {
+		if err := d.Set("enclave_options", []any{tfMap}); err != nil {
 			return fmt.Errorf("setting enclave_options: %w", err)
 		}
 	} else {
 		d.Set("enclave_options", nil)
 	}
 	if apiObject.HibernationOptions != nil {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"configured": aws.ToBool(apiObject.HibernationOptions.Configured),
 		}
 
-		if err := d.Set("hibernation_options", []interface{}{tfMap}); err != nil {
+		if err := d.Set("hibernation_options", []any{tfMap}); err != nil {
 			return fmt.Errorf("setting hibernation_options: %w", err)
 		}
 	} else {
 		d.Set("hibernation_options", nil)
 	}
 	if apiObject.IamInstanceProfile != nil {
-		if err := d.Set("iam_instance_profile", []interface{}{flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject.IamInstanceProfile)}); err != nil {
+		if err := d.Set("iam_instance_profile", []any{flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject.IamInstanceProfile)}); err != nil {
 			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}
 	} else {
@@ -2214,14 +2377,14 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	d.Set("image_id", apiObject.ImageId)
 	d.Set("instance_initiated_shutdown_behavior", apiObject.InstanceInitiatedShutdownBehavior)
 	if apiObject.InstanceMarketOptions != nil {
-		if err := d.Set("instance_market_options", []interface{}{flattenLaunchTemplateInstanceMarketOptions(apiObject.InstanceMarketOptions)}); err != nil {
+		if err := d.Set("instance_market_options", []any{flattenLaunchTemplateInstanceMarketOptions(apiObject.InstanceMarketOptions)}); err != nil {
 			return fmt.Errorf("setting instance_market_options: %w", err)
 		}
 	} else {
 		d.Set("instance_market_options", nil)
 	}
 	if apiObject.InstanceRequirements != nil {
-		if err := d.Set("instance_requirements", []interface{}{flattenInstanceRequirements(apiObject.InstanceRequirements)}); err != nil {
+		if err := d.Set("instance_requirements", []any{flattenInstanceRequirements(apiObject.InstanceRequirements)}); err != nil {
 			return fmt.Errorf("setting instance_requirements: %w", err)
 		}
 	} else {
@@ -2234,25 +2397,25 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		return fmt.Errorf("setting license_specification: %w", err)
 	}
 	if apiObject.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []interface{}{flattenLaunchTemplateInstanceMaintenanceOptions(apiObject.MaintenanceOptions)}); err != nil {
+		if err := d.Set("maintenance_options", []any{flattenLaunchTemplateInstanceMaintenanceOptions(apiObject.MaintenanceOptions)}); err != nil {
 			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
 		d.Set("maintenance_options", nil)
 	}
 	if apiObject.MetadataOptions != nil {
-		if err := d.Set("metadata_options", []interface{}{flattenLaunchTemplateInstanceMetadataOptions(apiObject.MetadataOptions)}); err != nil {
+		if err := d.Set("metadata_options", []any{flattenLaunchTemplateInstanceMetadataOptions(apiObject.MetadataOptions)}); err != nil {
 			return fmt.Errorf("setting metadata_options: %w", err)
 		}
 	} else {
 		d.Set("metadata_options", nil)
 	}
 	if apiObject.Monitoring != nil {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrEnabled: aws.ToBool(apiObject.Monitoring.Enabled),
 		}
 
-		if err := d.Set("monitoring", []interface{}{tfMap}); err != nil {
+		if err := d.Set("monitoring", []any{tfMap}); err != nil {
 			return fmt.Errorf("setting monitoring: %w", err)
 		}
 	} else {
@@ -2261,21 +2424,35 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)
 	}
+	if apiObject.NetworkPerformanceOptions != nil {
+		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
+			return fmt.Errorf("setting network_performance_options: %w", err)
+		}
+	} else {
+		d.Set("network_performance_options", nil)
+	}
 	if apiObject.Placement != nil {
-		if err := d.Set("placement", []interface{}{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
+		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
 			return fmt.Errorf("setting placement: %w", err)
 		}
 	} else {
 		d.Set("placement", nil)
 	}
 	if apiObject.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenLaunchTemplatePrivateDNSNameOptions(apiObject.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []any{flattenLaunchTemplatePrivateDNSNameOptions(apiObject.PrivateDnsNameOptions)}); err != nil {
 			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {
 		d.Set("private_dns_name_options", nil)
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
+	if apiObject.SecondaryInterfaces != nil {
+		if err := d.Set("secondary_interfaces", flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObject.SecondaryInterfaces)); err != nil {
+			return fmt.Errorf("setting secondary_interfaces: %w", err)
+		}
+	} else {
+		d.Set("secondary_interfaces", nil)
+	}
 	d.Set("security_group_names", apiObject.SecurityGroups)
 	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
 		return fmt.Errorf("setting tag_specifications: %w", err)
@@ -2286,15 +2463,15 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	return nil
 }
 
-func flattenLaunchTemplateBlockDeviceMapping(apiObject awstypes.LaunchTemplateBlockDeviceMapping) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateBlockDeviceMapping(apiObject awstypes.LaunchTemplateBlockDeviceMapping) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeviceName; v != nil {
 		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenLaunchTemplateEBSBlockDevice(v)}
+		tfMap["ebs"] = []any{flattenLaunchTemplateEBSBlockDevice(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {
@@ -2308,12 +2485,12 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject awstypes.LaunchTemplateBl
 	return tfMap
 }
 
-func flattenLaunchTemplateBlockDeviceMappings(apiObjects []awstypes.LaunchTemplateBlockDeviceMapping) []interface{} {
+func flattenLaunchTemplateBlockDeviceMappings(apiObjects []awstypes.LaunchTemplateBlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateBlockDeviceMapping(apiObject))
@@ -2322,19 +2499,19 @@ func flattenLaunchTemplateBlockDeviceMappings(apiObjects []awstypes.LaunchTempla
 	return tfList
 }
 
-func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBlockDevice) map[string]interface{} {
+func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBlockDevice) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrEncrypted] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {
@@ -2353,6 +2530,10 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.VolumeInitializationRate; v != nil {
+		tfMap["volume_initialization_rate"] = aws.ToInt32(v)
+	}
+
 	if v := apiObject.VolumeSize; v != nil {
 		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
@@ -2364,30 +2545,30 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 	return tfMap
 }
 
-func flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject *awstypes.LaunchTemplateCapacityReservationSpecificationResponse) map[string]interface{} {
+func flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject *awstypes.LaunchTemplateCapacityReservationSpecificationResponse) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CapacityReservationPreference; v != "" {
 		tfMap["capacity_reservation_preference"] = v
 	}
 
 	if v := apiObject.CapacityReservationTarget; v != nil {
-		tfMap["capacity_reservation_target"] = []interface{}{flattenCapacityReservationTargetResponse(v)}
+		tfMap["capacity_reservation_target"] = []any{flattenCapacityReservationTargetResponse(v)}
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOptions) map[string]interface{} {
+func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AmdSevSnp; v != "" {
 		tfMap["amd_sev_snp"] = v
@@ -2397,6 +2578,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOption
 		tfMap["core_count"] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.NestedVirtualization; v != "" {
+		tfMap["nested_virtualization"] = v
+	}
+
 	if v := apiObject.ThreadsPerCore; v != nil {
 		tfMap["threads_per_core"] = aws.ToInt32(v)
 	}
@@ -2404,12 +2589,12 @@ func flattenLaunchTemplateCPUOptions(apiObject *awstypes.LaunchTemplateCpuOption
 	return tfMap
 }
 
-func flattenCreditSpecification(apiObject *awstypes.CreditSpecification) map[string]interface{} {
+func flattenCreditSpecification(apiObject *awstypes.CreditSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CpuCredits; v != nil {
 		tfMap["cpu_credits"] = aws.ToString(v)
@@ -2418,60 +2603,12 @@ func flattenCreditSpecification(apiObject *awstypes.CreditSpecification) map[str
 	return tfMap
 }
 
-func flattenElasticGpuSpecificationResponse(apiObject awstypes.ElasticGpuSpecificationResponse) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenElasticGpuSpecificationResponses(apiObjects []awstypes.ElasticGpuSpecificationResponse) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenElasticGpuSpecificationResponse(apiObject))
-	}
-
-	return tfList
-}
-
-func flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject awstypes.LaunchTemplateElasticInferenceAcceleratorResponse) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenLaunchTemplateElasticInferenceAcceleratorResponses(apiObjects []awstypes.LaunchTemplateElasticInferenceAcceleratorResponse) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject))
-	}
-
-	return tfList
-}
-
-func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *awstypes.LaunchTemplateIamInstanceProfileSpecification) map[string]interface{} {
+func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *awstypes.LaunchTemplateIamInstanceProfileSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
@@ -2484,49 +2621,49 @@ func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *awstypes.La
 	return tfMap
 }
 
-func flattenLaunchTemplateInstanceMarketOptions(apiObject *awstypes.LaunchTemplateInstanceMarketOptions) map[string]interface{} {
+func flattenLaunchTemplateInstanceMarketOptions(apiObject *awstypes.LaunchTemplateInstanceMarketOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MarketType; v != "" {
 		tfMap["market_type"] = v
 	}
 
 	if v := apiObject.SpotOptions; v != nil {
-		tfMap["spot_options"] = []interface{}{flattenLaunchTemplateSpotMarketOptions(v)}
+		tfMap["spot_options"] = []any{flattenLaunchTemplateSpotMarketOptions(v)}
 	}
 
 	return tfMap
 }
 
-func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[string]interface{} {
+func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AcceleratorCount; v != nil {
-		tfMap["accelerator_count"] = []interface{}{flattenAcceleratorCount(v)}
+		tfMap["accelerator_count"] = []any{flattenAcceleratorCount(v)}
 	}
 
 	if v := apiObject.AcceleratorManufacturers; v != nil {
-		tfMap["accelerator_manufacturers"] = flex.FlattenStringyValueSet[awstypes.AcceleratorManufacturer](v)
+		tfMap["accelerator_manufacturers"] = v
 	}
 
 	if v := apiObject.AcceleratorNames; v != nil {
-		tfMap["accelerator_names"] = flex.FlattenStringyValueSet[awstypes.AcceleratorName](v)
+		tfMap["accelerator_names"] = v
 	}
 
 	if v := apiObject.AcceleratorTotalMemoryMiB; v != nil {
-		tfMap["accelerator_total_memory_mib"] = []interface{}{flattenAcceleratorTotalMemoryMiB(v)}
+		tfMap["accelerator_total_memory_mib"] = []any{flattenAcceleratorTotalMemoryMiB(v)}
 	}
 
 	if v := apiObject.AcceleratorTypes; v != nil {
-		tfMap["accelerator_types"] = flex.FlattenStringyValueSet[awstypes.AcceleratorType](v)
+		tfMap["accelerator_types"] = v
 	}
 
 	if v := apiObject.AllowedInstanceTypes; v != nil {
@@ -2538,7 +2675,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.BaselineEbsBandwidthMbps; v != nil {
-		tfMap["baseline_ebs_bandwidth_mbps"] = []interface{}{flattenBaselineEBSBandwidthMbps(v)}
+		tfMap["baseline_ebs_bandwidth_mbps"] = []any{flattenBaselineEBSBandwidthMbps(v)}
 	}
 
 	if v := apiObject.BurstablePerformance; v != "" {
@@ -2546,7 +2683,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.CpuManufacturers; v != nil {
-		tfMap["cpu_manufacturers"] = flex.FlattenStringyValueSet[awstypes.CpuManufacturer](v)
+		tfMap["cpu_manufacturers"] = v
 	}
 
 	if v := apiObject.ExcludedInstanceTypes; v != nil {
@@ -2554,7 +2691,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.InstanceGenerations; v != nil {
-		tfMap["instance_generations"] = flex.FlattenStringyValueSet[awstypes.InstanceGeneration](v)
+		tfMap["instance_generations"] = v
 	}
 
 	if v := apiObject.LocalStorage; v != "" {
@@ -2562,23 +2699,27 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.LocalStorageTypes; v != nil {
-		tfMap["local_storage_types"] = flex.FlattenStringyValueSet[awstypes.LocalStorageType](v)
+		tfMap["local_storage_types"] = v
+	}
+
+	if v := apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice; v != nil {
+		tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.MemoryGiBPerVCpu; v != nil {
-		tfMap["memory_gib_per_vcpu"] = []interface{}{flattenMemoryGiBPerVCPU(v)}
+		tfMap["memory_gib_per_vcpu"] = []any{flattenMemoryGiBPerVCPU(v)}
 	}
 
 	if v := apiObject.MemoryMiB; v != nil {
-		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+		tfMap["memory_mib"] = []any{flattenMemoryMiB(v)}
 	}
 
 	if v := apiObject.NetworkBandwidthGbps; v != nil {
-		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
+		tfMap["network_bandwidth_gbps"] = []any{flattenNetworkBandwidthGbps(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
-		tfMap["network_interface_count"] = []interface{}{flattenNetworkInterfaceCount(v)}
+		tfMap["network_interface_count"] = []any{flattenNetworkInterfaceCount(v)}
 	}
 
 	if v := apiObject.OnDemandMaxPricePercentageOverLowestPrice; v != nil {
@@ -2594,22 +2735,22 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.TotalLocalStorageGB; v != nil {
-		tfMap["total_local_storage_gb"] = []interface{}{flattenTotalLocalStorageGB(v)}
+		tfMap["total_local_storage_gb"] = []any{flattenTotalLocalStorageGB(v)}
 	}
 
 	if v := apiObject.VCpuCount; v != nil {
-		tfMap["vcpu_count"] = []interface{}{flattenVCPUCountRange(v)}
+		tfMap["vcpu_count"] = []any{flattenVCPUCountRange(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCount) map[string]interface{} {
+func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCount) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2622,12 +2763,12 @@ func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCount) map[string]in
 	return tfMap
 }
 
-func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemoryMiB) map[string]interface{} {
+func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemoryMiB) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2640,12 +2781,12 @@ func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemory
 	return tfMap
 }
 
-func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbps) map[string]interface{} {
+func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbps) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2658,12 +2799,12 @@ func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbp
 	return tfMap
 }
 
-func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpu) map[string]interface{} {
+func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpu) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -2676,12 +2817,12 @@ func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpu) map[string]in
 	return tfMap
 }
 
-func flattenMemoryMiB(apiObject *awstypes.MemoryMiB) map[string]interface{} {
+func flattenMemoryMiB(apiObject *awstypes.MemoryMiB) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2694,12 +2835,12 @@ func flattenMemoryMiB(apiObject *awstypes.MemoryMiB) map[string]interface{} {
 	return tfMap
 }
 
-func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbps) map[string]interface{} {
+func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbps) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -2712,12 +2853,12 @@ func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbps) map[s
 	return tfMap
 }
 
-func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCount) map[string]interface{} {
+func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCount) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2730,12 +2871,12 @@ func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCount) map
 	return tfMap
 }
 
-func flattenTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGB) map[string]interface{} {
+func flattenTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGB) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToFloat64(v)
@@ -2748,12 +2889,12 @@ func flattenTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGB) map[str
 	return tfMap
 }
 
-func flattenVCPUCountRange(apiObject *awstypes.VCpuCountRange) map[string]interface{} {
+func flattenVCPUCountRange(apiObject *awstypes.VCpuCountRange) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Max; v != nil {
 		tfMap[names.AttrMax] = aws.ToInt32(v)
@@ -2766,12 +2907,12 @@ func flattenVCPUCountRange(apiObject *awstypes.VCpuCountRange) map[string]interf
 	return tfMap
 }
 
-func flattenLaunchTemplateSpotMarketOptions(apiObject *awstypes.LaunchTemplateSpotMarketOptions) map[string]interface{} {
+func flattenLaunchTemplateSpotMarketOptions(apiObject *awstypes.LaunchTemplateSpotMarketOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BlockDurationMinutes; v != nil {
 		tfMap["block_duration_minutes"] = aws.ToInt32(v)
@@ -2796,8 +2937,8 @@ func flattenLaunchTemplateSpotMarketOptions(apiObject *awstypes.LaunchTemplateSp
 	return tfMap
 }
 
-func flattenLaunchTemplateLicenseConfiguration(apiObject awstypes.LaunchTemplateLicenseConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateLicenseConfiguration(apiObject awstypes.LaunchTemplateLicenseConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.LicenseConfigurationArn; v != nil {
 		tfMap["license_configuration_arn"] = aws.ToString(v)
@@ -2806,12 +2947,12 @@ func flattenLaunchTemplateLicenseConfiguration(apiObject awstypes.LaunchTemplate
 	return tfMap
 }
 
-func flattenLaunchTemplateLicenseConfigurations(apiObjects []awstypes.LaunchTemplateLicenseConfiguration) []interface{} {
+func flattenLaunchTemplateLicenseConfigurations(apiObjects []awstypes.LaunchTemplateLicenseConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateLicenseConfiguration(apiObject))
@@ -2820,8 +2961,8 @@ func flattenLaunchTemplateLicenseConfigurations(apiObjects []awstypes.LaunchTemp
 	return tfList
 }
 
-func flattenLaunchTemplateInstanceMaintenanceOptions(apiObject *awstypes.LaunchTemplateInstanceMaintenanceOptions) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateInstanceMaintenanceOptions(apiObject *awstypes.LaunchTemplateInstanceMaintenanceOptions) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoRecovery; v != "" {
 		tfMap["auto_recovery"] = v
@@ -2830,12 +2971,12 @@ func flattenLaunchTemplateInstanceMaintenanceOptions(apiObject *awstypes.LaunchT
 	return tfMap
 }
 
-func flattenLaunchTemplateInstanceMetadataOptions(apiObject *awstypes.LaunchTemplateInstanceMetadataOptions) map[string]interface{} {
+func flattenLaunchTemplateInstanceMetadataOptions(apiObject *awstypes.LaunchTemplateInstanceMetadataOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HttpEndpoint; v != "" {
 		tfMap["http_endpoint"] = v
@@ -2860,19 +3001,23 @@ func flattenLaunchTemplateInstanceMetadataOptions(apiObject *awstypes.LaunchTemp
 	return tfMap
 }
 
-func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstypes.LaunchTemplateInstanceNetworkInterfaceSpecification) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstypes.LaunchTemplateInstanceNetworkInterfaceSpecification) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AssociateCarrierIpAddress; v != nil {
-		tfMap["associate_carrier_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_carrier_ip_address"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.AssociatePublicIpAddress; v != nil {
-		tfMap["associate_public_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_public_ip_address"] = flex.BoolToStringValue(v)
+	}
+
+	if v := apiObject.ConnectionTrackingSpecification; v != nil {
+		tfMap["connection_tracking_specification"] = []any{flattenConnectionTrackingSpecification(v)}
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -2881,6 +3026,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 
 	if v := apiObject.DeviceIndex; v != nil {
 		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.EnaSrdSpecification; v != nil {
+		tfMap["ena_srd_specification"] = []any{flattenLaunchTemplateEnaSrdSpecification(v)}
 	}
 
 	if v := apiObject.InterfaceType; v != nil {
@@ -2892,13 +3041,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
-		var ipv4Addresses []string
-
-		for _, v := range v {
-			ipv4Addresses = append(ipv4Addresses, aws.ToString(v.PrivateIpAddress))
-		}
-
-		tfMap["ipv4_addresses"] = ipv4Addresses
+		tfMap["ipv4_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.PrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
 	}
 
 	if v := apiObject.Ipv4PrefixCount; v != nil {
@@ -2906,13 +3051,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv4Prefixes; v != nil {
-		var ipv4Prefixes []string
-
-		for _, v := range v {
-			ipv4Prefixes = append(ipv4Prefixes, aws.ToString(v.Ipv4Prefix))
-		}
-
-		tfMap["ipv4_prefixes"] = ipv4Prefixes
+		tfMap["ipv4_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv4PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv4Prefix)
+		})
 	}
 
 	if v := apiObject.Ipv6AddressCount; v != nil {
@@ -2920,13 +3061,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Addresses; len(v) > 0 {
-		var ipv6Addresses []string
-
-		for _, v := range v {
-			ipv6Addresses = append(ipv6Addresses, aws.ToString(v.Ipv6Address))
-		}
-
-		tfMap["ipv6_addresses"] = ipv6Addresses
+		tfMap["ipv6_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.InstanceIpv6Address) string {
+			return aws.ToString(v.Ipv6Address)
+		})
 	}
 
 	if v := apiObject.Ipv6PrefixCount; v != nil {
@@ -2934,13 +3071,9 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	}
 
 	if v := apiObject.Ipv6Prefixes; v != nil {
-		var ipv6Prefixes []string
-
-		for _, v := range v {
-			ipv6Prefixes = append(ipv6Prefixes, aws.ToString(v.Ipv6Prefix))
-		}
-
-		tfMap["ipv6_prefixes"] = ipv6Prefixes
+		tfMap["ipv6_prefixes"] = tfslices.ApplyToAll(v, func(v awstypes.Ipv6PrefixSpecificationResponse) string {
+			return aws.ToString(v.Ipv6Prefix)
+		})
 	}
 
 	if v := apiObject.NetworkCardIndex; v != nil {
@@ -2949,6 +3082,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
+	}
+
+	if v := apiObject.PrimaryIpv6; v != nil {
+		tfMap["primary_ipv6"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -2966,12 +3103,12 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	return tfMap
 }
 
-func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []awstypes.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
+func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []awstypes.LaunchTemplateInstanceNetworkInterfaceSpecification) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject))
@@ -2980,12 +3117,26 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []aw
 	return tfList
 }
 
-func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]interface{} {
+func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTemplateNetworkPerformanceOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.BandwidthWeighting; v != "" {
+		tfMap["bandwidth_weighting"] = v
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
 
 	if v := apiObject.Affinity; v != nil {
 		tfMap["affinity"] = aws.ToString(v)
@@ -2993,6 +3144,10 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
+	}
+
+	if v := apiObject.GroupId; v != nil {
+		tfMap["group_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupName; v != nil {
@@ -3022,12 +3177,12 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 	return tfMap
 }
 
-func flattenLaunchTemplatePrivateDNSNameOptions(apiObject *awstypes.LaunchTemplatePrivateDnsNameOptions) map[string]interface{} {
+func flattenLaunchTemplatePrivateDNSNameOptions(apiObject *awstypes.LaunchTemplatePrivateDnsNameOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enable_resource_name_dns_aaaa_record": aws.ToBool(apiObject.EnableResourceNameDnsAAAARecord),
 		"enable_resource_name_dns_a_record":    aws.ToBool(apiObject.EnableResourceNameDnsARecord),
 	}
@@ -3039,26 +3194,26 @@ func flattenLaunchTemplatePrivateDNSNameOptions(apiObject *awstypes.LaunchTempla
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject awstypes.LaunchTemplateTagSpecification) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject awstypes.LaunchTemplateTagSpecification) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ResourceType; v != "" {
 		tfMap[names.AttrResourceType] = v
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap[names.AttrTags] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []awstypes.LaunchTemplateTagSpecification) []interface{} {
+func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []awstypes.LaunchTemplateTagSpecification) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateTagSpecification(ctx, apiObject))
@@ -3079,7 +3234,7 @@ func expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString string) awstype
 	return apiObject
 }
 
-func expandLaunchTemplateIPv4PrefixSpecificationRequests(tfList []interface{}) []awstypes.Ipv4PrefixSpecificationRequest {
+func expandLaunchTemplateIPv4PrefixSpecificationRequests(tfList []any) []awstypes.Ipv4PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3111,7 +3266,7 @@ func expandLaunchTemplateIPv6PrefixSpecificationRequest(tfString string) awstype
 	return apiObject
 }
 
-func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) []awstypes.Ipv6PrefixSpecificationRequest {
+func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []any) []awstypes.Ipv6PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3129,4 +3284,158 @@ func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) [
 	}
 
 	return apiObjects
+}
+
+func expandConnectionTrackingSpecificationRequest(tfMap map[string]any) *awstypes.ConnectionTrackingSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ConnectionTrackingSpecificationRequest{}
+
+	if v, ok := tfMap["tcp_established_timeout"].(int); ok && v != 0 {
+		apiObject.TcpEstablishedTimeout = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["udp_stream_timeout"].(int); ok && v != 0 {
+		apiObject.UdpStreamTimeout = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["udp_timeout"].(int); ok && v != 0 {
+		apiObject.UdpTimeout = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenConnectionTrackingSpecification(apiObject *awstypes.ConnectionTrackingSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandEnaSrdSpecificationRequest(tfMap map[string]any) *awstypes.EnaSrdSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdSpecificationRequest{
+		EnaSrdEnabled: aws.Bool(tfMap["ena_srd_enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["ena_srd_udp_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdUdpSpecification = expandEnaSrdUdpSpecificationRequest(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenLaunchTemplateEnaSrdSpecification(apiObject *awstypes.LaunchTemplateEnaSrdSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"ena_srd_enabled": aws.ToBool(apiObject.EnaSrdEnabled),
+	}
+
+	if v := apiObject.EnaSrdUdpSpecification; v != nil {
+		tfMap["ena_srd_udp_specification"] = []any{flattenLaunchTemplateEnaSrdUdpSpecification(v)}
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.DeleteOnTermination; v != nil {
+		tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
+	}
+
+	if v := apiObject.DeviceIndex; v != nil {
+		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.InterfaceType; v != "" {
+		tfMap["interface_type"] = v
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PrivateIpAddressCount; v != nil {
+		tfMap["private_ip_address_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PrivateIpAddresses; len(v) > 0 {
+		tfMap["private_ip_addresses"] = tfslices.ApplyToAll(v, func(v awstypes.SecondaryInterfacePrivateIpAddressSpecification) string {
+			return aws.ToString(v.PrivateIpAddress)
+		})
+	}
+
+	if v := apiObject.SecondarySubnetId; v != nil {
+		tfMap["secondary_subnet_id"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateInstanceSecondaryInterfaceSpecifications(apiObjects []awstypes.LaunchTemplateInstanceSecondaryInterfaceSpecification) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenLaunchTemplateInstanceSecondaryInterfaceSpecification(apiObject))
+	}
+
+	return tfList
+}
+
+func expandEnaSrdUdpSpecificationRequest(tfMap map[string]any) *awstypes.EnaSrdUdpSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdUdpSpecificationRequest{
+		EnaSrdUdpEnabled: aws.Bool(tfMap["ena_srd_udp_enabled"].(bool)),
+	}
+
+	return apiObject
+}
+
+func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTemplateEnaSrdUdpSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"ena_srd_udp_enabled": aws.ToBool(apiObject.EnaSrdUdpEnabled),
+	}
+
+	return tfMap
+}
+
+func launchTemplateARN(ctx context.Context, c *conns.AWSClient, templateID string) string {
+	return c.RegionalARN(ctx, names.EC2, "launch-template/"+templateID)
 }

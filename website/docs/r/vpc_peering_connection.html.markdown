@@ -10,6 +10,11 @@ description: |-
 
 Provides a resource to manage a VPC peering connection.
 
+-> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
+can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
+Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
+more information.
+
 ~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
 both a standalone [VPC Peering Connection Options](vpc_peering_connection_options.html) and a VPC Peering Connection
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
@@ -98,15 +103,11 @@ resource "aws_vpc" "bar" {
 
 ## Argument Reference
 
--> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
-can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
-Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
-more information.
+This resource supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
-   Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
+   Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to, so must be managed if connecting cross-account.
 * `peer_vpc_id` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
 * `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
@@ -134,11 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `accept_status` - The status of the VPC Peering Connection request.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Notes
-
-If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
-The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
-or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
+~> **Note:** If both VPCs are not in the same AWS account and region, do not enable the `auto_accept` attribute. The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource or accept manually via the AWS Management Console, CLI, or SDKs.
 
 ## Timeouts
 
@@ -164,5 +161,3 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 ```console
 % terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
-
-[1]: /docs/providers/aws/index.html

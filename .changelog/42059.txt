@@ -1,0 +1,9 @@
+```release-note:breaking-change
+provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon Worklink, the `aws_worklink_fleet` resource has been removed
+```
+```release-note:breaking-change
+provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon Worklink, the `aws_worklink_website_certificate_authority_association` resource has been removed
+```
+```release-note:breaking-change
+provider: The `endpoints.worklink` configuration argument has been removed
+```

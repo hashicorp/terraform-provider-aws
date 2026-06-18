@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -18,56 +20,58 @@ func dataSourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNamespaceRead,
 
-		Schema: map[string]*schema.Schema{
-			"admin_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_iam_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"admin_username": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_exports": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"namespace_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"db_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_iam_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_roles": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_exports": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"namespace_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	namespaceName := d.Get("namespace_name").(string)
 	resource, err := findNamespaceByName(ctx, conn, namespaceName)

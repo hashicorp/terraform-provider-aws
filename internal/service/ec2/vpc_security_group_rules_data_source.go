@@ -1,24 +1,28 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Group Rules")
+// @FrameworkDataSource("aws_vpc_security_group_rules", name="Security Group Rules")
 func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &securityGroupRulesDataSource{}
 
@@ -26,11 +30,7 @@ func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWith
 }
 
 type securityGroupRulesDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *securityGroupRulesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rules"
+	framework.DataSourceWithModel[securityGroupRulesDataSourceModel]
 }
 
 func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -38,13 +38,14 @@ func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datas
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(ctx),
 		},
 	}
 }
@@ -56,10 +57,10 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	conn := d.Meta().EC2Conn(ctx)
+	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
+		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(svcTags(tftags.New(ctx, data.Tags)))...),
 	}
 
 	if len(input.Filters) == 0 {
@@ -67,7 +68,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroupRules(ctx, conn, input)
+	output, err := findSecurityGroupRules(ctx, conn, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Group Rules", err.Error())
@@ -75,17 +76,18 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
-	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v *ec2.SecurityGroupRule) string {
-		return aws.StringValue(v.SecurityGroupRuleId)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
+	data.IDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
+		return aws.ToString(v.SecurityGroupRuleId)
 	}))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type securityGroupRulesDataSourceModel struct {
-	Filters types.Set    `tfsdk:"filter"`
-	ID      types.String `tfsdk:"id"`
-	IDs     types.List   `tfsdk:"ids"`
-	Tags    types.Map    `tfsdk:"tags"`
+	framework.WithRegionModel
+	Filters customFilters        `tfsdk:"filter"`
+	ID      types.String         `tfsdk:"id"`
+	IDs     fwtypes.ListOfString `tfsdk:"ids"`
+	Tags    tftags.Map           `tfsdk:"tags"`
 }

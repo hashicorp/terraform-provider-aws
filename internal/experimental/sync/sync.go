@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sync
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -59,7 +58,7 @@ func (s Semaphore) Notify() {
 	select {
 	case <-s:
 	default:
-		log.Println("[WARN] Notifying semaphore without Wait")
+		// log.Println("[WARN] Notifying semaphore without Wait")
 	}
 }
 

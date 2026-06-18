@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -8,25 +8,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
@@ -34,15 +33,15 @@ func TestAccDSRegion_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckRegionDestroy(ctx),
+		CheckDestroy:             testAccCheckRegionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", acctest.Ct2),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -56,12 +55,12 @@ func TestAccDSRegion_basic(t *testing.T) {
 
 func TestAccDSRegion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
@@ -69,15 +68,23 @@ func TestAccDSRegion_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckRegionDestroy(ctx),
+		CheckDestroy:             testAccCheckRegionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRegion(), resourceName),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceRegion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -85,12 +92,12 @@ func TestAccDSRegion_disappears(t *testing.T) {
 
 func TestAccDSRegion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
@@ -98,13 +105,13 @@ func TestAccDSRegion_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckRegionDestroy(ctx),
+		CheckDestroy:             testAccCheckRegionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_tags1(rName, domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -116,8 +123,8 @@ func TestAccDSRegion_tags(t *testing.T) {
 			{
 				Config: testAccRegionConfig_tags2(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -125,8 +132,8 @@ func TestAccDSRegion_tags(t *testing.T) {
 			{
 				Config: testAccRegionConfig_tags1(rName, domainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -136,12 +143,12 @@ func TestAccDSRegion_tags(t *testing.T) {
 
 func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
@@ -149,13 +156,13 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckRegionDestroy(ctx),
+		CheckDestroy:             testAccCheckRegionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", acctest.Ct2),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
 				),
 			},
 			{
@@ -166,32 +173,26 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 			{
 				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", acctest.Ct3),
+					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRegionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_region" {
 				continue
 			}
 
-			directoryID, regionName, err := tfds.RegionParseResourceID(rs.Primary.ID)
+			_, err := tfds.FindRegionByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["region_name"])
 
-			if err != nil {
-				return err
-			}
-
-			_, err = tfds.FindRegion(ctx, conn, directoryID, regionName)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -206,26 +207,16 @@ func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRegionExists(ctx context.Context, n string, v *directoryservice.RegionDescription) resource.TestCheckFunc {
+func testAccCheckRegionExists(ctx context.Context, t *testing.T, n string, v *awstypes.RegionDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Directory Service Region ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
-		directoryID, regionName, err := tfds.RegionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
-
-		output, err := tfds.FindRegion(ctx, conn, directoryID, regionName)
+		output, err := tfds.FindRegionByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["region_name"])
 
 		if err != nil {
 			return err
@@ -300,7 +291,7 @@ func testAccRegionConfig_basic(rName, domain string) string {
 # but references VPC/subnets in the secondary directory's region.
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -314,7 +305,7 @@ func testAccRegionConfig_tags1(rName, domain, tagKey1, tagValue1 string) string 
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -332,7 +323,7 @@ func testAccRegionConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagVa
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -351,7 +342,7 @@ func testAccRegionConfig_desiredNumberOfDomainControllers(rName, domain string, 
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -19,11 +18,11 @@ import (
 
 func TestAccSQSQueueDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,34 +34,6 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-				},
-			},
-		},
-	})
-}
-
-func TestAccSQSQueueDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
-	resourceName := "aws_sqs_queue.test"
-	datasourceName := "data.aws_sqs_queue.by_name"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccQueueDataSourceConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccQueueCheckDataSource(datasourceName, resourceName),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"Environment": knownvalue.StringExact("Production"),
-						"Foo":         knownvalue.StringExact("Bar"),
-						"Empty":       knownvalue.StringExact(""),
-					})),
 				},
 			},
 		},
@@ -109,24 +80,6 @@ resource "aws_sqs_queue" "wrong" {
 
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"
-}
-
-data "aws_sqs_queue" "by_name" {
-  name = aws_sqs_queue.test.name
-}
-`, rName)
-}
-
-func testAccQueueDataSourceConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = "%[1]s"
-
-  tags = {
-    Environment = "Production"
-    Foo         = "Bar"
-    Empty       = ""
-  }
 }
 
 data "aws_sqs_queue" "by_name" {

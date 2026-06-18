@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,13 +16,13 @@ func testAccRouteDataSource_http2Route(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -56,13 +54,13 @@ func testAccRouteDataSource_httpRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -94,16 +92,16 @@ func testAccRouteDataSource_grpcRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_grpcRoute(meshName, vrName, vnName, rName),
@@ -133,16 +131,16 @@ func testAccRouteDataSource_tcpRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_tcpRoute(meshName, vrName, vnName, rName),

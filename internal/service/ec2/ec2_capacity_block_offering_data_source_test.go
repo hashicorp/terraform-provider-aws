@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -19,7 +19,7 @@ func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -32,7 +32,7 @@ func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(dataSourceName, "capacity_duration_hours", "24"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceCount, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "p4d.24xlarge"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "capacity_block_offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "tenancy", "default"),

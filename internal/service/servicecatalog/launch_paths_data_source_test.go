@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,10 +19,10 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	resourceNameProduct := "aws_servicecatalog_product.test"
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,9 +30,9 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLaunchPathsDataSourceConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(dataSourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", resourceNameProduct, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "summaries.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "summaries.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "summaries.0.name", resourceNamePortfolio, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "summaries.0.path_id"),
 				),

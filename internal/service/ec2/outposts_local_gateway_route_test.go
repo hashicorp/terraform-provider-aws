@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,34 +8,33 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	localGatewayVirtualInterfaceGroupDataSourceName := "data.aws_ec2_local_gateway_virtual_interface_group.test"
 	resourceName := "aws_ec2_local_gateway_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
+					testAccCheckLocalGatewayRouteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_route_table_id", localGatewayRouteTableDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroupDataSourceName, names.AttrID),
@@ -52,79 +51,63 @@ func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 
 func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	resourceName := "aws_ec2_local_gateway_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
+					testAccCheckLocalGatewayRouteExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckLocalGatewayRouteExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Local Gateway Route ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
+		_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		route, err := tfec2.GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
-
-		if err != nil {
-			return err
-		}
-
-		if route == nil {
-			return fmt.Errorf("EC2 Local Gateway Route (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_local_gateway_route" {
 				continue
 			}
 
-			localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
+			_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-			if err != nil {
-				return err
-			}
-
-			route, err := tfec2.GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
-
-			if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -132,11 +115,7 @@ func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if route == nil {
-				continue
-			}
-
-			return fmt.Errorf("EC2 Local Gateway Route (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("EC2 Local Gateway Route still exists: %s", rs.Primary.ID)
 		}
 
 		return nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,60 +23,62 @@ func dataSourcePublicIPv4Pool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_border_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pool_address_ranges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"available_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"first_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_address": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_border_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pool_address_ranges": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"available_address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"first_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"total_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"total_available_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"total_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"total_available_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	poolID := d.Get("pool_id").(string)
 	pool, err := findPublicIPv4PoolByID(ctx, conn, poolID)
@@ -89,7 +93,7 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("pool_address_ranges", flattenPublicIPv4PoolRanges(pool.PoolAddressRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pool_address_ranges: %s", err)
 	}
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("total_address_count", pool.TotalAddressCount)
@@ -98,8 +102,8 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AddressCount; v != nil {
 		tfMap["address_count"] = aws.ToInt32(v)
@@ -120,12 +124,12 @@ func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[stri
 	return tfMap
 }
 
-func flattenPublicIPv4PoolRanges(apiObjects []awstypes.PublicIpv4PoolRange) []interface{} {
+func flattenPublicIPv4PoolRanges(apiObjects []awstypes.PublicIpv4PoolRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPublicIPv4PoolRange(apiObject))

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codeguruprofiler
 
@@ -15,29 +17,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Profiling Group")
-func newDataSourceProfilingGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceProfilingGroup{}, nil
+// @FrameworkDataSource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
+func newProfilingGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &profilingGroupDataSource{}, nil
 }
 
 const (
 	DSNameProfilingGroup = "Profiling Group Data Source"
 )
 
-type dataSourceProfilingGroup struct {
-	framework.DataSourceWithConfigure
+type profilingGroupDataSource struct {
+	framework.DataSourceWithModel[profilingGroupDataSourceModel]
 }
 
-func (d *dataSourceProfilingGroup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
-func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *profilingGroupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
 	resp.Schema = schema.Schema{
@@ -71,17 +69,17 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 		},
 	}
 }
-func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *profilingGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().CodeGuruProfilerClient(ctx)
 
-	var data dataSourceProfilingGroupData
+	var data profilingGroupDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findProfilingGroupByName(ctx, conn, data.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -102,12 +100,13 @@ func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.Read
 	data.CreatedAt = flex.StringValueToFramework(ctx, out.CreatedAt.Format(time.RFC3339))
 	data.UpdatedAt = flex.StringValueToFramework(ctx, out.UpdatedAt.Format(time.RFC3339))
 	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	data.Tags = tftags.FlattenStringValueMap(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceProfilingGroupData struct {
+type profilingGroupDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                                `tfsdk:"arn"`
 	AgentOrchestrationConfig fwtypes.ListNestedObjectValueOf[dsAgentOrchestrationConfig] `tfsdk:"agent_orchestration_config"`
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]                `tfsdk:"compute_platform"`
@@ -115,7 +114,7 @@ type dataSourceProfilingGroupData struct {
 	ID                       types.String                                                `tfsdk:"id"`
 	Name                     types.String                                                `tfsdk:"name"`
 	ProfilingStatus          fwtypes.ListNestedObjectValueOf[dsProfilingStatus]          `tfsdk:"profiling_status"`
-	Tags                     types.Map                                                   `tfsdk:"tags"`
+	Tags                     tftags.Map                                                  `tfsdk:"tags"`
 	UpdatedAt                types.String                                                `tfsdk:"updated_at"`
 }
 

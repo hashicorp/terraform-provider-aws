@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -8,15 +10,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +27,7 @@ import (
 // @SDKResource("aws_default_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceDefaultSubnet() *schema.Resource {
+func resourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSubnetCreate,
@@ -36,137 +39,141 @@ func ResourceDefaultSubnet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SubnetMigrateState,
+		MigrateState:  subnetMigrateState,
 
 		// Keep in sync with aws_subnet's schema with the following changes:
 		//   - availability_zone is Required/ForceNew
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
 		//   - enable_lni_at_device_index is Computed-only
+		//   - ipv4_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv4_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - ipv6_cidr_block is Optional/Computed as it's automatically assigned if ipv6_native = true
+		//   - ipv6_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv6_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
 		//   - vpc_id is Computed-only
 		// and additions:
 		//   - existing_default_subnet Computed-only, set in resourceDefaultSubnetCreate
 		//   - force_destroy Optional
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"map_customer_owned_ip_on_launch"},
-			},
-			"enable_dns64": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_lni_at_device_index": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"enable_resource_name_dns_aaaa_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_resource_name_dns_a_record_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"existing_default_subnet": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_native": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"map_customer_owned_ip_on_launch": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
-			},
-			"map_public_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_hostname_type_on_launch": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_ipv6_address_on_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"map_customer_owned_ip_on_launch"},
+				},
+				"enable_dns64": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_lni_at_device_index": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"enable_resource_name_dns_aaaa_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_resource_name_dns_a_record_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"existing_default_subnet": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				"ipv6_cidr_block_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_native": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"map_customer_owned_ip_on_launch": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					RequiredWith: []string{"customer_owned_ipv4_pool", names.AttrOutpostARN},
+				},
+				"map_public_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_hostname_type_on_launch": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	availabilityZone := d.Get(names.AttrAvailabilityZone).(string)
 	input := &ec2.DescribeSubnetsInput{
@@ -179,13 +186,13 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	var computedIPv6CIDRBlock bool
-	subnet, err := FindSubnet(ctx, conn, input)
+	subnet, err := findSubnet(ctx, conn, input)
 
 	if err == nil {
 		log.Printf("[INFO] Found existing EC2 Default Subnet (%s)", availabilityZone)
-		d.SetId(aws.StringValue(subnet.SubnetId))
+		d.SetId(aws.ToString(subnet.SubnetId))
 		d.Set("existing_default_subnet", true)
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		input := &ec2.CreateDefaultSubnetInput{
 			AvailabilityZone: aws.String(availabilityZone),
 		}
@@ -196,8 +203,8 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 			input.Ipv6Native = aws.Bool(ipv6Native)
 		}
 
-		log.Printf("[DEBUG] Creating EC2 Default Subnet: %s", input)
-		output, err := conn.CreateDefaultSubnetWithContext(ctx, input)
+		log.Printf("[DEBUG] Creating EC2 Default Subnet: %#v", input)
+		output, err := conn.CreateDefaultSubnet(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default Subnet (%s): %s", availabilityZone, err)
@@ -205,10 +212,10 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 		subnet = output.Subnet
 
-		d.SetId(aws.StringValue(subnet.SubnetId))
+		d.SetId(aws.ToString(subnet.SubnetId))
 		d.Set("existing_default_subnet", false)
 
-		subnet, err = WaitSubnetAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		subnet, err = waitSubnetAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default Subnet (%s) create: %s", d.Id(), err)
@@ -216,10 +223,10 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 		// Creating an IPv6-native default subnets associates an IPv6 CIDR block.
 		for i, v := range subnet.Ipv6CidrBlockAssociationSet {
-			if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
-				associationID := aws.StringValue(v.AssociationId)
+			if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
+				associationID := aws.ToString(v.AssociationId)
 
-				subnetCidrBlockState, err := WaitSubnetIPv6CIDRBlockAssociationCreated(ctx, conn, associationID)
+				subnetCidrBlockState, err := waitSubnetIPv6CIDRBlockAssociationCreated(ctx, conn, associationID)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default Subnet (%s) IPv6 CIDR block (%s) to become associated: %s", d.Id(), associationID, err)
@@ -241,9 +248,9 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
@@ -254,7 +261,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceSubnetDelete(ctx, d, meta)...)

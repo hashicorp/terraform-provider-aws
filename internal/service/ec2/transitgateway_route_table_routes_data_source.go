@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,52 +23,54 @@ func dataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customRequiredFiltersSchema(),
-			"routes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_cidr_block": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"prefix_list_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"transit_gateway_route_table_announcement_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customRequiredFiltersSchema(),
+				"routes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination_cidr_block": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"prefix_list_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"transit_gateway_route_table_announcement_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				"transit_gateway_route_table_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	input := &ec2.SearchTransitGatewayRoutesInput{
-		Filters:                    newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
+		Filters:                    newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
 
@@ -78,9 +82,9 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	d.SetId(tgwRouteTableID)
 
-	routes := []interface{}{}
+	routes := []any{}
 	for _, route := range output {
-		routes = append(routes, map[string]interface{}{
+		routes = append(routes, map[string]any{
 			"destination_cidr_block": aws.ToString(route.DestinationCidrBlock),
 			"prefix_list_id":         aws.ToString(route.PrefixListId),
 			names.AttrState:          route.State,

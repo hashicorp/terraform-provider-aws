@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,26 +14,25 @@ import (
 
 func TestAccDirectConnectGatewayDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway.test"
 	datasourceName := "data.aws_dx_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGatewayDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`Direct Connect Gateway not found`),
-			},
-			{
-				Config: testAccGatewayDataSourceConfig_name(rName, sdkacctest.RandIntRange(64512, 65534)),
+				Config: testAccGatewayDataSourceConfig_name(rName, acctest.RandIntRange(t, 64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "amazon_side_asn", resourceName, "amazon_side_asn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerAccountID, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -45,13 +42,17 @@ func TestAccDirectConnectGatewayDataSource_basic(t *testing.T) {
 func testAccGatewayDataSourceConfig_name(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "wrong" {
-  amazon_side_asn = "%d"
-  name            = "%s-wrong"
+  amazon_side_asn = %[1]d
+  name            = "%[2]s-wrong"
 }
 
 resource "aws_dx_gateway" "test" {
-  amazon_side_asn = "%d"
-  name            = "%s"
+  amazon_side_asn = %[3]d
+  name            = %[4]q
+
+  tags = {
+    key1 = "value1"
+  }
 }
 
 data "aws_dx_gateway" "test" {
@@ -59,9 +60,3 @@ data "aws_dx_gateway" "test" {
 }
 `, rBgpAsn+1, rName, rBgpAsn, rName)
 }
-
-const testAccGatewayDataSourceConfig_nonExistent = `
-data "aws_dx_gateway" "test" {
-  name = "tf-acc-test-does-not-exist"
-}
-`

@@ -38,6 +38,7 @@ resource "aws_macie2_invitation_accepter" "member" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `administrator_account_id` - (Required) The AWS account ID for the account that sent the invitation.
 
 ## Attribute Reference
@@ -46,6 +47,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the macie invitation accepter.
 * `invitation_id` - The unique identifier for the invitation.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
 
 ## Import
 

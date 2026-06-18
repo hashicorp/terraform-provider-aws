@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_rule: Add `q_type` argument
+```

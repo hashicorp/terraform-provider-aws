@@ -1,19 +1,38 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
 
 // Exports for use in tests only.
 var (
-	FindListenerByARN             = findListenerByARN
-	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues
-	ProtocolVersionEnumValues     = protocolVersionEnumValues
-)
+	ResourceListener              = resourceListener
+	ResourceListenerCertificate   = resourceListenerCertificate
+	ResourceListenerRule          = resourceListenerRule
+	ResourceLoadBalancer          = resourceLoadBalancer
+	ResourceTargetGroup           = resourceTargetGroup
+	ResourceTargetGroupAttachment = resourceTargetGroupAttachment
+	ResourceTrustStore            = resourceTrustStore
+	ResourceTrustStoreRevocation  = resourceTrustStoreRevocation
 
-const (
-	MutualAuthenticationOff         = mutualAuthenticationOff
-	MutualAuthenticationVerify      = mutualAuthenticationVerify
-	MutualAuthenticationPassthrough = mutualAuthenticationPassthrough
+	FindListenerByARN                    = findListenerByARN
+	FindListenerCertificateByTwoPartKey  = findListenerCertificateByTwoPartKey
+	FindListenerRuleByARN                = findListenerRuleByARN
+	FindLoadBalancerAttributesByARN      = findLoadBalancerAttributesByARN
+	FindLoadBalancerByARN                = findLoadBalancerByARN
+	FindTargetHealthDescription          = findTargetHealthDescription
+	FindTrustStoreByARN                  = findTrustStoreByARN
+	FindTrustStoreRevocationByTwoPartKey = findTrustStoreRevocationByTwoPartKey
+	HealthCheckProtocolEnumValues        = healthCheckProtocolEnumValues
+	HostedZoneIDPerRegionALBMap          = hostedZoneIDPerRegionALBMap
+	HostedZoneIDPerRegionNLBMap          = hostedZoneIDPerRegionNLBMap
+	ListenerARNFromRuleARN               = listenerARNFromRuleARN
+	ProtocolVersionEnumValues            = protocolVersionEnumValues
+	SuffixFromARN                        = suffixFromARN
+
+	ValidName                  = validName
+	ValidNamePrefix            = validNamePrefix
+	ValidTargetGroupName       = validTargetGroupName
+	ValidTargetGroupNamePrefix = validTargetGroupNamePrefix
 )
 
 const (
@@ -24,4 +43,8 @@ const (
 	AlpnPolicyNone           = alpnPolicyNone
 
 	LoadBalancerAttributeClientKeepAliveSeconds = loadBalancerAttributeClientKeepAliveSeconds
+
+	MutualAuthenticationOff         = mutualAuthenticationOff
+	MutualAuthenticationVerify      = mutualAuthenticationVerify
+	MutualAuthenticationPassthrough = mutualAuthenticationPassthrough
 )

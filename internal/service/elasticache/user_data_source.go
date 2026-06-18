@@ -1,12 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,57 +22,59 @@ func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_string": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"authentication_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password_count": {
-							Optional: true,
-							Type:     schema.TypeInt,
-						},
-						names.AttrType: {
-							Optional: true,
-							Type:     schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_string": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"authentication_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"password_count": {
+								Optional: true,
+								Type:     schema.TypeInt,
+							},
+							names.AttrType: {
+								Optional: true,
+								Type:     schema.TypeString,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"no_password_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"passwords": {
-				Type:      schema.TypeSet,
-				Optional:  true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
-				Set:       schema.HashString,
-				Sensitive: true,
-			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"no_password_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"passwords": {
+					Type:      schema.TypeSet,
+					Optional:  true,
+					Elem:      &schema.Schema{Type: schema.TypeString},
+					Set:       schema.HashString,
+					Sensitive: true,
+				},
+				"user_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	user, err := findUserByID(ctx, conn, d.Get("user_id").(string))
 
@@ -78,15 +82,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache User", err))
 	}
 
-	d.SetId(aws.StringValue(user.UserId))
+	d.SetId(aws.ToString(user.UserId))
 	d.Set("access_string", user.AccessString)
 	if v := user.Authentication; v != nil {
-		tfMap := map[string]interface{}{
-			"password_count": aws.Int64Value(v.PasswordCount),
-			names.AttrType:   aws.StringValue(v.Type),
+		tfMap := map[string]any{
+			"password_count": aws.ToInt32(v.PasswordCount),
+			names.AttrType:   string(v.Type),
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
+		if err := d.Set("authentication_mode", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}

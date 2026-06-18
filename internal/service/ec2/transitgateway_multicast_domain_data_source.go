@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_multicast_domain", name="Transit Gateway Multicast Domain")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayMulticastDomainRead,
@@ -29,99 +32,101 @@ func dataSourceTransitGatewayMulticastDomain() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTransitGatewayAttachmentID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTransitGatewayAttachmentID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"auto_accept_shared_associations": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"igmpv2_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"members": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"group_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"auto_accept_shared_associations": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"igmpv2_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"members": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"group_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sources": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"group_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"group_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"static_sources_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_multicast_domain_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"static_sources_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_multicast_domain_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -131,7 +136,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		input.TransitGatewayMulticastDomainIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -155,7 +160,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set(names.AttrTransitGatewayID, transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
-	setTagsOutV2(ctx, transitGatewayMulticastDomain.Tags)
+	setTagsOut(ctx, transitGatewayMulticastDomain.Tags)
 
 	associations, err := findTransitGatewayMulticastDomainAssociations(ctx, conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
@@ -170,7 +175,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	members, err := findTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "true",
 			"is-group-source": "false",
 		}),
@@ -186,7 +191,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	sources, err := findTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "false",
 			"is-group-source": "true",
 		}),
@@ -204,8 +209,8 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitGatewayMulticastDomainAssociation) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitGatewayMulticastDomainAssociation) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Subnet.SubnetId; v != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
@@ -218,12 +223,12 @@ func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitG
 	return tfMap
 }
 
-func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.TransitGatewayMulticastDomainAssociation) []interface{} {
+func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.TransitGatewayMulticastDomainAssociation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTransitGatewayMulticastDomainAssociation(apiObject))
@@ -232,8 +237,8 @@ func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.Tran
 	return tfList
 }
 
-func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMulticastGroup) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMulticastGroup) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.GroupIpAddress; v != nil {
 		tfMap["group_ip_address"] = aws.ToString(v)
@@ -246,12 +251,12 @@ func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMultic
 	return tfMap
 }
 
-func flattenTransitGatewayMulticastGroups(apiObjects []awstypes.TransitGatewayMulticastGroup) []interface{} {
+func flattenTransitGatewayMulticastGroups(apiObjects []awstypes.TransitGatewayMulticastGroup) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTransitGatewayMulticastGroup(apiObject))

@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lb_listener: Add `tcp_idle_timeout_seconds` argument
+```
+
+```release-note:enhancement
+resource/aws_lb: Add `enable_zonal_shift` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `enable_zonal_shift` attribute
+```

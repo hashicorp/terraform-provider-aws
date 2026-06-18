@@ -1,0 +1,12 @@
+```release-note:bug
+resource/aws_bedrockagent_agent_knowledge_base_association: Retry `operation can't be performed on Agent when it is in Preparing state.` errors during agent knowledge base creation and disassociation
+```
+```release-note:bug
+resource/aws_bedrockagent_agent_knowledge_base_association: Add missing prepare agent call when deleting a knowledge base association
+```
+```release-note:bug
+resource/aws_bedrockagent_agent_action_group: Retry `operation can't be performed on Agent when it is in Preparing state.` errors during agent action group base creation, update, and deletion.
+```
+```release-note:bug
+resource/aws_bedrockagent_agent_action_group: Add missing prepare agent call when deleting an action group
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -8,23 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRInstanceFleet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet emr.InstanceFleet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var fleet awstypes.InstanceFleet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,10 +30,11 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, t, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
@@ -50,11 +49,11 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 
 func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet emr.InstanceFleet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var fleet awstypes.InstanceFleet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,18 +61,20 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, t, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceFleetConfig_zeroCount(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, t, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
@@ -88,11 +89,11 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 
 func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet emr.InstanceFleet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var fleet awstypes.InstanceFleet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -100,10 +101,11 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_ebsBasic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, t, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
 				),
 			},
 			{
@@ -119,11 +121,11 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 
 func TestAccEMRInstanceFleet_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet emr.InstanceFleet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var fleet awstypes.InstanceFleet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,10 +133,11 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_full(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, t, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
 				),
 			},
 			{
@@ -148,18 +151,14 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceFleetExists(ctx context.Context, n string, v *emr.InstanceFleet) resource.TestCheckFunc {
+func testAccCheckInstanceFleetExists(ctx context.Context, t *testing.T, n string, v *awstypes.InstanceFleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Instance Fleet ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		output, err := tfemr.FindInstanceFleetByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 

@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -11,10 +11,17 @@ resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = "t4g.nano"
 
+  metadata_options {
+    http_tokens = "required"
+  }
+
   tags = var.resource_tags
 }
 
 # acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI
+
+# acctest.configLatestAmazonLinux2HVMEBSAMI("arm64")
+
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-arm64" {
   most_recent = true
   owners      = ["amazon"]
@@ -33,12 +40,6 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-arm64" {
     name   = "architecture"
     values = ["arm64"]
   }
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {

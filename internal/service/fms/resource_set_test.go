@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -11,11 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	"github.com/aws/aws-sdk-go-v2/service/fms/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -26,24 +26,24 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var resourceset fms.GetResourceSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &resourceset),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.resource_set_status"),
@@ -60,85 +60,43 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 	}
 
 	var resourceset fms.GetResourceSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffms.ResourceSet, resourceName),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &resourceset),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffms.ResourceSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccFMSResourceSet_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var resourceset fms.GetResourceSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_fms_resource_set.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccResourceSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccResourceSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_resource_set" {
@@ -160,7 +118,7 @@ func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckResourceSetExists(ctx context.Context, name string, resourceset *fms.GetResourceSetOutput) resource.TestCheckFunc {
+func testAccCheckResourceSetExists(ctx context.Context, t *testing.T, name string, resourceset *fms.GetResourceSetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -171,7 +129,7 @@ func testAccCheckResourceSetExists(ctx context.Context, name string, resourceset
 			return create.Error(names.FMS, create.ErrActionCheckingExistence, tffms.ResNameResourceSet, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 		resp, err := tffms.FindResourceSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -200,48 +158,4 @@ resource "aws_fms_resource_set" "test" {
   }
 }
 `, rName)
-}
-
-func testAccResourceSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_fms_admin_account" "test" {
-  account_id = data.aws_caller_identity.current.account_id
-}
-
-resource "aws_fms_resource_set" "test" {
-  depends_on = [aws_fms_admin_account.test]
-  resource_set {
-    name               = %[1]q
-    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccResourceSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_fms_admin_account" "test" {
-  account_id = data.aws_caller_identity.current.account_id
-}
-resource "aws_fms_resource_set" "test" {
-  depends_on = [aws_fms_admin_account.test]
-  resource_set {
-    name               = %[1]q
-    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

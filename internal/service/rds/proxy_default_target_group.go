@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,69 +44,71 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_pool_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_borrow_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      120,
-							ValidateFunc: validation.IntBetween(0, 3600),
-						},
-						"init_query": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"max_connections_percent": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      100,
-							ValidateFunc: validation.IntBetween(1, 100),
-						},
-						"max_idle_connections_percent": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      50,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						"session_pinning_filters": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								// This isn't available as a constant
-								ValidateFunc: validation.StringInSlice([]string{
-									"EXCLUDE_VARIABLE_SETS",
-								}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_pool_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connection_borrow_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      120,
+								ValidateFunc: validation.IntBetween(0, 3600),
+							},
+							"init_query": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"max_connections_percent": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      100,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"max_idle_connections_percent": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      50,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"session_pinning_filters": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									// This isn't available as a constant
+									ValidateFunc: validation.StringInSlice([]string{
+										"EXCLUDE_VARIABLE_SETS",
+									}, false),
+								},
 							},
 						},
 					},
 				},
-			},
-			"db_proxy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"db_proxy_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -114,8 +118,8 @@ func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceD
 		TargetGroupName: aws.String("default"),
 	}
 
-	if v, ok := d.GetOk("connection_pool_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConnectionPoolConfig = expandConnectionPoolConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("connection_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConnectionPoolConfig = expandConnectionPoolConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.ModifyDBProxyTargetGroup(ctx, input)
@@ -138,13 +142,13 @@ func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProxyDefaultTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	tg, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy Default Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -156,7 +160,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 
 	d.Set(names.AttrARN, tg.TargetGroupArn)
 	if tg.ConnectionPoolConfig != nil {
-		if err := d.Set("connection_pool_config", []interface{}{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
+		if err := d.Set("connection_pool_config", []any{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_pool_config: %s", err)
 		}
 	} else {
@@ -197,8 +201,7 @@ func findDBProxyTargetGroups(ctx context.Context, conn *rds.Client, input *rds.D
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -216,11 +219,11 @@ func findDBProxyTargetGroups(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbProxyName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDefaultDBProxyTargetGroup(conn *rds.Client, dbProxyName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, dbProxyName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -236,7 +239,7 @@ func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusModifying),
 		Target:  enum.Slice(types.DBProxyStatusAvailable),
-		Refresh: statusDefaultDBProxyTargetGroup(ctx, conn, dbProxyName),
+		Refresh: statusDefaultDBProxyTargetGroup(conn, dbProxyName),
 		Timeout: timeout,
 	}
 
@@ -249,7 +252,7 @@ func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Clien
 	return nil, err
 }
 
-func expandConnectionPoolConfiguration(tfMap map[string]interface{}) *types.ConnectionPoolConfiguration {
+func expandConnectionPoolConfiguration(tfMap map[string]any) *types.ConnectionPoolConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -271,12 +274,12 @@ func expandConnectionPoolConfiguration(tfMap map[string]interface{}) *types.Conn
 	return apiObject
 }
 
-func flattenConnectionPoolConfigurationInfo(apiObject *types.ConnectionPoolConfigurationInfo) map[string]interface{} {
+func flattenConnectionPoolConfigurationInfo(apiObject *types.ConnectionPoolConfigurationInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["connection_borrow_timeout"] = aws.ToInt32(apiObject.ConnectionBorrowTimeout)
 	tfMap["init_query"] = aws.ToString(apiObject.InitQuery)

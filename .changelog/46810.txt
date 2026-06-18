@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appconfig_deployment_strategy: Fix panic due to "interface conversion: interface {} is float64, not float32" when updating `growth_factor`
+```

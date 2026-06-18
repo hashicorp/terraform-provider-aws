@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dynamodb
 
@@ -15,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,34 +26,36 @@ func dataSourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableItemRead,
 
-		Schema: map[string]*schema.Schema{
-			"expression_attribute_names": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"item": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateTableItem,
-			},
-			"projection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTableName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"expression_attribute_names": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"item": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateTableItem,
+				},
+				"projection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTableName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -68,8 +72,8 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 		TableName:      aws.String(tableName),
 	}
 
-	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ExpressionAttributeNames = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]any)) > 0 {
+		input.ExpressionAttributeNames = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("projection_expression"); ok {
@@ -104,7 +108,7 @@ func createTableItemDataSourceID(tableName string, attrs map[string]awstypes.Att
 	for k, v := range attrs {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, k, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, k, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:

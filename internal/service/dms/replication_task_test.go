@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -13,54 +13,53 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSReplicationTask_basic(t *testing.T) {
 	t.Parallel()
 
-	for _, migrationType := range dms.MigrationTypeValue_Values() { //nolint:paralleltest // false positive
+	for _, migrationType := range enum.Values[awstypes.MigrationTypeValue]() { //nolint:paralleltest // false positive
 		t.Run(migrationType, func(t *testing.T) {
 			ctx := acctest.Context(t)
-			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 			resourceName := "aws_dms_replication_task.test"
-			var v dms.ReplicationTask
+			var v awstypes.ReplicationTask
 
-			resource.ParallelTest(t, resource.TestCase{
+			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+				CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 				Steps: []resource.TestStep{
 					{
 						Config: testAccReplicationTaskConfig_basic(rName, migrationType),
 						Check: resource.ComposeAggregateTestCheckFunc(
-							testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+							testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 							resource.TestCheckResourceAttr(resourceName, "replication_task_id", rName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "replication_task_arn", "dms", regexache.MustCompile(`task:[A-Z0-9]{26}`)),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "replication_task_arn", "dms", regexache.MustCompile(`task:[A-Z0-9]{26}`)),
 							resource.TestCheckResourceAttr(resourceName, "cdc_start_position", ""),
 							resource.TestCheckNoResourceAttr(resourceName, "cdc_start_time"),
 							resource.TestCheckResourceAttr(resourceName, "migration_type", migrationType),
 							resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", "aws_dms_replication_instance.test", "replication_instance_arn"),
-							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskSettings[migrationType]),
+							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_task_settings", defaultReplicationTaskSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 							resource.TestCheckResourceAttr(resourceName, "start_replication_task", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ready"),
-							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 						),
 					},
 					{
@@ -77,22 +76,22 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 
 func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
 			},
@@ -105,9 +104,9 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "EMBRZ"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "EMBRZ"),
 				),
 			},
@@ -120,9 +119,9 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1248, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1248"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
 			},
@@ -135,9 +134,9 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
 			},
@@ -150,9 +149,9 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1248, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1248"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
 			},
@@ -165,9 +164,9 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "EMBRZ"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "EMBRZ"),
 				),
 			},
@@ -183,26 +182,26 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 
 func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -224,13 +223,13 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_settings_EnableLogContext(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -257,13 +256,13 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -293,13 +292,13 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 
 func TestAccDMSReplicationTask_settings_LoggingValidation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationTaskConfig_settings_EnableLogContext(rName, false, true),
@@ -319,20 +318,20 @@ func TestAccDMSReplicationTask_settings_LoggingValidation(t *testing.T) {
 
 func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_settings_LogComponents(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
@@ -352,21 +351,21 @@ func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
 
 func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_settings_StreamBuffer(rName, 4, 16),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferCount", acctest.Ct4),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferCount", "4"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
 				),
@@ -383,20 +382,20 @@ func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
 
 func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", "mysql-bin-changelog.000024:373"),
 					resource.TestCheckNoResourceAttr(resourceName, "cdc_start_time"),
 				),
@@ -413,20 +412,20 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 
 func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_resourceIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_identifier", names.AttrIdentifier),
 				),
 			},
@@ -446,20 +445,20 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "testrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
 			},
@@ -472,14 +471,14 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "changedtestrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
 			},
 			{
 				Config: testAccReplicationTaskConfig_start(rName, false, "changedtestrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "stopped"),
 				),
 			},
@@ -489,29 +488,29 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 
 func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	//https://github.com/hashicorp/terraform-provider-aws/issues/28277
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_s3ToRDS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_s3ToRDS(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -519,23 +518,31 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 
 func TestAccDMSReplicationTask_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, "full-load"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -543,24 +550,24 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 
 func TestAccDMSReplicationTask_cdcStartTime_rfc3339_date(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	currentTime := time.Now().UTC()
 	rfc3339Time := currentTime.Format(time.RFC3339)
 	awsDmsExpectedOutput := strings.TrimRight(rfc3339Time, "Z") // AWS API drop "Z" part.
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartTime(rName, rfc3339Time),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_time", rfc3339Time),
 				),
@@ -576,9 +583,9 @@ func TestAccDMSReplicationTask_cdcStartTime_rfc3339_date(t *testing.T) {
 
 func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	currentTime := time.Now().UTC()
 	rfc3339Time := currentTime.Format(time.RFC3339)
@@ -586,16 +593,16 @@ func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 	dateTime, _ := time.Parse(time.RFC3339, rfc3339Time)
 	unixDateTime := strconv.Itoa(int(dateTime.Unix()))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartTime(rName, unixDateTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_time", unixDateTime),
 				),
@@ -611,23 +618,23 @@ func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 
 func TestAccDMSReplicationTask_move(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 	instanceOne := "aws_dms_replication_instance.test"
 	instanceTwo := "aws_dms_replication_instance.test2"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test.replication_instance_arn"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationInstanceExists(ctx, t, resourceName),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceOne, "replication_instance_arn"),
 				),
@@ -635,8 +642,8 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test2.replication_instance_arn"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					testAccCheckReplicationInstanceExists(ctx, t, resourceName),
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceTwo, "replication_instance_arn"),
 				),
@@ -645,14 +652,14 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationTaskExists(ctx context.Context, n string, v *dms.ReplicationTask) resource.TestCheckFunc {
+func testAccCheckReplicationTaskExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 		output, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 
@@ -666,18 +673,18 @@ func testAccCheckReplicationTaskExists(ctx context.Context, n string, v *dms.Rep
 	}
 }
 
-func testAccCheckReplicationTaskDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReplicationTaskDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_task" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 			_, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1283,10 +1290,10 @@ resource "aws_dms_replication_instance" "test2" {
 }
 
 var (
-	defaultReplicationTaskSettings = map[string]string{
-		"cdc":               defaultReplicationTaskCdcSettings,
-		"full-load":         defaultReplicationTaskFullLoadSettings,
-		"full-load-and-cdc": defaultReplicationTaskFullLoadAndCdcSettings,
+	defaultReplicationTaskSettings = map[awstypes.MigrationTypeValue]string{
+		awstypes.MigrationTypeValueCdc:            defaultReplicationTaskCdcSettings,
+		awstypes.MigrationTypeValueFullLoad:       defaultReplicationTaskFullLoadSettings,
+		awstypes.MigrationTypeValueFullLoadAndCdc: defaultReplicationTaskFullLoadAndCdcSettings,
 	}
 
 	//go:embed testdata/replication_task/defaults/cdc.json

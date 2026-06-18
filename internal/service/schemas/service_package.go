@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schemas
@@ -13,31 +13,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*schemas.Client, error) {
+func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string]any) []func(*schemas.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return schemas.NewFromConfig(cfg, func(o *schemas.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+	return []func(*schemas.Options){
+		func(o *schemas.Options) {
+			retryables := []retry.IsErrorRetryable{
+				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsAErrorMessageContains[*awstypes.TooManyRequestsException](err, "Too Many Requests") {
+						return aws.TrueTernary
+					}
+					return aws.UnknownTernary // Delegate to configured Retryer.
+				}),
 			}
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*awstypes.TooManyRequestsException](err, "Too Many Requests") {
-				return aws.TrueTernary
+			// Include go-vcr retryable to prevent generated client retryer from being overridden
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				retryables = append(retryables, vcr.InteractionNotFoundRetryableFunc)
 			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retryables...)
+		},
+	}
 }

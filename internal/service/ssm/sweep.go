@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -104,7 +103,7 @@ type defaultPatchBaselineSweeper struct {
 	os   awstypes.OperatingSystem
 }
 
-func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	diags := defaultPatchBaselineRestoreOSDefault(ctx, s.conn, s.os)
 
 	for _, d := range sdkdiag.Warnings(diags) {
@@ -118,7 +117,7 @@ func sweepMaintenanceWindows(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSMClient(ctx)
 	input := &ssm.DescribeMaintenanceWindowsInput{}

@@ -38,6 +38,7 @@ resource "aws_kms_key" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
 * `default_branch` - (Optional) The default branch of the repository. The branch specified here needs to exist.

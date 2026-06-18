@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Set new computed value for `stream_arn` attribute when changing `stream_view_type`
+```

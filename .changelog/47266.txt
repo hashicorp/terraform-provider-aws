@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_glue_job
+```
+
+```release-note:enhancement
+resource/aws_glue_job: Add Resource Identity support
+```

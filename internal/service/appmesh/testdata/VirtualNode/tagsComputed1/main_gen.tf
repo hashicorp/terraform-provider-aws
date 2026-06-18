@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -15,7 +15,7 @@ resource "aws_appmesh_virtual_node" "test" {
 }
 
 resource "aws_appmesh_mesh" "test" {
-  name =var.rName
+  name = var.rName
 }
 
 resource "null_resource" "test" {}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -11,7 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -27,6 +28,8 @@ import (
 
 // @SDKDataSource("aws_instance", name="Instance")
 // @Tags
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="id")
 func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
@@ -35,389 +38,396 @@ func dataSourceInstance() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"ami": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"credit_specification": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu_credits": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"ami": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associate_public_ip_address": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"credit_specification": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cpu_credits": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"disable_api_stop": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"disable_api_termination": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ebs_block_device": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"disable_api_stop": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"disable_api_termination": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ebs_block_device": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSnapshotID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"volume_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSnapshotID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"volume_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+					// This should not be necessary, but currently is (see #7198)
+					Set: func(v any) int {
+						var buf bytes.Buffer
+						m := v.(map[string]any)
+						fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+						fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
+						return create.StringHashcode(buf.String())
+					},
+				},
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enclave_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-				// This should not be necessary, but currently is (see #7198)
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
-					return create.StringHashcode(buf.String())
-				},
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"ephemeral_block_device": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"no_device": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"ephemeral_block_device": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"no_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrFilter: customFiltersSchema(),
+				"get_password_data": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"get_user_data": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"host_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_resource_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_instance_profile": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"instance_tags": tftags.TagsSchemaComputed(),
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"launch_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"maintenance_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_recovery": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"get_password_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"get_user_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"host_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_resource_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"instance_tags": tftags.TagsSchemaComputed(),
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"maintenance_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_recovery": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"metadata_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"http_protocol_ipv6": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"http_put_response_hop_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"http_tokens": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_metadata_tags": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_protocol_ipv6": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_put_response_hop_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_metadata_tags": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"monitoring": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"password_data": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"placement_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"placement_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"placement_partition_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"private_dns": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_resource_name_dns_aaaa_record": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"enable_resource_name_dns_a_record": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"hostname_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"password_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placement_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placement_partition_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"private_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_resource_name_dns_aaaa_record": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"enable_resource_name_dns_a_record": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"hostname_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"public_dns": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_block_device": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"volume_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"public_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_block_device": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"volume_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+				"secondary_private_ips": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
 					},
 				},
-			},
-			"secondary_private_ips": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"source_dest_check": {
+					Type:     schema.TypeBool,
+					Computed: true,
 				},
-			},
-			"source_dest_check": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_data_base64": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_data": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_data_base64": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }
 
 // dataSourceInstanceRead performs the instanceID lookup
-func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	// Build up search parameters
-	input := &ec2.DescribeInstancesInput{}
+	input := ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
@@ -429,7 +439,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.InstanceIds = []string{v.(string)}
 	}
 
-	instance, err := findInstance(ctx, conn, input)
+	instance, err := findInstance(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance", err))
@@ -449,20 +459,13 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// ARN
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	return diags
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance) error {
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance) error {
 	d.SetId(aws.ToString(instance.InstanceId))
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -475,18 +478,20 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
-	d.Set("placement_group", instance.Placement.GroupName)
-	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	d.Set("tenancy", instance.Placement.Tenancy)
-	d.Set("host_id", instance.Placement.HostId)
-	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-
+	if v := instance.Placement; v != nil {
+		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
+		d.Set("host_id", v.HostId)
+		d.Set("host_resource_group_arn", v.HostResourceGroupArn)
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
+		d.Set("placement_partition_number", v.PartitionNumber)
+		d.Set("tenancy", v.Tenancy)
+	}
 	d.Set("ami", instance.ImageId)
 	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
-	d.Set("outpost_arn", instance.OutpostArn)
+	d.Set(names.AttrOutpostARN, instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("public_dns", instance.PublicDnsName)
@@ -546,7 +551,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
-	setTagsOutV2(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	// Security Groups
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
@@ -554,39 +559,42 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, true); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
-		d.Set("ephemeral_block_device", []interface{}{})
+		d.Set("ephemeral_block_device", []any{})
 	}
 
 	// Lookup and Set Instance Attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameUserData, err)
 		}
@@ -614,7 +622,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if instanceCreditSpecification != nil {
-			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+			if err := d.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
 				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
@@ -629,7 +637,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+		if err := d.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
 			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
@@ -641,7 +649,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
 			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {

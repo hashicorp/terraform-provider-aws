@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,9 +18,9 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	datasource2Name := "data.aws_autoscaling_groups.group_list_tag_lookup"
 	datasource3Name := "data.aws_autoscaling_groups.group_list_by_name"
 	datasource4Name := "data.aws_autoscaling_groups.group_list_multiple_values"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,14 +28,14 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasource1Name, "names.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(datasource1Name, "arns.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(datasource2Name, "names.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(datasource2Name, "arns.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(datasource3Name, "names.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(datasource3Name, "arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(datasource4Name, "names.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(datasource4Name, "arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
+					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
+					resource.TestCheckResourceAttr(datasource2Name, "names.#", "3"),
+					resource.TestCheckResourceAttr(datasource2Name, "arns.#", "3"),
+					resource.TestCheckResourceAttr(datasource3Name, "names.#", "1"),
+					resource.TestCheckResourceAttr(datasource3Name, "arns.#", "1"),
+					resource.TestCheckResourceAttr(datasource4Name, "names.#", "2"),
+					resource.TestCheckResourceAttr(datasource4Name, "arns.#", "2"),
 				),
 			},
 		},

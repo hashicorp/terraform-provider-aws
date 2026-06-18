@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -19,40 +21,46 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessIdentityRead,
 
-		Schema: map[string]*schema.Schema{
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_access_identity_path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_canonical_user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_access_identity_path": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"s3_canonical_user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -65,11 +73,12 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
 	d.SetId(aws.ToString(output.CloudFrontOriginAccessIdentity.Id))
+	d.Set(names.AttrARN, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags

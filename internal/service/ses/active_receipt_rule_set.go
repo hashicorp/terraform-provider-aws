@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
@@ -8,20 +10,22 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ses_active_receipt_rule_set")
-func ResourceActiveReceiptRuleSet() *schema.Resource {
+// @SDKResource("aws_ses_active_receipt_rule_set", name="Active Receipt Rule Set")
+func resourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
 		UpdateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
@@ -32,33 +36,35 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 			StateContext: resourceActiveReceiptRuleSetImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rule_set_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rule_set_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
 
-func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
-
-	createOpts := &ses.SetActiveReceiptRuleSetInput{
+	input := ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: aws.String(ruleSetName),
 	}
 
-	_, err := conn.SetActiveReceiptRuleSetWithContext(ctx, createOpts)
+	_, err := conn.SetActiveReceiptRuleSet(ctx, &input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting active SES rule set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting SES Active Receipt Rule Set (%s): %s", ruleSetName, err)
 	}
 
 	d.SetId(ruleSetName)
@@ -66,86 +72,85 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceActiveReceiptRuleSetRead(ctx, d, meta)...)
 }
 
-func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
-	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
+	output, err := findActiveReceiptRuleSet(ctx, conn)
 
-	response, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, describeOpts)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
-			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
-	}
-
-	if response.Metadata == nil {
-		log.Print("[WARN] No active Receipt Rule Set found")
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SES Active Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	d.Set("rule_set_name", response.Metadata.Name)
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
-
-	return diags
-}
-
-func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
-
-	deleteOpts := &ses.SetActiveReceiptRuleSetInput{
-		RuleSetName: nil,
-	}
-
-	_, err := conn.SetActiveReceiptRuleSetWithContext(ctx, deleteOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting active SES rule set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
+	}
+
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, d.Id()))
+	d.Set("rule_set_name", output.Name)
+
+	return diags
+}
+
+func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
+
+	log.Printf("[DEBUG] Deleting SES Active Receipt Rule Set: %s", d.Id())
+	var input ses.SetActiveReceiptRuleSetInput
+	_, err := conn.SetActiveReceiptRuleSet(ctx, &input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SES Active Receipt Rule Set: %s", err)
 	}
 
 	return diags
 }
 
-func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
+	// Region may be overridden in the import block.
+	var optFns []func(*ses.Options)
+	if v, ok := d.GetOk(names.AttrRegion); ok {
+		optFns = append(optFns, func(o *ses.Options) {
+			o.Region = v.(string)
+		})
+	}
 
-	response, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, describeOpts)
+	output, err := findActiveReceiptRuleSet(ctx, conn, optFns...)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if response.Metadata == nil {
-		return nil, fmt.Errorf("no active Receipt Rule Set found")
+	if got, want := aws.ToString(output.Name), d.Id(); got != want {
+		return nil, fmt.Errorf("SES Receipt Rule Set (%s) is not the SES Active Receipt Rule Set (%s)", want, got)
 	}
-
-	if aws.StringValue(response.Metadata.Name) != d.Id() {
-		return nil, fmt.Errorf("SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found", d.Id())
-	}
-
-	d.Set("rule_set_name", response.Metadata.Name)
-
-	arnValue := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arnValue)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client, optFns ...func(*ses.Options)) (*awstypes.ReceiptRuleSetMetadata, error) {
+	var input ses.DescribeActiveReceiptRuleSetInput
+	output, err := conn.DescribeActiveReceiptRuleSet(ctx, &input, optFns...)
+
+	if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Metadata == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Metadata, nil
 }

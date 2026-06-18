@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Allows providing a `cidr_block` when allocating a subnet from an IPAM resource pool.
+```

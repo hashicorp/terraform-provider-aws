@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_amplify_domain_association: Prevent permanent diff when `certificate_settings` not set.
+```
+
+```release-note:bug
+resource/aws_amplify_domain_association: Prevent `ValidationException` when setting `certificate_settings.type` to `AMPLIFY_MANAGED`.
+```
+
+```release-note:bug
+resource/aws_amplify_domain_association: Prevent "unexpected state" error when setting `certificate_settings.type` to `CUSTOM`.
+```
+
+```release-note:bug
+resource/aws_amplify_domain_association: No longer ignores changes to `certificate_settings` when updating.
+```
+
+```release-note:bug
+resource/aws_amplify_domain_association: Prevents panic in some circumstances when `certificate_settings` is not set during update.
+```

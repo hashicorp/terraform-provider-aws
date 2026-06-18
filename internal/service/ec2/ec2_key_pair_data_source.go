@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -8,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_key_pair", name="Key Pair")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyPairRead,
@@ -29,54 +31,57 @@ func dataSourceKeyPair() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_public_key": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"key_pair_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"key_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_public_key": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"key_pair_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"key_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeKeyPairsInput{}
+	input := ec2.DescribeKeyPairsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
@@ -91,7 +96,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.IncludePublicKey = aws.Bool(v.(bool))
 	}
 
-	keyPair, err := findKeyPair(ctx, conn, input)
+	keyPair, err := findKeyPair(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Key Pair", err))
@@ -99,14 +104,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(keyPair.KeyPairId))
 	keyName := aws.ToString(keyPair.KeyName)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "key-pair/" + keyName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, keyPairARN(ctx, c, keyName))
 	d.Set(names.AttrCreateTime, aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("include_public_key", input.IncludePublicKey)
@@ -115,7 +113,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("key_type", keyPair.KeyType)
 	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
-	setTagsOutV2(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs_test
@@ -10,26 +10,26 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfivs "github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIVSChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel ivs.Channel
+	var channel awstypes.Channel
 
 	resourceName := "aws_ivs_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVS)
@@ -37,17 +37,17 @@ func TestAccIVSChannel_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttrSet(resourceName, "ingest_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "playback_url"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
 				),
 			},
 			{
@@ -61,11 +61,11 @@ func TestAccIVSChannel_basic(t *testing.T) {
 
 func TestAccIVSChannel_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel ivs.Channel
+	var channel awstypes.Channel
 
 	resourceName := "aws_ivs_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVS)
@@ -73,13 +73,13 @@ func TestAccIVSChannel_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -91,8 +91,8 @@ func TestAccIVSChannel_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -100,8 +100,8 @@ func TestAccIVSChannel_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -111,14 +111,14 @@ func TestAccIVSChannel_tags(t *testing.T) {
 
 func TestAccIVSChannel_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ivs.Channel
+	var v1, v2 awstypes.Channel
 
 	resourceName := "aws_ivs_channel.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	latencyMode := "NORMAL"
 	channelType := "BASIC"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVS)
@@ -126,12 +126,12 @@ func TestAccIVSChannel_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &v1),
+					testAccCheckChannelExists(ctx, t, resourceName, &v1),
 				),
 			},
 			{
@@ -142,7 +142,7 @@ func TestAccIVSChannel_update(t *testing.T) {
 			{
 				Config: testAccChannelConfig_update(rName, acctest.CtTrue, latencyMode, channelType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &v2),
+					testAccCheckChannelExists(ctx, t, resourceName, &v2),
 					testAccCheckChannelNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "authorized", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "latency_mode", latencyMode),
@@ -156,26 +156,34 @@ func TestAccIVSChannel_update(t *testing.T) {
 
 func TestAccIVSChannel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel ivs.Channel
+	var channel awstypes.Channel
 
 	resourceName := "aws_ivs_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourceChannel(), resourceName),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceChannel(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -184,25 +192,25 @@ func TestAccIVSChannel_disappears(t *testing.T) {
 
 func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel ivs.Channel
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var channel awstypes.Channel
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ivs_channel.test"
 	recordingConfigurationResourceName := "aws_ivs_recording_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_recordingConfiguration(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, "recording_configuration_arn", recordingConfigurationResourceName, names.AttrID),
 				),
 			},
@@ -215,9 +223,9 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_channel" {
@@ -227,9 +235,9 @@ func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 			input := &ivs.GetChannelInput{
 				Arn: aws.String(rs.Primary.ID),
 			}
-			_, err := conn.GetChannelWithContext(ctx, input)
+			_, err := conn.GetChannel(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 
@@ -243,7 +251,7 @@ func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckChannelExists(ctx context.Context, name string, channel *ivs.Channel) resource.TestCheckFunc {
+func testAccCheckChannelExists(ctx context.Context, t *testing.T, name string, channel *awstypes.Channel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -255,7 +263,7 @@ func testAccCheckChannelExists(ctx context.Context, name string, channel *ivs.Ch
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 		output, err := tfivs.FindChannelByID(ctx, conn, rs.Primary.ID)
 
@@ -270,10 +278,10 @@ func testAccCheckChannelExists(ctx context.Context, name string, channel *ivs.Ch
 }
 
 func testAccChannelPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
+	conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 	input := &ivs.ListChannelsInput{}
-	_, err := conn.ListChannelsWithContext(ctx, input)
+	_, err := conn.ListChannels(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -284,9 +292,9 @@ func testAccChannelPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckChannelNotRecreated(before, after *ivs.Channel) resource.TestCheckFunc {
+func testAccCheckChannelNotRecreated(before, after *awstypes.Channel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before != after {
+		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before != after {
 			return create.Error(names.IVS, create.ErrActionCheckingNotRecreated, tfivs.ResNameChannel, before, errors.New("recreated"))
 		}
 

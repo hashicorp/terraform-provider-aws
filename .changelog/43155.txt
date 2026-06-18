@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_alb_listener_rule: Add resource identity support
+```

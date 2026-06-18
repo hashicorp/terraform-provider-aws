@@ -1,0 +1,72 @@
+---
+subcategory: "AppStream 2.0"
+layout: "aws"
+page_title: "AWS: aws_appstream_image"
+description: |-
+  Terraform data source for describing an AWS AppStream 2.0 Appstream Image.
+---
+
+# Data Source: aws_appstream_image
+
+Terraform data source for managing an AWS AppStream 2.0 Image.
+
+## Example Usage
+
+```terraform
+data "aws_appstream_image" "test" {
+  name        = "AppStream-WinServer2019-06-17-2024"
+  type        = "PUBLIC"
+  most_recent = true
+}
+
+```
+
+## Argument Reference
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional) Name of the image being searched for. Cannot be used with `name_regex` or `arn`.
+* `name_regex` - (Optional) Regular expression name of the image being searched for. Cannot be used with `arn` or `name`.
+* `arn` - (Optional) ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
+* `type` - (Optional) The type of image which must be (`PUBLIC`, `PRIVATE`, or `SHARED`).
+* `most_recent` - (Optional) Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `applications` - A application object that contains the following:
+    * `app_block_arn` - The app block ARN of the application.
+    * `created_time` - The time at which the application was created within the app block.
+    * `description` - The description of the application.
+    * `display_name` - The application name to display.
+    * `enabled` - Bool based on if the application is enabled.
+    * `icon_s3_location` - A list named icon_s3_location that contains the following:
+        * `s3_bucket` - S3 bucket of the S3 object.
+        * `s3_key` - S3 key of the S3 object.
+    * `icon_url` - URL of the application icon. This URL may be time-limited.
+    * `instance_families` - List of the instance families of the application.
+    * `launch_parameters` - Arguments that are passed to the application at it's launch.
+    * `launch_path` -  Path to the application's excecutable in the instance.
+    * `metadata` - String to string map that contains additional attributes used to describe the application.
+    * `name` - Name of the application.
+    * `platforms` - Array of strings describing the platforms on which the application can run. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
+    * `working_directory` - Working directory for the application.
+* `appstream_agent_version` - Version of the AppStream 2.0 agent to use for instances that are launched from this image. Has a maximum length of 100 characters.
+* `arn` - ARN of the image.
+* `base_image_arn` - ARN of the image from which the image was created.
+* `created_time` - Time at which this image was created.
+* `description` - Description of image.
+* `display_name` - Image name to display.
+* `image_builder_name` - The name of the image builder that was used to created the private image. If the image is sharedthen the value is null.
+* `image_builder_supported` - Boolean to indicate whether an image builder can be launched from this image.
+* `state_change_reason` - Reason for the last state change.
+    * `code` - State change reason code.
+    * `message` - State change reason message.
+* `image_permissions` - List of strings describing the image permissions containing the following:
+    * `allow_fleet` - Boolean indicating if the image can be used for a fleet.
+    * `allow_image_builder` - indicated whether the image can be used for an image builder.
+* `platform` - Operating system platform of the image. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
+* `public_base_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
+* `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.

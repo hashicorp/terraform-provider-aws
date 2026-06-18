@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package AWSR001
 
 import (
@@ -8,5 +11,5 @@ import (
 
 func TestAWSR001(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, Analyzer, "a")
+	analysistest.Run(t, testdata, Analyzer, "testdata/src/a")
 }

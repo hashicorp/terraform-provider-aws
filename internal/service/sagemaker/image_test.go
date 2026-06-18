@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,23 +21,23 @@ import (
 func TestAccSageMakerImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -54,19 +52,19 @@ func TestAccSageMakerImage_basic(t *testing.T) {
 func TestAccSageMakerImage_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
@@ -78,14 +76,14 @@ func TestAccSageMakerImage_description(t *testing.T) {
 			{
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccImageConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
@@ -96,19 +94,19 @@ func TestAccSageMakerImage_description(t *testing.T) {
 func TestAccSageMakerImage_displayName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
@@ -120,14 +118,14 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 			{
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 				),
 			},
 			{
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
@@ -138,20 +136,20 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 func TestAccSageMakerImage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -163,8 +161,8 @@ func TestAccSageMakerImage_tags(t *testing.T) {
 			{
 				Config: testAccImageConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -172,8 +170,8 @@ func TestAccSageMakerImage_tags(t *testing.T) {
 			{
 				Config: testAccImageConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -184,56 +182,62 @@ func TestAccSageMakerImage_tags(t *testing.T) {
 func TestAccSageMakerImage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), resourceName),
+					testAccCheckImageExists(ctx, t, resourceName, &image),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_image.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_image.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_image" {
 				continue
 			}
 
-			Image, err := tfsagemaker.FindImageByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindImageByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Image (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Image (%s): %w", rs.Primary.ID, err)
 			}
 
-			if aws.StringValue(Image.ImageName) == rs.Primary.ID {
-				return fmt.Errorf("sagemaker Image %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker Image %q still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckImageExists(ctx context.Context, n string, image *sagemaker.DescribeImageOutput) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, t *testing.T, n string, image *sagemaker.DescribeImageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -244,7 +248,7 @@ func testAccCheckImageExists(ctx context.Context, n string, image *sagemaker.Des
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindImageByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

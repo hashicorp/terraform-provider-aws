@@ -1,23 +1,25 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 const fieldSortOptionsMaxItems100 = 100
 
-func fieldSortOptionsSchema(maxItems int) *schema.Schema {
+var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: fieldSortOptionsMaxItems100,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column_sort": columnSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
@@ -25,9 +27,22 @@ func fieldSortOptionsSchema(maxItems int) *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func columnSortSchema() *schema.Schema {
+var fieldSortOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_sort": columnSortDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+				"field_sort":  fieldSortDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+			},
+		},
+	}
+})
+
+var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -35,15 +50,29 @@ func columnSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringSchema(true, validation.StringInSlice(quicksight.SortDirection_Values(), false)),
+				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
 		},
 	}
-}
+})
 
-func fieldSortSchema() *schema.Schema {
+var columnSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction":            sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				"sort_by":              columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			},
+		},
+	}
+})
+
+var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -51,96 +80,110 @@ func fieldSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringSchema(true, validation.StringInSlice(quicksight.SortDirection_Values(), false)),
-				"field_id":  stringSchema(true, validation.StringLenBetween(1, 512)),
+				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
+				attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 			},
 		},
 	}
-}
+})
 
-func expandFieldSortOptionsList(tfList []interface{}) []*quicksight.FieldSortOptions {
+var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction": sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				attrFieldID: stringComputedOnly(),
+			},
+		},
+	}
+})
+
+func expandFieldSortOptionsList(tfList []any) []awstypes.FieldSortOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.FieldSortOptions
+	var apiObjects []awstypes.FieldSortOptions
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		opts := expandFieldSortOptions(tfMap)
-		if opts == nil {
+		apiObject := expandFieldSortOptions(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		options = append(options, opts)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return options
+	return apiObjects
 }
 
-func expandFieldSortOptions(tfMap map[string]interface{}) *quicksight.FieldSortOptions {
+func expandFieldSortOptions(tfMap map[string]any) *awstypes.FieldSortOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.FieldSortOptions{}
+	apiObject := &awstypes.FieldSortOptions{}
 
-	if v, ok := tfMap["column_sort"].([]interface{}); ok && len(v) > 0 {
-		options.ColumnSort = expandColumnSort(v)
+	if v, ok := tfMap["column_sort"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnSort = expandColumnSort(v)
 	}
-	if v, ok := tfMap["field_sort"].([]interface{}); ok && len(v) > 0 {
-		options.FieldSort = expandFieldSort(v)
+	if v, ok := tfMap["field_sort"].([]any); ok && len(v) > 0 {
+		apiObject.FieldSort = expandFieldSort(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandColumnSort(tfList []interface{}) *quicksight.ColumnSort {
+func expandColumnSort(tfList []any) *awstypes.ColumnSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.ColumnSort{}
+	apiObject := &awstypes.ColumnSort{}
 
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
-		config.Direction = aws.String(v)
+		apiObject.Direction = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["sort_by"].([]interface{}); ok && len(v) > 0 {
-		config.SortBy = expandColumnIdentifier(v)
+	if v, ok := tfMap["sort_by"].([]any); ok && len(v) > 0 {
+		apiObject.SortBy = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
-		config.AggregationFunction = expandAggregationFunction(v)
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
+		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandFieldSort(tfList []interface{}) *quicksight.FieldSort {
+func expandFieldSort(tfList []any) *awstypes.FieldSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.FieldSort{}
+	apiObject := &awstypes.FieldSort{}
 
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
-		config.Direction = aws.String(v)
+		apiObject.Direction = awstypes.SortDirection(v)
 	}
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
-		config.FieldId = aws.String(v)
+		apiObject.FieldId = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }

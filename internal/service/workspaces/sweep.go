@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -40,7 +39,7 @@ func sweepDirectories(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	conn := client.WorkSpacesClient(ctx)
@@ -60,7 +59,7 @@ func sweepDirectories(region string) error {
 		}
 
 		for _, v := range page.Directories {
-			r := ResourceDirectory()
+			r := resourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DirectoryId))
 
@@ -81,7 +80,7 @@ func sweepIPGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
@@ -93,7 +92,7 @@ func sweepIPGroups(region string) error {
 		}
 
 		for _, v := range page.Result {
-			r := ResourceIPGroup()
+			r := resourceIPGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GroupId))
 
@@ -121,28 +120,11 @@ func sweepIPGroups(region string) error {
 	return nil
 }
 
-func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
-	for {
-		output, err := conn.DescribeIpGroups(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.ToString(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-	return nil
-}
-
 func sweepWorkspace(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &workspaces.DescribeWorkspacesInput{}
 	conn := client.WorkSpacesClient(ctx)
@@ -162,7 +144,7 @@ func sweepWorkspace(region string) error {
 		}
 
 		for _, v := range page.Workspaces {
-			r := ResourceWorkspace()
+			r := resourceWorkspace()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.WorkspaceId))
 

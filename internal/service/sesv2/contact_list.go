@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -11,24 +13,25 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sesv2_contact_list", name="Contact List")
 // @Tags(identifierAttribute="arn")
-func ResourceContactList() *schema.Resource {
+// @Testing(serialize=true)
+func resourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,
 		ReadWithoutTimeout:   resourceContactListRead,
@@ -39,66 +42,66 @@ func ResourceContactList() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"contact_list_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"last_updated_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"topic": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_subscription_status": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.SubscriptionStatus](),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDisplayName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"topic_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"contact_list_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"created_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"last_updated_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"topic": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_subscription_status": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.SubscriptionStatus](),
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDisplayName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"topic_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 const (
-	ResNameContactList = "Contact List"
+	resNameContactList = "Contact List"
 )
 
-func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -117,11 +120,11 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.CreateContactList(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameContactList, d.Get("contact_list_name").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("contact_list_name").(string))
@@ -129,27 +132,27 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
-func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindContactListByID(ctx, conn, d.Id())
+	out, err := findContactListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 ContactList (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameContactList, d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("contact-list/%s", d.Id()),
 	}.String()
 
@@ -160,13 +163,13 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("last_updated_timestamp", aws.ToTime(out.LastUpdatedTimestamp).Format(time.RFC3339))
 
 	if err := d.Set("topic", flattenTopics(out.Topics)); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameContactList, d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -180,14 +183,14 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		log.Printf("[DEBUG] Updating SESV2 ContactList (%s): %#v", d.Id(), in)
 		if _, err := conn.UpdateContactList(ctx, in); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameContactList, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameContactList, d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
-func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -197,43 +200,46 @@ func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta
 		ContactListName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameContactList, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameContactList, d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindContactListByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetContactListOutput, error) {
-	in := &sesv2.GetContactListInput{
+func findContactListByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetContactListOutput, error) {
+	input := &sesv2.GetContactListInput{
 		ContactListName: aws.String(id),
 	}
-	out, err := conn.GetContactList(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findContactList(ctx, conn, input)
+}
+
+func findContactList(ctx context.Context, conn *sesv2.Client, input *sesv2.GetContactListInput) (*sesv2.GetContactListOutput, error) {
+	output, err := conn.GetContactList(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }
 
-func expandTopics(tfList []interface{}) []types.Topic {
+func expandTopics(tfList []any) []types.Topic {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -241,7 +247,7 @@ func expandTopics(tfList []interface{}) []types.Topic {
 	var apiObjects []types.Topic
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -259,7 +265,7 @@ func expandTopics(tfList []interface{}) []types.Topic {
 	return apiObjects
 }
 
-func expandTopic(tfMap map[string]interface{}) *types.Topic {
+func expandTopic(tfMap map[string]any) *types.Topic {
 	if tfMap == nil {
 		return nil
 	}
@@ -285,12 +291,12 @@ func expandTopic(tfMap map[string]interface{}) *types.Topic {
 	return apiObject
 }
 
-func flattenTopics(apiObjects []types.Topic) []interface{} {
+func flattenTopics(apiObjects []types.Topic) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTopic(&apiObject))
@@ -299,12 +305,12 @@ func flattenTopics(apiObjects []types.Topic) []interface{} {
 	return tfList
 }
 
-func flattenTopic(apiObject *types.Topic) map[string]interface{} {
+func flattenTopic(apiObject *types.Topic) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"default_subscription_status": string(apiObject.DefaultSubscriptionStatus),
 	}
 

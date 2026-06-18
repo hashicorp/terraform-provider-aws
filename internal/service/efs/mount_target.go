@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -9,25 +11,27 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_mount_target", name="Mount Target")
-func ResourceMountTarget() *schema.Resource {
+func resourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMountTargetCreate,
 		ReadWithoutTimeout:   resourceMountTargetRead,
@@ -43,72 +47,89 @@ func ResourceMountTarget() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"availability_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrIPAddress: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPv4Address,
-			},
-			"mount_target_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrIPAddress: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				"ipv6_address": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv6Address,
+				},
+				"mount_target_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
 	// CreateMountTarget would return the same Mount Target ID
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
 	subnetID := d.Get(names.AttrSubnetID).(string)
-	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
+	az, err := getAZFromSubnetID(ctx, c.EC2Client(ctx), subnetID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", subnetID, err)
@@ -119,7 +140,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	conns.GlobalMutexKV.Lock(mtKey)
 	defer conns.GlobalMutexKV.Unlock(mtKey)
 
-	input := &efs.CreateMountTargetInput{
+	input := efs.CreateMountTargetInput{
 		FileSystemId: aws.String(fsID),
 		SubnetId:     aws.String(subnetID),
 	}
@@ -128,17 +149,25 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
-		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	mt, err := conn.CreateMountTargetWithContext(ctx, input)
+	if v, ok := d.GetOk("ipv6_address"); ok {
+		input.Ipv6Address = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
+		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	mt, err := conn.CreateMountTarget(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Mount Target (%s): %s", fsID, err)
 	}
 
-	d.SetId(aws.StringValue(mt.MountTargetId))
+	d.SetId(aws.ToString(mt.MountTargetId))
 
 	if _, err := waitMountTargetCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EFS Mount Target (%s) create: %s", d.Id(), err)
@@ -147,13 +176,14 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
-	mt, err := FindMountTargetByID(ctx, conn, d.Id())
+	mt, err := findMountTargetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Mount Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,49 +193,53 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s): %s", d.Id(), err)
 	}
 
-	fsID := aws.StringValue(mt.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
+	fsID := aws.ToString(mt.FileSystemId)
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
-	d.Set("file_system_arn", fsARN)
+	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	if mt.IpAddress != nil && mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
+	} else if mt.IpAddress != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
+	} else if mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
+	} else {
+		d.Set(names.AttrIPAddressType, nil)
+	}
+	d.Set("ipv6_address", mt.Ipv6Address)
+	d.Set("mount_target_dns_name", c.RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)
 	d.Set(names.AttrSubnetID, mt.SubnetId)
 
-	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
+	input := efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.DescribeMountTargetSecurityGroups(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 
 	return diags
 }
 
-func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	if d.HasChange(names.AttrSecurityGroups) {
-		input := &efs.ModifyMountTargetSecurityGroupsInput{
+		input := efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
-		_, err := conn.ModifyMountTargetSecurityGroupsWithContext(ctx, input)
+		_, err := conn.ModifyMountTargetSecurityGroups(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS Mount Target (%s) security groups: %s", d.Id(), err)
@@ -215,16 +249,17 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS Mount Target: %s", d.Id())
-	_, err := conn.DeleteMountTargetWithContext(ctx, &efs.DeleteMountTargetInput{
+	input := efs.DeleteMountTargetInput{
 		MountTargetId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMountTarget(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
+	if errs.IsA[*awstypes.MountTargetNotFound](err) {
 		return diags
 	}
 
@@ -239,70 +274,78 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func getAZFromSubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (string, error) {
+func getAZFromSubnetID(ctx context.Context, conn *ec2.Client, subnetID string) (string, error) {
 	subnet, err := tfec2.FindSubnetByID(ctx, conn, subnetID)
 
 	if err != nil {
 		return "", err
 	}
 
-	return aws.StringValue(subnet.AvailabilityZone), nil
+	return aws.ToString(subnet.AvailabilityZone), nil
 }
 
-func findMountTarget(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) (*efs.MountTargetDescription, error) {
-	output, err := findMountTargets(ctx, conn, input)
+func findMountTarget(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput, filter tfslices.Predicate[awstypes.MountTargetDescription]) (*awstypes.MountTargetDescription, error) {
+	output, err := findMountTargets(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMountTargets(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) ([]*efs.MountTargetDescription, error) {
-	var output []*efs.MountTargetDescription
+func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput, filter tfslices.Predicate[awstypes.MountTargetDescription]) ([]awstypes.MountTargetDescription, error) {
+	var output []awstypes.MountTargetDescription
 
-	err := conn.DescribeMountTargetsPagesWithContext(ctx, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := efs.NewDescribeMountTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.MountTargets {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.MountTargetNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.MountTargets {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.MountTargetDescription, error) {
-	input := &efs.DescribeMountTargetsInput{
+func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.MountTargetDescription, error) {
+	input := efs.DescribeMountTargetsInput{
 		MountTargetId: aws.String(id),
 	}
 
-	return findMountTarget(ctx, conn, input)
+	output, err := findMountTarget(ctx, conn, &input, tfslices.PredicateTrue[awstypes.MountTargetDescription]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	return output, nil
 }
 
-func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindMountTargetByID(ctx, conn, id)
+func statusMountTargetLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findMountTargetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -310,15 +353,15 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id stri
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.LifeCycleState), nil
+		return output, string(output.LifeCycleState), nil
 	}
 }
 
-func waitMountTargetCreated(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.MountTargetDescription, error) {
+func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{efs.LifeCycleStateCreating},
-		Target:     []string{efs.LifeCycleStateAvailable},
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -326,18 +369,18 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.EFS, id string, timeo
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*efs.MountTargetDescription); ok {
+	if output, ok := outputRaw.(*awstypes.MountTargetDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitMountTargetDeleted(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.MountTargetDescription, error) {
+func waitMountTargetDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
+		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:     []string{},
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -345,7 +388,7 @@ func waitMountTargetDeleted(ctx context.Context, conn *efs.EFS, id string, timeo
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*efs.MountTargetDescription); ok {
+	if output, ok := outputRaw.(*awstypes.MountTargetDescription); ok {
 		return output, err
 	}
 

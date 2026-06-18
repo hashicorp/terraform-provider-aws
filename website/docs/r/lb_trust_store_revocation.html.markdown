@@ -37,6 +37,7 @@ resource "aws_lb_trust_store_revocation" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `trust_store_arn` - (Required) Trust Store ARN.
 * `revocations_s3_bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
 * `revocations_s3_key` - (Required) S3 object key holding the client certificate CA bundle.
@@ -48,6 +49,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `revocation_id` - AWS assigned RevocationId, (number).
 * `id` - "combination of the Trust Store ARN and RevocationId `${trust_store_arn},{revocation_id}`"
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
 
 ## Import
 

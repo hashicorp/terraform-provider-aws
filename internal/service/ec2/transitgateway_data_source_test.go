@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -53,6 +52,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"IDDifferentAccount":     testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
 			"Tags":                   testAccTransitGatewayPeeringAttachmentDataSource_Tags,
 		},
+		"PeeringAttachments": {
+			"Filter": testAccTransitGatewayPeeringAttachmentsDataSource_Filter,
+		},
 		"RouteTable": {
 			"Filter": testAccTransitGatewayRouteTableDataSource_Filter,
 			"ID":     testAccTransitGatewayRouteTableDataSource_ID,
@@ -94,9 +96,9 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T, semaphore tfsync.Semap
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -104,7 +106,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T, semaphore tfsync.Semap
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDataSourceConfig_filter(rName),
@@ -117,9 +119,11 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T, semaphore tfsync.Semap
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_support", dataSourceName, "encryption_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "multicast_support", dataSourceName, "multicast_support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerID, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
@@ -133,9 +137,9 @@ func testAccTransitGatewayDataSource_ID(t *testing.T, semaphore tfsync.Semaphore
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -143,7 +147,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T, semaphore tfsync.Semaphore
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDataSourceConfig_id(rName),
@@ -156,8 +160,10 @@ func testAccTransitGatewayDataSource_ID(t *testing.T, semaphore tfsync.Semaphore
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_support", dataSourceName, "encryption_support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerID, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),

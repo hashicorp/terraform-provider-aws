@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `policy_details.schedule.cross_region_copy_rule.target_region` argument
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Make `policy_details.schedule.cross_region_copy_rule.target` optional
+```

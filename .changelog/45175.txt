@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_vpn_connection: Add `vpn_concentrator_id` argument to support Site-to-Site VPN Concentrator
+```
+
+```release-note:enhancement
+data-source/aws_vpn_connection: Add `vpn_concentrator_id` attribute
+```
+
+```release-note:new-resource
+aws_vpn_concentrator
+```

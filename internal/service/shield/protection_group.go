@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package shield
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,54 +39,55 @@ func ResourceProtectionGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"aggregation": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupAggregation](),
-			},
-			"members": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      0,
-				MaxItems:      10000,
-				ConflictsWith: []string{names.AttrResourceType},
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(verify.ValidARN,
-						validation.StringLenBetween(1, 2048),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"aggregation": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupAggregation](),
 				},
-			},
-			"pattern": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupPattern](),
-			},
-			"protection_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-				ForceNew:     true,
-			},
-			"protection_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{"members"},
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectedResourceType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"members": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      0,
+					MaxItems:      10000,
+					ConflictsWith: []string{names.AttrResourceType},
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(verify.ValidARN,
+							validation.StringLenBetween(1, 2048),
+						),
+					},
+				},
+				"pattern": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupPattern](),
+				},
+				"protection_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+					ForceNew:     true,
+				},
+				"protection_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{"members"},
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectedResourceType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -97,7 +100,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("members"); ok {
-		input.Members = flex.ExpandStringValueList(v.([]interface{}))
+		input.Members = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceType); ok {
@@ -115,13 +118,13 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	resp, err := findProtectionGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Shield Protection Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -142,7 +145,7 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -154,7 +157,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk("members"); ok {
-			input.Members = flex.ExpandStringValueList(v.([]interface{}))
+			input.Members = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrResourceType); ok {
@@ -171,7 +174,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -200,8 +203,7 @@ func findProtectionGroupByID(ctx context.Context, conn *shield.Client, id string
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -210,7 +212,7 @@ func findProtectionGroupByID(ctx context.Context, conn *shield.Client, id string
 	}
 
 	if resp.ProtectionGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return resp.ProtectionGroup, nil

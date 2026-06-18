@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -8,8 +10,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_portfolio")
-func DataSourcePortfolio() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_portfolio", name="Portfolio")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Portfolio")
+func dataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
 
@@ -28,45 +32,47 @@ func DataSourcePortfolio() *schema.Resource {
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get(names.AttrID).(string)),
@@ -76,7 +82,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribePortfolioWithContext(ctx, input)
+	output, err := conn.DescribePortfolio(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get(names.AttrID).(string), err)
@@ -88,9 +94,9 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	detail := output.PortfolioDetail
 
-	d.SetId(aws.StringValue(detail.Id))
+	d.SetId(aws.ToString(detail.Id))
 
-	if err := d.Set(names.AttrCreatedTime, aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedTime, aws.ToTime(detail.CreatedTime).Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 
@@ -99,12 +105,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, detail.DisplayName)
 	d.Set(names.AttrProviderName, detail.ProviderName)
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := KeyValueTags(ctx, output.Tags)
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

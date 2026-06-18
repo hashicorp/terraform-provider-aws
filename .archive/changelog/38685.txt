@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix`
+```
+
+```release-note:bug
+data-source/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix`
+```

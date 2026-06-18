@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +19,19 @@ func TestAccVPCEndpointServicePrivateDNSVerification_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, "tfacctest") // 32 character limit
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_vpc_endpoint_service_private_dns_verification.test"
 	endpointServiceResourceName := "aws_vpc_endpoint_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServicePrivateDNSVerificationConfig_basic(rName, domainName),
@@ -50,30 +49,30 @@ func TestAccVPCEndpointServicePrivateDNSVerification_waitForVerification(t *test
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, "tfacctest") // 32 character limit
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServicePrivateDNSVerificationConfig_waitForVerification(rName, domainName),
 				// Expect an error as private DNS setup and verification is not
 				// included in this configuration. This test simply verifies the
 				// create waiter functions as expected.
-				ExpectError: regexache.MustCompile("waiting for creation"),
+				ExpectError: regexache.MustCompile("waiting for VPC Endpoint Service Private DNS Verification"),
 			},
 		},
 	})
 }
 
-func testAccVPCEndpointServicePrivateDNSVerificationConfigBase(rName, domainName string, count int) string {
+func testAccVPCEndpointServicePrivateDNSVerificationConfig_base(rName, domainName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -104,7 +103,7 @@ resource "aws_vpc_endpoint_service" "test" {
 
 func testAccVPCEndpointServicePrivateDNSVerificationConfig_basic(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEndpointServicePrivateDNSVerificationConfigBase(rName, domainName, 1),
+		testAccVPCEndpointServicePrivateDNSVerificationConfig_base(rName, domainName, 1),
 		`
 resource "aws_vpc_endpoint_service_private_dns_verification" "test" {
   service_id = aws_vpc_endpoint_service.test.id
@@ -114,7 +113,7 @@ resource "aws_vpc_endpoint_service_private_dns_verification" "test" {
 
 func testAccVPCEndpointServicePrivateDNSVerificationConfig_waitForVerification(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEndpointServicePrivateDNSVerificationConfigBase(rName, domainName, 1),
+		testAccVPCEndpointServicePrivateDNSVerificationConfig_base(rName, domainName, 1),
 		`
 resource "aws_vpc_endpoint_service_private_dns_verification" "test" {
   service_id = aws_vpc_endpoint_service.test.id

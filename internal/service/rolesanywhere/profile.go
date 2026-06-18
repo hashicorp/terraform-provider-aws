@@ -1,20 +1,24 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rolesanywhere
 
 import (
 	"context"
-	"errors"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
-	"github.com/aws/aws-sdk-go/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,72 +27,84 @@ import (
 
 // @SDKResource("aws_rolesanywhere_profile", name="Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceProfile() *schema.Resource {
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
 		UpdateWithoutTimeout: resourceProfileUpdate,
 		DeleteWithoutTimeout: resourceProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"duration_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"managed_policy_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_role_session_name": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"require_instance_properties": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"role_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"session_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"duration_seconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"managed_policy_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"require_instance_properties": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"role_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"session_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &rolesanywhere.CreateProfileInput{
+	input := rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
-		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
+		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)), // Send [] if not configured.
 		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("accept_role_session_name"); ok {
+		input.AcceptRoleSessionName = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("duration_seconds"); ok {
@@ -100,7 +116,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("managed_policy_arns"); ok {
-		input.ManagedPolicyArns = expandStringList(v.(*schema.Set).List())
+		input.ManagedPolicyArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("require_instance_properties"); ok {
@@ -111,25 +127,24 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SessionPolicy = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating RolesAnywhere Profile: %#v", input)
-	output, err := conn.CreateProfile(ctx, input)
+	output, err := conn.CreateProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Profile.ProfileId))
+	d.SetId(aws.ToString(output.Profile.ProfileId))
 
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	profile, err := FindProfileByID(ctx, conn, d.Id())
+	profile, err := findProfileByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,6 +154,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 	d.Set(names.AttrARN, profile.ProfileArn)
 	d.Set("duration_seconds", profile.DurationSeconds)
 	d.Set(names.AttrEnabled, profile.Enabled)
@@ -151,13 +167,17 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &rolesanywhere.UpdateProfileInput{
+		input := rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("accept_role_session_name") {
+			input.AcceptRoleSessionName = aws.Bool(d.Get("accept_role_session_name").(bool))
 		}
 
 		if d.HasChange("duration_seconds") {
@@ -165,7 +185,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("managed_policy_arns") {
-			input.ManagedPolicyArns = expandStringList(d.Get("managed_policy_arns").(*schema.Set).List())
+			input.ManagedPolicyArns = flex.ExpandStringValueSet(d.Get("managed_policy_arns").(*schema.Set))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -173,31 +193,30 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("role_arns") {
-			input.RoleArns = expandStringList(d.Get("role_arns").(*schema.Set).List())
+			input.RoleArns = flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set))
 		}
 
 		if d.HasChange("session_policy") {
 			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
 		}
 
-		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
-		_, err := conn.UpdateProfile(ctx, input)
+		_, err := conn.UpdateProfile(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange(names.AttrEnabled) {
-		_, n := d.GetChange(names.AttrEnabled)
-		if n == true {
-			err := enableProfile(ctx, d.Id(), meta)
+		if _, n := d.GetChange(names.AttrEnabled); n == true {
+			err := enableProfile(ctx, conn, d.Id())
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
-			err := disableProfile(ctx, d.Id(), meta)
+			err := disableProfile(ctx, conn, d.Id())
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -205,17 +224,17 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
-	_, err := conn.DeleteProfile(ctx, &rolesanywhere.DeleteProfileInput{
+	input := rolesanywhere.DeleteProfileInput{
 		ProfileId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProfile(ctx, &input)
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -226,24 +245,48 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
-
-	input := &rolesanywhere.DisableProfileInput{
-		ProfileId: aws.String(profileId),
+func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*awstypes.ProfileDetail, error) {
+	input := rolesanywhere.GetProfileInput{
+		ProfileId: aws.String(id),
 	}
 
-	_, err := conn.DisableProfile(ctx, input)
+	return findProfile(ctx, conn, &input)
+}
+
+func findProfile(ctx context.Context, conn *rolesanywhere.Client, input *rolesanywhere.GetProfileInput) (*awstypes.ProfileDetail, error) {
+	output, err := conn.GetProfile(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Profile == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Profile, nil
+}
+
+func disableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) error {
+	input := rolesanywhere.DisableProfileInput{
+		ProfileId: aws.String(id),
+	}
+
+	_, err := conn.DisableProfile(ctx, &input)
 	return err
 }
 
-func enableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
-
-	input := &rolesanywhere.EnableProfileInput{
-		ProfileId: aws.String(profileId),
+func enableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) error {
+	input := rolesanywhere.EnableProfileInput{
+		ProfileId: aws.String(id),
 	}
 
-	_, err := conn.EnableProfile(ctx, input)
+	_, err := conn.EnableProfile(ctx, &input)
 	return err
 }

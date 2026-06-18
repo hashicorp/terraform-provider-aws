@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fix to allow in-place updates when `engine` is changed from `redis` to `valkey` 
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -9,7 +9,6 @@ var (
 	DiffSuppressKeyOrAlias      = diffSuppressKeyOrAlias
 	FindAliasByName             = findAliasByName
 	FindDefaultKeyARNForService = findDefaultKeyARNForService
-	FindKeyByID                 = findKeyByID
 	ValidateKey                 = validateKey
 	ValidateKeyOrAlias          = validateKeyOrAlias
 )

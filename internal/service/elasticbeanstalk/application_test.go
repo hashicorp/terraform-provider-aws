@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk_test
@@ -9,37 +9,37 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticBeanstalkApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct0),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -54,22 +54,30 @@ func TestAccElasticBeanstalkApplication_basic(t *testing.T) {
 func TestAccElasticBeanstalkApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticbeanstalk.ResourceApplication(), resourceName),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -78,20 +86,20 @@ func TestAccElasticBeanstalkApplication_disappears(t *testing.T) {
 func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -103,8 +111,8 @@ func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -112,8 +120,8 @@ func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -124,24 +132,24 @@ func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 func TestAccElasticBeanstalkApplication_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct0),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -152,12 +160,12 @@ func TestAccElasticBeanstalkApplication_description(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct0),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "application/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -167,23 +175,23 @@ func TestAccElasticBeanstalkApplication_description(t *testing.T) {
 func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_maxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct1),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtTrue),
 				),
 			},
@@ -195,29 +203,29 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_maxCount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct1),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "10"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct0),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "0"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_maxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.Ct1),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtTrue),
 				),
 			},
@@ -225,9 +233,9 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElasticBeanstalkClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_application" {
@@ -236,7 +244,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -251,18 +259,14 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.ApplicationDescription) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, v *awstypes.ApplicationDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Elastic Beanstalk Application ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElasticBeanstalkClient(ctx)
 
 		output, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)
 

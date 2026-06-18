@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package athena
 
@@ -15,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,34 +45,36 @@ func resourcePreparedStatement() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_@:]{1,256}$`), ""),
-			},
-			"query_statement": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 262144),
-			},
-			"workgroup": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._-]{1,128}$`), ""),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_@:]{1,256}$`), ""),
+				},
+				"query_statement": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 262144),
+				},
+				"workgroup": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._-]{1,128}$`), ""),
+				},
+			}
 		},
 	}
 }
 
-func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -97,7 +101,7 @@ func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
 }
 
-func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -108,7 +112,7 @@ func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, 
 
 	preparedStatement, err := findPreparedStatementByTwoPartKey(ctx, conn, workGroupName, statementName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Athena Prepared Statement (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,7 +130,7 @@ func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -157,7 +161,7 @@ func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
 }
 
-func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -167,10 +171,11 @@ func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Deleting Athena Prepared Statement: %s", d.Id())
-	_, err = conn.DeletePreparedStatement(ctx, &athena.DeletePreparedStatementInput{
+	input := athena.DeletePreparedStatementInput{
 		StatementName: aws.String(statementName),
 		WorkGroup:     aws.String(workGroupName),
-	})
+	}
+	_, err = conn.DeletePreparedStatement(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -193,8 +198,7 @@ func findPreparedStatementByTwoPartKey(ctx context.Context, conn *athena.Client,
 
 	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "WorkGroup is not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -203,7 +207,7 @@ func findPreparedStatementByTwoPartKey(ctx context.Context, conn *athena.Client,
 	}
 
 	if output == nil || output.PreparedStatement == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PreparedStatement, nil

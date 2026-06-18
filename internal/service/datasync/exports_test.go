@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
 
 // Exports for use in tests only.
 var (
+	ResourceAgent                        = resourceAgent
 	ResourceLocationAzureBlob            = resourceLocationAzureBlob
 	ResourceLocationEFS                  = resourceLocationEFS
 	ResourceLocationFSxLustreFileSystem  = resourceLocationFSxLustreFileSystem
@@ -18,6 +19,7 @@ var (
 	ResourceLocationSMB                  = resourceLocationSMB
 	ResourceTask                         = resourceTask
 
+	FindAgentByARN                 = findAgentByARN
 	FindLocationAzureBlobByARN     = findLocationAzureBlobByARN
 	FindLocationEFSByARN           = findLocationEFSByARN
 	FindLocationFSxLustreByARN     = findLocationFSxLustreByARN

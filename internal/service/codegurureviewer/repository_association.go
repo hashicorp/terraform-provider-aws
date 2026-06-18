@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codegurureviewer
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,7 +30,11 @@ import (
 )
 
 // @SDKResource("aws_codegurureviewer_repository_association", name="Repository Association")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
+// @Testing(importIgnore="repository", plannableImportAction="Replace")
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
@@ -42,229 +48,229 @@ func resourceRepositoryAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kms_key_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Show difference for new resources
-					if d.Id() == "" {
-						return false
-					}
-					// Show difference if existing state reflects different default type
-					_, defaultEncryptionOption := d.GetChange("kms_key_details.0.encryption_option")
-					if defaultEncryptionOption := types.EncryptionOption(defaultEncryptionOption.(string)); defaultEncryptionOption != types.EncryptionOptionAoCmk {
-						return defaultEncryptionOption == types.EncryptionOptionAoCmk
-					}
-					return true
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_option": {
-							Type:             schema.TypeString,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 2048),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z-]+`), ""),
-							),
-						},
+				names.AttrAssociationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kms_key_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Show difference for new resources
+						if d.Id() == "" {
+							return false
+						}
+						// Show difference if existing state reflects different default type
+						_, defaultEncryptionOption := d.GetChange("kms_key_details.0.encryption_option")
+						if defaultEncryptionOption := types.EncryptionOption(defaultEncryptionOption.(string)); defaultEncryptionOption != types.EncryptionOptionAoCmk {
+							return defaultEncryptionOption == types.EncryptionOptionAoCmk
+						}
+						return true
 					},
-				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provider_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bitbucket": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-									names.AttrOwner: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-								},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_option": {
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 							},
-						},
-						"codecommit": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-								},
-							},
-						},
-						"github_enterprise_server": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-									names.AttrOwner: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-								},
-							},
-						},
-						names.AttrS3Bucket: {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 63),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-								},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 2048),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z-]+`), ""),
+								),
 							},
 						},
 					},
 				},
-			},
-			"s3_repository_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"code_artifacts": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"build_artifacts_object_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"provider_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bitbucket": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"connection_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+											),
+										},
+										names.AttrOwner: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+											),
+										},
 									},
-									"source_code_artifacts_object_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+								},
+							},
+							"codecommit": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+											),
+										},
+									},
+								},
+							},
+							"github_enterprise_server": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"connection_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+											),
+										},
+										names.AttrOwner: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+											),
+										},
+									},
+								},
+							},
+							names.AttrS3Bucket: {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 63),
+												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+											),
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"s3_repository_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"code_artifacts": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"build_artifacts_object_key": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"source_code_artifacts_object_key": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
@@ -272,10 +278,10 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 		Tags: getTagsIn(ctx),
 	}
 
-	input.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]interface{}))
+	input.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]any))
 
 	if v, ok := d.GetOk("repository"); ok {
-		input.Repository = expandRepository(v.([]interface{}))
+		input.Repository = expandRepository(v.([]any))
 	}
 
 	output, err := conn.AssociateRepository(ctx, input)
@@ -293,13 +299,13 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
-	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
+	out, err := findRepositoryAssociationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeGuru Reviewer Repository Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -327,7 +333,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -335,14 +341,15 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeGuru Repository Association %s", d.Id())
-	_, err := conn.DisassociateRepository(ctx, &codegurureviewer.DisassociateRepositoryInput{
+	input := codegurureviewer.DisassociateRepositoryInput{
 		AssociationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateRepository(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -359,17 +366,16 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.Client, id string) (*types.RepositoryAssociation, error) {
+func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.Client, arn string) (*types.RepositoryAssociation, error) {
 	input := &codegurureviewer.DescribeRepositoryAssociationInput{
-		AssociationArn: aws.String(id),
+		AssociationArn: aws.String(arn),
 	}
 
 	output, err := conn.DescribeRepositoryAssociation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -378,17 +384,17 @@ func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.C
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil
 }
 
-func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRepositoryAssociationByID(ctx, conn, id)
+func statusRepositoryAssociation(conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -404,7 +410,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RepositoryAssociationStateAssociating),
 		Target:                    enum.Slice(types.RepositoryAssociationStateAssociated),
-		Refresh:                   statusRepositoryAssociation(ctx, conn, id),
+		Refresh:                   statusRepositoryAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -413,7 +419,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -425,14 +431,14 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RepositoryAssociationStateDisassociating, types.RepositoryAssociationStateAssociated),
 		Target:  []string{},
-		Refresh: statusRepositoryAssociation(ctx, conn, id),
+		Refresh: statusRepositoryAssociation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -440,12 +446,12 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	return nil, err
 }
 
-func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []interface{} {
+func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []any {
 	if kmsKeyDetails == nil {
 		return nil
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"encryption_option": kmsKeyDetails.EncryptionOption,
 	}
 
@@ -453,15 +459,15 @@ func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []interface{} {
 		values[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) []interface{} {
+func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) []any {
 	if s3RepositoryDetails == nil {
 		return nil
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if v := s3RepositoryDetails.BucketName; v != nil {
 		values[names.AttrBucketName] = aws.ToString(v)
@@ -471,15 +477,15 @@ func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) 
 		values["code_artifacts"] = flattenCodeArtifacts(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]interface{} {
+func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.BuildArtifactsObjectKey; v != nil {
 		m["build_artifacts_object_key"] = aws.ToString(v)
@@ -492,12 +498,12 @@ func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]interface{}
 	return m
 }
 
-func expandKMSKeyDetails(kmsKeyDetails []interface{}) *types.KMSKeyDetails {
+func expandKMSKeyDetails(kmsKeyDetails []any) *types.KMSKeyDetails {
 	if len(kmsKeyDetails) == 0 || kmsKeyDetails[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := kmsKeyDetails[0].(map[string]interface{})
+	tfMap, ok := kmsKeyDetails[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -515,12 +521,12 @@ func expandKMSKeyDetails(kmsKeyDetails []interface{}) *types.KMSKeyDetails {
 	return result
 }
 
-func expandCodeCommitRepository(repository []interface{}) *types.CodeCommitRepository {
+func expandCodeCommitRepository(repository []any) *types.CodeCommitRepository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -534,12 +540,12 @@ func expandCodeCommitRepository(repository []interface{}) *types.CodeCommitRepos
 	return result
 }
 
-func expandRepository(repository []interface{}) *types.Repository {
+func expandRepository(repository []any) *types.Repository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -547,27 +553,27 @@ func expandRepository(repository []interface{}) *types.Repository {
 	result := &types.Repository{}
 
 	if v, ok := tfMap["bitbucket"]; ok {
-		result.Bitbucket = expandThirdPartySourceRepository(v.([]interface{}))
+		result.Bitbucket = expandThirdPartySourceRepository(v.([]any))
 	}
 	if v, ok := tfMap["codecommit"]; ok {
-		result.CodeCommit = expandCodeCommitRepository(v.([]interface{}))
+		result.CodeCommit = expandCodeCommitRepository(v.([]any))
 	}
 	if v, ok := tfMap["github_enterprise_server"]; ok {
-		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]interface{}))
+		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]any))
 	}
 	if v, ok := tfMap[names.AttrS3Bucket]; ok {
-		result.S3Bucket = expandS3Repository(v.([]interface{}))
+		result.S3Bucket = expandS3Repository(v.([]any))
 	}
 
 	return result
 }
 
-func expandS3Repository(repository []interface{}) *types.S3Repository {
+func expandS3Repository(repository []any) *types.S3Repository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -585,12 +591,12 @@ func expandS3Repository(repository []interface{}) *types.S3Repository {
 	return result
 }
 
-func expandThirdPartySourceRepository(repository []interface{}) *types.ThirdPartySourceRepository {
+func expandThirdPartySourceRepository(repository []any) *types.ThirdPartySourceRepository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}

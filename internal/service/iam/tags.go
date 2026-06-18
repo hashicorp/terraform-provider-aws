@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build !generate
-// +build !generate
 
 package iam
 
@@ -43,7 +42,7 @@ func instanceProfileUpdateTags(ctx context.Context, conn *iam.Client, identifier
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                Tags(updatedTags),
+			Tags:                svcTags(updatedTags),
 		}
 
 		_, err := conn.TagInstanceProfile(ctx, input)
@@ -61,7 +60,7 @@ func instanceProfileCreateTags(ctx context.Context, conn *iam.Client, identifier
 		return nil
 	}
 
-	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return instanceProfileUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func instanceProfileKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -70,7 +69,7 @@ func instanceProfileKeyValueTags(ctx context.Context, conn *iam.Client, identifi
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
@@ -95,7 +94,7 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn *iam.Client, iden
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     Tags(updatedTags),
+			Tags:                     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagOpenIDConnectProvider(ctx, input)
@@ -113,7 +112,7 @@ func openIDConnectProviderCreateTags(ctx context.Context, conn *iam.Client, iden
 		return nil
 	}
 
-	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -122,7 +121,7 @@ func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.Client, id
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // policyUpdateTags updates IAM Policy tags.
@@ -147,7 +146,7 @@ func policyUpdateTags(ctx context.Context, conn *iam.Client, identifier string, 
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      Tags(updatedTags),
+			Tags:      svcTags(updatedTags),
 		}
 
 		_, err := conn.TagPolicy(ctx, input)
@@ -165,7 +164,7 @@ func policyCreateTags(ctx context.Context, conn *iam.Client, identifier string, 
 		return nil
 	}
 
-	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return policyUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func policyKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -174,7 +173,7 @@ func policyKeyValueTags(ctx context.Context, conn *iam.Client, identifier string
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // roleUpdateTags updates IAM role tags.
@@ -199,7 +198,7 @@ func roleUpdateTags(ctx context.Context, conn *iam.Client, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagRole(ctx, input)
@@ -217,7 +216,7 @@ func roleCreateTags(ctx context.Context, conn *iam.Client, identifier string, ta
 		return nil
 	}
 
-	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return roleUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func roleKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -226,7 +225,7 @@ func roleKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) 
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // samlProviderUpdateTags updates IAM SAML Provider tags.
@@ -251,7 +250,7 @@ func samlProviderUpdateTags(ctx context.Context, conn *iam.Client, identifier st
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            Tags(updatedTags),
+			Tags:            svcTags(updatedTags),
 		}
 
 		_, err := conn.TagSAMLProvider(ctx, input)
@@ -269,7 +268,16 @@ func samlProviderCreateTags(ctx context.Context, conn *iam.Client, identifier st
 		return nil
 	}
 
-	return samlProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return samlProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
+
+func samlProviderKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := samlProviderTags(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return keyValueTags(ctx, tags), nil
 }
 
 // serverCertificateUpdateTags updates IAM Server Certificate tags.
@@ -294,7 +302,7 @@ func serverCertificateUpdateTags(ctx context.Context, conn *iam.Client, identifi
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  Tags(updatedTags),
+			Tags:                  svcTags(updatedTags),
 		}
 
 		_, err := conn.TagServerCertificate(ctx, input)
@@ -312,7 +320,7 @@ func serverCertificateCreateTags(ctx context.Context, conn *iam.Client, identifi
 		return nil
 	}
 
-	return serverCertificateUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return serverCertificateUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func serverCertificateKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -321,7 +329,7 @@ func serverCertificateKeyValueTags(ctx context.Context, conn *iam.Client, identi
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // userUpdateTags updates IAM user tags.
@@ -346,7 +354,7 @@ func userUpdateTags(ctx context.Context, conn *iam.Client, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagUser(ctx, input)
@@ -364,7 +372,7 @@ func userCreateTags(ctx context.Context, conn *iam.Client, identifier string, ta
 		return nil
 	}
 
-	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return userUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 func userKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -373,7 +381,7 @@ func userKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) 
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // virtualMFADeviceUpdateTags updates IAM Virtual MFA Device tags.
@@ -398,7 +406,7 @@ func virtualMFADeviceUpdateTags(ctx context.Context, conn *iam.Client, identifie
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
 		_, err := conn.TagMFADevice(ctx, input)
@@ -416,16 +424,16 @@ func virtualMFADeviceCreateTags(ctx context.Context, conn *iam.Client, identifie
 		return nil
 	}
 
-	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func virtualMFADeviceKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func virtualMFADevicekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := virtualMFADeviceTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // updateTags updates iam service tags.
@@ -442,7 +450,7 @@ func updateTags(ctx context.Context, conn *iam.Client, identifier, resourceType 
 	case "Role":
 		return roleUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	case "ServiceLinkedRole":
-		_, roleName, _, err := DecodeServiceLinkedRoleID(identifier)
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(identifier)
 		if err != nil {
 			return err
 		}
@@ -480,9 +488,12 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Role":
 		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
+	case "SAMLProvider":
+		tags, err = samlProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+
 	case "ServiceLinkedRole":
 		var roleName string
-		_, roleName, _, err = DecodeServiceLinkedRoleID(identifier)
+		_, roleName, _, err = serviceLinkedRoleParseResourceID(identifier)
 		if err != nil {
 			return err
 		}
@@ -495,7 +506,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "VirtualMFADevice":
-		tags, err = virtualMFADeviceKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = virtualMFADevicekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	default:
 		return nil

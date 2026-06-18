@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,38 +9,37 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", acctest.Ct0),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "path_found", acctest.CtTrue),
 					acctest.CheckResourceAttrRFC3339(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "succeeded"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtTrue),
 				),
 			},
@@ -57,21 +56,29 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 func TestAccVPCNetworkInsightsAnalysis_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -80,19 +87,19 @@ func TestAccVPCNetworkInsightsAnalysis_disappears(t *testing.T) {
 func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -105,8 +112,8 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -114,8 +121,8 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -126,19 +133,19 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
 				),
 			},
 			{
@@ -150,8 +157,8 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
 				),
 			},
 		},
@@ -161,18 +168,18 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
@@ -180,7 +187,7 @@ func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
+					testAccCheckNetworkInsightsAnalysisExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtTrue),
 				),
 			},
@@ -188,18 +195,14 @@ func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Network Insights Analysis ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
@@ -207,9 +210,9 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 	}
 }
 
-func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_analysis" {
@@ -218,7 +221,7 @@ func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.Te
 
 			_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -298,7 +301,7 @@ data "aws_partition" "current" {}
 
 resource "aws_ec2_network_insights_analysis" "test" {
   network_insights_path_id = aws_ec2_network_insights_path.test.id
-  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:%[2]s"]
+  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.id}:%[2]s"]
 
   tags = {
     Name = %[1]q

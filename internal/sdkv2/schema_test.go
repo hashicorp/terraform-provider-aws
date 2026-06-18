@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestDataSourceElemFromResourceElem(t *testing.T) {
+func TestComputedOnlyFromResource(t *testing.T) {
 	t.Parallel()
 
 	input := &schema.Resource{
@@ -67,7 +67,7 @@ func TestDataSourceElemFromResourceElem(t *testing.T) {
 		},
 	}
 
-	got := DataSourceElemFromResourceElem(input)
+	got := ComputedOnlyFromResource(input)
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("unexpected diff (+want, -got): %s", diff)

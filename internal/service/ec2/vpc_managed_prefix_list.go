@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -8,26 +10,26 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceManagedPrefixList() *schema.Resource {
+func resourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListCreate,
 		ReadWithoutTimeout:   resourceManagedPrefixListRead,
@@ -39,107 +41,108 @@ func ResourceManagedPrefixList() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("entry")
 			}),
-			verify.SetTagsDiff,
 		),
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"entry": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"entry": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cidr": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsCIDR,
+							},
+							names.AttrDescription: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
 						},
 					},
 				},
-			},
-			"max_entries": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"max_entries": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateManagedPrefixListInput{
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
-		ClientToken:       aws.String(id.UniqueId()),
-		MaxEntries:        aws.Int64(int64(d.Get("max_entries").(int))),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
+		MaxEntries:        aws.Int32(int32(d.Get("max_entries").(int))),
 		PrefixListName:    aws.String(name),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePrefixList),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),
 	}
 
 	if v, ok := d.GetOk("entry"); ok && v.(*schema.Set).Len() > 0 {
 		input.Entries = expandAddPrefixListEntries(v.(*schema.Set).List())
 	}
 
-	output, err := conn.CreateManagedPrefixListWithContext(ctx, input)
+	output, err := conn.CreateManagedPrefixList(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Managed Prefix List (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.PrefixList.PrefixListId))
+	d.SetId(aws.ToString(output.PrefixList.PrefixListId))
 
-	if _, err := WaitManagedPrefixListCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitManagedPrefixListCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	pl, err := FindManagedPrefixListByID(ctx, conn, d.Id())
+	pl, err := findManagedPrefixListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -149,7 +152,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s): %s", d.Id(), err)
 	}
 
-	prefixListEntries, err := FindManagedPrefixListEntriesByID(ctx, conn, d.Id())
+	prefixListEntries, err := findManagedPrefixListEntriesByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
@@ -170,20 +173,20 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// MaxEntries & Entry cannot change in the same API call.
 	//   If MaxEntry is increasing, complete before updating entry(s)
 	//   If MaxEntry is decreasing, complete after updating entry(s)
 	maxEntryChangedDecrease := false
-	var newMaxEntryInt int64
+	var newMaxEntryInt int32
 
 	if d.HasChange("max_entries") {
 		oldMaxEntry, newMaxEntry := d.GetChange("max_entries")
-		newMaxEntryInt = int64(d.Get("max_entries").(int))
+		newMaxEntryInt = int32(d.Get("max_entries").(int))
 
 		if newMaxEntry.(int) < oldMaxEntry.(int) {
 			maxEntryChangedDecrease = true
@@ -228,14 +231,14 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		// one with a collection of all description-only removals and the
 		// second one will add them all back.
 		if len(input.AddEntries) > 0 && len(input.RemoveEntries) > 0 {
-			descriptionOnlyRemovals := []*ec2.RemovePrefixListEntry{}
-			removals := []*ec2.RemovePrefixListEntry{}
+			descriptionOnlyRemovals := []awstypes.RemovePrefixListEntry{}
+			removals := []awstypes.RemovePrefixListEntry{}
 
 			for _, removeEntry := range input.RemoveEntries {
 				inAddAndRemove := false
 
 				for _, addEntry := range input.AddEntries {
-					if aws.StringValue(addEntry.Cidr) == aws.StringValue(removeEntry.Cidr) {
+					if aws.ToString(addEntry.Cidr) == aws.ToString(removeEntry.Cidr) {
 						inAddAndRemove = true
 						break
 					}
@@ -249,17 +252,18 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				_, err := conn.ModifyManagedPrefixListWithContext(ctx, &ec2.ModifyManagedPrefixListInput{
+				removeInput := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
-				})
+				}
+				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 				}
 
-				managedPrefixList, err := WaitManagedPrefixListModified(ctx, conn, d.Id())
+				managedPrefixList, err := waitManagedPrefixListModified(ctx, conn, d.Id())
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
@@ -277,14 +281,14 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 		}
 
-		_, err := conn.ModifyManagedPrefixListWithContext(ctx, input)
+		_, err := conn.ModifyManagedPrefixList(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 		}
 
 		if wait {
-			if _, err := WaitManagedPrefixListModified(ctx, conn, d.Id()); err != nil {
+			if _, err := waitManagedPrefixListModified(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -301,15 +305,16 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Managed Prefix List: %s", d.Id())
-	_, err := conn.DeleteManagedPrefixListWithContext(ctx, &ec2.DeleteManagedPrefixListInput{
+	input := ec2.DeleteManagedPrefixListInput{
 		PrefixListId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteManagedPrefixList(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
 		return diags
@@ -319,38 +324,35 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Managed Prefix List (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitManagedPrefixListDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitManagedPrefixListDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func updateMaxEntry(ctx context.Context, conn *ec2.EC2, id string, maxEntries int64) error {
-	_, err := conn.ModifyManagedPrefixListWithContext(ctx, &ec2.ModifyManagedPrefixListInput{
+func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries int32) error {
+	input := ec2.ModifyManagedPrefixListInput{
 		PrefixListId: aws.String(id),
-		MaxEntries:   aws.Int64(maxEntries),
-	})
+		MaxEntries:   aws.Int32(maxEntries),
+	}
+	_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %w", id, err)
 	}
 
-	_, err = WaitManagedPrefixListModified(ctx, conn, id)
+	_, err = waitManagedPrefixListModified(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %w", id, err)
 	}
 
 	return nil
 }
 
-func expandAddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixListEntry {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &ec2.AddPrefixListEntry{}
+func expandAddPrefixListEntry(tfMap map[string]any) awstypes.AddPrefixListEntry {
+	apiObject := awstypes.AddPrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
@@ -363,38 +365,28 @@ func expandAddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixListEn
 	return apiObject
 }
 
-func expandAddPrefixListEntries(tfList []interface{}) []*ec2.AddPrefixListEntry {
+func expandAddPrefixListEntries(tfList []any) []awstypes.AddPrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2.AddPrefixListEntry
+	var apiObjects []awstypes.AddPrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandAddPrefixListEntry(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandAddPrefixListEntry(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandRemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePrefixListEntry {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &ec2.RemovePrefixListEntry{}
+func expandRemovePrefixListEntry(tfMap map[string]any) awstypes.RemovePrefixListEntry {
+	apiObject := awstypes.RemovePrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
@@ -403,62 +395,48 @@ func expandRemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePrefix
 	return apiObject
 }
 
-func expandRemovePrefixListEntries(tfList []interface{}) []*ec2.RemovePrefixListEntry {
+func expandRemovePrefixListEntries(tfList []any) []awstypes.RemovePrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2.RemovePrefixListEntry
+	var apiObjects []awstypes.RemovePrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandRemovePrefixListEntry(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandRemovePrefixListEntry(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenPrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr"] = aws.StringValue(v)
+		tfMap["cidr"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenPrefixListEntries(apiObjects []*ec2.PrefixListEntry) []interface{} {
+func flattenPrefixListEntries(apiObjects []awstypes.PrefixListEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenPrefixListEntry(apiObject))
 	}
 

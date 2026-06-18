@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -8,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -24,38 +25,40 @@ func dataSourceDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataDocumentRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContent: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DocumentFormatJson,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
-			},
-			"document_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContent: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DocumentFormatJson,
+					ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
+				},
+				"document_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -75,25 +78,18 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Name))
-
+	documentType, name := output.DocumentType, aws.ToString(output.Name)
+	d.SetId(name)
 	if !strings.HasPrefix(name, "AWS-") {
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "ssm",
-			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  "document/" + name,
-		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	} else {
 		d.Set(names.AttrARN, name)
 	}
 	d.Set(names.AttrContent, output.Content)
 	d.Set("document_format", output.DocumentFormat)
-	d.Set("document_type", output.DocumentType)
+	d.Set("document_type", documentType)
 	d.Set("document_version", output.DocumentVersion)
-	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrName, name)
 
 	return diags
 }

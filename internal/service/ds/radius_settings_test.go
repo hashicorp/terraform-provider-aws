@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -9,14 +9,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,29 +27,29 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v directoryservice.RadiusSettings
+	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
+					testAccCheckRadiusSettingsExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
 					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
-					resource.TestCheckResourceAttr(resourceName, "radius_retries", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "radius_retries", "3"),
+					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", radiusServer),
 					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_secret"),
@@ -76,44 +75,52 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v directoryservice.RadiusSettings
+	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
+					testAccCheckRadiusSettingsExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceRadiusSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRadiusSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_radius_settings" {
 				continue
 			}
 
-			_, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
+			_, err := tfds.FindRadiusSettingsByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -121,27 +128,23 @@ func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("Directory Service Directory %s RADIUS settings still exists", rs.Primary.ID)
+			return fmt.Errorf("Directory Service Directory %s RADIUS Settings still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *directoryservice.RadiusSettings) resource.TestCheckFunc {
+func testAccCheckRadiusSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.RadiusSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Directory Service RADIUS Settings ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
-
-		output, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
+		output, err := tfds.FindRadiusSettingsByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

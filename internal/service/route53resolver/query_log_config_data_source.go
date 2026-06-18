@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -7,51 +9,54 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_query_log_config")
-func DataSourceQueryLogConfig() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_query_log_config", name="Query Log Config")
+func dataSourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueryLogConfigRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: namevaluesfilters.Schema(),
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resolver_query_log_config_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestinationARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: namevaluesfilters.Schema(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resolver_query_log_config_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"share_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -60,40 +65,37 @@ const (
 	DSNameQueryLogConfig = "Query Log Config Data Source"
 )
 
-func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	configID := d.Get("resolver_query_log_config_id").(string)
 
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53resolverFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53ResolverFilters()
 	}
 
-	var configs []*route53resolver.ResolverQueryLogConfig
+	var configs []awstypes.ResolverQueryLogConfig
 
-	err := conn.ListResolverQueryLogConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverQueryLogConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := route53resolver.NewListResolverQueryLogConfigsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Route53 resolver Query Logging Configurations: %s", err)
 		}
 
 		for _, v := range page.ResolverQueryLogConfigs {
 			if configID != "" {
-				if aws.StringValue(v.Id) == configID {
+				if aws.ToString(v.Id) == configID {
 					configs = append(configs, v)
 				}
 			} else {
 				configs = append(configs, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Route53 resolver Query Logging Configurations: %s", err)
 	}
 
 	if n := len(configs); n == 0 {
@@ -106,28 +108,27 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	config := configs[0]
 
-	d.SetId(aws.StringValue(config.Id))
-	arn := aws.StringValue(config.Arn)
+	d.SetId(aws.ToString(config.Id))
+	arn := aws.ToString(config.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDestinationARN, config.DestinationArn)
 	d.Set(names.AttrName, config.Name)
 	d.Set(names.AttrOwnerID, config.OwnerId)
 	d.Set("resolver_query_log_config_id", config.Id)
 
-	shareStatus := aws.StringValue(config.ShareStatus)
+	shareStatus := config.ShareStatus
 	d.Set("share_status", shareStatus)
 
-	if shareStatus != route53resolver.ShareStatusSharedWithMe {
+	if shareStatus != awstypes.ShareStatusSharedWithMe {
 		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
 		}
 
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		//lintignore:AWSR002
 		if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}

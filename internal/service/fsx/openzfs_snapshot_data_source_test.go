@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,14 +17,14 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_fsx_openzfs_snapshot.test"
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	mostRecentResourceName := "aws_fsx_openzfs_snapshot.latest"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSSnapshotDataSourceConfig_basic(rName),
@@ -81,6 +79,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_basic(rName string) string {
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -94,6 +96,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterFileSystemId(rName string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -110,6 +116,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterVolumeId(rName string) string 
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -126,12 +136,20 @@ func testAccOpenZFSSnapshotDataSourceConfig_mostRecent(rName, rName2 string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_fsx_openzfs_snapshot" "latest" {
   # Ensure that this snapshot is created after the other.
   name      = %[2]q
   volume_id = aws_fsx_openzfs_snapshot.test.volume_id
+
+  tags = {
+    Name = %[2]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {

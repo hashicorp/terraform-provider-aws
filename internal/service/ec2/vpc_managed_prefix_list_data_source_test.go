@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,27 +9,28 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name string, id *string, arn *string) resource.TestCheckFunc {
+func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, t *testing.T, name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		output, err := conn.DescribeManagedPrefixListsWithContext(ctx, &ec2.DescribeManagedPrefixListsInput{
-			Filters: []*ec2.Filter{
+		input := ec2.DescribeManagedPrefixListsInput{
+			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("prefix-list-name"),
-					Values: aws.StringSlice([]string{name}),
+					Values: []string{name},
 				},
 			},
-		})
+		}
+		output, err := conn.DescribeManagedPrefixLists(ctx, &input)
 
 		if err != nil {
 			return err
@@ -51,7 +52,7 @@ func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 	resourceById := "data.aws_ec2_managed_prefix_list.s3_by_id"
 	prefixListResourceName := "data.aws_prefix_list.s3_by_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,16 +60,16 @@ func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccManagedPrefixListGetIdByNameDataSource(ctx, prefixListName, &prefixListId, &prefixListArn),
+					testAccManagedPrefixListGetIdByNameDataSource(ctx, t, prefixListName, &prefixListId, &prefixListArn),
 
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrID, &prefixListId),
 					resource.TestCheckResourceAttr(resourceByName, names.AttrName, prefixListName),
 					resource.TestCheckResourceAttr(resourceByName, names.AttrOwnerID, "AWS"),
 					resource.TestCheckResourceAttr(resourceByName, "address_family", "IPv4"),
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrARN, &prefixListArn),
-					resource.TestCheckResourceAttr(resourceByName, "max_entries", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceByName, "max_entries", "0"),
+					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, "0"),
+					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, "0"),
 
 					resource.TestCheckResourceAttrPtr(resourceById, names.AttrID, &prefixListId),
 					resource.TestCheckResourceAttr(resourceById, names.AttrName, prefixListName),
@@ -86,7 +87,7 @@ const testAccVPCManagedPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
-  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 data "aws_ec2_managed_prefix_list" "s3_by_id" {
@@ -107,7 +108,7 @@ func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 	resourceByName := "data.aws_ec2_managed_prefix_list.s3_by_name"
 	resourceById := "data.aws_ec2_managed_prefix_list.s3_by_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -115,15 +116,15 @@ func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccManagedPrefixListGetIdByNameDataSource(ctx, prefixListName, &prefixListId, &prefixListArn),
+					testAccManagedPrefixListGetIdByNameDataSource(ctx, t, prefixListName, &prefixListId, &prefixListArn),
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrID, &prefixListId),
 					resource.TestCheckResourceAttr(resourceByName, names.AttrName, prefixListName),
 					resource.TestCheckResourceAttr(resourceByName, names.AttrOwnerID, "AWS"),
 					resource.TestCheckResourceAttr(resourceByName, "address_family", "IPv4"),
 					resource.TestCheckResourceAttrPtr(resourceByName, names.AttrARN, &prefixListArn),
-					resource.TestCheckResourceAttr(resourceByName, "max_entries", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceByName, "max_entries", "0"),
+					resource.TestCheckResourceAttr(resourceByName, names.AttrVersion, "0"),
+					resource.TestCheckResourceAttr(resourceByName, acctest.CtTagsPercent, "0"),
 
 					resource.TestCheckResourceAttrPair(resourceByName, names.AttrID, resourceById, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceByName, names.AttrName, resourceById, names.AttrName),
@@ -146,7 +147,7 @@ data "aws_region" "current" {}
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
+    values = ["com.amazonaws.${data.aws_region.current.region}.s3"]
   }
 }
 
@@ -160,7 +161,7 @@ data "aws_ec2_managed_prefix_list" "s3_by_id" {
 
 func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

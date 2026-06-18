@@ -1,16 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,60 +17,47 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ses_domain_identity")
-func DataSourceDomainIdentity() *schema.Resource {
+// @SDKDataSource("aws_ses_domain_identity", name="Domain Identity")
+func dataSourceDomainIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainIdentityRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-			},
-			"verification_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+				},
+				"verification_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	d.SetId(domainName)
-	d.Set(names.AttrDomain, domainName)
+	verificationAttrs, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(domainName),
-		},
-	}
-
-	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, readOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Error fetching identity verification attributes for %s: %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity (%s) verification: %s", domainName, err)
 	}
 
-	verificationAttrs, ok := response.VerificationAttributes[domainName]
-	if !ok {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Domain not listed in response when fetching verification attributes for %s", domainName)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("identity/%s", domainName),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.SetId(domainName)
+	d.Set(names.AttrARN, identityARN(ctx, c, domainName))
+	d.Set(names.AttrDomain, domainName)
 	d.Set("verification_token", verificationAttrs.VerificationToken)
+
 	return diags
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,11 +23,11 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 	}
 
 	var input medialive.DescribeInputOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_input.test"
 	dataSourceName := "data.aws_medialive_input.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -33,15 +35,15 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputDestroy(ctx),
+		CheckDestroy:             testAccCheckInputDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputExists(ctx, dataSourceName, &input),
+					testAccCheckInputExists(ctx, t, dataSourceName, &input),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_class", dataSourceName, "input_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_devices", dataSourceName, "input_devices"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_partner_ids", dataSourceName, "input_partner_ids"),
@@ -49,9 +51,11 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSecurityGroups, dataSourceName, names.AttrSecurityGroups),
 					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, "sources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
-					resource.TestCheckResourceAttrPair(resourceName, "tag_all", dataSourceName, names.AttrTags),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrTags), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
+				},
 			},
 		},
 	})

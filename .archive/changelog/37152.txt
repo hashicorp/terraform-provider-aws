@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_iot_authorizer: Add `tags` argument
+```
+
+```release-note:bug
+resource/aws_iot_provisioning_template: Fix `pre_provisioning_hook` update operation
+```

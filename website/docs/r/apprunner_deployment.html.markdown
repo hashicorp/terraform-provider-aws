@@ -20,8 +20,9 @@ resource "aws_apprunner_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_arn` - (Required) The Amazon Resource Name (ARN) of the App Runner service to start the deployment for.
 
 ## Attribute Reference
@@ -31,3 +32,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - A unique identifier for the deployment.
 * `operation_id` - The unique ID of the operation associated with deployment.
 * `status` - The current status of the App Runner service deployment.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)

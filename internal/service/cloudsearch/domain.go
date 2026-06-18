@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudsearch
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,143 +47,151 @@ func resourceDomain() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_options": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"tls_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.TLSSecurityPolicy](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_service_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_options": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforce_https": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"tls_security_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.TLSSecurityPolicy](),
+							},
 						},
 					},
 				},
-			},
-			// The index_field schema is based on the AWS Console screen, not the API model.
-			"index_field": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"analysis_scheme": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"facet": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"highlight": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateIndexName,
-						},
-						"return": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"search": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"sort": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"source_fields": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
-						},
-					},
-				},
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
-			},
-			"scaling_parameters": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_instance_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.PartitionInstanceType](),
-						},
-						"desired_partition_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"desired_replication_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+				// The index_field schema is based on the AWS Console screen, not the API model.
+				"index_field": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"analysis_scheme": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"facet": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"highlight": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateIndexName,
+							},
+							"return": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"search": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"sort": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"source_fields": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
+							},
 						},
 					},
 				},
-			},
-			"search_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				},
+				"scaling_parameters": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_instance_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.PartitionInstanceType](),
+							},
+							"desired_partition_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"desired_replication_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"search_service_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+var (
+	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
+	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
+	scoreRegex     = regexache.MustCompile(`score`)
+)
+
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
@@ -197,10 +207,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &cloudsearch.UpdateScalingParametersInput{
 			DomainName:        aws.String(d.Id()),
-			ScalingParameters: expandScalingParameters(v.([]interface{})[0].(map[string]interface{})),
+			ScalingParameters: expandScalingParameters(v.([]any)[0].(map[string]any)),
 		}
 
 		_, err := conn.UpdateScalingParameters(ctx, input)
@@ -223,9 +233,9 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
-			DomainEndpointOptions: expandDomainEndpointOptions(v.([]interface{})[0].(map[string]interface{})),
+			DomainEndpointOptions: expandDomainEndpointOptions(v.([]any)[0].(map[string]any)),
 			DomainName:            aws.String(d.Id()),
 		}
 
@@ -263,13 +273,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	domain, err := findDomainByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -307,7 +317,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
 	}
 
-	if err := d.Set("endpoint_options", []interface{}{flattenDomainEndpointOptions(endpointOptions)}); err != nil {
+	if err := d.Set("endpoint_options", []any{flattenDomainEndpointOptions(endpointOptions)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_options: %s", err)
 	}
 
@@ -317,13 +327,14 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("scaling_parameters", []interface{}{flattenScalingParameters(scalingParameters)}); err != nil {
+	if err := d.Set("scaling_parameters", []any{flattenScalingParameters(scalingParameters)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scaling_parameters: %s", err)
 	}
 
-	indexResults, err := conn.DescribeIndexFields(ctx, &cloudsearch.DescribeIndexFieldsInput{
+	input := cloudsearch.DescribeIndexFieldsInput{
 		DomainName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	indexResults, err := conn.DescribeIndexFields(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) index fields: %s", d.Id(), err)
@@ -338,7 +349,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
@@ -348,8 +359,8 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ScalingParameters = expandScalingParameters(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ScalingParameters = expandScalingParameters(v.([]any)[0].(map[string]any))
 		} else {
 			input.ScalingParameters = &types.ScalingParameters{}
 		}
@@ -387,8 +398,8 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any)[0].(map[string]any))
 		} else {
 			input.DomainEndpointOptions = &types.DomainEndpointOptions{}
 		}
@@ -409,7 +420,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
@@ -462,14 +473,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
-	_, err := conn.DeleteDomain(ctx, &cloudsearch.DeleteDomainInput{
+	input := cloudsearch.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s): %s", d.Id(), err)
@@ -482,12 +494,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func validateIndexName(v interface{}, k string) (ws []string, es []error) {
+func validateIndexName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{2,63}\*?)$`).MatchString(value) {
+	if !indexNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
+			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
 	}
 
 	if value == "score" {
@@ -497,11 +509,11 @@ func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func defineIndexFields(ctx context.Context, conn *cloudsearch.Client, domainName string, tfList []interface{}) error {
+func defineIndexFields(ctx context.Context, conn *cloudsearch.Client, domainName string, tfList []any) error {
 	// Define index fields with source fields after those without.
 	for _, defineWhenSourceFieldsConfigured := range []bool{false, true} {
 		for _, tfMapRaw := range tfList {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -553,7 +565,7 @@ func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.DomainStatusList)
@@ -568,8 +580,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -578,7 +589,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 	}
 
 	if output == nil || output.AvailabilityOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AvailabilityOptions, nil
@@ -592,7 +603,7 @@ func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Clie
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -607,8 +618,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -617,7 +627,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 	}
 
 	if output == nil || output.DomainEndpointOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainEndpointOptions, nil
@@ -631,7 +641,7 @@ func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, 
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -646,8 +656,7 @@ func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Cl
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -656,17 +665,17 @@ func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Cl
 	}
 
 	if output == nil || output.ScalingParameters == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ScalingParameters, nil
 }
 
-func statusDomainDeleting(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDomainDeleting(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -678,11 +687,11 @@ func statusDomainDeleting(ctx context.Context, conn *cloudsearch.Client, name st
 	}
 }
 
-func statusDomainProcessing(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -698,7 +707,7 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusDomainProcessing(ctx, conn, name),
+		Refresh: statusDomainProcessing(conn, name),
 		Timeout: timeout,
 	}
 
@@ -715,7 +724,7 @@ func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name strin
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{},
-		Refresh: statusDomainDeleting(ctx, conn, name),
+		Refresh: statusDomainDeleting(conn, name),
 		Timeout: timeout,
 	}
 
@@ -728,7 +737,7 @@ func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name strin
 	return nil, err
 }
 
-func expandDomainEndpointOptions(tfMap map[string]interface{}) *types.DomainEndpointOptions {
+func expandDomainEndpointOptions(tfMap map[string]any) *types.DomainEndpointOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -746,12 +755,12 @@ func expandDomainEndpointOptions(tfMap map[string]interface{}) *types.DomainEndp
 	return apiObject
 }
 
-func flattenDomainEndpointOptions(apiObject *types.DomainEndpointOptions) map[string]interface{} {
+func flattenDomainEndpointOptions(apiObject *types.DomainEndpointOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"tls_security_policy": apiObject.TLSSecurityPolicy,
 	}
 
@@ -762,7 +771,7 @@ func flattenDomainEndpointOptions(apiObject *types.DomainEndpointOptions) map[st
 	return tfMap
 }
 
-func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, error) {
+func expandIndexField(tfMap map[string]any) (*types.IndexField, bool, error) {
 	if tfMap == nil {
 		return nil, false, nil
 	}
@@ -1027,7 +1036,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 	return apiObject, sourceFieldsConfigured, nil
 }
 
-func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]interface{}, error) {
+func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]any, error) {
 	if apiObject.Options == nil || apiObject.Status == nil {
 		return nil, nil
 	}
@@ -1038,7 +1047,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 	}
 
 	field := apiObject.Options
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := field.IndexFieldName; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1414,12 +1423,12 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 	return tfMap, nil
 }
 
-func flattenIndexFieldStatuses(apiObjects []types.IndexFieldStatus) ([]interface{}, error) {
+func flattenIndexFieldStatuses(apiObjects []types.IndexFieldStatus) ([]any, error) {
 	if len(apiObjects) == 0 {
 		return nil, nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfMap, err := flattenIndexFieldStatus(apiObject)
@@ -1434,7 +1443,7 @@ func flattenIndexFieldStatuses(apiObjects []types.IndexFieldStatus) ([]interface
 	return tfList, nil
 }
 
-func expandScalingParameters(tfMap map[string]interface{}) *types.ScalingParameters {
+func expandScalingParameters(tfMap map[string]any) *types.ScalingParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1456,12 +1465,12 @@ func expandScalingParameters(tfMap map[string]interface{}) *types.ScalingParamet
 	return apiObject
 }
 
-func flattenScalingParameters(apiObject *types.ScalingParameters) map[string]interface{} {
+func flattenScalingParameters(apiObject *types.ScalingParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"desired_instance_type":     apiObject.DesiredInstanceType,
 		"desired_partition_count":   apiObject.DesiredPartitionCount,
 		"desired_replication_count": apiObject.DesiredReplicationCount,

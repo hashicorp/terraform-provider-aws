@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -12,5 +12,33 @@ func jobDefinitionStatus_Values() []string {
 	return []string{
 		jobDefinitionStatusInactive,
 		jobDefinitionStatusActive,
+	}
+}
+
+const (
+	imagePullPolicyAlways       = "Always"
+	imagePullPolicyIfNotPresent = "IfNotPresent"
+	imagePullPolicyNever        = "Never"
+)
+
+func imagePullPolicy_Values() []string {
+	return []string{
+		imagePullPolicyAlways,
+		imagePullPolicyIfNotPresent,
+		imagePullPolicyNever,
+	}
+}
+
+const (
+	dnsPolicyDefault                 = "Default"
+	dnsPolicyClusterFirst            = "ClusterFirst"
+	dnsPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
+)
+
+func dnsPolicy_Values() []string {
+	return []string{
+		dnsPolicyDefault,
+		dnsPolicyClusterFirst,
+		dnsPolicyClusterFirstWithHostNet,
 	}
 }

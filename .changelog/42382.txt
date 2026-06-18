@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_timestreaminfluxdb_db_cluster
+```
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_instance: Fix tag-only update errors
+```

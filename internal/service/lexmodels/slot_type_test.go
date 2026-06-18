@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,32 +24,32 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, acctest.Ct1),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					testAccCheckSlotTypeNotExists(ctx, t, testSlotTypeID, "1"),
 					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "lilies",
 					}),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Lirium"),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Martagon"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyOriginalValue)),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
@@ -70,22 +70,22 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, acctest.Ct1),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					testAccCheckSlotTypeNotExists(ctx, t, testSlotTypeID, "1"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 				),
 			},
@@ -98,9 +98,9 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 			{
 				Config: testAccSlotTypeConfig_withVersion(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeExistsWithVersion(ctx, rName, acctest.Ct1, &v),
-					resource.TestCheckResourceAttr(rName, names.AttrVersion, acctest.Ct1),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					testAccCheckSlotTypeExistsWithVersion(ctx, t, rName, "1", &v),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -117,21 +117,21 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 			{
 				Config: testAccSlotTypeUpdateConfig_description(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Types of flowers to pick up"),
 				),
 			},
@@ -162,22 +162,22 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.Ct1),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
 				),
 			},
 			{
@@ -189,8 +189,8 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 			{
 				Config: testAccSlotTypeConfig_enumerationValues(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.Ct2),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "tulips",
 					}),
@@ -212,22 +212,22 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID1 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testSlotTypeID2 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID1 := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testSlotTypeID2 := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID1),
 				),
 			},
@@ -240,7 +240,7 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID2),
 				),
 			},
@@ -258,22 +258,22 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyOriginalValue)),
 				),
 			},
 			{
@@ -285,8 +285,8 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 			{
 				Config: testAccSlotTypeConfig_valueSelectionStrategy(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyTopResolution),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyTopResolution)),
 				),
 			},
 			{
@@ -303,24 +303,32 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlotTypeExists(ctx, rName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceSlotType(), rName),
+					testAccCheckSlotTypeExists(ctx, t, rName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -333,16 +341,16 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 
 	slotTypeResourceName := "aws_lex_slot_type.test"
 	intentResourceName := "aws_lex_intent.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -350,11 +358,11 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 					testAccIntentConfig_slotsWithVersion(testSlotTypeID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, acctest.Ct1, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, acctest.Ct1),
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, acctest.Ct1, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.Ct1),
-					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", acctest.Ct1),
+					testAccCheckSlotTypeExistsWithVersion(ctx, t, slotTypeResourceName, "1", &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, "1"),
+					testAccCheckIntentExistsWithVersion(ctx, t, intentResourceName, "1", &v2),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", "1"),
 				),
 			},
 			{
@@ -363,24 +371,24 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 					testAccIntentConfig_slotsWithVersion(testSlotTypeID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, acctest.Ct2, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, acctest.Ct2),
-					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", acctest.Ct2),
+					testAccCheckSlotTypeExistsWithVersion(ctx, t, slotTypeResourceName, "2", &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, "2"),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(slotTypeResourceName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "tulips",
 					}),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, acctest.Ct2, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.Ct2),
-					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", acctest.Ct2),
+					testAccCheckIntentExistsWithVersion(ctx, t, intentResourceName, "2", &v2),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, "2"),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, rName, slotTypeVersion string, v *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
+func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, t *testing.T, rName, slotTypeVersion string, v *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
@@ -391,7 +399,7 @@ func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, rName, slotTypeV
 			return fmt.Errorf("No Lex Slot Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		output, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, rs.Primary.ID, slotTypeVersion)
 
@@ -405,17 +413,17 @@ func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, rName, slotTypeV
 	}
 }
 
-func testAccCheckSlotTypeExists(ctx context.Context, rName string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
-	return testAccCheckSlotTypeExistsWithVersion(ctx, rName, tflexmodels.SlotTypeVersionLatest, output)
+func testAccCheckSlotTypeExists(ctx context.Context, t *testing.T, rName string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
+	return testAccCheckSlotTypeExistsWithVersion(ctx, t, rName, tflexmodels.SlotTypeVersionLatest, output)
 }
 
-func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
+func testAccCheckSlotTypeNotExists(ctx context.Context, t *testing.T, slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		_, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, slotTypeName, slotTypeVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -427,16 +435,16 @@ func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVe
 	}
 }
 
-func testAccCheckSlotTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSlotTypeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_slot_type" {
 				continue
 			}
 
-			output, err := conn.GetSlotTypeVersionsWithContext(ctx, &lexmodelbuildingservice.GetSlotTypeVersionsInput{
+			output, err := conn.GetSlotTypeVersions(ctx, &lexmodelbuildingservice.GetSlotTypeVersionsInput{
 				Name: aws.String(rs.Primary.ID),
 			})
 

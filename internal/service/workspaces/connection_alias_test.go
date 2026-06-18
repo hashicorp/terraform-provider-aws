@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -13,12 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,10 +24,10 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -37,12 +35,12 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
+					testAccCheckConnectionAliasExists(ctx, t, resourceName, &connectionalias),
 					resource.TestCheckResourceAttr(resourceName, "connection_string", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -61,10 +59,10 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -72,15 +70,23 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceConnectionAlias, resourceName),
+					testAccCheckConnectionAliasExists(ctx, t, resourceName, &connectionalias),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspaces.ResourceConnectionAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -90,10 +96,10 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -101,13 +107,13 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckConnectionAliasExists(ctx, t, resourceName, &connectionalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -119,8 +125,8 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 			{
 				Config: testAccConnectionAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckConnectionAliasExists(ctx, t, resourceName, &connectionalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -128,8 +134,8 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 			{
 				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckConnectionAliasExists(ctx, t, resourceName, &connectionalias),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -137,9 +143,9 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspaces_connection_alias" {
@@ -148,7 +154,7 @@ func testAccCheckConnectionAliasDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfworkspaces.FindConnectionAliasByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -156,39 +162,36 @@ func testAccCheckConnectionAliasDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingDestroyed, tfworkspaces.ResNameConnectionAlias, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("WorkSpaces Connection Alias %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConnectionAliasExists(ctx context.Context, name string, connectionalias *awstypes.ConnectionAlias) resource.TestCheckFunc {
+func testAccCheckConnectionAliasExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConnectionAlias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
-		out, err := tfworkspaces.FindConnectionAliasByID(ctx, conn, rs.Primary.ID)
+		output, err := tfworkspaces.FindConnectionAliasByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNameConnectionAlias, rs.Primary.ID, err)
+			return err
 		}
 
-		*connectionalias = *out
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
 	input := &workspaces.DescribeConnectionAliasesInput{}
 	_, err := conn.DescribeConnectionAliases(ctx, input)

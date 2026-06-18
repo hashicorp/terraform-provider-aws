@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Properly send `domain_settings.r_studio_server_pro_domain_settings.r_studio_package_manager_url` argument on create
+```

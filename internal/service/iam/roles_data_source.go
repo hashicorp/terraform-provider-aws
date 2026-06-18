@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,31 +26,33 @@ func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRolesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			names.AttrNames: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"path_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"name_regex": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsValidRegExp,
+				},
+				names.AttrNames: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"path_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -68,7 +72,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, role := range page.Roles {
-			if reflect.ValueOf(role).IsZero() {
+			if p := &role; inttypes.IsZero(p) {
 				continue
 			}
 
@@ -80,7 +84,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	var arns, nms []string
 
@@ -89,13 +93,8 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		nms = append(nms, aws.ToString(r.RoleName))
 	}
 
-	if err := d.Set(names.AttrARNs, arns); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
-	}
-
-	if err := d.Set(names.AttrNames, nms); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
-	}
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

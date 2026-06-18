@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,6 +29,8 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -46,11 +47,11 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 
 func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -61,6 +62,8 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -77,11 +80,11 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 
 func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -92,6 +95,8 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -106,8 +111,8 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 	})
 }
 
-func testAccMountTargetBaseDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccMountTargetDataSourceConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
 
@@ -118,31 +123,13 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test.id
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
+  subnet_id      = aws_subnet.test[0].id
 }
 `, rName))
 }
 
 func testAccMountTargetDataSourceConfig_byID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 data "aws_efs_mount_target" "test" {
   mount_target_id = aws_efs_mount_target.test.id
 }
@@ -150,7 +137,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccMountTargetDataSourceConfig_byAccessPointID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
@@ -162,7 +149,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccMountTargetDataSourceConfig_byFileSystemID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 data "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
 

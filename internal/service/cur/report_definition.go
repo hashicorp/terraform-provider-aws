@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cur
 
@@ -11,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,12 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cur_report_definition", name="Report Definition")
+// @Tags(identifierAttribute="report_name")
 func resourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportDefinitionCreate,
@@ -39,83 +44,90 @@ func resourceReportDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"additional_artifacts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{Type: schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_artifacts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{Type: schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+					},
 				},
-			},
-			"additional_schema_elements": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				"additional_schema_elements": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compression": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compression": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ReportFormat](),
-			},
-			"refresh_closed_reports": {
-				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
-			},
-			"report_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
-				),
-			},
-			"report_versioning": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Default:          types.ReportVersioningCreateNewReport,
-				ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"s3_region": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AWSRegion](),
-			},
-			"time_unit": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.TimeUnit](),
-			},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ReportFormat](),
+				},
+				"refresh_closed_reports": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+				"report_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+					),
+				},
+				"report_versioning": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Default:          types.ReportVersioningCreateNewReport,
+					ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"s3_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
+					),
+				},
+				"s3_region": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"time_unit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.TimeUnit](),
+				},
+			}
 		},
 	}
 }
 
-func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURClient(ctx)
 
@@ -136,7 +148,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &cur.PutReportDefinitionInput{
+	input := cur.PutReportDefinitionInput{
 		ReportDefinition: &types.ReportDefinition{
 			AdditionalArtifacts:      additionalArtifacts,
 			AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -150,9 +162,10 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
 			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
-	_, err := conn.PutReportDefinition(ctx, input)
+	_, err := conn.PutReportDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
@@ -163,13 +176,14 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceReportDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.CURClient(ctx)
 
 	reportDefinition, err := findReportDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cost And Usage Report Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -183,14 +197,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(reportName)
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.CUR,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "definition/" + reportName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, c.RegionalARN(ctx, "cur", "definition/"+reportName))
 	d.Set("compression", reportDefinition.Compression)
 	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
@@ -204,60 +211,63 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURClient(ctx)
 
-	additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
-	compression := types.CompressionFormat(d.Get("compression").(string))
-	format := types.ReportFormat(d.Get(names.AttrFormat).(string))
-	prefix := d.Get("s3_prefix").(string)
-	reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
+		compression := types.CompressionFormat(d.Get("compression").(string))
+		format := types.ReportFormat(d.Get(names.AttrFormat).(string))
+		prefix := d.Get("s3_prefix").(string)
+		reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
 
-	if err := checkReportDefinitionPropertyCombination(
-		additionalArtifacts,
-		compression,
-		format,
-		prefix,
-		reportVersioning,
-	); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+		if err := checkReportDefinitionPropertyCombination(
+			additionalArtifacts,
+			compression,
+			format,
+			prefix,
+			reportVersioning,
+		); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 
-	input := &cur.ModifyReportDefinitionInput{
-		ReportDefinition: &types.ReportDefinition{
-			AdditionalArtifacts:      additionalArtifacts,
-			AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
-			Compression:              compression,
-			Format:                   format,
-			RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
-			ReportName:               aws.String(d.Id()),
-			ReportVersioning:         reportVersioning,
-			S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
-			S3Prefix:                 aws.String(prefix),
-			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
-			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),
-		},
-		ReportName: aws.String(d.Id()),
-	}
+		input := cur.ModifyReportDefinitionInput{
+			ReportDefinition: &types.ReportDefinition{
+				AdditionalArtifacts:      additionalArtifacts,
+				AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
+				Compression:              compression,
+				Format:                   format,
+				RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
+				ReportName:               aws.String(d.Id()),
+				ReportVersioning:         reportVersioning,
+				S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
+				S3Prefix:                 aws.String(prefix),
+				S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
+				TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),
+			},
+			ReportName: aws.String(d.Id()),
+		}
 
-	_, err := conn.ModifyReportDefinition(ctx, input)
+		_, err := conn.ModifyReportDefinition(ctx, &input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceReportDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
-	_, err := conn.DeleteReportDefinition(ctx, &cur.DeleteReportDefinitionInput{
+	input := cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReportDefinition(ctx, &input)
 
 	if errs.IsA[*types.ValidationException](err) {
 		return diags
@@ -336,9 +346,9 @@ func checkReportDefinitionPropertyCombination(additionalArtifacts []types.Additi
 }
 
 func findReportDefinitionByName(ctx context.Context, conn *cur.Client, name string) (*types.ReportDefinition, error) {
-	input := &cur.DescribeReportDefinitionsInput{}
+	var input cur.DescribeReportDefinitionsInput
 
-	return findReportDefinition(ctx, conn, input, func(v *types.ReportDefinition) bool {
+	return findReportDefinition(ctx, conn, &input, func(v *types.ReportDefinition) bool {
 		return aws.ToString(v.ReportName) == name
 	})
 }
@@ -372,4 +382,8 @@ func findReportDefinitions(ctx context.Context, conn *cur.Client, input *cur.Des
 	}
 
 	return output, nil
+}
+
+func awsRegion_Values() []string { // nosemgrep:ci.aws-in-func-name
+	return tfslices.AppendUnique(enum.Values[types.AWSRegion](), endpoints.ApSoutheast5RegionID, endpoints.EuscDeEast1RegionID)
 }

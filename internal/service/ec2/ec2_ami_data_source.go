@@ -1,26 +1,23 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"log"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,6 +26,7 @@ import (
 
 // @SDKDataSource("aws_ami", name="AMI")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIRead,
@@ -37,224 +35,238 @@ func dataSourceAMI() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"architecture": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"block_device_mappings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiBlockDeviceMappingHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_unsafe_filter": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"architecture": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"block_device_mappings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ebs": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"no_device": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"boot_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deprecation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ena_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"executable_users": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"hypervisor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"imds_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_deprecated": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"kernel_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
+				"boot_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deprecation_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ena_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"executable_users": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"hypervisor": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_owner_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"imds_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_deprecated": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"kernel_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_launched_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name_regex": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
+					Optional:     true,
+					ValidateFunc: validation.StringIsValidRegExp,
 				},
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_details": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiProductCodesHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_code_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_code_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owners": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.NoZeroValues,
+					},
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_details": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"product_codes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"product_code_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"product_code_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"public": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ramdisk_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_device_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_device_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_snapshot_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sriov_net_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_reason": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"tpm_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_operation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"virtualization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"public": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ramdisk_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_device_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_device_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_snapshot_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sriov_net_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_reason": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"tpm_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"uefi_data": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"usage_operation": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"virtualization_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	describeImagesInput := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		describeImagesInput.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]any))
 	}
 
-	images, err := findImages(ctx, conn, input)
+	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool), d.Get("allow_unsafe_filter").(bool))
 
+	images, err := findImages(ctx, conn, &describeImagesInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
@@ -284,29 +296,20 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(filteredImages) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
-				"specific search criteria, or set `most_recent` attribute to true.")
-		}
-		sort.Slice(filteredImages, func(i, j int) bool {
-			itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
-			jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
-			return itime.Unix() > jtime.Unix()
-		})
+	if len(filteredImages) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
+			"specific search criteria, or set `most_recent` attribute to true.")
 	}
 
-	image := filteredImages[0]
+	image := slices.MaxFunc(filteredImages, func(a, b awstypes.Image) int {
+		atime, _ := time.Parse(time.RFC3339, aws.ToString(a.CreationDate))
+		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
+		return atime.Compare(btime)
+	})
 
 	d.SetId(aws.ToString(image.ImageId))
 	d.Set("architecture", image.Architecture)
-	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   names.EC2,
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
@@ -322,6 +325,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
@@ -343,53 +347,68 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	setTagsOutV2(ctx, image.Tags)
+	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &getInstanceUEFIDataInput)
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
+
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
 
-func flattenAMIBlockDeviceMappings(m []awstypes.BlockDeviceMapping) *schema.Set {
-	s := &schema.Set{
-		F: amiBlockDeviceMappingHash,
+func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []any {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	for _, v := range m {
-		mapping := map[string]interface{}{
-			names.AttrDeviceName:  aws.ToString(v.DeviceName),
-			names.AttrVirtualName: aws.ToString(v.VirtualName),
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrDeviceName:  aws.ToString(apiObject.DeviceName),
+			names.AttrVirtualName: aws.ToString(apiObject.VirtualName),
 		}
 
-		if v.Ebs != nil {
-			ebs := map[string]interface{}{
-				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.ToBool(v.Ebs.DeleteOnTermination)),
-				names.AttrEncrypted:           fmt.Sprintf("%t", aws.ToBool(v.Ebs.Encrypted)),
-				names.AttrIOPS:                fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Iops)),
-				names.AttrThroughput:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Throughput)),
-				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.VolumeSize)),
-				names.AttrSnapshotID:          aws.ToString(v.Ebs.SnapshotId),
-				names.AttrVolumeType:          v.Ebs.VolumeType,
+		if apiObject := apiObject.Ebs; apiObject != nil {
+			ebs := map[string]any{
+				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
+				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
+				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
+				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
+				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
+				"volume_initialization_rate":  flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
+				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
+				names.AttrVolumeType:          apiObject.VolumeType,
 			}
 
-			mapping["ebs"] = ebs
+			tfMap["ebs"] = ebs
 		}
 
-		log.Printf("[DEBUG] aws_ami - adding block device mapping: %v", mapping)
-		s.Add(mapping)
+		tfList = append(tfList, tfMap)
 	}
-	return s
+
+	return tfList
 }
 
-func flattenAMIProductCodes(m []awstypes.ProductCode) *schema.Set {
-	s := &schema.Set{
-		F: amiProductCodesHash,
+func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []any {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	for _, v := range m {
-		code := map[string]interface{}{
-			"product_code_id":   aws.ToString(v.ProductCodeId),
-			"product_code_type": v.ProductCodeType,
-		}
-		s.Add(code)
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"product_code_id":   aws.ToString(apiObject.ProductCodeId),
+			"product_code_type": apiObject.ProductCodeType,
+		})
 	}
-	return s
+
+	return tfList
 }
 
 func amiRootSnapshotId(image awstypes.Image) string {
@@ -408,8 +427,8 @@ func amiRootSnapshotId(image awstypes.Image) string {
 	return ""
 }
 
-func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
-	s := make(map[string]interface{})
+func flattenAMIStateReason(m *awstypes.StateReason) map[string]any {
+	s := make(map[string]any)
 	if m != nil {
 		s["code"] = aws.ToString(m.Code)
 		s[names.AttrMessage] = aws.ToString(m.Message)
@@ -420,38 +439,32 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 	return s
 }
 
-func amiBlockDeviceMappingHash(v interface{}) int {
-	var buf bytes.Buffer
-	// All keys added in alphabetical order.
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	if d, ok := m["ebs"]; ok {
-		if len(d.(map[string]interface{})) > 0 {
-			e := d.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrIOPS].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeSize].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType]))
+// checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration
+// uses the most recent image and is not filtered by owner or image ID
+func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent, allowUnsafe bool) diag.Diagnostics {
+	filtered := false
+	for _, f := range input.Filters {
+		name := aws.ToString(f.Name)
+		if name == "image-id" || name == "owner-id" {
+			filtered = true
 		}
 	}
-	if d, ok := m["no_device"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	if d, ok := m[names.AttrVirtualName]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	if d, ok := m[names.AttrSnapshotID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
 
-func amiProductCodesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	// All keys added in alphabetical order.
-	buf.WriteString(fmt.Sprintf("%s-", m["product_code_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["product_code_type"].(string)))
-	return create.StringHashcode(buf.String())
+	if mostRecent && len(input.Owners) == 0 && !filtered {
+		d := diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Most Recent Image Not Filtered",
+			Detail: `"most_recent" is set to "true" and results are not filtered by owner or image ID. ` +
+				"With this configuration, a third party may introduce a new image which " +
+				"will be returned by this data source. Filter by owner or image ID to " +
+				"avoid this possibility.",
+		}
+		if allowUnsafe {
+			d.Severity = diag.Warning
+		}
+
+		return append(diags, d)
+	}
+
+	return diags
 }

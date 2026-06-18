@@ -6,7 +6,7 @@ description: |-
   Provides details about a specific DataPipeline Definition.
 ---
 
-# Source: aws_datapipeline_pipeline_definition
+# Data Source: aws_datapipeline_pipeline_definition
 
 Provides details about a specific DataPipeline Pipeline Definition.
 
@@ -20,8 +20,9 @@ data "aws_datapipeline_pipeline_definition" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pipeline_id` - (Required) ID of the pipeline.
 
 ## Attribute Reference

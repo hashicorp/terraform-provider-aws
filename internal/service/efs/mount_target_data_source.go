@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -7,135 +9,151 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_efs_mount_target")
-func DataSourceMountTarget() *schema.Resource {
+// @SDKDataSource("aws_efs_mount_target", name="Mount Target")
+func dataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMountTargetRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_point_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mount_target_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"mount_target_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_point_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mount_target_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"mount_target_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
-	input := &efs.DescribeMountTargetsInput{}
+	var inputDMT efs.DescribeMountTargetsInput
 
 	if v, ok := d.GetOk("access_point_id"); ok {
-		input.AccessPointId = aws.String(v.(string))
+		inputDMT.AccessPointId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
-		input.FileSystemId = aws.String(v.(string))
+		inputDMT.FileSystemId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("mount_target_id"); ok {
-		input.MountTargetId = aws.String(v.(string))
+		inputDMT.MountTargetId = aws.String(v.(string))
 	}
 
-	mt, err := findMountTarget(ctx, conn, input)
+	mt, err := findMountTarget(ctx, conn, &inputDMT, tfslices.PredicateTrue[awstypes.MountTargetDescription]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target: %s", err)
 	}
 
-	d.SetId(aws.StringValue(mt.MountTargetId))
-	fsID := aws.StringValue(mt.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
+	d.SetId(aws.ToString(mt.MountTargetId))
+	fsID := aws.ToString(mt.FileSystemId)
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
-	d.Set("file_system_arn", fsARN)
+	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	if mt.IpAddress != nil && mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
+	} else if mt.IpAddress != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
+	} else if mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
+	} else {
+		d.Set(names.AttrIPAddressType, nil)
+	}
+	d.Set("ipv6_address", mt.Ipv6Address)
+	d.Set("mount_target_dns_name", c.RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
 	d.Set("mount_target_id", mt.MountTargetId)
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)
 	d.Set(names.AttrSubnetID, mt.SubnetId)
 
-	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
+	inputDMTSG := efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
-	})
+	}
+	outputDMTSG, err := conn.DescribeMountTargetSecurityGroups(ctx, &inputDMTSG)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, outputDMTSG.SecurityGroups)
 
 	return diags
 }

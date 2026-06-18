@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpoint
 
@@ -7,18 +9,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_adm_channel")
-func ResourceADMChannel() *schema.Resource {
+// @SDKResource("aws_pinpoint_adm_channel", name="ADM Channel")
+func resourceADMChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceADMChannelUpsert,
 		ReadWithoutTimeout:   resourceADMChannelRead,
@@ -28,38 +33,40 @@ func ResourceADMChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrClientID: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			names.AttrClientSecret: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrClientID: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+				names.AttrClientSecret: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }
 
-func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	applicationId := d.Get(names.AttrApplicationID).(string)
 
-	params := &pinpoint.ADMChannelRequest{}
+	params := &awstypes.ADMChannelRequest{}
 
 	params.ClientId = aws.String(d.Get(names.AttrClientID).(string))
 	params.ClientSecret = aws.String(d.Get(names.AttrClientSecret).(string))
@@ -70,9 +77,9 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 		ADMChannelRequest: params,
 	}
 
-	_, err := conn.UpdateAdmChannelWithContext(ctx, &req)
+	_, err := conn.UpdateAdmChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint ADM Channel: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging ADM Channel: %s", err)
 	}
 
 	d.SetId(applicationId)
@@ -80,47 +87,68 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceADMChannelRead(ctx, d, meta)...)
 }
 
-func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint ADM Channel for application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging ADM Channel for application %s", d.Id())
 
-	channel, err := conn.GetAdmChannelWithContext(ctx, &pinpoint.GetAdmChannelInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint ADM Channel for application %s not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
+	output, err := findADMChannelByApplicationId(ctx, conn, d.Id())
 
-		return sdkdiag.AppendErrorf(diags, "getting Pinpoint ADM Channel for application %s: %s", d.Id(), err)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] End User Messaging ADM Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set(names.AttrApplicationID, channel.ADMChannelResponse.ApplicationId)
-	d.Set(names.AttrEnabled, channel.ADMChannelResponse.Enabled)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging ADM Channel (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set(names.AttrEnabled, output.Enabled)
 	// client_id and client_secret are never returned
 
 	return diags
 }
 
-func resourceADMChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Pinpoint Delete ADM Channel: %s", d.Id())
-	_, err := conn.DeleteAdmChannelWithContext(ctx, &pinpoint.DeleteAdmChannelInput{
+	log.Printf("[DEBUG] End User Messaging Delete ADM Channel: %s", d.Id())
+	_, err := conn.DeleteAdmChannel(ctx, &pinpoint.DeleteAdmChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint ADM Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging ADM Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
+}
+
+func findADMChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, applicationId string) (*awstypes.ADMChannelResponse, error) {
+	input := &pinpoint.GetAdmChannelInput{
+		ApplicationId: aws.String(applicationId),
+	}
+
+	output, err := conn.GetAdmChannel(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ADMChannelResponse == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.ADMChannelResponse, nil
 }

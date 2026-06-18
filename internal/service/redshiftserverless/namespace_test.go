@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -9,37 +9,38 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
-					resource.TestCheckResourceAttr(resourceName, "log_exports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -50,15 +51,15 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 			{
 				Config: testAccNamespaceConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
-					resource.TestCheckResourceAttr(resourceName, "log_exports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.0", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.1", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -68,18 +69,18 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_defaultIAMRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_defaultIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_iam_role_arn", "aws_iam_role.test.0", names.AttrARN),
 				),
@@ -96,18 +97,18 @@ func TestAccRedshiftServerlessNamespace_defaultIAMRole(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_user(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -118,8 +119,38 @@ func TestAccRedshiftServerlessNamespace_user(t *testing.T) {
 			{
 				Config: testAccNamespaceConfig_user(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "Password123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessNamespace_userPasswordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_userPasswordWriteOnly(rName, "Password123", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccNamespaceConfig_userPasswordWriteOnly(rName, "Password123updated", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -129,19 +160,19 @@ func TestAccRedshiftServerlessNamespace_user(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -153,7 +184,7 @@ func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 			{
 				Config: testAccNamespaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -161,8 +192,8 @@ func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 			{
 				Config: testAccNamespaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -173,21 +204,29 @@ func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceNamespace(), resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -196,23 +235,19 @@ func TestAccRedshiftServerlessNamespace_disappears(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_withWorkgroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 				),
-			},
-			{
-				Config:   testAccNamespaceConfig_withWorkgroup(rName),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -221,19 +256,19 @@ func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 func TestAccRedshiftServerlessNamespace_manageAdminPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceConfig_manageAdminPassword(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamespaceExists(ctx, resourceName),
-					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					testAccCheckNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "manage_admin_password", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "admin_password_secret_arn"),
 				),
@@ -242,9 +277,9 @@ func TestAccRedshiftServerlessNamespace_manageAdminPassword(t *testing.T) {
 	})
 }
 
-func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNamespaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_namespace" {
@@ -253,7 +288,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -268,7 +303,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckNamespaceExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckNamespaceExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -279,7 +314,7 @@ func testAccCheckNamespaceExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Redshift Serverless Namespace is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 
@@ -342,6 +377,17 @@ resource "aws_redshiftserverless_namespace" "test" {
   admin_user_password = "Password123"
 }
 `, rName)
+}
+
+func testAccNamespaceConfig_userPasswordWriteOnly(rName, password string, passwordVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name                 = %[1]q
+  admin_username                 = "admin"
+  admin_user_password_wo         = %[2]q
+  admin_user_password_wo_version = %[3]d
+}
+`, rName, password, passwordVersion)
 }
 
 func testAccNamespaceConfig_updated(rName string) string {

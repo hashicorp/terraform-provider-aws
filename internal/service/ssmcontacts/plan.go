@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssmcontacts
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,56 +32,58 @@ func ResourcePlan() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"contact_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStage: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"duration_in_minutes": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_target_info": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"contact_channel_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"retry_interval_in_minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"contact_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStage: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"duration_in_minutes": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_target_info": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"contact_channel_id": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"retry_interval_in_minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"contact_target_info": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"is_essential": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"contact_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+										"contact_target_info": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"is_essential": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"contact_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
@@ -89,7 +93,7 @@ func ResourcePlan() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -98,12 +102,12 @@ const (
 	ResNamePlan = "Plan"
 )
 
-func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
-	stages := expandStages(d.Get(names.AttrStage).([]interface{}))
+	stages := expandStages(d.Get(names.AttrStage).([]any))
 	plan := &types.Plan{
 		Stages: stages,
 	}
@@ -127,13 +131,13 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMContacts Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,7 +154,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
@@ -161,7 +165,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges(names.AttrStage) {
-		stages := expandStages(d.Get(names.AttrStage).([]interface{}))
+		stages := expandStages(d.Get(names.AttrStage).([]any))
 		in.Plan = &types.Plan{
 			Stages: stages,
 		}
@@ -181,7 +185,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 

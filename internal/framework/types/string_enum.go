@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -6,6 +6,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type dummyValueser string
@@ -53,9 +55,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 }
 
 func (stringEnumType[T]) String() string {
-	var zero T
-	// The format of this returned value is used inside AutoFlEx.
-	return fmt.Sprintf("StringEnumType[%T]", zero)
+	return fmt.Sprintf("StringEnumType[%T]", inttypes.Zero[T]())
 }
 
 func (t stringEnumType[T]) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
@@ -120,6 +120,10 @@ func StringEnumUnknown[T enum.Valueser[T]]() StringEnum[T] {
 
 func StringEnumValue[T enum.Valueser[T]](value T) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(string(value))}
+}
+
+func StringEnumValueToUpper[T enum.Valueser[T]](value T) StringEnum[T] {
+	return StringEnumValue(T(strings.ToUpper(string(value))))
 }
 
 func (v StringEnum[T]) Equal(o attr.Value) bool {

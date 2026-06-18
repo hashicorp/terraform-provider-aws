@@ -1,13 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,111 +21,114 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_neptune_orderable_db_instance")
-func DataSourceOrderableDBInstance() *schema.Resource {
+// @SDKDataSource("aws_neptune_orderable_db_instance", name="Orderable DB Instance")
+func dataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  engineNeptune,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_class": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"preferred_instance_classes"},
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "amazon-license",
-			},
-			"max_iops_per_db_instance": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"max_iops_per_gib": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"max_storage_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"min_iops_per_db_instance": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"min_iops_per_gib": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"min_storage_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"multi_az_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"preferred_instance_classes": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"instance_class"},
-			},
-			"read_replica_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"supports_enhanced_monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_iam_database_authentication": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_iops": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_performance_insights": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_storage_encryption": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  defaultEngine,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_class": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"preferred_instance_classes"},
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "amazon-license",
+				},
+				"max_iops_per_db_instance": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"max_iops_per_gib": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"max_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"min_iops_per_db_instance": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"min_iops_per_gib": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"min_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"multi_az_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"preferred_instance_classes": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"instance_class"},
+				},
+				"read_replica_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"supports_enhanced_monitoring": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_iam_database_authentication": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_iops": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_performance_insights": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_storage_encryption": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"vpc": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -146,25 +152,26 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
-	var orderableDBInstance *neptune.OrderableDBInstanceOption
+	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
-	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
-		var orderableDBInstances []*neptune.OrderableDBInstanceOption
+	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]any)); len(preferredInstanceClasses) > 0 {
+		var orderableDBInstances []awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
 		if err == nil {
 		PreferredInstanceClassLoop:
 			for _, preferredInstanceClass := range preferredInstanceClasses {
 				for _, v := range orderableDBInstances {
-					if preferredInstanceClass == aws.StringValue(v.DBInstanceClass) {
-						orderableDBInstance = v
+					if preferredInstanceClass == aws.ToString(v.DBInstanceClass) {
+						oDBInstance := v
+						orderableDBInstance = &oDBInstance
 						break PreferredInstanceClassLoop
 					}
 				}
 			}
 
 			if orderableDBInstance == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {
@@ -175,9 +182,9 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Neptune Orderable DB Instance", err))
 	}
 
-	d.SetId(aws.StringValue(orderableDBInstance.DBInstanceClass))
-	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *neptune.AvailabilityZone) string {
-		return aws.StringValue(v.Name)
+	d.SetId(aws.ToString(orderableDBInstance.DBInstanceClass))
+	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v awstypes.AvailabilityZone) string {
+		return aws.ToString(v.Name)
 	}))
 	d.Set(names.AttrEngine, orderableDBInstance.Engine)
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
@@ -202,35 +209,29 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func findOrderableDBInstance(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeOrderableDBInstanceOptionsInput) (*neptune.OrderableDBInstanceOption, error) {
+func findOrderableDBInstance(ctx context.Context, conn *neptune.Client, input *neptune.DescribeOrderableDBInstanceOptionsInput) (*awstypes.OrderableDBInstanceOption, error) {
 	output, err := findOrderableDBInstances(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findOrderableDBInstances(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeOrderableDBInstanceOptionsInput) ([]*neptune.OrderableDBInstanceOption, error) {
-	var output []*neptune.OrderableDBInstanceOption
+func findOrderableDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.DescribeOrderableDBInstanceOptionsInput) ([]awstypes.OrderableDBInstanceOption, error) {
+	var output []awstypes.OrderableDBInstanceOption
 
-	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(page *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeOrderableDBInstanceOptionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.OrderableDBInstanceOptions {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.OrderableDBInstanceOptions...)
 	}
 
 	return output, nil

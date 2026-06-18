@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,18 +22,18 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
@@ -54,19 +53,18 @@ func TestAccAppStreamImageBuilder_withIAMRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
-	imageName := "AppStream-WinServer2022-03-24-2024"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderConfig_withIAMRole(rName, imageName, instanceType),
+				Config: testAccImageBuilderConfig_withIAMRole(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -78,21 +76,29 @@ func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceImageBuilder(), resourceName),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceImageBuilder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -101,22 +107,22 @@ func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBuilderConfig_complete(rName, description, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
@@ -133,7 +139,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 			{
 				Config: testAccImageBuilderConfig_complete(rName, descriptionUpdated, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
@@ -154,20 +160,20 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	instanceType := "stream.standard.small"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -180,8 +186,8 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 			{
 				Config: testAccImageBuilderConfig_tags2(instanceType, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -189,8 +195,8 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 			{
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -203,21 +209,20 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	// imageName selected from the available AWS Managed AppStream 2.0 Base Images
 	// Reference: https://docs.aws.amazon.com/appstream2/latest/developerguide/base-image-version-history.html
-	imageName := "AppStream-WinServer2022-03-24-2024"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx),
+		CheckDestroy:             testAccCheckImageBuilderDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderConfig_byARN(rName, imageName, instanceType),
+				Config: testAccImageBuilderConfig_byARN(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageBuilderExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "image_arn", "appstream", fmt.Sprintf("image/%s", imageName)),
+					testAccCheckImageBuilderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -229,37 +234,18 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	})
 }
 
-func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckImageBuilderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AppStream ImageBuilder ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
-
-		return err
-	}
-}
-
-func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_image_builder" {
 				continue
 			}
 
-			_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
+			_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -274,20 +260,43 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
+func testAccCheckImageBuilderExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
+
+		_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+const testAccImageBuilderConfig_base = `
+data "aws_appstream_image" "test" {
+  name_regex  = "^AppStream-WinServer.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+`
+
 func testAccImageBuilderConfig_basic(instanceType, rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2022-03-24-2024"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[1]q
   name          = %[2]q
 }
-`, instanceType, rName)
+`, instanceType, rName))
 }
 
 func testAccImageBuilderConfig_complete(rName, description, instanceType string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name                     = "AppStream-WinServer2022-03-24-2024"
+  image_name                     = data.aws_appstream_image.test.name
   name                           = %[1]q
   description                    = %[2]q
   enable_default_internet_access = false
@@ -300,9 +309,9 @@ resource "aws_appstream_image_builder" "test" {
 }
 
 func testAccImageBuilderConfig_tags1(instanceType, rName, key, value string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2022-03-24-2024"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[1]q
   name          = %[2]q
 
@@ -310,13 +319,13 @@ resource "aws_appstream_image_builder" "test" {
     %[3]q = %[4]q
   }
 }
-`, instanceType, rName, key, value)
+`, instanceType, rName, key, value))
 }
 
 func testAccImageBuilderConfig_tags2(instanceType, rName, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2022-03-24-2024"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[1]q
   name          = %[2]q
 
@@ -325,28 +334,26 @@ resource "aws_appstream_image_builder" "test" {
     %[5]q = %[6]q
   }
 }
-`, instanceType, rName, key1, value1, key2, value2)
+`, instanceType, rName, key1, value1, key2, value2))
 }
 
-func testAccImageBuilderConfig_byARN(rName, imageName, instanceType string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
+func testAccImageBuilderConfig_byARN(rName, instanceType string) string {
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_arn     = "arn:${data.aws_partition.current.partition}:appstream:%[1]s::image/%[2]s"
-  instance_type = %[3]q
-  name          = %[4]q
+  image_arn     = data.aws_appstream_image.test.arn
+  instance_type = %[1]q
+  name          = %[2]q
 }
-`, acctest.Region(), imageName, instanceType, rName)
+`, instanceType, rName))
 }
 
-func testAccImageBuilderConfig_withIAMRole(rName, imageName, instanceType string) string {
-	return fmt.Sprintf(`
+func testAccImageBuilderConfig_withIAMRole(rName, instanceType string) string {
+	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   name          = %[1]q
   instance_type = %[2]q
   iam_role_arn  = aws_iam_role.test.arn
-  image_name    = %[3]q
+  image_name    = data.aws_appstream_image.test.name
 }
 
 resource "aws_iam_role" "test" {
@@ -364,5 +371,5 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
-`, rName, instanceType, imageName)
+`, rName, instanceType))
 }

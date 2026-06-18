@@ -1,13 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -20,9 +20,9 @@ func wordCloudVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -30,7 +30,7 @@ func wordCloudVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"category_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -52,7 +52,7 @@ func wordCloudVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -60,8 +60,8 @@ func wordCloudVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -72,193 +72,261 @@ func wordCloudVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"cloud_layout":          stringSchema(false, validation.StringInSlice(quicksight.WordCloudCloudLayout_Values(), false)),
-										"maximum_string_length": intSchema(false, validation.IntBetween(1, 100)),
-										"word_casing":           stringSchema(false, validation.StringInSlice(quicksight.WordCloudWordCasing_Values(), false)),
-										"word_orientation":      stringSchema(false, validation.StringInSlice(quicksight.WordCloudWordOrientation_Values(), false)),
-										"word_padding":          stringSchema(false, validation.StringInSlice(quicksight.WordCloudWordPadding_Values(), false)),
-										"word_scaling":          stringSchema(false, validation.StringInSlice(quicksight.WordCloudWordScaling_Values(), false)),
+										"cloud_layout":          sdkschema.StringEnumSchema[awstypes.WordCloudCloudLayout](sdkschema.AttrOptional),
+										"maximum_string_length": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 100),
+										"word_casing":           sdkschema.StringEnumSchema[awstypes.WordCloudWordCasing](sdkschema.AttrOptional),
+										"word_orientation":      sdkschema.StringEnumSchema[awstypes.WordCloudWordOrientation](sdkschema.AttrOptional),
+										"word_padding":          sdkschema.StringEnumSchema[awstypes.WordCloudWordPadding](sdkschema.AttrOptional),
+										"word_scaling":          sdkschema.StringEnumSchema[awstypes.WordCloudWordScaling](sdkschema.AttrOptional),
 									},
 								},
 							},
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
 }
 
-func expandWordCloudVisual(tfList []interface{}) *quicksight.WordCloudVisual {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
+func wordCloudVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisualID:      idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"word_cloud_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"group_by":     dimensionFieldDataSourceSchema(),
+													names.AttrSize: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":        fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"word_cloud_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WordCloudOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloud_layout":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudCloudLayout](),
+										"maximum_string_length": intComputedOnly(),
+										"word_casing":           sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordCasing](),
+										"word_orientation":      sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordOrientation](),
+										"word_padding":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordPadding](),
+										"word_scaling":          sdkschema.StringEnumDataSourceSchema[awstypes.WordCloudWordScaling](),
+									},
+								},
+							},
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
 	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	visual := &quicksight.WordCloudVisual{}
-
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
-	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
-	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandWordCloudChartConfiguration(v)
-	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
-	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
-	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
-	}
-
-	return visual
 }
 
-func expandWordCloudChartConfiguration(tfList []interface{}) *quicksight.WordCloudChartConfiguration {
+func expandWordCloudVisual(tfList []any) *awstypes.WordCloudVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.WordCloudChartConfiguration{}
+	apiObject := &awstypes.WordCloudVisual{}
 
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
+		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandWordCloudFieldWells(v)
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandWordCloudSortConfiguration(v)
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ChartConfiguration = expandWordCloudChartConfiguration(v)
 	}
-	if v, ok := tfMap["word_cloud_options"].([]interface{}); ok && len(v) > 0 {
-		config.WordCloudOptions = expandWordCloudOptions(v)
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
+	}
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
+	}
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandWordCloudFieldWells(tfList []interface{}) *quicksight.WordCloudFieldWells {
+func expandWordCloudChartConfiguration(tfList []any) *awstypes.WordCloudChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.WordCloudFieldWells{}
+	apiObject := &awstypes.WordCloudChartConfiguration{}
 
-	if v, ok := tfMap["word_cloud_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.WordCloudAggregatedFieldWells = expandWordCloudAggregatedFieldWells(v)
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
+	}
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.FieldWells = expandWordCloudFieldWells(v)
+	}
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
+		apiObject.SortConfiguration = expandWordCloudSortConfiguration(v)
+	}
+	if v, ok := tfMap["word_cloud_options"].([]any); ok && len(v) > 0 {
+		apiObject.WordCloudOptions = expandWordCloudOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandWordCloudAggregatedFieldWells(tfList []interface{}) *quicksight.WordCloudAggregatedFieldWells {
+func expandWordCloudFieldWells(tfList []any) *awstypes.WordCloudFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.WordCloudAggregatedFieldWells{}
+	apiObject := &awstypes.WordCloudFieldWells{}
 
-	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
-		config.GroupBy = expandDimensionFields(v)
-	}
-	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
-		config.Size = expandMeasureFields(v)
+	if v, ok := tfMap["word_cloud_aggregated_field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.WordCloudAggregatedFieldWells = expandWordCloudAggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandWordCloudSortConfiguration(tfList []interface{}) *quicksight.WordCloudSortConfiguration {
+func expandWordCloudAggregatedFieldWells(tfList []any) *awstypes.WordCloudAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.WordCloudSortConfiguration{}
+	apiObject := &awstypes.WordCloudAggregatedFieldWells{}
 
-	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["group_by"].([]any); ok && len(v) > 0 {
+		apiObject.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
-		config.CategorySort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap[names.AttrSize].([]any); ok && len(v) > 0 {
+		apiObject.Size = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandWordCloudOptions(tfList []interface{}) *quicksight.WordCloudOptions {
+func expandWordCloudSortConfiguration(tfList []any) *awstypes.WordCloudSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.WordCloudOptions{}
+	apiObject := &awstypes.WordCloudSortConfiguration{}
+
+	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
+	}
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+		apiObject.CategorySort = expandFieldSortOptionsList(v)
+	}
+
+	return apiObject
+}
+
+func expandWordCloudOptions(tfList []any) *awstypes.WordCloudOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.WordCloudOptions{}
 
 	if v, ok := tfMap["cloud_layout"].(string); ok && v != "" {
-		options.CloudLayout = aws.String(v)
+		apiObject.CloudLayout = awstypes.WordCloudCloudLayout(v)
 	}
 	if v, ok := tfMap["maximum_string_length"].(int); ok {
-		options.MaximumStringLength = aws.Int64(int64(v))
+		apiObject.MaximumStringLength = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["word_casing"].(string); ok && v != "" {
-		options.WordCasing = aws.String(v)
+		apiObject.WordCasing = awstypes.WordCloudWordCasing(v)
 	}
 	if v, ok := tfMap["word_orientation"].(string); ok && v != "" {
-		options.WordOrientation = aws.String(v)
+		apiObject.WordOrientation = awstypes.WordCloudWordOrientation(v)
 	}
 	if v, ok := tfMap["word_padding"].(string); ok && v != "" {
-		options.WordPadding = aws.String(v)
+		apiObject.WordPadding = awstypes.WordCloudWordPadding(v)
 	}
 	if v, ok := tfMap["word_padding"].(string); ok && v != "" {
-		options.WordScaling = aws.String(v)
+		apiObject.WordScaling = awstypes.WordCloudWordScaling(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenWordCloudVisual(apiObject *quicksight.WordCloudVisual) []interface{} {
+func flattenWordCloudVisual(apiObject *awstypes.WordCloudVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+	tfMap := map[string]any{
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -266,24 +334,25 @@ func flattenWordCloudVisual(apiObject *quicksight.WordCloudVisual) []interface{}
 		tfMap["chart_configuration"] = flattenWordCloudChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWordCloudChartConfiguration(apiObject *quicksight.WordCloudChartConfiguration) []interface{} {
+func flattenWordCloudChartConfiguration(apiObject *awstypes.WordCloudChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoryLabelOptions != nil {
 		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
 	}
@@ -291,34 +360,35 @@ func flattenWordCloudChartConfiguration(apiObject *quicksight.WordCloudChartConf
 		tfMap["field_wells"] = flattenWordCloudFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.WordCloudOptions != nil {
 		tfMap["word_cloud_options"] = flattenWordCloudOptions(apiObject.WordCloudOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWordCloudFieldWells(apiObject *quicksight.WordCloudFieldWells) []interface{} {
+func flattenWordCloudFieldWells(apiObject *awstypes.WordCloudFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.WordCloudAggregatedFieldWells != nil {
 		tfMap["word_cloud_aggregated_field_wells"] = flattenWordCloudAggregatedFieldWells(apiObject.WordCloudAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWordCloudAggregatedFieldWells(apiObject *quicksight.WordCloudAggregatedFieldWells) []interface{} {
+func flattenWordCloudAggregatedFieldWells(apiObject *awstypes.WordCloudAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.GroupBy != nil {
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
@@ -326,15 +396,16 @@ func flattenWordCloudAggregatedFieldWells(apiObject *quicksight.WordCloudAggrega
 		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWordCloudSortConfiguration(apiObject *quicksight.WordCloudSortConfiguration) []interface{} {
+func flattenWordCloudSortConfiguration(apiObject *awstypes.WordCloudSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoryItemsLimit != nil {
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
@@ -342,33 +413,24 @@ func flattenWordCloudSortConfiguration(apiObject *quicksight.WordCloudSortConfig
 		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWordCloudOptions(apiObject *quicksight.WordCloudOptions) []interface{} {
+func flattenWordCloudOptions(apiObject *awstypes.WordCloudOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.CloudLayout != nil {
-		tfMap["cloud_layout"] = aws.StringValue(apiObject.CloudLayout)
-	}
-	if apiObject.MaximumStringLength != nil {
-		tfMap["maximum_string_length"] = aws.Int64Value(apiObject.MaximumStringLength)
-	}
-	if apiObject.WordCasing != nil {
-		tfMap["word_casing"] = aws.StringValue(apiObject.WordCasing)
-	}
-	if apiObject.WordOrientation != nil {
-		tfMap["word_orientation"] = aws.StringValue(apiObject.WordOrientation)
-	}
-	if apiObject.WordPadding != nil {
-		tfMap["word_padding"] = aws.StringValue(apiObject.WordPadding)
-	}
-	if apiObject.WordScaling != nil {
-		tfMap["word_scaling"] = aws.StringValue(apiObject.WordScaling)
-	}
+	tfMap := map[string]any{}
 
-	return []interface{}{tfMap}
+	tfMap["cloud_layout"] = apiObject.CloudLayout
+	if apiObject.MaximumStringLength != nil {
+		tfMap["maximum_string_length"] = aws.ToInt32(apiObject.MaximumStringLength)
+	}
+	tfMap["word_casing"] = apiObject.WordCasing
+	tfMap["word_orientation"] = apiObject.WordOrientation
+	tfMap["word_padding"] = apiObject.WordPadding
+	tfMap["word_scaling"] = apiObject.WordScaling
+
+	return []any{tfMap}
 }

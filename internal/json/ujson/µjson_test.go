@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ujson
@@ -316,7 +316,6 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run("Walk/"+tt.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -335,7 +334,6 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run("Reconstruct/"+tt.input, func(t *testing.T) {
 			t.Parallel()
 

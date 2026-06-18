@@ -1,21 +1,26 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package memorydb
 
 import (
 	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,7 +29,7 @@ import (
 
 // @SDKResource("aws_memorydb_snapshot", name="Snapshot")
 // @Tags(identifierAttribute="arn")
-func ResourceSnapshot() *schema.Resource {
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,
@@ -36,124 +41,127 @@ func ResourceSnapshot() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(snapshotAvailableTimeout),
-			Delete: schema.DefaultTimeout(snapshotDeletedTimeout),
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEngineVersion: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"maintenance_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"node_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"num_shards": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrParameterGroupName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_retention_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subnet_group_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTopicARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngine: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngineVersion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"maintenance_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"node_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"num_shards": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrParameterGroupName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_retention_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"subnet_group_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTopicARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyARN: {
-				// The API will accept an ID, but return the ARN on every read.
-				// For the sake of consistency, force everyone to use ARN-s.
-				// To prevent confusion, the attribute is suffixed _arn rather
-				// than the _id implied by the API.
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validateResourceName(snapshotNameMaxLength),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - id.UniqueIDSuffixLength),
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrClusterName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyARN: {
+					// The API will accept an ID, but return the ARN on every read.
+					// For the sake of consistency, force everyone to use ARN-s.
+					// To prevent confusion, the attribute is suffixed _arn rather
+					// than the _id implied by the API.
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validateResourceName(snapshotNameMaxLength),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - sdkid.UniqueIDSuffixLength),
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
-
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get(names.AttrClusterName).(string)),
 		SnapshotName: aws.String(name),
@@ -164,35 +172,28 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %s", input)
-	_, err := conn.CreateSnapshotWithContext(ctx, input)
+	_, err := conn.CreateSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Snapshot (%s): %s", name, err)
 	}
 
-	if err := waitSnapshotAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
-	}
-
 	d.SetId(name)
+
+	if _, err := waitSnapshotAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
-	return resourceSnapshotRead(ctx, d, meta)
-}
-
-func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	snapshot, err := findSnapshotByName(ctx, conn, d.Id())
 
-	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -204,28 +205,32 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_configuration: %s", err)
 	}
 	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(snapshot.Name)))
 	d.Set(names.AttrSource, snapshot.Source)
 
 	return diags
 }
 
-func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	// Tags only.
+	return resourceSnapshotRead(ctx, d, meta)
+}
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
-	_, err := conn.DeleteSnapshotWithContext(ctx, &memorydb.DeleteSnapshotInput{
+	_, err := conn.DeleteSnapshot(ctx, &memorydb.DeleteSnapshotInput{
 		SnapshotName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
+	if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
 		return diags
 	}
 
@@ -233,33 +238,125 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{} {
-	if v == nil {
-		return []interface{}{}
+func findSnapshotByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Snapshot, error) {
+	input := &memorydb.DescribeSnapshotsInput{
+		SnapshotName: aws.String(name),
 	}
 
-	m := map[string]interface{}{
-		names.AttrDescription:        aws.StringValue(v.Description),
-		names.AttrEngineVersion:      aws.StringValue(v.EngineVersion),
-		"maintenance_window":         aws.StringValue(v.MaintenanceWindow),
-		names.AttrName:               aws.StringValue(v.Name),
-		"node_type":                  aws.StringValue(v.NodeType),
-		"num_shards":                 aws.Int64Value(v.NumShards),
-		names.AttrParameterGroupName: aws.StringValue(v.ParameterGroupName),
-		names.AttrPort:               aws.Int64Value(v.Port),
-		"snapshot_retention_limit":   aws.Int64Value(v.SnapshotRetentionLimit),
-		"snapshot_window":            aws.StringValue(v.SnapshotWindow),
-		"subnet_group_name":          aws.StringValue(v.SubnetGroupName),
-		names.AttrTopicARN:           aws.StringValue(v.TopicArn),
-		names.AttrVPCID:              aws.StringValue(v.VpcId),
+	return findSnapshot(ctx, conn, input)
+}
+
+func findSnapshot(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
+	output, err := findSnapshots(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return []interface{}{m}
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
+
+	pages := memorydb.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Snapshots...)
+	}
+
+	return output, nil
+}
+
+func statusSnapshot(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findSnapshotByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{snapshotStatusCreating},
+		Target:  []string{snapshotStatusAvailable},
+		Refresh: statusSnapshot(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{snapshotStatusDeleting},
+		Target:  []string{},
+		Refresh: statusSnapshot(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrDescription:        aws.ToString(apiObject.Description),
+		names.AttrEngine:             aws.ToString(apiObject.Engine),
+		names.AttrEngineVersion:      aws.ToString(apiObject.EngineVersion),
+		"maintenance_window":         aws.ToString(apiObject.MaintenanceWindow),
+		names.AttrName:               aws.ToString(apiObject.Name),
+		"node_type":                  aws.ToString(apiObject.NodeType),
+		"num_shards":                 aws.ToInt32(apiObject.NumShards),
+		names.AttrParameterGroupName: aws.ToString(apiObject.ParameterGroupName),
+		names.AttrPort:               aws.ToInt32(apiObject.Port),
+		"snapshot_retention_limit":   aws.ToInt32(apiObject.SnapshotRetentionLimit),
+		"snapshot_window":            aws.ToString(apiObject.SnapshotWindow),
+		"subnet_group_name":          aws.ToString(apiObject.SubnetGroupName),
+		names.AttrTopicARN:           aws.ToString(apiObject.TopicArn),
+		names.AttrVPCID:              aws.ToString(apiObject.VpcId),
+	}
+
+	return []any{tfMap}
 }

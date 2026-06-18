@@ -25,6 +25,7 @@ resource "aws_ses_template" "MyTemplate" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the template. Cannot exceed 64 characters. You will refer to this name when you send email.
 * `html` - (Optional) The HTML body of the email. Must be less than 500KB in size, including both the text and HTML parts.
 * `subject` - (Optional) The subject line of the email.

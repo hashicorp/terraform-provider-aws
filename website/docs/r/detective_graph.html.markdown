@@ -24,19 +24,40 @@ resource "aws_detective_graph" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the Detective Graph.
 * `graph_arn` - ARN of the Detective Graph.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_graph` using the ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_detective_graph.example
+  identity = {
+    graph_arn = "arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d"
+  }
+}
+
+resource "aws_detective_graph" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `graph_arn` (String) ARN of the Detective graph.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Detective graphs using `graph_arn`. For example:
 
 ```terraform
 import {
@@ -45,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_detective_graph` using the ARN. For example:
+Using `terraform import`, import Detective graphs using `graph_arn`. For example:
 
 ```console
 % terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,38 +36,40 @@ func resourceSSHKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"body": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					old = cleanSSHKey(old)
-					new = cleanSSHKey(new)
-					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"body": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						old = cleanSSHKey(old)
+						new = cleanSSHKey(new)
+						return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+					},
 				},
-			},
-			"server_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validServerID,
-			},
-			"ssh_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validUserName,
-			},
+				"server_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validServerID,
+				},
+				"ssh_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validUserName,
+				},
+			}
 		},
 	}
 }
 
-func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -87,7 +92,7 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSSHKeyRead(ctx, d, meta)...)
 }
 
-func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -98,7 +103,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	user, sshKey, err := findUserSSHKeyByThreePartKey(ctx, conn, serverID, userName, sshKeyID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer SSH Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -116,7 +121,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -126,11 +131,12 @@ func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer SSH Key: %s", d.Id())
-	_, err = conn.DeleteSshPublicKey(ctx, &transfer.DeleteSshPublicKeyInput{
+	input := transfer.DeleteSshPublicKeyInput{
 		UserName:       aws.String(userName),
 		ServerId:       aws.String(serverID),
 		SshPublicKeyId: aws.String(sshKeyID),
-	})
+	}
+	_, err = conn.DeleteSshPublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -178,7 +184,7 @@ func findUserSSHKeyByThreePartKey(ctx context.Context, conn *transfer.Client, se
 	}
 
 	if aws.ToString(sshKey.SshPublicKeyBody) == "" {
-		return nil, nil, tfresource.NewEmptyResultError(nil)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return user, sshKey, nil

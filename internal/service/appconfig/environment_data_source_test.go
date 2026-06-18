@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -8,43 +8,45 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	appName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	appName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	appResourceName := "aws_appconfig_application.test"
 	dataSourceName := "data.aws_appconfig_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/environment/+.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_appconfig_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Example AppConfig Environment"),
 					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
-					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -119,10 +121,6 @@ resource "aws_appconfig_environment" "test" {
   monitor {
     alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
     alarm_role_arn = aws_iam_role.test.arn
-  }
-
-  tags = {
-    key1 = "value1"
   }
 }
 

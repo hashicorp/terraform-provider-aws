@@ -1,12 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
 import (
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,81 +29,69 @@ func dataSourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServerCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 128),
+				},
 
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
-			},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
+				},
 
-			"path_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"path_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
 
-			"latest": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+				"latest": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"upload_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"upload_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"certificate_body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"certificate_body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-type CertificateByExpiration []awstypes.ServerCertificateMetadata
-
-func (m CertificateByExpiration) Len() int {
-	return len(m)
-}
-
-func (m CertificateByExpiration) Swap(i, j int) {
-	m[i], m[j] = m[j], m[i]
-}
-
-func (m CertificateByExpiration) Less(i, j int) bool {
-	return m[i].Expiration.After(*m[j].Expiration)
-}
-
-func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -136,15 +126,13 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	if len(metadatas) == 0 {
 		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned no results")
 	}
-	if len(metadatas) > 1 {
-		if !d.Get("latest").(bool) {
-			return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
-		}
-
-		sort.Sort(CertificateByExpiration(metadatas))
+	if len(metadatas) > 1 && !d.Get("latest").(bool) {
+		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
 	}
 
-	metadata := metadatas[0]
+	metadata := slices.MaxFunc(metadatas, func(a, b awstypes.ServerCertificateMetadata) int {
+		return a.Expiration.Compare(aws.ToTime(b.Expiration))
+	})
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
 	d.Set(names.AttrARN, metadata.Arn)
 	d.Set(names.AttrPath, metadata.Path)

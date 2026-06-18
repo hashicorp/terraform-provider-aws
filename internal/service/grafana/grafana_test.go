@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana_test
@@ -38,15 +38,15 @@ func TestAccGrafana_serial(t *testing.T) {
 			"configuration":            testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
 			"version":                  testAccWorkspace_version,
+			"kmsKeyId":                 testAccWorkspace_kmsKeyID,
+			"dataSourceBasic":          testAccWorkspaceDataSource_basic,
 		},
 		"ApiKey": {
 			acctest.CtBasic: testAccWorkspaceAPIKey_basic,
 		},
-		"DataSource": {
-			acctest.CtBasic: testAccWorkspaceDataSource_basic,
-		},
 		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
+			"enterpriseFreeTrial":    testAccLicenseAssociation_freeTrial,
+			"enterpriseGrafanaToken": testAccLicenseAssociation_enterpriseToken,
 		},
 		"SamlConfiguration": {
 			acctest.CtBasic: testAccWorkspaceSAMLConfiguration_basic,

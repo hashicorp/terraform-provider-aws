@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Allow `ignore_tags.keys` and `ignore_tags.key_prefixes` to be set by environment variables
+```

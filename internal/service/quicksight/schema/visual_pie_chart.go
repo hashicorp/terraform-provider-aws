@@ -1,13 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -20,9 +20,9 @@ func pieChartVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -46,7 +46,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringSchema(false, validation.StringInSlice(quicksight.ArcThicknessOptions_Values(), false)),
+													"arc_thickness": sdkschema.StringEnumSchema[awstypes.ArcThickness](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -57,14 +57,14 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -89,7 +89,7 @@ func pieChartVisualSchema() *schema.Schema {
 							},
 							"legend":                  legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -97,10 +97,10 @@ func pieChartVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit":                itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":                       fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"small_multiples_sort":                fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit":                itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":                       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_sort":                fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -110,237 +110,327 @@ func pieChartVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 			},
 		},
 	}
 }
 
-func expandPieChartVisual(tfList []interface{}) *quicksight.PieChartVisual {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
+func pieChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisualID:      idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"category_label_options":         chartAxisLabelOptionsDataSourceSchema(),
+							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(),
+							"data_labels":                    dataLabelOptionsDataSourceSchema(),
+							"donut_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DonutOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arc_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ArcOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"arc_thickness": sdkschema.StringEnumDataSourceSchema[awstypes.ArcThickness](),
+												},
+											},
+										},
+										"donut_center_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DonutCenterOptions.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+									},
+								},
+							},
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pie_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":        dimensionFieldDataSourceSchema(),
+													"small_multiples": dimensionFieldDataSourceSchema(),
+													names.AttrValues:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend":                  legendOptionsDataSourceSchema(),
+							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(),
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PieChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit":                itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":                       fieldSortOptionsDataSourceSchema(),
+										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":             tooltipOptionsDataSourceSchema(),
+							"value_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"visual_palette":      visualPaletteDataSourceSchema(),
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
+			},
+		},
 	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	visual := &quicksight.PieChartVisual{}
-
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
-	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
-	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandPieChartConfiguration(v)
-	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
-	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
-	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
-	}
-
-	return visual
 }
 
-func expandPieChartConfiguration(tfList []interface{}) *quicksight.PieChartConfiguration {
+func expandPieChartVisual(tfList []any) *awstypes.PieChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.PieChartConfiguration{}
+	apiObject := &awstypes.PieChartVisual{}
 
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
+		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["contribution_analysis_defaults"].([]interface{}); ok && len(v) > 0 {
-		config.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
-		config.DataLabels = expandDataLabelOptions(v)
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ChartConfiguration = expandPieChartConfiguration(v)
 	}
-	if v, ok := tfMap["donut_options"].([]interface{}); ok && len(v) > 0 {
-		config.DonutOptions = expandDonutOptions(v)
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandPieChartFieldWells(v)
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
-		config.Legend = expandLegendOptions(v)
-	}
-	if v, ok := tfMap["small_multiples_options"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
-	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandPieChartSortConfiguration(v)
-	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
-		config.Tooltip = expandTooltipOptions(v)
-	}
-	if v, ok := tfMap["value_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.ValueLabelOptions = expandChartAxisLabelOptions(v)
-	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
-		config.VisualPalette = expandVisualPalette(v)
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandPieChartFieldWells(tfList []interface{}) *quicksight.PieChartFieldWells {
+func expandPieChartConfiguration(tfList []any) *awstypes.PieChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.PieChartFieldWells{}
+	apiObject := &awstypes.PieChartConfiguration{}
 
-	if v, ok := tfMap["pie_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.PieChartAggregatedFieldWells = expandPieChartAggregatedFieldWells(v)
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
+	}
+	if v, ok := tfMap["contribution_analysis_defaults"].([]any); ok && len(v) > 0 {
+		apiObject.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
+	}
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+		apiObject.DataLabels = expandDataLabelOptions(v)
+	}
+	if v, ok := tfMap["donut_options"].([]any); ok && len(v) > 0 {
+		apiObject.DonutOptions = expandDonutOptions(v)
+	}
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.FieldWells = expandPieChartFieldWells(v)
+	}
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+		apiObject.Legend = expandLegendOptions(v)
+	}
+	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
+	}
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
+		apiObject.SortConfiguration = expandPieChartSortConfiguration(v)
+	}
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+		apiObject.Tooltip = expandTooltipOptions(v)
+	}
+	if v, ok := tfMap["value_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.ValueLabelOptions = expandChartAxisLabelOptions(v)
+	}
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandPieChartAggregatedFieldWells(tfList []interface{}) *quicksight.PieChartAggregatedFieldWells {
+func expandPieChartFieldWells(tfList []any) *awstypes.PieChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.PieChartAggregatedFieldWells{}
+	apiObject := &awstypes.PieChartFieldWells{}
 
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
-		config.Category = expandDimensionFields(v)
-	}
-	if v, ok := tfMap["small_multiples"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiples = expandDimensionFields(v)
-	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+	if v, ok := tfMap["pie_chart_aggregated_field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.PieChartAggregatedFieldWells = expandPieChartAggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandPieChartSortConfiguration(tfList []interface{}) *quicksight.PieChartSortConfiguration {
+func expandPieChartAggregatedFieldWells(tfList []any) *awstypes.PieChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.PieChartSortConfiguration{}
+	apiObject := &awstypes.PieChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+		apiObject.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
-		config.CategorySort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["small_multiples"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiples = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["small_multiples_limit_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesLimitConfiguration = expandItemsLimitConfiguration(v)
-	}
-	if v, ok := tfMap["small_multiples_sort"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandDonutOptions(tfList []interface{}) *quicksight.DonutOptions {
+func expandPieChartSortConfiguration(tfList []any) *awstypes.PieChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.DonutOptions{}
+	apiObject := &awstypes.PieChartSortConfiguration{}
 
-	if v, ok := tfMap["arc_options"].([]interface{}); ok && len(v) > 0 {
-		options.ArcOptions = expandArcOptions(v)
+	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["donut_center_options"].([]interface{}); ok && len(v) > 0 {
-		options.DonutCenterOptions = expandDonutCenterOptions(v)
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+		apiObject.CategorySort = expandFieldSortOptionsList(v)
+	}
+	if v, ok := tfMap["small_multiples_limit_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesLimitConfiguration = expandItemsLimitConfiguration(v)
+	}
+	if v, ok := tfMap["small_multiples_sort"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesSort = expandFieldSortOptionsList(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandArcOptions(tfList []interface{}) *quicksight.ArcOptions {
+func expandDonutOptions(tfList []any) *awstypes.DonutOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.ArcOptions{}
+	apiObject := &awstypes.DonutOptions{}
+
+	if v, ok := tfMap["arc_options"].([]any); ok && len(v) > 0 {
+		apiObject.ArcOptions = expandArcOptions(v)
+	}
+	if v, ok := tfMap["donut_center_options"].([]any); ok && len(v) > 0 {
+		apiObject.DonutCenterOptions = expandDonutCenterOptions(v)
+	}
+
+	return apiObject
+}
+
+func expandArcOptions(tfList []any) *awstypes.ArcOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.ArcOptions{}
 
 	if v, ok := tfMap["arc_thickness"].(string); ok && v != "" {
-		options.ArcThickness = aws.String(v)
+		apiObject.ArcThickness = awstypes.ArcThickness(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandDonutCenterOptions(tfList []interface{}) *quicksight.DonutCenterOptions {
+func expandDonutCenterOptions(tfList []any) *awstypes.DonutCenterOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.DonutCenterOptions{}
+	apiObject := &awstypes.DonutCenterOptions{}
 
 	if v, ok := tfMap["label_visibility"].(string); ok && v != "" {
-		options.LabelVisibility = aws.String(v)
+		apiObject.LabelVisibility = awstypes.Visibility(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
+func flattenPieChartVisual(apiObject *awstypes.PieChartVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+	tfMap := map[string]any{
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -348,24 +438,25 @@ func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
 		tfMap["chart_configuration"] = flattenPieChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) []interface{} {
+func flattenPieChartConfiguration(apiObject *awstypes.PieChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoryLabelOptions != nil {
 		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
 	}
@@ -388,7 +479,7 @@ func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) [
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenPieChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenPieChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
@@ -400,15 +491,16 @@ func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) [
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDonutOptions(apiObject *quicksight.DonutOptions) []interface{} {
+func flattenDonutOptions(apiObject *awstypes.DonutOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.ArcOptions != nil {
 		tfMap["arc_options"] = flattenArcOptions(apiObject.ArcOptions)
 	}
@@ -416,54 +508,54 @@ func flattenDonutOptions(apiObject *quicksight.DonutOptions) []interface{} {
 		tfMap["donut_center_options"] = flattenDonutCenterOptions(apiObject.DonutCenterOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenArcOptions(apiObject *quicksight.ArcOptions) []interface{} {
+func flattenArcOptions(apiObject *awstypes.ArcOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.ArcThickness != nil {
-		tfMap["arc_thickness"] = aws.StringValue(apiObject.ArcThickness)
+	tfMap := map[string]any{
+		"arc_thickness": apiObject.ArcThickness,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDonutCenterOptions(apiObject *quicksight.DonutCenterOptions) []interface{} {
+func flattenDonutCenterOptions(apiObject *awstypes.DonutCenterOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.LabelVisibility != nil {
-		tfMap["label_visibility"] = aws.StringValue(apiObject.LabelVisibility)
+	tfMap := map[string]any{
+		"label_visibility": apiObject.LabelVisibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPieChartFieldWells(apiObject *quicksight.PieChartFieldWells) []interface{} {
+func flattenPieChartFieldWells(apiObject *awstypes.PieChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.PieChartAggregatedFieldWells != nil {
 		tfMap["pie_chart_aggregated_field_wells"] = flattenPieChartAggregatedFieldWells(apiObject.PieChartAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPieChartAggregatedFieldWells(apiObject *quicksight.PieChartAggregatedFieldWells) []interface{} {
+func flattenPieChartAggregatedFieldWells(apiObject *awstypes.PieChartAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
@@ -474,15 +566,16 @@ func flattenPieChartAggregatedFieldWells(apiObject *quicksight.PieChartAggregate
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPieChartSortConfiguration(apiObject *quicksight.PieChartSortConfiguration) []interface{} {
+func flattenPieChartSortConfiguration(apiObject *awstypes.PieChartSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoryItemsLimit != nil {
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
@@ -496,5 +589,5 @@ func flattenPieChartSortConfiguration(apiObject *quicksight.PieChartSortConfigur
 		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

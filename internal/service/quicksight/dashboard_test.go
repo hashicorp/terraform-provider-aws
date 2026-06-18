@@ -1,49 +1,45 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightDashboard_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
+	var dashboard awstypes.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 				),
 			},
 			{
@@ -57,27 +53,34 @@ func TestAccQuickSightDashboard_basic(t *testing.T) {
 
 func TestAccQuickSightDashboard_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
+	var dashboard awstypes.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDashboard(), resourceName),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDashboard(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -85,30 +88,29 @@ func TestAccQuickSightDashboard_disappears(t *testing.T) {
 
 func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
+	var dashboard awstypes.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_TemplateSourceEntity(rId, rName, sourceId, sourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{
@@ -123,42 +125,40 @@ func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 
 func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
-	var dashboardV1 quicksight.Dashboard
+	var dashboard awstypes.Dashboard
+	var dashboardV1 awstypes.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
 			{
 				Config: testAccDashboardConfig_basic(rId, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboardV1),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboardV1),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
-					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboardV1),
-					testAccCheckDashboardName(&dashboardV1, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
+					testAccCheckDashboardVersionExists(ctx, t, resourceName, 1, &dashboardV1),
 				),
 			},
 		},
@@ -167,27 +167,26 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 
 func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
+	var dashboard awstypes.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_DashboardSpecificConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_publish_options.0.ad_hoc_filtering_option.0.availability_status", quicksight.StatusDisabled),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_publish_options.0.ad_hoc_filtering_option.0.availability_status", string(awstypes.StatusDisabled)),
 				),
 			},
 			{
@@ -200,73 +199,95 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccQuickSightDashboard_pieChartVisualArcThickness(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var dashboard awstypes.Dashboard
+	resourceName := "aws_quicksight_dashboard.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDashboardConfig_pieChartVisualArcThickness(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.pie_chart_visual.0.chart_configuration.0.donut_options.0.arc_options.0.arc_thickness", string(awstypes.ArcThicknessWhole)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
+			},
+		},
+	})
+}
+
+func testAccCheckDashboardDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_dashboard" {
 				continue
 			}
 
-			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, tfquicksight.DashboardLatestVersion)
+			_, err := tfquicksight.FindDashboardByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["dashboard_id"], tfquicksight.DashboardLatestVersion)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("QuickSight Dashboard (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("QuickSight Dashboard (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
-	return testAccCheckDashboardVersionExists(ctx, name, tfquicksight.DashboardLatestVersion, dashboard)
+func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, v *awstypes.Dashboard) resource.TestCheckFunc {
+	return testAccCheckDashboardVersionExists(ctx, t, n, tfquicksight.DashboardLatestVersion, v)
 }
 
-func testAccCheckDashboardVersionExists(ctx context.Context, name string, version int64, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
+func testAccCheckDashboardVersionExists(ctx context.Context, t *testing.T, n string, version int64, v *awstypes.Dashboard) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, version)
+		output, err := tfquicksight.FindDashboardByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["dashboard_id"], version)
 
 		if err != nil {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, rs.Primary.ID, err)
+			return err
 		}
 
-		*dashboard = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckDashboardName(dashboard *quicksight.Dashboard, expectedName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *dashboard.Name != expectedName {
-			return create.Error(names.QuickSight, create.ErrActionChecking, tfquicksight.ResNameDashboard, *dashboard.Name, errors.New("value does not match expected"))
-		}
-
-		return nil
-	}
-}
-
-func testAccDashboardConfigBase(rId string, rName string) string {
+func testAccDashboardConfig_base(rId string, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -313,7 +334,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDashboardConfig_basic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDashboardConfigBase(rId, rName),
+		testAccDashboardConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_dashboard" "test" {
   dashboard_id        = %[1]q
@@ -381,7 +402,7 @@ resource "aws_quicksight_dashboard" "test" {
 
 func testAccDashboardConfig_TemplateSourceEntity(rId, rName, sourceId, sourceName string) string {
 	return acctest.ConfigCompose(
-		testAccDashboardConfigBase(rId, rName),
+		testAccDashboardConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_template" "test" {
   template_id         = %[3]q
@@ -473,7 +494,7 @@ resource "aws_quicksight_dashboard" "test" {
 
 func testAccDashboardConfig_DashboardSpecificConfig(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDashboardConfigBase(rId, rName),
+		testAccDashboardConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_dashboard" "test" {
   dashboard_id        = %[1]q
@@ -567,6 +588,61 @@ resource "aws_quicksight_dashboard" "test" {
                     aggregation_function = "COUNT"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDashboardConfig_pieChartVisualArcThickness(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDashboardConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_dashboard" "test" {
+  dashboard_id        = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        pie_chart_visual {
+          visual_id = "PieChart"
+          title {
+            format_text {
+              plain_text = "Pie Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              pie_chart_aggregated_field_wells {}
+            }
+            category_label_options {
+              sort_icon_visibility = "HIDDEN"
+              visibility           = "HIDDEN"
+            }
+            data_labels {
+              category_label_visibility = "VISIBLE"
+              label_color               = null
+              label_content             = null
+              measure_label_visibility  = "VISIBLE"
+              overlap                   = "DISABLE_OVERLAP"
+              position                  = null
+              visibility                = "VISIBLE"
+            }
+            donut_options {
+              arc_options {
+                arc_thickness = "WHOLE"
               }
             }
           }

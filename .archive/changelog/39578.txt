@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Add `transition_default_minimum_object_size` argument
+```
+
+```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: Amazon S3 now applies a default minimum object size of 128 KB for S3 Lifecycle transition rules to any S3 storage class. This new default behavior will be applied to any new or modified S3 Lifecycle configuration. You can override this new default and customize the minimum object size for S3 Lifecycle transition rules to any value
+```

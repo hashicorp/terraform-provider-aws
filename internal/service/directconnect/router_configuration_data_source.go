@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -7,151 +9,147 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dx_router_configuration")
-func DataSourceRouterConfiguration() *schema.Resource {
+// @SDKDataSource("aws_dx_router_configuration", name="Router Configuration")
+func dataSourceRouterConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouterConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"customer_router_config": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"router": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"platform": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"router_type_identifier": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"software": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vendor": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name_for_mac_sec": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"customer_router_config": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"router": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"platform": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"router_type_identifier": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"software": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"vendor": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name_for_mac_sec": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"router_type_identifier": {
-				Type: schema.TypeString,
-				// even though the API Reference shows this as optional, the API call will fail without this argument
-				Required: true,
-			},
-			"virtual_interface_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"virtual_interface_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"router_type_identifier": {
+					Type: schema.TypeString,
+					// even though the API Reference shows this as optional, the API call will fail without this argument
+					Required: true,
+				},
+				"virtual_interface_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"virtual_interface_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-const (
-	DSNameRouterConfiguration = "Router Configuration Data Source"
-)
-
-func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
-	virtualInterfaceId := d.Get("virtual_interface_id").(string)
+	vifID := d.Get("virtual_interface_id").(string)
+	id := fmt.Sprintf("%s:%s", vifID, routerTypeIdentifier)
+	output, err := findRouterConfigurationByTwoPartKey(ctx, conn, routerTypeIdentifier, vifID)
 
-	out, err := findRouterConfigurationByTypeAndVif(ctx, conn, routerTypeIdentifier, virtualInterfaceId)
 	if err != nil {
-		return create.AppendDiagError(diags, names.DirectConnect, create.ErrActionReading, DSNameRouterConfiguration, virtualInterfaceId, err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Router Configuration (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", virtualInterfaceId, routerTypeIdentifier))
-
-	d.Set("customer_router_config", out.CustomerRouterConfig)
-	d.Set("router_type_identifier", out.Router.RouterTypeIdentifier)
-	d.Set("virtual_interface_id", out.VirtualInterfaceId)
-	d.Set("virtual_interface_name", out.VirtualInterfaceName)
-
-	if err := d.Set("router", flattenRouter(out.Router)); err != nil {
-		return create.AppendDiagError(diags, names.DirectConnect, create.ErrActionSetting, DSNameRouterConfiguration, d.Id(), err)
+	d.SetId(id)
+	d.Set("customer_router_config", output.CustomerRouterConfig)
+	if err := d.Set("router", flattenRouter(output.Router)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting router: %s", err)
 	}
+	d.Set("router_type_identifier", output.Router.RouterTypeIdentifier)
+	d.Set("virtual_interface_id", output.VirtualInterfaceId)
+	d.Set("virtual_interface_name", output.VirtualInterfaceName)
 
 	return diags
 }
 
-func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnect.DirectConnect, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {
+func findRouterConfigurationByTwoPartKey(ctx context.Context, conn *directconnect.Client, routerTypeIdentifier, vifID string) (*directconnect.DescribeRouterConfigurationOutput, error) {
 	input := &directconnect.DescribeRouterConfigurationInput{
 		RouterTypeIdentifier: aws.String(routerTypeIdentifier),
-		VirtualInterfaceId:   aws.String(virtualInterfaceId),
+		VirtualInterfaceId:   aws.String(vifID),
 	}
 
-	output, err := conn.DescribeRouterConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeRouterConfiguration(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	if output == nil || output.Router == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func flattenRouter(apiObject *directconnect.RouterType) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRouter(apiObject *awstypes.RouterType) []any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Platform; v != nil {
-		tfMap["platform"] = aws.StringValue(v)
+		tfMap["platform"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RouterTypeIdentifier; v != nil {
-		tfMap["router_type_identifier"] = aws.StringValue(v)
+		tfMap["router_type_identifier"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Software; v != nil {
-		tfMap["software"] = aws.StringValue(v)
+		tfMap["software"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Vendor; v != nil {
-		tfMap["vendor"] = aws.StringValue(v)
+		tfMap["vendor"] = aws.ToString(v)
 	}
 
 	if v := apiObject.XsltTemplateName; v != nil {
-		tfMap["xslt_template_name"] = aws.StringValue(v)
+		tfMap["xslt_template_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.XsltTemplateNameForMacSec; v != nil {
-		tfMap["xslt_template_name_for_mac_sec"] = aws.StringValue(v)
+		tfMap["xslt_template_name_for_mac_sec"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -9,14 +11,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,7 +29,7 @@ import (
 
 // @SDKResource("aws_sagemaker_device_fleet", name="Device Fleet")
 // @Tags(identifierAttribute="arn")
-func ResourceDeviceFleet() *schema.Resource {
+func resourceDeviceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceFleetCreate,
 		ReadWithoutTimeout:   resourceDeviceFleetRead,
@@ -35,72 +39,73 @@ func ResourceDeviceFleet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 800),
-			},
-			"device_fleet_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"enable_iot_role_alias": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"iot_role_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"output_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_output_location": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 800),
+				},
+				"device_fleet_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"enable_iot_role_alias": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"iot_role_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"output_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_output_location": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
 						},
 					},
 				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.CreateDeviceFleetInput{
 		DeviceFleetName:    aws.String(name),
-		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]any)),
 		EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -113,11 +118,11 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.CreateDeviceFleetWithContext(ctx, input)
-	}, "ValidationException")
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
+		return conn.CreateDeviceFleet(ctx, input)
+	}, ErrCodeValidationException)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Device Fleet %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Device Fleet %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -125,47 +130,47 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	deviceFleet, err := FindDeviceFleetByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
+	deviceFleet, err := findDeviceFleetByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Unable to find SageMaker AI Device Fleet (%s); removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(deviceFleet.DeviceFleetArn)
 	d.Set("device_fleet_name", deviceFleet.DeviceFleetName)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, deviceFleet.DeviceFleetArn)
 	d.Set(names.AttrRoleARN, deviceFleet.RoleArn)
 	d.Set(names.AttrDescription, deviceFleet.Description)
 
-	iotAlias := aws.StringValue(deviceFleet.IotRoleAlias)
+	iotAlias := aws.ToString(deviceFleet.IotRoleAlias)
 	d.Set("iot_role_alias", iotAlias)
 	d.Set("enable_iot_role_alias", len(iotAlias) > 0)
 
 	if err := d.Set("output_config", flattenFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting output_config for SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting output_config for SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
-			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]any)),
 			RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
@@ -173,42 +178,66 @@ func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %s", input.String())
-		_, err := conn.UpdateDeviceFleetWithContext(ctx, input)
+		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %#v", input)
+		_, err := conn.UpdateDeviceFleet(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Device Fleet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Device Fleet: %s", err)
 		}
 	}
 
 	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteDeviceFleetInput{
 		DeviceFleetName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteDeviceFleetWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "DeviceFleet with name") {
+	if _, err := conn.DeleteDeviceFleet(ctx, input); err != nil {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "DeviceFleet with name") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutputConfig {
+func findDeviceFleetByName(ctx context.Context, conn *sagemaker.Client, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
+	input := &sagemaker.DescribeDeviceFleetInput{
+		DeviceFleetName: aws.String(id),
+	}
+
+	output, err := conn.DescribeDeviceFleet(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No devicefleet with name") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func expandFeatureDeviceFleetOutputConfig(l []any) *awstypes.EdgeOutputConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.EdgeOutputConfig{
+	config := &awstypes.EdgeOutputConfig{
 		S3OutputLocation: aws.String(m["s3_output_location"].(string)),
 	}
 
@@ -219,18 +248,18 @@ func expandFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutput
 	return config
 }
 
-func flattenFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) []map[string]interface{} {
+func flattenFeatureDeviceFleetOutputConfig(config *awstypes.EdgeOutputConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"s3_output_location": aws.StringValue(config.S3OutputLocation),
+	m := map[string]any{
+		"s3_output_location": aws.ToString(config.S3OutputLocation),
 	}
 
 	if config.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

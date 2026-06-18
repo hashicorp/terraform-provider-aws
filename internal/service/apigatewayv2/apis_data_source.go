@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigatewayv2
 
@@ -23,32 +25,34 @@ func dataSourceAPIs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"protocol_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags: tftags.TagsSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Set:      schema.HashString,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"protocol_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags: tftags.TagsSchema(),
+			}
 		},
 	}
 }
 
-func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	apis, err := findAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
 
@@ -67,14 +71,14 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 			continue
 		}
 
-		if len(tagsToMatch) > 0 && !KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+		if len(tagsToMatch) > 0 && !keyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
 			continue
 		}
 
 		ids = append(ids, api.ApiId)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set(names.AttrIDs, flex.FlattenStringSet(ids)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)

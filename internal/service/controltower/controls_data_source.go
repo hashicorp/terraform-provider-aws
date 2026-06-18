@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package controltower
 
@@ -22,22 +24,24 @@ func dataSourceControls() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceControlsRead,
 
-		Schema: map[string]*schema.Schema{
-			"enabled_controls": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"target_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enabled_controls": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"target_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -54,7 +58,7 @@ func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(targetIdentifier)
-	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v *types.EnabledControlSummary) string {
+	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v types.EnabledControlSummary) string {
 		return aws.ToString(v.ControlIdentifier)
 	}))
 

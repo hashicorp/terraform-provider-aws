@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -8,35 +8,33 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointEventStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stream pinpoint.EventStream
+	var stream awstypes.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckEventStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventStreamExists(ctx, resourceName, &stream),
+					testAccCheckEventStreamExists(ctx, t, resourceName, &stream),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test", names.AttrApplicationID),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -50,7 +48,7 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventStreamExists(ctx, resourceName, &stream),
+					testAccCheckEventStreamExists(ctx, t, resourceName, &stream),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test", names.AttrApplicationID),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -62,29 +60,37 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 
 func TestAccPinpointEventStream_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stream pinpoint.EventStream
+	var stream awstypes.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckEventStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEventStream(), resourceName),
+					testAccCheckEventStreamExists(ctx, t, resourceName, &stream),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckEventStreamExists(ctx context.Context, n string, stream *pinpoint.EventStream) resource.TestCheckFunc {
+func testAccCheckEventStreamExists(ctx context.Context, t *testing.T, n string, stream *awstypes.EventStream) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -92,22 +98,44 @@ func testAccCheckEventStreamExists(ctx context.Context, n string, stream *pinpoi
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint event stream with that ID exists")
+			return fmt.Errorf("No End User Messaging event stream with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
-		// Check if the app exists
-		params := &pinpoint.GetEventStreamInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetEventStreamWithContext(ctx, params)
+		output, err := tfpinpoint.FindEventStreamByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*stream = *output.EventStream
+		*stream = *output
+
+		return nil
+	}
+}
+
+func testAccCheckEventStreamDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_event_stream" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindEventStreamByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("End User Messaging Event Stream %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -169,31 +197,4 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 `, rName, streamName)
-}
-
-func testAccCheckEventStreamDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_event_stream" {
-				continue
-			}
-
-			// Check if the event stream exists
-			params := &pinpoint.GetEventStreamInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetEventStreamWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("Event stream exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

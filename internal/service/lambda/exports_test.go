@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -6,6 +6,7 @@ package lambda
 // Exports for use in tests only.
 var (
 	ResourceAlias                        = resourceAlias
+	ResourceCapacityProvider             = newResourceCapacityProvider
 	ResourceCodeSigningConfig            = resourceCodeSigningConfig
 	ResourceEventSourceMapping           = resourceEventSourceMapping
 	ResourceFunction                     = resourceFunction
@@ -18,10 +19,12 @@ var (
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
+	FindCapacityProviderByName                   = findCapacityProviderByName
 	FindCodeSigningConfigByARN                   = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName
 	FindFunctionEventInvokeConfigByTwoPartKey    = findFunctionEventInvokeConfigByTwoPartKey
+	FindFunctionRecursionConfigByName            = findFunctionRecursionConfigByName
 	FindFunctionURLByTwoPartKey                  = findFunctionURLByTwoPartKey
 	FindLayerVersionByTwoPartKey                 = findLayerVersionByTwoPartKey
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
@@ -31,7 +34,31 @@ var (
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN
+	LayerNameFromARN                             = layerNameFromARN
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
+	ParseLayerVersionARN                         = parseLayerVersionARN
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
+	InvocationParseResourceID                    = invocationParseResourceID
+
+	ValidFunctionName               = validFunctionName
+	FunctionNameValidator           = functionNameValidator
+	KafkaOrARNPattern               = kafkaOrARNPattern
+	FunctionRegexpPattern           = functionRegexp
+	ValidPermissionAction           = validPermissionAction
+	ValidPermissionEventSourceToken = validPermissionEventSourceToken
+	ValidQualifier                  = validQualifier
+	ValidPolicyStatementID          = validPolicyStatementID
+
+	BuildInput = buildInput
+
+	InvocationActionCreate = invocationActionCreate
+	InvocationActionDelete = invocationActionDelete
+	InvocationActionUpdate = invocationActionUpdate
+)
+
+type (
+	InvocationAction = invocationAction
+	Policy           = policy
+	PolicyStatement  = policyStatement
 )

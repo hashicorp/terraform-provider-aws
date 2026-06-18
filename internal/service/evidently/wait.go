@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package evidently
@@ -11,57 +11,55 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
-		Refresh: statusFeature(ctx, conn, id),
+		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.FeatureStatusUpdating},
-		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
-		Refresh: statusFeature(ctx, conn, id),
+		Pending: enum.Slice(awstypes.FeatureStatusUpdating),
+		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.FeatureStatusAvailable},
+		Pending: enum.Slice(awstypes.FeatureStatusAvailable),
 		Target:  []string{},
-		Refresh: statusFeature(ctx, conn, id),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
@@ -72,7 +70,7 @@ func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.LaunchStatusCreated),
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -80,7 +78,7 @@ func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -93,7 +91,7 @@ func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LaunchStatusUpdating),
 		Target:  enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusRunning),
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -101,7 +99,7 @@ func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -114,7 +112,7 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusCompleted, awstypes.LaunchStatusRunning, awstypes.LaunchStatusCancelled, awstypes.LaunchStatusUpdating),
 		Target:  []string{},
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -122,7 +120,7 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -135,7 +133,7 @@ func waitProjectCreated(ctx context.Context, conn *evidently.Client, nameOrARN s
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 
@@ -152,7 +150,7 @@ func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN s
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusUpdating),
 		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 
@@ -167,9 +165,9 @@ func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN s
 
 func waitProjectDeleted(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.ProjectStatusAvailable},
+		Pending: enum.Slice(awstypes.ProjectStatusAvailable),
 		Target:  []string{},
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 

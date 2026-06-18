@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -15,6 +15,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 
   tags = var.resource_tags
 }

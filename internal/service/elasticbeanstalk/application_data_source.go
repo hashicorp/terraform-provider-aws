@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -13,58 +15,60 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elastic_beanstalk_application")
-func DataSourceApplication() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_application", name="Application")
+func dataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
-		Schema: map[string]*schema.Schema{
-			"appversion_lifecycle": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_source_from_s3": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"max_age_in_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"max_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrServiceRole: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appversion_lifecycle": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delete_source_from_s3": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"max_age_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"max_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrServiceRole: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	app, err := FindApplicationByName(ctx, conn, name)
+	app, err := findApplicationByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", name, err)

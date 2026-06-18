@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transcribe
 
@@ -16,12 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,60 +47,60 @@ func ResourceLanguageModel() *schema.Resource {
 			Create: schema.DefaultTimeout(600 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_model_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.BaseModelName](),
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_access_role_arn": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"tuning_data_s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_model_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BaseModelName](),
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_access_role_arn": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"tuning_data_s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.LanguageCode](),
-			},
-			"model_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.LanguageCode](),
+				},
+				"model_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -108,7 +110,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -119,12 +121,12 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {
-		in.InputDataConfig = expandInputDataConfig(v.([]interface{}))
+	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]any)) > 0 {
+		in.InputDataConfig = expandInputDataConfig(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -149,13 +151,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceLanguageModelRead(ctx, d, meta)...)
 }
 
-func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -166,10 +168,10 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("language-model/%s", d.Id()),
 	}.String()
 
@@ -185,20 +187,21 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceLanguageModelRead(ctx, d, meta)
 }
 
-func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
-	_, err := conn.DeleteLanguageModel(ctx, &transcribe.DeleteLanguageModelInput{
+	input := transcribe.DeleteLanguageModelInput{
 		ModelName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLanguageModel(ctx, &input)
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {
@@ -216,7 +219,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
-		Refresh:                   statusLanguageModel(ctx, conn, id),
+		Refresh:                   statusLanguageModel(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -230,10 +233,10 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLanguageModel(conn *transcribe.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -255,8 +258,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -265,18 +267,18 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	}
 
 	if out == nil || out.LanguageModel == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.LanguageModel, nil
 }
 
-func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
+func flattenInputDataConfig(apiObjects *types.InputDataConfig) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"data_access_role_arn": apiObjects.DataAccessRoleArn,
 		"s3_uri":               apiObjects.S3Uri,
 	}
@@ -285,17 +287,17 @@ func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
 		m["tuning_data_s3_uri"] = apiObjects.TuningDataS3Uri
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandInputDataConfig(tfList []interface{}) *types.InputDataConfig {
+func expandInputDataConfig(tfList []any) *types.InputDataConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	s := &types.InputDataConfig{}
 
-	i := tfList[0].(map[string]interface{})
+	i := tfList[0].(map[string]any)
 
 	if val, ok := i["data_access_role_arn"]; ok {
 		s.DataAccessRoleArn = aws.String(val.(string))

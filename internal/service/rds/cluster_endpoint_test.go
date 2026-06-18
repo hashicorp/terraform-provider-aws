@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -6,19 +6,15 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,41 +24,39 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rInt := sdkacctest.RandInt()
-	var customReaderEndpoint rds.DBClusterEndpoint
-	var customEndpoint rds.DBClusterEndpoint
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var customReaderEndpoint types.DBClusterEndpoint
+	var customEndpoint types.DBClusterEndpoint
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, readerResourceName, &customReaderEndpoint),
-					testAccCheckClusterEndpointAttributes(&customReaderEndpoint),
-					testAccCheckClusterEndpointExists(ctx, defaultResourceName, &customEndpoint),
-					testAccCheckClusterEndpointAttributes(&customEndpoint),
-					acctest.MatchResourceAttrRegionalARN(readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+				Config: testAccClusterEndpointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterEndpointExists(ctx, t, readerResourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, t, defaultResourceName, &customEndpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, names.AttrEndpoint),
-					acctest.MatchResourceAttrRegionalARN(defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_rds_cluster_endpoint.reader",
+				ResourceName:      readerResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 
 			{
-				ResourceName:      "aws_rds_cluster_endpoint.default",
+				ResourceName:      defaultResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -76,21 +70,21 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rInt := sdkacctest.RandInt()
-	var customReaderEndpoint rds.DBClusterEndpoint
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var customReaderEndpoint types.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig_tags1(rInt, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -100,19 +94,19 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterEndpointConfig_tags2(rInt, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterEndpointConfig_tags1(rInt, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -120,40 +114,9 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(v.Endpoint) == "" {
-			return fmt.Errorf("empty endpoint domain")
-		}
-
-		if aws.StringValue(v.CustomEndpointType) != "READER" &&
-			aws.StringValue(v.CustomEndpointType) != "ANY" {
-			return fmt.Errorf("Incorrect endpoint type: expected: READER or ANY, got: %s", aws.StringValue(v.CustomEndpointType))
-		}
-
-		if len(v.StaticMembers) == 0 && len(v.ExcludedMembers) == 0 {
-			return fmt.Errorf("Empty members")
-		}
-
-		for _, m := range aws.StringValueSlice(v.StaticMembers) {
-			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
-				return fmt.Errorf("Incorrect StaticMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
-			}
-		}
-
-		for _, m := range aws.StringValueSlice(v.ExcludedMembers) {
-			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
-				return fmt.Errorf("Incorrect ExcludeMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_endpoint" {
@@ -162,7 +125,7 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -177,20 +140,17 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *rds.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExists(ctx context.Context, t *testing.T, n string, v *types.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Cluster Endpoint ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
@@ -201,10 +161,8 @@ func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *rds.DBC
 	}
 }
 
-func testAccClusterEndpointBaseConfig(n int) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccClusterEndpointConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.default.engine
   engine_version             = aws_rds_cluster.default.engine_version
@@ -212,42 +170,43 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%[1]d"
+  cluster_identifier = %[1]q
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
     data.aws_availability_zones.available.names[2]
   ]
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
+
+  database_name       = "test"
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
 }
 
 resource "aws_rds_cluster_instance" "test1" {
   apply_immediately  = true
   cluster_identifier = aws_rds_cluster.default.id
-  identifier         = "tf-aurora-cluster-instance-test1-%[1]d"
+  identifier         = "%[1]s-1"
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  engine             = aws_rds_cluster.default.engine
 }
 
 resource "aws_rds_cluster_instance" "test2" {
   apply_immediately  = true
   cluster_identifier = aws_rds_cluster.default.id
-  identifier         = "tf-aurora-cluster-instance-test2-%[1]d"
+  identifier         = "%[1]s-2"
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  engine             = aws_rds_cluster.default.engine
 }
-`, n))
+`, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
-func testAccClusterEndpointConfig_basic(n int) string {
-	return acctest.ConfigCompose(
-		testAccClusterEndpointBaseConfig(n),
-		fmt.Sprintf(`
+func testAccClusterEndpointConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
-  cluster_endpoint_identifier = "reader-%[1]d"
+  cluster_endpoint_identifier = "%[1]s-reader"
   custom_endpoint_type        = "READER"
 
   static_members = [aws_rds_cluster_instance.test2.id]
@@ -255,21 +214,19 @@ resource "aws_rds_cluster_endpoint" "reader" {
 
 resource "aws_rds_cluster_endpoint" "default" {
   cluster_identifier          = aws_rds_cluster.default.id
-  cluster_endpoint_identifier = "default-%[1]d"
+  cluster_endpoint_identifier = "%[1]s-default"
   custom_endpoint_type        = "ANY"
 
   excluded_members = [aws_rds_cluster_instance.test2.id]
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterEndpointConfig_tags1(n int, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccClusterEndpointBaseConfig(n),
-		fmt.Sprintf(`
+func testAccClusterEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccClusterEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
-  cluster_endpoint_identifier = "reader-%[1]d"
+  cluster_endpoint_identifier = "%[1]s-reader"
   custom_endpoint_type        = "READER"
 
   static_members = [aws_rds_cluster_instance.test2.id]
@@ -278,16 +235,14 @@ resource "aws_rds_cluster_endpoint" "reader" {
     %[2]q = %[3]q
   }
 }
-`, n, tagKey1, tagValue1))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterEndpointConfig_tags2(n int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccClusterEndpointBaseConfig(n),
-		fmt.Sprintf(`
+func testAccClusterEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccClusterEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
-  cluster_endpoint_identifier = "reader-%[1]d"
+  cluster_endpoint_identifier = "%[1]s-reader"
   custom_endpoint_type        = "READER"
 
   static_members = [aws_rds_cluster_instance.test2.id]
@@ -297,5 +252,5 @@ resource "aws_rds_cluster_endpoint" "reader" {
     %[4]q = %[5]q
   }
 }
-`, n, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

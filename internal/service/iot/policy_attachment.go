@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -9,44 +11,46 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_policy_attachment")
-func ResourcePolicyAttachment() *schema.Resource {
+// @SDKResource("aws_iot_policy_attachment", name="Policy Attachment")
+func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTarget: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTarget: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	policyName := d.Get(names.AttrPolicy).(string)
 	target := d.Get(names.AttrTarget).(string)
@@ -56,7 +60,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		Target:     aws.String(target),
 	}
 
-	_, err := conn.AttachPolicyWithContext(ctx, input)
+	_, err := conn.AttachPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IoT Policy Attachment (%s): %s", id, err)
@@ -67,18 +71,18 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	policyName, target, err := policyAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = FindAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
+	_, err = findAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -91,9 +95,9 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	policyName, target, err := policyAttachmentParseResourceID(d.Id())
 	if err != nil {
@@ -101,14 +105,12 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Policy Attachment: %s", d.Id())
-	_, err = conn.DetachPolicyWithContext(ctx, &iot.DetachPolicyInput{
+	_, err = conn.DetachPolicy(ctx, &iot.DetachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
 	})
 
-	// DetachPolicy doesn't return an error if the policy doesn't exist,
-	// but it returns an error if the Target is not found.
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -119,54 +121,44 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.IoT, policyName, target string) (*iot.Policy, error) {
+func findAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.Client, policyName, target string) (*awstypes.Policy, error) {
 	input := &iot.ListAttachedPoliciesInput{
-		PageSize:  aws.Int64(250),
-		Recursive: aws.Bool(false),
+		PageSize:  aws.Int32(250),
+		Recursive: false,
 		Target:    aws.String(target),
 	}
 
-	return findAttachedPolicy(ctx, conn, input, func(v *iot.Policy) bool {
-		return aws.StringValue(v.PolicyName) == policyName
-	})
+	return findAttachedPolicy(ctx, conn, input)
 }
 
-func findAttachedPolicy(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput, filter tfslices.Predicate[*iot.Policy]) (*iot.Policy, error) {
-	output, err := findAttachedPolicies(ctx, conn, input, filter)
+func findAttachedPolicy(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) (*awstypes.Policy, error) {
+	output, err := findAttachedPolicies(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertFirstValueResult(output)
 }
 
-func findAttachedPolicies(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput, filter tfslices.Predicate[*iot.Policy]) ([]*iot.Policy, error) {
-	var output []*iot.Policy
+func findAttachedPolicies(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) ([]awstypes.Policy, error) {
+	var output []awstypes.Policy
 
-	err := conn.ListAttachedPoliciesPagesWithContext(ctx, input, func(page *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := iot.NewListAttachedPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.Policies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.Policies...)
 	}
 
 	return output, nil

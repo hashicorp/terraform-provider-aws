@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -8,263 +10,371 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_backup_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
-func ResourceFramework() *schema.Resource {
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
+// @Testing(generator="randomFrameworkName(t)")
+func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
 		ReadWithoutTimeout:   resourceFrameworkRead,
 		UpdateWithoutTimeout: resourceFrameworkUpdate,
 		DeleteWithoutTimeout: resourceFrameworkDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute),
-			Delete: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_parameter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Optional: true,
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"control": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"input_parameter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-						names.AttrScope: {
-							// The control scope can include
-							// one or more resource types,
-							// a combination of a tag key and value,
-							// or a combination of one resource type and one resource ID.
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"compliance_resource_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 100,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							names.AttrScope: {
+								// The control scope can include
+								// one or more resource types,
+								// a combination of a tag key and value,
+								// or a combination of one resource type and one resource ID.
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"compliance_resource_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											MaxItems: 100,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"compliance_resource_types": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"compliance_resource_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
+										// A maximum of one key-value pair can be provided.
+										// The tag value is optional, but it cannot be an empty string
+										names.AttrTags: tftags.TagsSchema(),
 									},
-									// A maximum of one key-value pair can be provided.
-									// The tag value is optional, but it cannot be an empty string
-									names.AttrTags: tftags.TagsSchema(),
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validFrameworkName,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validFrameworkName,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateFrameworkInput{
-		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
 		FrameworkTags:     getTagsIn(ctx),
+		IdempotencyToken:  aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.FrameworkDescription = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateFrameworkWithContext(ctx, input)
+	_, err := conn.CreateFramework(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Backup Framework: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Framework (%s): %s", name, err)
 	}
 
-	// Set ID with the name since the name is unique for the framework
-	d.SetId(aws.StringValue(resp.FrameworkName))
+	d.SetId(name)
 
-	// waiter since the status changes from CREATE_IN_PROGRESS to either COMPLETED or FAILED
 	if _, err := waitFrameworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Framework (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for  Backup Framework (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceFrameworkRead(ctx, d, meta)...)
 }
 
-func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
-		FrameworkName: aws.String(d.Id()),
-	})
+	output, err := findFrameworkByName(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Framework (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, resp.FrameworkArn)
-	d.Set("deployment_status", resp.DeploymentStatus)
-	d.Set(names.AttrDescription, resp.FrameworkDescription)
-	d.Set(names.AttrName, resp.FrameworkName)
-	d.Set(names.AttrStatus, resp.FrameworkStatus)
-
-	if err := d.Set(names.AttrCreationTime, resp.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
-
-	if err := d.Set("control", flattenFrameworkControls(ctx, resp.FrameworkControls)); err != nil {
+	d.Set(names.AttrARN, output.FrameworkArn)
+	if err := d.Set("control", flattenFrameworkControls(ctx, output.FrameworkControls)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set("deployment_status", output.DeploymentStatus)
+	d.Set(names.AttrDescription, output.FrameworkDescription)
+	d.Set(names.AttrName, output.FrameworkName)
+	d.Set(names.AttrStatus, output.FrameworkStatus)
 
 	return diags
 }
 
-func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	if d.HasChanges(names.AttrDescription, "control") {
+	if d.HasChanges("control", names.AttrDescription) {
 		input := &backup.UpdateFrameworkInput{
-			IdempotencyToken:     aws.String(id.UniqueId()),
 			FrameworkControls:    expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 			FrameworkDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			FrameworkName:        aws.String(d.Id()),
+			IdempotencyToken:     aws.String(create.UniqueId(ctx)),
 		}
 
-		log.Printf("[DEBUG] Updating Backup Framework: %#v", input)
-
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.UpdateFrameworkWithContext(ctx, input)
-		}, backup.ErrCodeConflictException)
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.UpdateFramework(ctx, input)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Backup Framework (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFrameworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Framework (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Backup Framework (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceFrameworkRead(ctx, d, meta)...)
 }
 
-func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	input := &backup.DeleteFrameworkInput{
-		FrameworkName: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Backup Framework: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.DeleteFramework(ctx, &backup.DeleteFrameworkInput{
+			FrameworkName: aws.String(d.Id()),
+		})
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteFrameworkWithContext(ctx, input)
-	}, backup.ErrCodeConflictException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Backup Framework (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFrameworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Framework (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Backup Framework (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandFrameworkControls(ctx context.Context, controls []interface{}) []*backup.FrameworkControl {
-	if len(controls) == 0 {
+func findFrameworkByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeFrameworkOutput, error) {
+	input := &backup.DescribeFrameworkInput{
+		FrameworkName: aws.String(name),
+	}
+
+	return findFramework(ctx, conn, input)
+}
+
+func findFramework(ctx context.Context, conn *backup.Client, input *backup.DescribeFrameworkInput) (*backup.DescribeFrameworkOutput, error) {
+	output, err := conn.DescribeFramework(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusFramework(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findFrameworkByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.DeploymentStatus), nil
+	}
+}
+
+const (
+	frameworkStatusCompleted          = "COMPLETED"
+	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"
+	frameworkStatusDeletionInProgress = "DELETE_IN_PROGRESS"
+	frameworkStatusFailed             = "FAILED"
+	frameworkStatusUpdateInProgress   = "UPDATE_IN_PROGRESS"
+)
+
+func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{frameworkStatusCreationInProgress},
+		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
+		Refresh: statusFramework(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{frameworkStatusUpdateInProgress},
+		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
+		Refresh: statusFramework(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{frameworkStatusDeletionInProgress},
+		Target:  []string{},
+		Refresh: statusFramework(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*backup.DescribeFrameworkOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandFrameworkControls(ctx context.Context, tfList []any) []awstypes.FrameworkControl {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	frameworkControls := []*backup.FrameworkControl{}
+	apiObjects := []awstypes.FrameworkControl{}
 
-	for _, control := range controls {
-		tfMap := control.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
 		// on some updates, there is an { ControlName: "" } element in Framework Controls.
 		// this element must be skipped to avoid the "A control name is required." error
@@ -273,119 +383,126 @@ func expandFrameworkControls(ctx context.Context, controls []interface{}) []*bac
 			continue
 		}
 
-		frameworkControl := &backup.FrameworkControl{
+		apiObject := awstypes.FrameworkControl{
 			ControlName:  aws.String(tfMap[names.AttrName].(string)),
-			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]interface{})),
+			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]any)),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
-			frameworkControl.ControlInputParameters = expandInputParmaeters(tfMap["input_parameter"].(*schema.Set).List())
+			apiObject.ControlInputParameters = expandControlInputParameters(tfMap["input_parameter"].(*schema.Set).List())
 		}
 
-		frameworkControls = append(frameworkControls, frameworkControl)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return frameworkControls
+	return apiObjects
 }
 
-func expandInputParmaeters(inputParams []interface{}) []*backup.ControlInputParameter {
-	if len(inputParams) == 0 {
+func expandControlInputParameters(tfList []any) []awstypes.ControlInputParameter {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	controlInputParameters := []*backup.ControlInputParameter{}
+	apiObjects := []awstypes.ControlInputParameter{}
 
-	for _, inputParam := range inputParams {
-		tfMap := inputParam.(map[string]interface{})
-		controlInputParameter := &backup.ControlInputParameter{}
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+
+		apiObject := awstypes.ControlInputParameter{}
 
 		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-			controlInputParameter.ParameterName = aws.String(v)
+			apiObject.ParameterName = aws.String(v)
 		}
 
 		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-			controlInputParameter.ParameterValue = aws.String(v)
+			apiObject.ParameterValue = aws.String(v)
 		}
 
-		controlInputParameters = append(controlInputParameters, controlInputParameter)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return controlInputParameters
+	return apiObjects
 }
 
-func expandControlScope(ctx context.Context, scope []interface{}) *backup.ControlScope {
-	if len(scope) == 0 || scope[0] == nil {
+func expandControlScope(ctx context.Context, tfList []any) *awstypes.ControlScope {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := scope[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	controlScope := &backup.ControlScope{}
+	apiObject := &awstypes.ControlScope{}
 
 	if v, ok := tfMap["compliance_resource_ids"]; ok && v.(*schema.Set).Len() > 0 {
-		controlScope.ComplianceResourceIds = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.ComplianceResourceIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["compliance_resource_types"]; ok && v.(*schema.Set).Len() > 0 {
-		controlScope.ComplianceResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.ComplianceResourceTypes = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
-		controlScope.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+		apiObject.Tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
-	return controlScope
+	return apiObject
 }
 
-func flattenFrameworkControls(ctx context.Context, controls []*backup.FrameworkControl) []interface{} {
-	if controls == nil {
-		return []interface{}{}
+func flattenFrameworkControls(ctx context.Context, apiObjects []awstypes.FrameworkControl) []any {
+	if apiObjects == nil {
+		return []any{}
 	}
 
-	frameworkControls := []interface{}{}
-	for _, control := range controls {
-		values := map[string]interface{}{}
-		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
-		values[names.AttrName] = aws.StringValue(control.ControlName)
-		values[names.AttrScope] = flattenScope(ctx, control.ControlScope)
-		frameworkControls = append(frameworkControls, values)
+	tfList := []any{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		tfMap["input_parameter"] = flattenControlInputParameters(apiObject.ControlInputParameters)
+		tfMap[names.AttrName] = aws.ToString(apiObject.ControlName)
+		tfMap[names.AttrScope] = flattenControlScope(ctx, apiObject.ControlScope)
+
+		tfList = append(tfList, tfMap)
 	}
-	return frameworkControls
+
+	return tfList
 }
 
-func flattenInputParameters(inputParams []*backup.ControlInputParameter) []interface{} {
-	if inputParams == nil {
-		return []interface{}{}
+func flattenControlInputParameters(apiObjects []awstypes.ControlInputParameter) []any {
+	if apiObjects == nil {
+		return []any{}
 	}
 
-	controlInputParameters := []interface{}{}
-	for _, inputParam := range inputParams {
-		values := map[string]interface{}{}
-		values[names.AttrName] = aws.StringValue(inputParam.ParameterName)
-		values[names.AttrValue] = aws.StringValue(inputParam.ParameterValue)
-		controlInputParameters = append(controlInputParameters, values)
+	tfList := []any{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		tfMap[names.AttrName] = aws.ToString(apiObject.ParameterName)
+		tfMap[names.AttrValue] = aws.ToString(apiObject.ParameterValue)
+
+		tfList = append(tfList, tfMap)
 	}
-	return controlInputParameters
+
+	return tfList
 }
 
-func flattenScope(ctx context.Context, scope *backup.ControlScope) []interface{} {
-	if scope == nil {
-		return []interface{}{}
+func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	controlScope := map[string]interface{}{
-		"compliance_resource_ids":   flex.FlattenStringList(scope.ComplianceResourceIds),
-		"compliance_resource_types": flex.FlattenStringList(scope.ComplianceResourceTypes),
+	tfMap := map[string]any{
+		"compliance_resource_ids":   apiObject.ComplianceResourceIds,
+		"compliance_resource_types": apiObject.ComplianceResourceTypes,
 	}
 
-	if v := scope.Tags; v != nil {
-		controlScope[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+	if v := apiObject.Tags; v != nil {
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
-	return []interface{}{controlScope}
+	return []any{tfMap}
 }

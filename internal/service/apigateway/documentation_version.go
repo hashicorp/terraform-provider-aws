@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -13,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,31 +36,33 @@ func resourceDocumentationVersion() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.CreateDocumentationVersionInput{
+	apiID := d.Get(attrRestAPIID).(string)
+	input := apigateway.CreateDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		RestApiId:            aws.String(apiID),
 	}
@@ -67,7 +71,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateDocumentationVersion(ctx, input)
+	output, err := conn.CreateDocumentationVersion(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Documentation Version: %s", err)
@@ -78,7 +82,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -89,7 +93,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 
 	version, err := findDocumentationVersionByTwoPartKey(ctx, conn, apiID, documentationVersion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Documentation Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -100,13 +104,13 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set(names.AttrDescription, version.Description)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 	d.Set(names.AttrVersion, version.Version)
 
 	return diags
 }
 
-func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -115,7 +119,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.UpdateDocumentationVersion(ctx, &apigateway.UpdateDocumentationVersionInput{
+	input := apigateway.UpdateDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		PatchOperations: []types.PatchOperation{
 			{
@@ -125,7 +129,8 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 			},
 		},
 		RestApiId: aws.String(apiID),
-	})
+	}
+	_, err = conn.UpdateDocumentationVersion(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Documentation Version (%s): %s", d.Id(), err)
@@ -134,7 +139,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -144,10 +149,11 @@ func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
-	_, err = conn.DeleteDocumentationVersion(ctx, &apigateway.DeleteDocumentationVersionInput{
+	input := apigateway.DeleteDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		RestApiId:            aws.String(apiID),
-	})
+	}
+	_, err = conn.DeleteDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -161,17 +167,16 @@ func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, documentationVersion string) (*apigateway.GetDocumentationVersionOutput, error) {
-	input := &apigateway.GetDocumentationVersionInput{
+	input := apigateway.GetDocumentationVersionInput{
 		DocumentationVersion: aws.String(documentationVersion),
 		RestApiId:            aws.String(apiID),
 	}
 
-	output, err := conn.GetDocumentationVersion(ctx, input)
+	output, err := conn.GetDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -180,7 +185,7 @@ func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

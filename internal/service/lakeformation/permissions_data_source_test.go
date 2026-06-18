@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,15 +14,18 @@ import (
 
 func testAccPermissionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_basic(rName),
@@ -41,15 +42,18 @@ func testAccPermissionsDataSource_basic(t *testing.T) {
 
 func testAccPermissionsDataSource_dataCellsFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_dataCellsFilter(rName),
@@ -66,15 +70,18 @@ func testAccPermissionsDataSource_dataCellsFilter(t *testing.T) {
 
 func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_dataLocation(rName),
@@ -92,15 +99,18 @@ func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 
 func testAccPermissionsDataSource_database(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_database(rName),
@@ -122,15 +132,18 @@ func testAccPermissionsDataSource_database(t *testing.T) {
 
 func testAccPermissionsDataSource_lfTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_lfTag(rName),
@@ -153,15 +166,18 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 
 func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName),
@@ -186,15 +202,18 @@ func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 
 func testAccPermissionsDataSource_table(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_table(rName),
@@ -213,15 +232,18 @@ func testAccPermissionsDataSource_table(t *testing.T) {
 
 func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_tableWithColumns(rName),
@@ -235,6 +257,34 @@ func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.column_names.1", dataSourceName, "table_with_columns.0.column_names.1"),
 					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "permissions.0", dataSourceName, "permissions.0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPermissionsDataSource_catalogResource_nonIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dataSourceName := "data.aws_lakeformation_permissions.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsDataSourceConfig_catalogResource_nonIAMPrincipals(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPrincipal, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttrPair(dataSourceName, "permissions.#", resourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "permissions.0", resourceName, "permissions.0"),
 				),
 			},
 		},
@@ -801,4 +851,14 @@ data "aws_lakeformation_permissions" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPermissionsDataSourceConfig_catalogResource_nonIAMPrincipals(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPermissionsConfig_catalogResource_nonIAMPrincipals(rName), `
+data "aws_lakeformation_permissions" "test" {
+  principal        = aws_lakeformation_permissions.test.principal
+  catalog_resource = true
+}
+`)
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ce
 
@@ -27,83 +29,85 @@ func dataSourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTagsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem:     expressionElem(tagRootElementSchemaLevel),
-			},
-			"search_string": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 1024),
-				ConflictsWith: []string{"sort_by"},
-			},
-			"sort_by": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"search_string"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Metric](),
-						},
-						"sort_order": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem:     expressionElem(tagRootElementSchemaLevel),
+				},
+				"search_string": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(1, 1024),
+					ConflictsWith: []string{"sort_by"},
+				},
+				"sort_by": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{"search_string"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+							},
+							"sort_order": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
+							},
 						},
 					},
 				},
-			},
-			"tag_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrTags: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"tag_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
 				},
-			},
-			"time_period": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"end": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 40),
-						},
-						"start": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 40),
+				names.AttrTags: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"time_period": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"end": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 40),
+							},
+							"start": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 40),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	input := &costexplorer.GetTagsInput{
-		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
+		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]any)[0].(map[string]any)),
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Filter = expandExpression(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Filter = expandExpression(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("search_string"); ok {
@@ -111,7 +115,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("sort_by"); ok {
-		input.SortBy = expandTagsSortBys(v.([]interface{}))
+		input.SortBy = expandTagsSortBys(v.([]any))
 	}
 
 	if v, ok := d.GetOk("tag_key"); ok {
@@ -124,13 +128,13 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Tags: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	d.Set(names.AttrTags, output.Tags)
 
 	return diags
 }
 
-func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
+func expandTagsSortBys(tfList []any) []awstypes.SortDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -138,7 +142,7 @@ func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
 	var apiObjects []awstypes.SortDefinition
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -152,7 +156,7 @@ func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
 	return apiObjects
 }
 
-func expandTagsSortBy(tfMap map[string]interface{}) awstypes.SortDefinition {
+func expandTagsSortBy(tfMap map[string]any) awstypes.SortDefinition {
 	apiObject := awstypes.SortDefinition{}
 	apiObject.Key = aws.String(tfMap[names.AttrKey].(string))
 	if v, ok := tfMap["sort_order"]; ok {
@@ -162,7 +166,7 @@ func expandTagsSortBy(tfMap map[string]interface{}) awstypes.SortDefinition {
 	return apiObject
 }
 
-func expandTagsTimePeriod(tfMap map[string]interface{}) *awstypes.DateInterval {
+func expandTagsTimePeriod(tfMap map[string]any) *awstypes.DateInterval {
 	if tfMap == nil {
 		return nil
 	}

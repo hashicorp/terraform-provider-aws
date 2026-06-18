@@ -36,6 +36,7 @@ resource "aws_inspector_assessment_template" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the assessment template.
 * `target_arn` - (Required) The assessment target ARN to attach the template to.
 * `duration` - (Required) The duration of the inspector run.
@@ -58,6 +59,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_inspector_assessment_template.example
+  identity = {
+    "arn" = "arn:aws:inspector:us-west-2:123456789012:target/0-12345678/template/0-87654321"
+  }
+}
+
+resource "aws_inspector_assessment_template" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Inspector assessment template.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_inspector_assessment_template` using the template assessment ARN. For example:
 

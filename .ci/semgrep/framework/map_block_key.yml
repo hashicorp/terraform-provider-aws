@@ -1,0 +1,15 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: map_block_key-meaningful-names
+    languages: [go]
+    message: Map Block Keys should have meaningful names
+    patterns:
+      - pattern: |
+          map[string]schema.Attribute{
+            ... ,
+            "map_block_key": schema.StringAttribute{ ... },
+            ... ,
+          }
+    severity: WARNING

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoveryreadiness_test
@@ -9,43 +9,41 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSetName := acctest.RandomWithPrefix(t, "tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
+		AccountID: acctest.Ct12Digit,
+		Partition: acctest.Partition(),
 		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx),
+		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -60,30 +58,38 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 
 func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSetName := acctest.RandomWithPrefix(t, "tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
+		AccountID: acctest.Ct12Digit,
+		Partition: acctest.Partition(),
 		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx),
+		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceReadinessCheck(), resourceName),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceReadinessCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -91,27 +97,27 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 
 func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
+		AccountID: acctest.Ct12Digit,
+		Partition: acctest.Partition(),
 		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx),
+		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReadinessCheckConfig_tags1(rName, cwArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -123,8 +129,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 			{
 				Config: testAccReadinessCheckConfig_tags2(rName, cwArn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -132,8 +138,8 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 			{
 				Config: testAccReadinessCheckConfig_tags1(rName, cwArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -143,28 +149,28 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 
 func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSetName := acctest.RandomWithPrefix(t, "tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
+		AccountID: acctest.Ct12Digit,
+		Partition: acctest.Partition(),
 		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx),
+		CheckDestroy:             testAccCheckReadinessCheckDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReadinessCheckConfig_timeout(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					testAccCheckReadinessCheckExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -177,43 +183,42 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	})
 }
 
-func testAccCheckReadinessCheckDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReadinessCheckDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryReadinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
 				continue
 			}
 
-			input := &route53recoveryreadiness.GetReadinessCheckInput{
-				ReadinessCheckName: aws.String(rs.Primary.ID),
+			_, err := tfroute53recoveryreadiness.FindReadinessCheckByName(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetReadinessCheckWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("Route53RecoveryReadiness Readiness Check (%s) not deleted", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Route53 Recovery Readiness Readiness Check %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckReadinessCheckExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckReadinessCheckExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryReadinessClient(ctx)
 
-		input := &route53recoveryreadiness.GetReadinessCheckInput{
-			ReadinessCheckName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetReadinessCheckWithContext(ctx, input)
+		_, err := tfroute53recoveryreadiness.FindReadinessCheckByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

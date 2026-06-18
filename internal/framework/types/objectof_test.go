@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types_test
@@ -43,7 +43,6 @@ func TestObjectTypeOfEqual(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		name, testCase := name, testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -95,17 +94,16 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAValue,
-			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBValue,
-			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 			wantErr: true,
 		},
 	}
 
 	for name, testCase := range testCases {
-		name, testCase := name, testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -167,7 +165,6 @@ func TestObjectValueOfEqual(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		name, testCase := name, testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,19 +180,28 @@ func TestObjectValueOfEqual(t *testing.T) {
 func TestNullOutObjectPtrFields(t *testing.T) {
 	t.Parallel()
 
-	type A struct {
+	type inner struct {
+		F5 types.String `tfsdk:"f5"`
+		F6 types.Int32  `tfsdk:"f6"`
+	}
+
+	type Outer struct {
 		F1 types.Bool                        `tfsdk:"f1"`
 		F2 types.String                      `tfsdk:"f2"`
 		F3 fwtypes.ListValueOf[types.String] `tfsdk:"f3"`
 		F4 fwtypes.SetValueOf[types.Int64]   `tfsdk:"f4"`
+		inner
 	}
 
 	ctx := context.Background()
-	a := new(A)
+	a := new(Outer)
 	a.F1 = types.BoolValue(true)
 	a.F2 = types.StringValue("test")
 	a.F3 = fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("test")})
 	a.F4 = fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(-1)})
+	a.F5 = types.StringValue("test")
+	a.F6 = types.Int32Value(42)
+
 	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %v", diags)
@@ -211,5 +217,34 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 	}
 	if !a.F4.IsNull() {
 		t.Errorf("expected F4 to be null")
+	}
+	if !a.F5.IsNull() {
+		t.Errorf("expected F5 to be null")
+	}
+	if !a.F6.IsNull() {
+		t.Errorf("expected F6 to be null")
+	}
+}
+
+func BenchmarkNullOutObjectPtrFields(b *testing.B) {
+	type inner struct {
+		F5 types.String `tfsdk:"f5"`
+		F6 types.Int32  `tfsdk:"f6"`
+	}
+
+	type Outer struct {
+		F1 types.Bool                        `tfsdk:"f1"`
+		F2 types.String                      `tfsdk:"f2"`
+		F3 fwtypes.ListValueOf[types.String] `tfsdk:"f3"`
+		F4 fwtypes.SetValueOf[types.Int64]   `tfsdk:"f4"`
+		inner
+	}
+	ctx := context.Background()
+
+	for b.Loop() {
+		var a Outer
+		if diags := fwtypes.NullOutObjectPtrFields(ctx, &a); diags.HasError() {
+			b.Fatalf("unexpected error: %v", diags)
+		}
 	}
 }

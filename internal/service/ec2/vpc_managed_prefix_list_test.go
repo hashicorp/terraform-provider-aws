@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,41 +9,40 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_name(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -55,8 +54,8 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 				Config:       testAccVPCManagedPrefixListConfig_updated(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "2"),
 				),
 			},
 		},
@@ -66,21 +65,29 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCManagedPrefixListConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceManagedPrefixList(), resourceName),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceManagedPrefixList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,19 +96,19 @@ func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 func TestAccVPCManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_addressFamily(rName, "IPv6"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv6"),
 				),
 			},
@@ -117,20 +124,20 @@ func TestAccVPCManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_entryCIDR1(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "Test1",
@@ -139,7 +146,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "Test2",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -151,8 +158,8 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 				Config:       testAccVPCManagedPrefixListConfig_entryCIDR2(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "Test1",
@@ -161,7 +168,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 						"cidr":                "3.0.0.0/8",
 						names.AttrDescription: "Test3",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 			{
@@ -176,20 +183,20 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_entryDescription(rName, "description1"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "description1",
@@ -198,7 +205,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "description1",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -210,8 +217,8 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 				Config:       testAccVPCManagedPrefixListConfig_entryDescription(rName, "description2"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "description2",
@@ -220,7 +227,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "description2",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct3), // description-only updates require two operations
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // description-only updates require two operations
 				),
 			},
 		},
@@ -230,28 +237,28 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_entryMaxEntry(rName, 2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 				),
 			},
 			{
 				Config:       testAccVPCManagedPrefixListConfig_entryMaxEntry(rName, 3),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct3),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "3"),
 				),
 			},
 			{
@@ -263,8 +270,8 @@ func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 				Config:       testAccVPCManagedPrefixListConfig_entryMaxEntry(rName, 1),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct1),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
 				),
 			},
 		},
@@ -274,22 +281,22 @@ func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 func TestAccVPCManagedPrefixList_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:       testAccVPCManagedPrefixListConfig_name(rName1),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -301,9 +308,9 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 				Config:       testAccVPCManagedPrefixListConfig_name(rName2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -313,21 +320,21 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCManagedPrefixListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -338,29 +345,64 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
 				Config: testAccVPCManagedPrefixListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccVPCManagedPrefixList_descriptionOnlyChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "old description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+				),
+			},
+			{
+				// This reproduces the bug: change ONLY the description
+				// Before the fix, this would fail with "PrefixListVersionMismatch"
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "new description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":                "1.0.0.0/8",
+						names.AttrDescription: "new description",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckManagedPrefixListDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_managed_prefix_list" {
@@ -369,7 +411,7 @@ func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfec2.FindManagedPrefixListByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -384,7 +426,7 @@ func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccManagedPrefixListExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccManagedPrefixListExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -395,7 +437,7 @@ func testAccManagedPrefixListExists(ctx context.Context, resourceName string) re
 			return fmt.Errorf("No EC2 Managed Prefix List ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindManagedPrefixListByID(ctx, conn, rs.Primary.ID)
 
@@ -404,11 +446,11 @@ func testAccManagedPrefixListExists(ctx context.Context, resourceName string) re
 }
 
 func testAccPreCheckManagedPrefixList(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 
-	_, err := conn.DescribeManagedPrefixListsWithContext(ctx, input)
+	_, err := conn.DescribeManagedPrefixLists(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -555,4 +597,19 @@ resource "aws_ec2_managed_prefix_list" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName string, description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+
+  entry {
+    cidr        = "1.0.0.0/8"
+    description = %[2]q
+  }
+}
+`, rName, description)
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigatewayv2
 
@@ -20,44 +22,46 @@ func dataSourceExport() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExportRead,
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"1.0"}, false),
-			},
-			"include_extensions": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"specification": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"OAS30"}, false),
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"output_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"JSON", "YAML"}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice([]string{"1.0"}, false),
+				},
+				"include_extensions": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"specification": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"OAS30"}, false),
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"output_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"JSON", "YAML"}, false),
+				},
+			}
 		},
 	}
 }
 
-func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 

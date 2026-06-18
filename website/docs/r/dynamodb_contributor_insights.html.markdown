@@ -22,12 +22,21 @@ resource "aws_dynamodb_contributor_insights" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
+* `mode` - (Optional) argument to specify the [CloudWatch contributor insights mode](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/contributorinsights_HowItWorks.html#contributorinsights_HowItWorks.Modes)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

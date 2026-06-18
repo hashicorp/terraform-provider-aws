@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,9 +17,9 @@ func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,9 +43,9 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,7 +67,7 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 
 func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,7 +80,7 @@ func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func testAccSSOPermissionSetBaseDataSourceConfig(rName string) string {
+func testAccSSOPermissionSetDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -102,7 +101,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 
 func testAccPermissionSetDataSourceConfig_ssoByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOPermissionSetBaseDataSourceConfig(rName),
+		testAccSSOPermissionSetDataSourceConfig_base(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
@@ -113,7 +112,7 @@ data "aws_ssoadmin_permission_set" "test" {
 
 func testAccPermissionSetDataSourceConfig_ssoByName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOPermissionSetBaseDataSourceConfig(rName),
+		testAccSSOPermissionSetDataSourceConfig_base(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]

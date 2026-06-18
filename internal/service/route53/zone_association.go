@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -8,65 +10,75 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_zone_association", name="Zone Association")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("vpc_id")
+// @IdentityAttribute("vpc_region", optional="true", testNotNull="true")
+// @ImportIDHandler("zoneAssociationImportID")
+// @Testing(preIdentityVersion="v6.45.0")
 func resourceZoneAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneAssociationCreate,
 		ReadWithoutTimeout:   resourceZoneAssociationRead,
 		DeleteWithoutTimeout: resourceZoneAssociationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"owning_account": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpc_region": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
-		Schema: map[string]*schema.Schema{
-			"owning_account": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_region": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VPCRegion](),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
 }
 
-func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	vpcRegion := meta.(*conns.AWSClient).Region
+	vpcRegion := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk("vpc_region"); ok {
 		vpcRegion = v.(string)
 	}
@@ -91,7 +103,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
@@ -102,7 +114,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceZoneAssociationRead(ctx, d, meta)...)
 }
 
-func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -116,12 +128,12 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		vpcRegion = d.Get("vpc_region").(string)
 	}
 	if vpcRegion == "" {
-		vpcRegion = meta.(*conns.AWSClient).Region
+		vpcRegion = meta.(*conns.AWSClient).Region(ctx)
 	}
 
 	hostedZoneSummary, err := findZoneAssociationByThreePartKey(ctx, conn, zoneID, vpcID, vpcRegion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Zone Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,15 +143,19 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Zone Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("owning_account", hostedZoneSummary.Owner.OwningAccount)
-	d.Set(names.AttrVPCID, vpcID)
-	d.Set("vpc_region", vpcRegion)
-	d.Set("zone_id", hostedZoneSummary.HostedZoneId)
+	resourceZoneAssociationFlatten(d, hostedZoneSummary, vpcID, vpcRegion)
 
 	return diags
 }
 
-func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationFlatten(d *schema.ResourceData, summary *awstypes.HostedZoneSummary, vpcID, vpcRegion string) {
+	d.Set("owning_account", summary.Owner.OwningAccount)
+	d.Set(names.AttrVPCID, vpcID)
+	d.Set("vpc_region", vpcRegion)
+	d.Set("zone_id", summary.HostedZoneId)
+}
+
+func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -153,7 +169,7 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 		vpcRegion = d.Get("vpc_region").(string)
 	}
 	if vpcRegion == "" {
-		vpcRegion = meta.(*conns.AWSClient).Region
+		vpcRegion = meta.(*conns.AWSClient).Region(ctx)
 	}
 
 	log.Printf("[INFO] Deleting Route53 Zone Association: %s", d.Id())
@@ -175,7 +191,7 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
@@ -249,8 +265,7 @@ func findZoneAssociations(ctx context.Context, conn *route53.Client, input *rout
 
 	if tfawserr.ErrMessageContains(err, errCodeAccessDenied, "is not owned by you") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -259,4 +274,29 @@ func findZoneAssociations(ctx context.Context, conn *route53.Client, input *rout
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = zoneAssociationImportID{}
+
+type zoneAssociationImportID struct{}
+
+func (zoneAssociationImportID) Create(d *schema.ResourceData) string {
+	return zoneAssociationCreateResourceID(d.Get("zone_id").(string), d.Get(names.AttrVPCID).(string), d.Get("vpc_region").(string))
+}
+
+func (zoneAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	zoneID, vpcID, vpcRegion, err := zoneAssociationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"zone_id":       zoneID,
+		names.AttrVPCID: vpcID,
+	}
+	if vpcRegion != "" {
+		result["vpc_region"] = vpcRegion
+	}
+
+	return id, result, nil
 }

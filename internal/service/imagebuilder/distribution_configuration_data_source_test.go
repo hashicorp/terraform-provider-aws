@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,15 +14,15 @@ import (
 
 func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfigurationDataSourceConfig_arn(rName),
@@ -53,6 +52,15 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.default", resourceName, "distribution.0.launch_template_configuration.0.default"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.launch_template_id", resourceName, "distribution.0.launch_template_configuration.0.launch_template_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.account_id", resourceName, "distribution.0.launch_template_configuration.0.account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.#", resourceName, "distribution.0.s3_export_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.disk_image_format", resourceName, "distribution.0.s3_export_configuration.0.disk_image_format"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.role_name", resourceName, "distribution.0.s3_export_configuration.0.role_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.s3_bucket", resourceName, "distribution.0.s3_export_configuration.0.s3_bucket"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.s3_prefix", resourceName, "distribution.0.s3_export_configuration.0.s3_prefix"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.#", resourceName, "distribution.0.ssm_parameter_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.parameter_name", resourceName, "distribution.0.ssm_parameter_configuration.0.parameter_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.ami_account_id", resourceName, "distribution.0.ssm_parameter_configuration.0.ami_account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.data_type", resourceName, "distribution.0.ssm_parameter_configuration.0.data_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -66,6 +74,10 @@ func testAccDistributionConfigurationDataSourceConfig_arn(rName string) string {
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
 
 resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
@@ -109,7 +121,20 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    s3_export_configuration {
+      disk_image_format = "RAW"
+      role_name         = "role-name"
+      s3_bucket         = aws_s3_bucket.test.id
+      s3_prefix         = "prefix/"
+    }
+
+    ssm_parameter_configuration {
+      parameter_name = "/test/ami-id"
+      ami_account_id = data.aws_caller_identity.current.account_id
+      data_type      = "aws:ec2:image"
+    }
+
+    region = data.aws_region.current.region
   }
 }
 

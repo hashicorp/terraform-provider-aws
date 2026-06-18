@@ -1,0 +1,11 @@
+```release-note:bug
+datasource/aws_cognito_user_pool: Fixes value conversion error.
+```
+
+```release-note:enhancement
+datasource/aws_cognito_user_pool: Deprecates `user_pool_tags` in favor of standard `tags`.
+```
+
+```release-note:bug
+resource/aws_cognito_user_pool: Correctly unsets tags.
+```

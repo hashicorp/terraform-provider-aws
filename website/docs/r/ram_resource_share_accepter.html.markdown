@@ -55,6 +55,7 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `share_arn` - (Required) The ARN of the resource share.
 
 ## Attribute Reference
@@ -68,6 +69,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `sender_account_id` - The account ID of the sender account which submits the invitation.
 * `share_name` - The name of the resource share.
 * `resources` - A list of the resource ARNs shared via the resource share.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

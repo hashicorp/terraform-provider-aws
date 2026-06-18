@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -17,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route")
-func DataSourceRoute() *schema.Resource {
+// @SDKDataSource("aws_route", name="Route")
+func dataSourceRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteRead,
 
@@ -26,89 +28,96 @@ func DataSourceRoute() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 
-			///
-			// Destinations.
-			///
-			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destination_ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destination_prefix_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				///
+				// Destinations.
+				///
+				"destination_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"destination_ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"destination_prefix_list_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 
-			//
-			// Targets.
-			//
-			"carrier_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"egress_only_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"local_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"nat_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				//
+				// Targets.
+				//
+				"carrier_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"egress_only_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"local_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"nat_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"odb_network_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"vpc_peering_connection_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -177,6 +186,10 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 			continue
 		}
 
+		if v, ok := d.GetOk("odb_network_arn"); ok && aws.ToString(r.OdbNetworkArn) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk(names.AttrTransitGatewayID); ok && aws.ToString(r.TransitGatewayId) != v.(string) {
 			continue
 		}
@@ -199,11 +212,11 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	route := routes[0]
 
 	if destination := aws.ToString(route.DestinationCidrBlock); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	} else if destination := aws.ToString(route.DestinationIpv6CidrBlock); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	} else if destination := aws.ToString(route.DestinationPrefixListId); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
@@ -217,6 +230,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 

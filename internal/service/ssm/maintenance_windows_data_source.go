@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -23,34 +25,36 @@ func dataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataMaintenanceWindowsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
-func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -72,7 +76,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 		output = append(output, page.WindowIdentities...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.MaintenanceWindowIdentity) string {
 		return aws.ToString(v.WindowId)
 	}))
@@ -80,7 +84,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilters(tfList []any) []awstypes.MaintenanceWindowFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -88,7 +92,7 @@ func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.Maintenance
 	var apiObjects []awstypes.MaintenanceWindowFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -106,7 +110,7 @@ func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.Maintenance
 	return apiObjects
 }
 
-func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *awstypes.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilter(tfMap map[string]any) *awstypes.MaintenanceWindowFilter {
 	if tfMap == nil {
 		return nil
 	}
@@ -117,7 +121,7 @@ func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *awstypes.Maint
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 

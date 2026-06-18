@@ -1,0 +1,23 @@
+```release-note:bug
+resource/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors
+```
+
+```release-note:bug
+data-source/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `view_definition` argument
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `open_table_format_input.iceberg_input.iceberg_table_input` argument
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Change `parameters`, `storage_descriptor`, and `table_type` to Optional and Computed
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Change `open_table_format_input.iceberg_input.metadata_operation` and `open_table_format_input.iceberg_input.version` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package outposts_test
@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +19,7 @@ func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_sites.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,7 +42,7 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["ids.#"]; v == acctest.Ct0 {
+		if v := rs.Primary.Attributes["ids.#"]; v == "0" {
 			return fmt.Errorf("expected at least one ids result, got none")
 		}
 
@@ -52,11 +51,11 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckSites(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OutpostsClient(ctx)
 
 	input := &outposts.ListSitesInput{}
 
-	output, err := conn.ListSitesWithContext(ctx, input)
+	output, err := conn.ListSites(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

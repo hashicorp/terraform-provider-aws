@@ -1,19 +1,21 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
 
 // Exports for use in tests only.
 var (
-	ResourcePolicy         = newResourcePolicy
-	ResourcePolicyStore    = newResourcePolicyStore
-	ResourcePolicyTemplate = newResourcePolicyTemplate
-	ResourceSchema         = newResourceSchema
+	ResourceIdentitySource = newIdentitySourceResource
+	ResourcePolicy         = newPolicyResource
+	ResourcePolicyStore    = newPolicyStoreResource
+	ResourcePolicyTemplate = newPolicyTemplateResource
+	ResourceSchema         = newSchemaResource
 
-	FindPolicyByID            = findPolicyByID
-	FindPolicyStoreByID       = findPolicyStoreByID
-	FindPolicyTemplateByID    = findPolicyTemplateByID
-	FindSchemaByPolicyStoreID = findSchemaByPolicyStoreID
+	FindIdentitySourceByIDAndPolicyStoreID = findIdentitySourceByIDAndPolicyStoreID
+	FindPolicyByID                         = findPolicyByID
+	FindPolicyStoreByID                    = findPolicyStoreByID
+	FindPolicyTemplateByID                 = findPolicyTemplateByID
+	FindSchemaByPolicyStoreID              = findSchemaByPolicyStoreID
 )
 
 var (

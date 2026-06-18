@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_batch_job_queue: Add `job_state_time_limit_action` argument
+```
+
+```release-note:enhancement
+data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute
+```

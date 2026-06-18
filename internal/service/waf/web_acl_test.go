@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -10,40 +10,39 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFWebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`webacl/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -58,38 +57,38 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName1 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
-	rName2 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName1 := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
+	rName2 := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_required(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_required(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
@@ -104,28 +103,28 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 func TestAccWAFWebACL_defaultAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_defaultAction(rName, "ALLOW"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_defaultAction(rName, "BLOCK"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "BLOCK"),
 				),
 			},
@@ -141,37 +140,37 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 func TestAccWAFWebACL_rules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Test creating with rule
 			{
 				Config: testAccWebACLConfig_rulesSingleRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
 			// Test adding rule
 			{
 				Config: testAccWebACLConfig_rulesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct2),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
 				),
 			},
 			// Test removing rule
 			{
 				Config: testAccWebACLConfig_rulesSingleRuleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
 			// Test import
@@ -187,10 +186,10 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 func TestAccWAFWebACL_logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -198,15 +197,15 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_logging(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", acctest.Ct2),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
 				),
 			},
 			// Test resource import
@@ -220,17 +219,17 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 			{
 				Config: testAccWebACLConfig_loggingUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct0),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "0"),
 				),
 			},
 			// Test logging configuration removal
 			{
 				Config: testAccWebACLConfig_loggingRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
 		},
@@ -240,22 +239,30 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 func TestAccWAFWebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceWebACL(), resourceName),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -264,53 +271,53 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 func TestAccWAFWebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					testAccCheckWebACLExists(ctx, t, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
 			{
@@ -322,18 +329,18 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_waf_web_acl" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 			_, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -348,14 +355,14 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL) resource.TestCheckFunc {
+func testAccCheckWebACLExists(ctx context.Context, t *testing.T, n string, v *awstypes.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 		output, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
 

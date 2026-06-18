@@ -41,6 +41,7 @@ resource "aws_vpc_endpoint_service" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
 * `gateway_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Gateway Load Balancers for the endpoint service.
@@ -48,6 +49,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `private_dns_name` - (Optional) The private DNS name for the service.
 * `supported_ip_address_types` - (Optional) The supported IP address types. The possible values are `ipv4` and `ipv6`.
+* `supported_regions` - (Optional) The set of regions from which service consumers can access the service.
 
 ## Attribute Reference
 
@@ -67,6 +69,14 @@ This resource exports the following attributes in addition to the arguments abov
     * `type` - Endpoint service verification type, for example `TXT`.
     * `value` - Value the service provider adds to the private DNS name domain record before verification.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

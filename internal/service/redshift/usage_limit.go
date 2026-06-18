@@ -1,25 +1,25 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshift
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,92 +36,93 @@ func resourceUsageLimit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"amount": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"breach_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      redshift.UsageLimitBreachActionLog,
-				ValidateFunc: validation.StringInSlice(redshift.UsageLimitBreachAction_Values(), false),
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"feature_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(redshift.UsageLimitFeatureType_Values(), false),
-			},
-			"limit_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(redshift.UsageLimitLimitType_Values(), false),
-			},
-			"period": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      redshift.UsageLimitPeriodMonthly,
-				ValidateFunc: validation.StringInSlice(redshift.UsageLimitPeriod_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amount": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"breach_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UsageLimitBreachActionLog,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"feature_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitFeatureType](),
+				},
+				"limit_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitLimitType](),
+				},
+				"period": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.UsageLimitPeriodMonthly,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	clusterId := d.Get(names.AttrClusterIdentifier).(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.CreateUsageLimitInput{
 		Amount:            aws.Int64(int64(d.Get("amount").(int))),
-		ClusterIdentifier: aws.String(clusterId),
-		FeatureType:       aws.String(d.Get("feature_type").(string)),
-		LimitType:         aws.String(d.Get("limit_type").(string)),
+		ClusterIdentifier: aws.String(clusterID),
+		FeatureType:       awstypes.UsageLimitFeatureType(d.Get("feature_type").(string)),
+		LimitType:         awstypes.UsageLimitLimitType(d.Get("limit_type").(string)),
 		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("breach_action"); ok {
-		input.BreachAction = aws.String(v.(string))
+		input.BreachAction = awstypes.UsageLimitBreachAction(v.(string))
 	}
 
 	if v, ok := d.GetOk("period"); ok {
-		input.Period = aws.String(v.(string))
+		input.Period = awstypes.UsageLimitPeriod(v.(string))
 	}
 
-	out, err := conn.CreateUsageLimitWithContext(ctx, &input)
+	out, err := conn.CreateUsageLimit(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Usage Limit (%s): %s", clusterId, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Usage Limit (%s): %s", clusterID, err)
 	}
 
-	d.SetId(aws.StringValue(out.UsageLimitId))
+	d.SetId(aws.ToString(out.UsageLimitId))
 
 	return append(diags, resourceUsageLimitRead(ctx, d, meta)...)
 }
 
-func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	out, err := findUsageLimitByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Usage Limit (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,33 +132,25 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("usagelimit:%s", d.Id()),
-	}.String()
-
-	d.Set(names.AttrARN, arn)
 	d.Set("amount", out.Amount)
-	d.Set("period", out.Period)
-	d.Set("limit_type", out.LimitType)
-	d.Set("feature_type", out.FeatureType)
+	d.Set(names.AttrARN, usageLimitARN(ctx, c, d.Id()))
 	d.Set("breach_action", out.BreachAction)
 	d.Set(names.AttrClusterIdentifier, out.ClusterIdentifier)
+	d.Set("feature_type", out.FeatureType)
+	d.Set("limit_type", out.LimitType)
+	d.Set("period", out.Period)
 
 	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
 
-func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &redshift.ModifyUsageLimitInput{
+		input := redshift.ModifyUsageLimitInput{
 			UsageLimitId: aws.String(d.Id()),
 		}
 
@@ -166,10 +159,10 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("breach_action") {
-			input.BreachAction = aws.String(d.Get("breach_action").(string))
+			input.BreachAction = awstypes.UsageLimitBreachAction(d.Get("breach_action").(string))
 		}
 
-		_, err := conn.ModifyUsageLimitWithContext(ctx, input)
+		_, err := conn.ModifyUsageLimit(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Redshift Usage Limit (%s): %s", d.Id(), err)
 		}
@@ -178,22 +171,27 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceUsageLimitRead(ctx, d, meta)...)
 }
 
-func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	deleteInput := redshift.DeleteUsageLimitInput{
+	log.Printf("[DEBUG] Deleting Redshift Usage Limit: %s", d.Id())
+	input := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
 	}
+	_, err := conn.DeleteUsageLimit(ctx, &input)
 
-	_, err := conn.DeleteUsageLimitWithContext(ctx, &deleteInput)
+	if errs.IsA[*awstypes.UsageLimitNotFoundFault](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeUsageLimitNotFoundFault) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Usage Limit (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func usageLimitARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "usagelimit:"+id)
 }

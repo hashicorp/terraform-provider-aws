@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,32 +8,31 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPNConnectionRouteExists(ctx, resourceName),
+					testAccVPNConnectionRouteExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -42,46 +41,48 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 
 func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPNConnectionRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnectionRoute(), resourceName),
+					testAccVPNConnectionRouteExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnectionRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckVPNConnectionRouteDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPNConnectionRouteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_connection_route" {
 				continue
 			}
 
-			cidrBlock, vpnConnectionID, err := tfec2.VPNConnectionRouteParseResourceID(rs.Primary.ID)
+			_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -96,32 +97,22 @@ func testAccCheckVPNConnectionRouteDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccVPNConnectionRouteExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccVPNConnectionRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPN Connection Route ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		cidrBlock, vpnConnectionID, err := tfec2.VPNConnectionRouteParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
+		_, err := tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_connection_id"], rs.Primary.Attributes["destination_cidr_block"])
 
 		return err
 	}
 }
 
-func testAccSiteVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
+func testAccVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {

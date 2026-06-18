@@ -1,16 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ebs_volume", name="EBS Volume")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumeRead,
@@ -31,73 +32,84 @@ func dataSourceEBSVolume() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"multi_attach_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSize: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrThroughput: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVolumeType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"multi_attach_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSize: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrThroughput: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVolumeType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_initialization_rate": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeVolumesInput{}
+	input := ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -105,7 +117,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumes(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -132,44 +144,28 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.ToString(volume.VolumeId))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("outpost_arn", volume.OutpostArn)
+	d.Set(names.AttrOutpostARN, volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
+	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
-	setTagsOutV2(ctx, volume.Tags)
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }
 
-type volumeSort []awstypes.Volume
-
-func (a volumeSort) Len() int      { return len(a) }
-func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a volumeSort) Less(i, j int) bool {
-	itime := aws.ToTime(a[i].CreateTime)
-	jtime := aws.ToTime(a[j].CreateTime)
-	return itime.Unix() < jtime.Unix()
-}
-
 func mostRecentVolume(volumes []awstypes.Volume) awstypes.Volume {
-	sortedVolumes := volumes
-	sort.Sort(volumeSort(sortedVolumes))
-	return sortedVolumes[len(sortedVolumes)-1]
+	return slices.MaxFunc(volumes, func(a, b awstypes.Volume) int {
+		return a.CreateTime.Compare(aws.ToTime(b.CreateTime))
+	})
 }

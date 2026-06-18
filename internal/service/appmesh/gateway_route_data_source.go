@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appmesh
 
@@ -7,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +20,9 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_gateway_route", name="Gateway Route")
+// @Tags
+// @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRouteRead,
@@ -53,7 +58,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 				"virtual_gateway_name": {
 					Type:     schema.TypeString,
@@ -64,10 +69,9 @@ func dataSourceGatewayRoute() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	gatewayRouteName := d.Get(names.AttrName).(string)
 	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
@@ -76,13 +80,13 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", gatewayRouteName, err)
 	}
 
-	d.SetId(aws.StringValue(gatewayRoute.GatewayRouteName))
-	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
+	d.SetId(aws.ToString(gatewayRoute.GatewayRouteName))
+	arn := aws.ToString(gatewayRoute.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
-	meshOwner := aws.StringValue(gatewayRoute.Metadata.MeshOwner)
+	meshOwner := aws.ToString(gatewayRoute.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
 	d.Set(names.AttrResourceOwner, gatewayRoute.Metadata.ResourceOwner)
@@ -96,7 +100,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
@@ -104,9 +108,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

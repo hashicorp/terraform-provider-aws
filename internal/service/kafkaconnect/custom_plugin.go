@@ -1,31 +1,39 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafkaconnect
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_mskconnect_custom_plugin")
-func ResourceCustomPlugin() *schema.Resource {
+// @SDKResource("aws_mskconnect_custom_plugin", name="Custom Plugin")
+// @Tags(identifierAttribute="arn")
+func resourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomPluginCreate,
 		ReadWithoutTimeout:   resourceCustomPluginRead,
+		UpdateWithoutTimeout: resourceCustomPluginUpdate,
 		DeleteWithoutTimeout: resourceCustomPluginDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -37,117 +45,117 @@ func ResourceCustomPlugin() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(kafkaconnect.CustomPluginContentType_Values(), false),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							ForceNew: true,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"file_key": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"object_version": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CustomPluginContentType](),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"latest_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								ForceNew: true,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bucket_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"file_key": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"object_version": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
-		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
-		Location:    expandCustomPluginLocation(d.Get(names.AttrLocation).([]interface{})[0].(map[string]interface{})),
+		ContentType: awstypes.CustomPluginContentType(d.Get(names.AttrContentType).(string)),
+		Location:    expandCustomPluginLocation(d.Get(names.AttrLocation).([]any)[0].(map[string]any)),
 		Name:        aws.String(name),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MSK Connect Custom Plugin: %s", input)
-	output, err := conn.CreateCustomPluginWithContext(ctx, input)
+	output, err := conn.CreateCustomPlugin(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MSK Connect Custom Plugin (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.CustomPluginArn))
+	d.SetId(aws.ToString(output.CustomPluginArn))
 
-	_, err = waitCustomPluginCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitCustomPluginCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Custom Plugin (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceCustomPluginRead(ctx, d, meta)...)
 }
 
-func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
+	plugin, err := findCustomPluginByARN(ctx, conn, d.Id())
 
-	plugin, err := FindCustomPluginByARN(ctx, conn, d.Id())
-
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Custom Plugin (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -166,7 +174,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrContentType, plugin.LatestRevision.ContentType)
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
-			if err := d.Set(names.AttrLocation, []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
+			if err := d.Set(names.AttrLocation, []any{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 			}
 		} else {
@@ -181,17 +189,24 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomPluginUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
+	// This update function is for updating tags only - there is no update action for this resource.
+
+	return append(diags, resourceCustomPluginRead(ctx, d, meta)...)
+}
+
+func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Connect Custom Plugin: %s", d.Id())
-	_, err := conn.DeleteCustomPluginWithContext(ctx, &kafkaconnect.DeleteCustomPluginInput{
+	_, err := conn.DeleteCustomPlugin(ctx, &kafkaconnect.DeleteCustomPluginInput{
 		CustomPluginArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -199,35 +214,111 @@ func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitCustomPluginDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitCustomPluginDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandCustomPluginLocation(tfMap map[string]interface{}) *kafkaconnect.CustomPluginLocation {
+func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn string) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+	input := &kafkaconnect.DescribeCustomPluginInput{
+		CustomPluginArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCustomPlugin(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusCustomPlugin(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findCustomPluginByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.CustomPluginState), nil
+	}
+}
+
+func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CustomPluginStateCreating),
+		Target:  enum.Slice(awstypes.CustomPluginStateActive),
+		Refresh: statusCustomPlugin(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
+		if state, stateDescription := output.CustomPluginState, output.StateDescription; state == awstypes.CustomPluginStateCreateFailed && stateDescription != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CustomPluginStateDeleting),
+		Target:  []string{},
+		Refresh: statusCustomPlugin(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandCustomPluginLocation(tfMap map[string]any) *awstypes.CustomPluginLocation {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafkaconnect.CustomPluginLocation{}
+	apiObject := &awstypes.CustomPluginLocation{}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Location = expandS3Location(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
+		apiObject.S3Location = expandS3Location(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandS3Location(tfMap map[string]interface{}) *kafkaconnect.S3Location {
+func expandS3Location(tfMap map[string]any) *awstypes.S3Location {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafkaconnect.S3Location{}
+	apiObject := &awstypes.S3Location{}
 
 	if v, ok := tfMap["bucket_arn"].(string); ok && v != "" {
 		apiObject.BucketArn = aws.String(v)
@@ -244,37 +335,37 @@ func expandS3Location(tfMap map[string]interface{}) *kafkaconnect.S3Location {
 	return apiObject
 }
 
-func flattenCustomPluginLocationDescription(apiObject *kafkaconnect.CustomPluginLocationDescription) map[string]interface{} {
+func flattenCustomPluginLocationDescription(apiObject *awstypes.CustomPluginLocationDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Location; v != nil {
-		tfMap["s3"] = []interface{}{flattenS3LocationDescription(v)}
+		tfMap["s3"] = []any{flattenS3LocationDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenS3LocationDescription(apiObject *kafkaconnect.S3LocationDescription) map[string]interface{} {
+func flattenS3LocationDescription(apiObject *awstypes.S3LocationDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketArn; v != nil {
-		tfMap["bucket_arn"] = aws.StringValue(v)
+		tfMap["bucket_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.FileKey; v != nil {
-		tfMap["file_key"] = aws.StringValue(v)
+		tfMap["file_key"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ObjectVersion; v != nil {
-		tfMap["object_version"] = aws.StringValue(v)
+		tfMap["object_version"] = aws.ToString(v)
 	}
 
 	return tfMap

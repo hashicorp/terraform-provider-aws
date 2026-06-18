@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_studio_lifecycle_config"
 description: |-
-  Provides a SageMaker Studio Lifecycle Config resource.
+  Provides a SageMaker AI Studio Lifecycle Config resource.
 ---
 
 # Resource: aws_sagemaker_studio_lifecycle_config
 
-Provides a SageMaker Studio Lifecycle Config resource.
+Provides a SageMaker AI Studio Lifecycle Config resource.
 
 ## Example Usage
 
@@ -26,6 +26,7 @@ resource "aws_sagemaker_studio_lifecycle_config" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `studio_lifecycle_config_name` - (Required) The name of the Studio Lifecycle Configuration to create.
 - `studio_lifecycle_config_app_type` - (Required) The App type that the Lifecycle Configuration is attached to. Valid values are `JupyterServer`, `JupyterLab`, `CodeEditor` and `KernelGateway`.
 - `studio_lifecycle_config_content` - (Required) The content of your Studio Lifecycle Configuration script. This content must be base64 encoded.
@@ -41,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
 ```terraform
 import {
@@ -50,7 +51,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+Using `terraform import`, import SageMaker AI Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_studio_lifecycle_config.example example

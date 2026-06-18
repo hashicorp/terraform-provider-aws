@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -10,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,36 +27,38 @@ func dataSourceOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitsRead,
 
-		Schema: map[string]*schema.Schema{
-			"children": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"children": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"parent_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -62,7 +66,7 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 	children, err := findOrganizationalUnitsForParentByID(ctx, conn, parentID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parentID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Units for parent (%s): %s", parentID, err)
 	}
 
 	d.SetId(parentID)
@@ -74,11 +78,11 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func findOrganizationalUnitsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
-	input := &organizations.ListOrganizationalUnitsForParentInput{
+	input := organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(id),
 	}
 
-	return findOrganizationalUnitsForParent(ctx, conn, input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
+	return findOrganizationalUnitsForParent(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
 }
 
 func findOrganizationalUnitForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*awstypes.OrganizationalUnit]) (*awstypes.OrganizationalUnit, error) {
@@ -100,8 +104,7 @@ func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.C
 
 		if errs.IsA[*awstypes.ParentNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -119,15 +122,15 @@ func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.C
 	return output, nil
 }
 
-func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []interface{} {
+func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, ou := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:  aws.ToString(ou.Arn),
 			names.AttrID:   aws.ToString(ou.Id),
 			names.AttrName: aws.ToString(ou.Name),

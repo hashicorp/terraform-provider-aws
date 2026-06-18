@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lightsail
 
@@ -16,17 +18,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service_deployment_version")
+// @SDKResource("aws_lightsail_container_service_deployment_version", name="Container Service Deployment Version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
@@ -40,140 +42,142 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"container": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 53,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
-						},
-						"image": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						names.AttrEnvironment: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ports": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"container": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 53,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
-							}},
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringIsNotWhiteSpace,
+							},
+							"image": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"command": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrEnvironment: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ports": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
+								}},
+						},
 					},
 				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_endpoint": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"container_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrHealthCheck: {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"healthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
-									},
-									"interval_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      5,
-										ValidateFunc: validation.IntBetween(5, 300),
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "/",
-									},
-									"success_codes": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "200-499",
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      2,
-										ValidateFunc: validation.IntBetween(2, 60),
-									},
-									"unhealthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_endpoint": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"container_port": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrHealthCheck: {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"healthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
+										"interval_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      5,
+											ValidateFunc: validation.IntBetween(5, 300),
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "/",
+										},
+										"success_codes": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "200-499",
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      2,
+											ValidateFunc: validation.IntBetween(2, 60),
+										},
+										"unhealthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -187,8 +191,8 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 		input.Containers = expandContainerServiceDeploymentContainers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("public_endpoint"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PublicEndpoint = expandContainerServiceDeploymentPublicEndpoint(v.([]interface{}))
+	if v, ok := d.GetOk("public_endpoint"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PublicEndpoint = expandContainerServiceDeploymentPublicEndpoint(v.([]any))
 	}
 
 	output, err := conn.CreateContainerServiceDeployment(ctx, &input)
@@ -211,7 +215,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	return append(diags, resourceContainerServiceDeploymentVersionRead(ctx, d, meta)...)
 }
 
-func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -223,7 +227,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 
 	deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lightsail Container Service (%s) Deployment Version (%d) not found, removing from state", serviceName, version)
 		d.SetId("")
 		return diags
@@ -249,7 +253,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceContainerServiceDeploymentVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerServiceDeploymentVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[WARN] Cannot destroy Lightsail Container Service Deployment Version. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
@@ -269,7 +273,7 @@ func ContainerServiceDeploymentVersionParseResourceID(id string) (string, int, e
 	return parts[0], version, nil
 }
 
-func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string]types.Container {
+func expandContainerServiceDeploymentContainers(tfList []any) map[string]types.Container {
 	if len(tfList) == 0 {
 		return map[string]types.Container{}
 	}
@@ -277,7 +281,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 	result := make(map[string]types.Container)
 
 	for _, tfListRaw := range tfList {
-		tfMap, ok := tfListRaw.(map[string]interface{})
+		tfMap, ok := tfListRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -288,15 +292,15 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 			Image: aws.String(tfMap["image"].(string)),
 		}
 
-		if v, ok := tfMap["command"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["command"].([]any); ok && len(v) > 0 {
 			container.Command = aws.ToStringSlice(flex.ExpandStringList(v))
 		}
 
-		if v, ok := tfMap[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 			container.Environment = aws.ToStringMap(flex.ExpandStringMap(v))
 		}
 
-		if v, ok := tfMap["ports"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["ports"].(map[string]any); ok && len(v) > 0 {
 			container.Ports = expandContainerServiceProtocol(v)
 		}
 
@@ -306,7 +310,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 	return result
 }
 
-func expandContainerServiceProtocol(tfMap map[string]interface{}) map[string]types.ContainerServiceProtocol {
+func expandContainerServiceProtocol(tfMap map[string]any) map[string]types.ContainerServiceProtocol {
 	if tfMap == nil {
 		return nil
 	}
@@ -329,12 +333,12 @@ func expandContainerServiceProtocol(tfMap map[string]interface{}) map[string]typ
 	return apiObject
 }
 
-func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types.EndpointRequest {
+func expandContainerServiceDeploymentPublicEndpoint(tfList []any) *types.EndpointRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -344,19 +348,19 @@ func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types
 		ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
 	}
 
-	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrHealthCheck].([]any); ok && len(v) > 0 {
 		endpoint.HealthCheck = expandContainerServiceDeploymentPublicEndpointHealthCheck(v)
 	}
 
 	return endpoint
 }
 
-func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interface{}) *types.ContainerServiceHealthCheckConfig {
+func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []any) *types.ContainerServiceHealthCheckConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -373,14 +377,14 @@ func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interfac
 	return healthCheck
 }
 
-func flattenContainerServiceDeploymentContainers(containers map[string]types.Container) []interface{} {
+func flattenContainerServiceDeploymentContainers(containers map[string]types.Container) []any {
 	if len(containers) == 0 {
 		return nil
 	}
 
-	var rawContainers []interface{}
+	var rawContainers []any
 	for containerName, container := range containers {
-		rawContainer := map[string]interface{}{
+		rawContainer := map[string]any{
 			"container_name":      containerName,
 			"image":               aws.ToString(container.Image),
 			"command":             container.Command,
@@ -394,13 +398,13 @@ func flattenContainerServiceDeploymentContainers(containers map[string]types.Con
 	return rawContainers
 }
 
-func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerServiceEndpoint) []interface{} {
+func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerServiceEndpoint) []any {
 	if endpoint == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"container_name":      aws.ToString(endpoint.ContainerName),
 			"container_port":      int(aws.ToInt32(endpoint.ContainerPort)),
 			names.AttrHealthCheck: flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
@@ -408,13 +412,13 @@ func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerSe
 	}
 }
 
-func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *types.ContainerServiceHealthCheckConfig) []interface{} {
+func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *types.ContainerServiceHealthCheckConfig) []any {
 	if healthCheck == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
 			"interval_seconds":    int(aws.ToInt32(healthCheck.IntervalSeconds)),
 			names.AttrPath:        aws.ToString(healthCheck.Path),
@@ -444,8 +448,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 
 	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -454,7 +457,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if output == nil || len(output.Deployments) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	var result types.ContainerServiceDeployment
@@ -472,8 +475,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 
 	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
 		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+			Message: "Empty result",
 		}
 	}
 

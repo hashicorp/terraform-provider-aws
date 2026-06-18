@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,42 +9,42 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -58,26 +58,26 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 	description := "test eni target"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_eni(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 			{
@@ -91,25 +91,25 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -121,8 +121,8 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_tags2(rName, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -130,8 +130,8 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -141,27 +141,35 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorTarget(), resourceName),
+					testAccCheckTrafficMirrorTargetExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -170,17 +178,17 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_traffic_mirror_target.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 	description := "test gwlb endpoint target"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description),
@@ -198,9 +206,24 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+	input := ec2.DescribeTrafficMirrorTargetsInput{}
+	_, err := conn.DescribeTrafficMirrorTargets(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skip("skipping traffic mirror target acceptance test: ", err)
+	}
+
+	if err != nil {
+		t.Fatal("Unexpected PreCheck error: ", err)
+	}
+}
+
+func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_target" {
@@ -209,7 +232,7 @@ func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfec2.FindTrafficMirrorTargetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -224,18 +247,14 @@ func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckTrafficMirrorTargetExists(ctx context.Context, n string, v *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorTargetExists(ctx context.Context, t *testing.T, n string, v *awstypes.TrafficMirrorTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Traffic Mirror Target ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorTargetByID(ctx, conn, rs.Primary.ID)
 
@@ -351,18 +370,4 @@ resource "aws_ec2_traffic_mirror_target" "test" {
   }
 }
 `, rName, description))
-}
-
-func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-	_, err := conn.DescribeTrafficMirrorTargetsWithContext(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skip("skipping traffic mirror target acceptance test: ", err)
-	}
-
-	if err != nil {
-		t.Fatal("Unexpected PreCheck error: ", err)
-	}
 }

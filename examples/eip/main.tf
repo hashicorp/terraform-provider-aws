@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -67,7 +67,12 @@ resource "aws_instance" "web" {
   # this should be on port 80
   user_data = file("userdata.sh")
 
-  #Instance tags
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  # Instance tags.
   tags = {
     Name = "eip-example"
   }

@@ -1,81 +1,85 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicediscovery
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_service_discovery_dns_namespace")
-func DataSourceDNSNamespace() *schema.Resource {
+// @SDKDataSource("aws_service_discovery_dns_namespace", name="DNS Namespace")
+func dataSourceDNSNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDNSNamespaceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hosted_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Required: true,
-				// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
-				ValidateFunc: validation.StringInSlice([]string{
-					servicediscovery.NamespaceTypeDnsPublic,
-					servicediscovery.NamespaceTypeDnsPrivate,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hosted_zone": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Required: true,
+					// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						awstypes.NamespaceTypeDnsPublic,
+						awstypes.NamespaceTypeDnsPrivate,
+					), false),
+				},
+			}
 		},
 	}
 }
 
-func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	nsType := d.Get(names.AttrType).(string)
+	nsType := awstypes.NamespaceType(d.Get(names.AttrType).(string))
 	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
 	}
 
-	namespaceID := aws.StringValue(nsSummary.Id)
-
-	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
+	namespaceID := aws.ToString(nsSummary.Id)
+	ns, err := findNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
-	arn := aws.StringValue(ns.Arn)
+	arn := aws.ToString(ns.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,9 +18,9 @@ import (
 
 func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -34,7 +33,7 @@ func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
 				),
@@ -45,9 +44,9 @@ func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -60,7 +59,7 @@ func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_basicViaAccessPoint(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
 				),
@@ -71,9 +70,9 @@ func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -102,9 +101,9 @@ func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -117,9 +116,9 @@ func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_prefixes(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/rubicon"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.#", acctest.Ct4),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.0", "arch/courthouse_towers/"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.1", "arch/navajo/"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.2", "arch/partition/"),
@@ -132,9 +131,9 @@ func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -147,7 +146,7 @@ func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_encoded(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/ru+b+ic+on"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/rubicon"),
 				),
@@ -158,9 +157,9 @@ func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -173,7 +172,7 @@ func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_maxKeys(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/north_window"),
 				),
@@ -184,9 +183,9 @@ func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -199,7 +198,7 @@ func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_startAfter(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/three_gossips/turret"),
 				),
 			},
@@ -209,9 +208,9 @@ func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 
 func TestAccS3BucketObjectsDataSource_fetchOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -224,8 +223,8 @@ func TestAccS3BucketObjectsDataSource_fetchOwner(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_owners(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct2),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "owners.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "owners.#", "2"),
 				),
 			},
 		},
@@ -283,17 +282,17 @@ resource "aws_s3_object" "object7" {
 }
 
 func testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resources(randInt) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resources(randInt), fmt.Sprintf(`
 resource "aws_s3_access_point" "test" {
   bucket = aws_s3_bucket.objects_bucket.bucket
   name   = "tf-objects-test-access-point-%[1]d"
 }
-`, randInt)
+`, randInt))
 }
 
 func testAccBucketObjectsDataSourceConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_bucket.objects_bucket.id
@@ -304,13 +303,13 @@ data "aws_s3_objects" "yesh" {
 }
 
 func testAccBucketObjectsDataSourceConfig_basicViaAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt) + `
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt), `
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_access_point.test.arn
   prefix    = "arch/navajo/"
   delimiter = "/"
 }
-`
+`)
 }
 
 func testAccBucketObjectsDataSourceConfig_all(randInt int) string {

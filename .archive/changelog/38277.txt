@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_oam_link: Add `link_configuration` argument
+```
+
+```release-note:enhancement
+data-source/aws_oam_link: Add `link_configuration` attribute
+```

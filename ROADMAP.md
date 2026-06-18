@@ -1,4 +1,7 @@
-# Roadmap:  Feb 2024 - Apr 2024
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+# Roadmap:  October 2025 - December 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,79 +11,76 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
+In the period spanning July to September 2025 the AWS Provider added support for the following (among many others):
 
-- Amazon S3 Express
-- Amazon S3 Access Controls
-- Amazon DocDB Elastic Cluster
-- Amazon EBS Fast Snapshot Restore
-- Amazon Bedrock
+- Oracle Database on AWS
+- DynamoDB Warm Throughput
+- Amazon Workspaces Web
 
-From Feb - April 2024, we will be prioritizing the following areas of work:
+From October - December 2025, we will be prioritizing the following areas of work (and more):
 
-## New Services
+## New Services / Features
 
-### AWS Resource Explorer Search
+### Amazon Bedrock AgentCore
 
-Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
+Issue: [#43424](https://github.com/hashicorp/terraform-provider-aws/issues/43424)
 
-[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables..
+[Amazon Bedrock AgentCore](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) Amazon Bedrock AgentCore is an agentic platform to build, deploy and operate highly capable agents securely at scale using any framework, model, or protocol. AgentCore lets you build agents faster, enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production - all without any infrastructure management.
 
-Support for additional Resource explorer resources may include:
+Support for Amazon Bedrock AgentCore includes the following new resources:
 
 New Resource(s):
 
-- `aws_resourceexplorer2_search`
+- `aws_bedrockagentcore_agent_runtime`
+- `aws_bedrockagentcore_runtime_endpoint`
+- `aws_bedrockagentcore_gateway`
+- `aws_bedrockagentcore_browser`
+- `aws_bedrockagentcore_code_interpreter`
+- `aws_bedrockagentcore_gateway_target`
+- `aws_bedrockagentcore_memory`
+- `aws_bedrockagentcore_oauth2_credential_provider`
+- `aws_bedrockagentcore_workload_provider`
+- `aws_bedrockagentcore_apikey_credential_provider`
 
-### Amazon Verified Permissions
+### AWS Transfer Family Web Apps
 
-Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
+Issue: [#40996](https://github.com/hashicorp/terraform-provider-aws/issues/40996)
 
-[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
+[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance.
 
-Support for Amazon Verified Permissions may include:
-
-New Resource(s):
-
-- `aws_verifiedpermissions_policy`
-- `aws_verifiedpermissions_identity_source`
-
-### Amazon Security Lake
-
-Issue: [#29376](https://github.com/hashicorp/terraform-provider-aws/issues/29376)
-
-[Amazon Security Lake](https://aws.amazon.com/security-lake/) automatically centralizes security data from AWS environments, SaaS providers, on premises, and cloud sources into a purpose-built data lake stored in your account. With Security Lake, you can get a more complete understanding of your security data across your entire organization. You can also improve the protection of your workloads, applications, and data.
-
-Support for Amazon Security Lake may include:
+Support for AWS Transfer Family Web Apps includes:
 
 New Resource(s):
 
-- `aws_security_lake_aws_log_source`
-- `aws_security_lake_custom_log_source`
-- `aws_security_lake_subscriber`
+- `aws_transfer_web_app`
+- `aws_transfer_web_app_customization`
 
-### Amazon DevOps Guru
+### Amazon SaaS Manager for Amazon CloudFront
 
-Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
+Issue: [#42409](https://github.com/hashicorp/terraform-provider-aws/issues/42409)
 
-[Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
-
-Support for Amazon DevOps Guru may include:
+[Amazon SaaS Manager for Amazon CloudFront](https://aws.amazon.com/about-aws/whats-new/2025/04/saas-manager-amazon-cloudfront/) Amazon SaaS Manager for Amazon CloudFront is a new Amazon CloudFront feature designed to efficiently manage content delivery across multiple websites for Software-as-a-Service (SaaS) providers, web development platforms, and companies with multiple brands/websites. CloudFront SaaS Manager provides a unified experience, alleviating the operational burden of managing multiple websites at scale, including TLS certificate management, DDoS protection, and observability.
 
 New Resource(s):
 
-- `aws_devopsguru_notification_channel`
-- `aws_devopsguru_resource_collection`
+- `aws_cloudfront_distribution_tenant`
+- `aws_cloudfront_connection_group`
+
+Affected Resource:
+
+- `aws_cloudfront_distribution`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Add in Security Hub Automation Rules](https://github.com/hashicorp/terraform-provider-aws/issues/32210)
-- [aws rds modify-certificates](https://github.com/hashicorp/terraform-provider-aws/issues/33196)
-- [Add EKS cluster IAM access management API resources](https://github.com/hashicorp/terraform-provider-aws/issues/34982)
-- [Support for AWS Shield Advance Subscriptions](https://github.com/hashicorp/terraform-provider-aws/issues/21430)
-- [Add resources for ComputeOptimizer Recommendation Preferences](https://github.com/hashicorp/terraform-provider-aws/issues/23945)
+- [Allow to set preferred_cache_cluster_azs for ElastiCache Redis Сluster](https://github.com/hashicorp/terraform-provider-aws/issues/37497)
+- [AWS_Route53_zone: support attribute-only search](https://github.com/hashicorp/terraform-provider-aws/pull/39671)
+- [Add support for concurrency cross channel behaviour to aws_connect_routing_profile](https://github.com/hashicorp/terraform-provider-aws/issues/35018)
+- [Parameter to enable Certificate-based-authentication in the directory configuration of Appstream](https://github.com/hashicorp/terraform-provider-aws/issues/31766)
+- [Resources for Custom Billing View](https://github.com/hashicorp/terraform-provider-aws/issues/40677)
+- [Support CHALLENGE WAF actions and overrides on individual WAF Rule Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/27862)
+- [Add required suffix when specifying log group ARN](https://github.com/hashicorp/terraform-provider-aws/pull/35941)
 
 ## Disclosures
 

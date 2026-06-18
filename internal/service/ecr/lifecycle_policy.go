@@ -1,73 +1,73 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
 import (
-	"bytes"
+	"cmp"
 	"context"
-	"encoding/json"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_lifecycle_policy", name="Lifecycle Policy")
+// @IdentityAttribute("repository")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(idAttrDuplicates="repository")
 func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
 		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsJSON,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentLifecyclePolicyJSON(old, new)
-					return equal
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsJSON,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentLifecyclePolicyJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 				},
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -93,15 +93,15 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
-func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetLifecyclePolicyOutput, error) {
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -110,8 +110,6 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
 
 	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -130,7 +128,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -159,8 +157,7 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 
 	if errs.IsA[*types.LifecyclePolicyNotFoundException](err) || errs.IsA[*types.RepositoryNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -169,7 +166,7 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -179,13 +176,15 @@ type lifecyclePolicyRuleSelection struct {
 	TagStatus      *string   `json:"tagStatus,omitempty"`
 	TagPatternList []*string `json:"tagPatternList,omitempty"`
 	TagPrefixList  []*string `json:"tagPrefixList,omitempty"`
+	StorageClass   *string   `json:"storageClass,omitempty"`
 	CountType      *string   `json:"countType,omitempty"`
 	CountUnit      *string   `json:"countUnit,omitempty"`
 	CountNumber    *int64    `json:"countNumber,omitempty"`
 }
 
 type lifecyclePolicyRuleAction struct {
-	Type *string `json:"type"`
+	TargetStorageClass *string `json:"targetStorageClass,omitempty"`
+	Type               *string `json:"type"`
 }
 
 type lifecyclePolicyRule struct {
@@ -200,8 +199,8 @@ type lifecyclePolicy struct {
 }
 
 func (lp *lifecyclePolicy) reduce() {
-	sort.Slice(lp.Rules, func(i, j int) bool {
-		return aws.ToInt64(lp.Rules[i].RulePriority) < aws.ToInt64(lp.Rules[j].RulePriority)
+	slices.SortFunc(lp.Rules, func(a, b *lifecyclePolicyRule) int {
+		return cmp.Compare(aws.ToInt64(a.RulePriority), aws.ToInt64(b.RulePriority))
 	})
 
 	for _, rule := range lp.Rules {
@@ -210,16 +209,16 @@ func (lp *lifecyclePolicy) reduce() {
 }
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
-	sort.Slice(lprs.TagPatternList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPatternList[i]) < aws.ToString(lprs.TagPatternList[j])
+	slices.SortFunc(lprs.TagPatternList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPatternList) == 0 {
 		lprs.TagPatternList = nil
 	}
 
-	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
+	slices.SortFunc(lprs.TagPrefixList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPrefixList) == 0 {
@@ -236,37 +235,27 @@ func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
 		str2 = "{}"
 	}
 
-	var lp1, lp2 lifecyclePolicy
-
-	if err := json.Unmarshal([]byte(str1), &lp1); err != nil {
+	var lp1 lifecyclePolicy
+	err := tfjson.DecodeFromString(str1, &lp1)
+	if err != nil {
 		return false, err
 	}
-
 	lp1.reduce()
-
-	canonicalJSON1, err := jsonutil.BuildJSON(lp1)
-
+	b1, err := tfjson.EncodeToBytes(lp1)
 	if err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(str2), &lp2); err != nil {
+	var lp2 lifecyclePolicy
+	err = tfjson.DecodeFromString(str2, &lp2)
+	if err != nil {
 		return false, err
 	}
-
 	lp2.reduce()
-
-	canonicalJSON2, err := jsonutil.BuildJSON(lp2)
-
+	b2, err := tfjson.EncodeToBytes(lp2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJSON1, canonicalJSON2)
-
-	if !equal {
-		log.Printf("[DEBUG] Canonical Lifecycle Policy JSONs are not equal.\nFirst: %s\nSecond: %s\n", canonicalJSON1, canonicalJSON2)
-	}
-
-	return equal, nil
+	return tfjson.EqualBytes(b1, b2), nil
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_model_invocation_logging_configuration: Mark `logging_config.s3_config.bucket_name`, `logging_config.cloudwatch_config.log_group_name`, `logging_config.cloudwatch_config.role_arn`, and `logging_config.cloudwatch_config.large_data_delivery_s3_config.bucket_name` as Required
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -18,7 +18,7 @@ func TestRecordMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_0": {
 			StateVersion: 0,
@@ -71,18 +71,18 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				names.AttrWeight: "0", // nosemgrep: ci.literal-0-string-test-constant
+				names.AttrWeight: "0",
 				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
-				"weighted_routing_policy.0.weight": "0", // nosemgrep: ci.literal-0-string-test-constant
-				"failover_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
+				"weighted_routing_policy.#":        "1",
+				"weighted_routing_policy.0.weight": "0",
+				"failover_routing_policy.#":        "1",
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},

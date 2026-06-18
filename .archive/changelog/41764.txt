@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix potential eventual consistency errors in some regions
+```
+

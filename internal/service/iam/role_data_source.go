@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -19,72 +21,75 @@ import (
 )
 
 // @SDKDataSource("aws_iam_role", name="Role")
+// @Tags
+// @Testing(tagsIdentifierAttribute="name", tagsResourceType="Role")
 func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assume_role_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_session_duration": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permissions_boundary": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_last_used": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_used_date": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assume_role_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"max_session_duration": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permissions_boundary": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"role_last_used": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_used_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	role, err := findRoleByName(ctx, conn, name)
@@ -116,27 +121,22 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("assume_role_policy", assumeRolePolicy)
 
-	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }
 
-func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []interface{} {
+func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrRegion: aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {
 		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
 	}
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

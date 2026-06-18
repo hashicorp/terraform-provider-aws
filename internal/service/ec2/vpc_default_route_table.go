@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -43,107 +45,107 @@ func resourceDefaultRouteTable() *schema.Resource {
 		//
 		// The top-level attributes must be a superset of the aws_route_table resource's attributes as common CRUD handlers are used.
 		//
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagating_vgws": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"route": {
-				Type:       schema.TypeSet,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Computed:   true,
-				Optional:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						///
-						// Destinations.
-						///
-						names.AttrCIDRBlock: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-						},
-						"destination_prefix_list_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-						},
-						//
-						// Targets.
-						// These target attributes are a subset of the aws_route_table resource's target attributes
-						// as there are some targets that are not allowed in the default route table for a VPC.
-						//
-						"core_network_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"egress_only_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrInstanceID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"nat_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrTransitGatewayID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagating_vgws": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"route": {
+					Type:       schema.TypeSet,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Computed:   true,
+					Optional:   true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							///
+							// Destinations.
+							///
+							names.AttrCIDRBlock: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+							},
+							"destination_prefix_list_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ipv6_cidr_block": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+							},
+							//
+							// Targets.
+							// These target attributes are a subset of the aws_route_table resource's target attributes
+							// as there are some targets that are not allowed in the default route table for a VPC.
+							//
+							"core_network_arn": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"egress_only_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrInstanceID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"nat_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"vpc_peering_connection_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					Set: resourceRouteTableHash,
 				},
-				Set: resourceRouteTableHash,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -230,7 +232,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 	// Add new routes.
 	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
-			v := v.(map[string]interface{})
+			v := v.(map[string]any)
 
 			if err := routeTableAddRoute(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -238,14 +240,14 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDefaultRouteTableRead(ctx, d, meta)...)
 }
 
-func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	d.Set("default_route_table_id", d.Id())
 
 	// Re-use regular AWS Route Table READ.
@@ -253,7 +255,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 	return resourceRouteTableRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
 }
 
-func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTable, err := findMainRouteTableByVPCID(ctx, conn, d.Id())

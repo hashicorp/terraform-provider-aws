@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_number` - A unique account number that you have given to the customer.
 * `additional_information` - Any additional information relevant to the customer’s profile.
 * `address` - A block that specifies a generic address associated with the customer that is not mailing, shipping, or billing. [Documented below](#address).
@@ -73,14 +74,6 @@ The `address` configuration block supports the following attributes:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Customer Profiles Profile.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 

@@ -1,13 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package sqs_test
+package sqs
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,16 +18,16 @@ func TestQueuePolicyMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1": {
 			StateVersion: 0,
-			ID:           "sqs-policy-https://queue.amazonaws.com/0123456789012/myqueue",
+			ID:           "sqs-policy-https://queue.amazonaws.com/123456789012/myqueue",
 			Attributes: map[string]string{
 				names.AttrPolicy: "{}",
-				"queue_url":      "https://queue.amazonaws.com/0123456789012/myqueue",
+				"queue_url":      "https://queue.amazonaws.com/123456789012/myqueue",
 			},
-			Expected: "https://queue.amazonaws.com/0123456789012/myqueue",
+			Expected: "https://queue.amazonaws.com/123456789012/myqueue",
 		},
 	}
 
@@ -37,7 +36,7 @@ func TestQueuePolicyMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := tfsqs.QueuePolicyMigrateState(
+		is, err := queuePolicyMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

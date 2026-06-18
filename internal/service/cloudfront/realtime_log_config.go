@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,12 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @ArnFormat("realtime-log-config/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
 func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
@@ -32,70 +38,68 @@ func resourceRealtimeLogConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
 		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_stream_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrStreamARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_stream_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrStreamARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"stream_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[streamType](),
+							"stream_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[streamType](),
+							},
 						},
 					},
 				},
-			},
-			"fields": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sampling_rate": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-			},
+				"fields": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sampling_rate": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+			}
 		},
 	}
 }
 
-func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -104,8 +108,8 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
-		input.EndPoints = expandEndPoints(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]any)) > 0 {
+		input.EndPoints = expandEndPoints(v.([]any))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
@@ -127,13 +131,13 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	logConfig, err := findRealtimeLogConfigByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,7 +158,7 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -166,8 +170,8 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
-		input.EndPoints = expandEndPoints(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]any)) > 0 {
+		input.EndPoints = expandEndPoints(v.([]any))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
@@ -187,14 +191,15 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config: %s", d.Id())
-	_, err := conn.DeleteRealtimeLogConfig(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
+	input := cloudfront.DeleteRealtimeLogConfigInput{
 		ARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRealtimeLogConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return diags
@@ -220,8 +225,7 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -230,21 +234,21 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 	}
 
 	if output == nil || output.RealtimeLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RealtimeLogConfig, nil
 }
 
-func expandEndPoint(tfMap map[string]interface{}) *awstypes.EndPoint {
+func expandEndPoint(tfMap map[string]any) *awstypes.EndPoint {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.EndPoint{}
 
-	if v, ok := tfMap["kinesis_stream_config"].([]interface{}); ok && len(v) > 0 {
-		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_stream_config"].([]any); ok && len(v) > 0 {
+		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["stream_type"].(string); ok && v != "" {
@@ -254,7 +258,7 @@ func expandEndPoint(tfMap map[string]interface{}) *awstypes.EndPoint {
 	return apiObject
 }
 
-func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
+func expandEndPoints(tfList []any) []awstypes.EndPoint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -262,7 +266,7 @@ func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
 	var apiObjects []awstypes.EndPoint
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -280,7 +284,7 @@ func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
 	return apiObjects
 }
 
-func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisStreamConfig {
+func expandKinesisStreamConfig(tfMap map[string]any) *awstypes.KinesisStreamConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -298,15 +302,15 @@ func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisSt
 	return apiObject
 }
 
-func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]interface{} {
+func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenKinesisStreamConfig(apiObject.KinesisStreamConfig); len(v) > 0 {
-		tfMap["kinesis_stream_config"] = []interface{}{v}
+		tfMap["kinesis_stream_config"] = []any{v}
 	}
 
 	if v := apiObject.StreamType; v != nil {
@@ -316,12 +320,12 @@ func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
+func flattenEndPoints(apiObjects []awstypes.EndPoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenEndPoint(&apiObject); len(v) > 0 {
@@ -332,12 +336,12 @@ func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
 	return tfList
 }
 
-func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[string]interface{} {
+func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RoleARN; v != nil {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)

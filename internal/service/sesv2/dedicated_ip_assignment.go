@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -15,17 +16,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_dedicated_ip_assignment")
-func ResourceDedicatedIPAssignment() *schema.Resource {
+// @SDKResource("aws_sesv2_dedicated_ip_assignment", name="Dedicated IP Assignment")
+func resourceDedicatedIPAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPAssignmentCreate,
 		ReadWithoutTimeout:   resourceDedicatedIPAssignmentRead,
@@ -40,142 +43,164 @@ func ResourceDedicatedIPAssignment() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"destination_pool_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ip": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPAddress,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"destination_pool_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ip": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPAddress,
+				},
+			}
 		},
 	}
 }
 
 const (
-	ResNameDedicatedIPAssignment = "Dedicated IP Assignment"
+	resNameDedicatedIPAssignment = "Dedicated IP Assignment"
 )
 
-func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	in := &sesv2.PutDedicatedIpInPoolInput{
-		Ip:                  aws.String(d.Get("ip").(string)),
-		DestinationPoolName: aws.String(d.Get("destination_pool_name").(string)),
+	ip, destinationPoolName := d.Get("ip").(string), d.Get("destination_pool_name").(string)
+	id := dedicatedIPAssignmentCreateResourceID(ip, destinationPoolName)
+	input := &sesv2.PutDedicatedIpInPoolInput{
+		DestinationPoolName: aws.String(destinationPoolName),
+		Ip:                  aws.String(ip),
 	}
 
-	_, err := conn.PutDedicatedIpInPool(ctx, in)
+	_, err := conn.PutDedicatedIpInPool(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameDedicatedIPAssignment, d.Get("ip").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameDedicatedIPAssignment, d.Get("ip").(string), err)
 	}
 
-	id := toID(d.Get("ip").(string), d.Get("destination_pool_name").(string))
 	d.SetId(id)
 
 	return append(diags, resourceDedicatedIPAssignmentRead(ctx, d, meta)...)
 }
 
-func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	ip, destinationPoolName, err := dedicatedIPAssignmentParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	out, err := findDedicatedIPByTwoPartKey(ctx, conn, ip, destinationPoolName)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPAssignment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	d.Set("ip", out.Ip)
 	d.Set("destination_pool_name", out.PoolName)
+	d.Set("ip", out.Ip)
 
 	return diags
 }
 
-func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
-	ip, _ := splitID(d.Id())
+
+	ip, _, err := dedicatedIPAssignmentParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPAssignment %s", d.Id())
-	_, err := conn.PutDedicatedIpInPool(ctx, &sesv2.PutDedicatedIpInPoolInput{
+	const (
+		// defaultDedicatedPoolName contains the name of the standard pool managed by AWS
+		// where dedicated IP addresses with an assignment are stored
+		//
+		// When an assignment resource is removed from state, the delete function will re-assign
+		// the relevant IP to this pool.
+		defaultDedicatedPoolName = "ses-default-dedicated-pool"
+	)
+	_, err = conn.PutDedicatedIpInPool(ctx, &sesv2.PutDedicatedIpInPoolInput{
 		Ip:                  aws.String(ip),
 		DestinationPoolName: aws.String(defaultDedicatedPoolName),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPAssignment, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameDedicatedIPAssignment, d.Id(), err)
 	}
 
 	return diags
 }
 
-const (
-	// defaultDedicatedPoolName contains the name of the standard pool managed by AWS
-	// where dedicated IP addresses with an assignment are stored
-	//
-	// When an assignment resource is removed from state, the delete function will re-assign
-	// the relevant IP to this pool.
-	defaultDedicatedPoolName = "ses-default-dedicated-pool"
-)
+const dedicatedIPAssignmentResourceIDSeparator = ","
 
-// ErrIncorrectPoolAssignment is returned when an IP is assigned to a pool different
-// from what is specified in state
-var ErrIncorrectPoolAssignment = errors.New("incorrect pool assignment")
+func dedicatedIPAssignmentCreateResourceID(ip, destinationPoolName string) string {
+	parts := []string{ip, destinationPoolName}
+	id := strings.Join(parts, dedicatedIPAssignmentResourceIDSeparator)
 
-func FindDedicatedIPAssignmentByID(ctx context.Context, conn *sesv2.Client, id string) (*types.DedicatedIp, error) {
-	ip, destinationPoolName := splitID(id)
+	return id
+}
 
-	in := &sesv2.GetDedicatedIpInput{
+func dedicatedIPAssignmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, dedicatedIPAssignmentResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected IP%[2]sDESTINATION_POOL_NAME", id, dedicatedIPAssignmentResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findDedicatedIPByTwoPartKey(ctx context.Context, conn *sesv2.Client, ip, destinationPoolName string) (*types.DedicatedIp, error) {
+	input := &sesv2.GetDedicatedIpInput{
 		Ip: aws.String(ip),
 	}
-	out, err := conn.GetDedicatedIp(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	output, err := findDedicatedIP(ctx, conn, input)
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.DedicatedIp == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if aws.ToString(output.PoolName) != destinationPoolName {
+		return nil, &retry.NotFoundError{}
 	}
-	if out.DedicatedIp.PoolName == nil || aws.ToString(out.DedicatedIp.PoolName) != destinationPoolName {
+
+	return output, nil
+}
+
+func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDedicatedIpInput) (*types.DedicatedIp, error) {
+	output, err := conn.GetDedicatedIp(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   ErrIncorrectPoolAssignment,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
-	return out.DedicatedIp, nil
-}
-
-func toID(ip, destinationPoolName string) string {
-	return fmt.Sprintf("%s,%s", ip, destinationPoolName)
-}
-
-func splitID(id string) (string, string) {
-	items := strings.Split(id, ",")
-	if len(items) == 2 {
-		return items[0], items[1]
+	if err != nil {
+		return nil, err
 	}
-	return "", ""
+
+	if output == nil || output.DedicatedIp == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.DedicatedIp, nil
 }

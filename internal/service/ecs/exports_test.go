@@ -1,11 +1,36 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceTag = resourceTag
+	ResourceAccountSettingDefault    = resourceAccountSettingDefault
+	ResourceCapacityProvider         = resourceCapacityProvider
+	ResourceCluster                  = resourceCluster
+	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceDaemon                   = newDaemonResource
+	ResourceDaemonTaskDefinition     = newDaemonTaskDefinitionResource
+	ResourceExpressGatewayService    = newExpressGatewayServiceResource
+	ResourceService                  = resourceService
+	ResourceTag                      = resourceTag
+	ResourceTaskDefinition           = resourceTaskDefinition
+	ResourceTaskSet                  = resourceTaskSet
 
-	FindTag = findTag
+	ClusterNameFromARN                      = clusterNameFromARN
+	DaemonNameFromARN                       = daemonNameFromARN
+	FindCapacityProviderByARN               = findCapacityProviderByARN
+	FindClusterByNameOrARN                  = findClusterByNameOrARN
+	FindDaemonByARN                         = findDaemonByARN
+	FindDaemonTaskDefinitionByARN           = findDaemonTaskDefinitionByARN
+	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
+	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
+	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
+	FindTag                                 = findTag
+	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
+	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
+	RoleNameFromARN                         = roleNameFromARN
+	ServiceNameFromARN                      = serviceNameFromARN
+	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
+	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -14,7 +14,7 @@ import (
 
 func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -22,7 +22,7 @@ func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", names.AttrID, tfelb.HostedZoneIdPerRegionMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", names.AttrID, tfelb.HostedZoneIDPerRegionMap[acctest.Region()]),
 				),
 			},
 			{

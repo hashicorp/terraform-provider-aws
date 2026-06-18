@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,43 +38,49 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrHostedZoneID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-				StateFunc: func(v interface{}) string {
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"traffic_policy_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-			},
-			"traffic_policy_version": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 1000),
-			},
-			"ttl": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtMost(2147483647),
-			},
+				names.AttrHostedZoneID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+					StateFunc: func(v any) string {
+						value := strings.TrimSuffix(v.(string), ".")
+						return strings.ToLower(value)
+					},
+				},
+				"traffic_policy_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+				},
+				"traffic_policy_version": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 1000),
+				},
+				"ttl": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtMost(2147483647),
+				},
+			}
 		},
 	}
 }
 
-func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -85,7 +93,7 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 		TTL:                  aws.Int64(int64(d.Get("ttl").(int))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateTrafficPolicyInstance(ctx, input)
 	})
 
@@ -102,13 +110,13 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTrafficPolicyInstanceRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	trafficPolicyInstance, err := findTrafficPolicyInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Traffic Policy Instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -118,6 +126,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, trafficPolicyInstanceARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrHostedZoneID, trafficPolicyInstance.HostedZoneId)
 	d.Set(names.AttrName, strings.TrimSuffix(aws.ToString(trafficPolicyInstance.Name), "."))
 	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
@@ -127,7 +136,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -151,7 +160,7 @@ func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTrafficPolicyInstanceRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -184,8 +193,7 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 
 	if errs.IsA[*awstypes.NoSuchTrafficPolicyInstance](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -194,17 +202,17 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	}
 
 	if output == nil || output.TrafficPolicyInstance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicyInstance, nil
 }
 
-func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTrafficPolicyInstanceState(conn *route53.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrafficPolicyInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -232,7 +240,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateCreating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -240,7 +248,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -253,7 +261,7 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateUpdating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -261,7 +269,7 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -274,7 +282,7 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateDeleting},
 		Target:  []string{},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -282,11 +290,16 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
 	}
 
 	return nil, err
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func trafficPolicyInstanceARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "trafficpolicyinstance/"+id)
 }

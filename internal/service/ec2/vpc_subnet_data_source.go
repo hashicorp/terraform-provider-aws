@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -7,8 +9,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnet")
-func DataSourceSubnet() *schema.Resource {
+// @SDKDataSource("aws_subnet", name="Subnet")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id", generator=false)
+func dataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,
 
@@ -27,122 +32,123 @@ func DataSourceSubnet() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"available_ip_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_for_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns64": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_lni_at_device_index": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"enable_resource_name_dns_aaaa_record_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_resource_name_dns_a_record_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_native": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"map_customer_owned_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"map_public_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_hostname_type_on_launch": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_ipv6_address_on_creation": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"available_ip_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_for_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns64": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_lni_at_device_index": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"enable_resource_name_dns_aaaa_record_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_resource_name_dns_a_record_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ipv6_cidr_block_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_native": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"map_customer_owned_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"map_public_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_hostname_type_on_launch": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{}
 
 	if id, ok := d.GetOk(names.AttrID); ok {
-		input.SubnetIds = []*string{aws.String(id.(string))}
+		input.SubnetIds = []string{id.(string)}
 	}
 
 	// We specify default_for_az as boolean, but EC2 filters want
@@ -175,7 +181,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
@@ -187,13 +193,13 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Filters = nil
 	}
 
-	subnet, err := FindSubnet(ctx, conn, input)
+	subnet, err := findSubnet(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Subnet", err))
 	}
 
-	d.SetId(aws.StringValue(subnet.SubnetId))
+	d.SetId(aws.ToString(subnet.SubnetId))
 
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
@@ -212,7 +218,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ipv6_cidr_block", nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState != nil && aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+		if v.Ipv6CidrBlockState != nil && v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
 			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 		}
@@ -220,7 +226,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
+	d.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	d.Set(names.AttrOwnerID, subnet.OwnerId)
 	d.Set(names.AttrState, subnet.State)
 
@@ -234,11 +240,8 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
 	d.Set(names.AttrVPCID, subnet.VpcId)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }

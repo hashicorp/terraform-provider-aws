@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -12,11 +12,12 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -27,26 +28,26 @@ func TestAccLambdaRuntimeManagementConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var cfg lambda.GetRuntimeManagementConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_runtime_management_config.test"
 	functionResourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuntimeManagementConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
+					testAccCheckRuntimeManagementConfigExists(ctx, t, resourceName, &cfg),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnFunctionUpdate)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
 				),
 			},
 			{
@@ -67,26 +68,34 @@ func TestAccLambdaRuntimeManagementConfig_disappears_Function(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var cfg lambda.GetRuntimeManagementConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_runtime_management_config.test"
 	functionResourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuntimeManagementConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), functionResourceName),
+					testAccCheckRuntimeManagementConfigExists(ctx, t, resourceName, &cfg),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), functionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -96,44 +105,68 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var cfg lambda.GetRuntimeManagementConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_runtime_management_config.test"
 	functionResourceName := "aws_lambda_function.test"
-	// nodejs18.x version hash in us-west-2, commercial partition
-	runtimeVersion := "b475b23763329123d9e6f79f51886d0e1054f727f5b90ec945fcb2a3ec09afdd"
+	var runtimeVersionARN *string
+	runtimeVersionConfigVars := config.Variables{}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// The runtime version ARN contains a hash unique to a partition/region.
-			// There is currently no API to retrieve this ARN, so we have to hard-code
-			// the value and restrict this test to us-west-2 in the standard commercial
-			// partition.
-			acctest.PreCheckPartition(t, names.StandardPartitionID)
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRuntimeManagementConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuntimeManagementConfigConfig_runtimeVersionARN(rName, runtimeVersion),
+				Config: testAccRuntimeManagementConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
+					testAccCheckRuntimeManagementConfigExists(ctx, t, resourceName, &cfg),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnFunctionUpdate)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
+				),
+			},
+			{
+				PreConfig: func() {
+					function, err := tflambda.FindFunctionByName(ctx, acctest.ProviderMeta(ctx, t).LambdaClient(ctx), rName)
+					if err != nil {
+						t.Fatalf("finding Lambda Function (%s): %s", rName, err)
+					}
+
+					if function.Configuration == nil || function.Configuration.RuntimeVersionConfig == nil || function.Configuration.RuntimeVersionConfig.RuntimeVersionArn == nil {
+						t.Fatal("runtime version ARN not found")
+					}
+
+					runtimeVersionARN = function.Configuration.RuntimeVersionConfig.RuntimeVersionArn
+					runtimeVersionConfigVars["runtime_version_arn"] = config.StringVariable(*runtimeVersionARN)
+				},
+				Config:          testAccRuntimeManagementConfigConfig_runtimeVersionARN(rName),
+				ConfigVariables: runtimeVersionConfigVars,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuntimeManagementConfigExists(ctx, t, resourceName, &cfg),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "update_runtime_on", string(types.UpdateRuntimeOnManual)),
-					resource.TestMatchResourceAttr(resourceName, "runtime_version_arn", regexache.MustCompile(runtimeVersion)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
+					resource.TestCheckResourceAttrWith(resourceName, "runtime_version_arn", func(value string) error {
+						if got, want := value, *runtimeVersionARN; got != want {
+							return fmt.Errorf("Attribute 'runtime_version_arn' expected %q, got: %s", want, got)
+						}
+						return nil
+					}),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrFunctionARN, "lambda", regexache.MustCompile(`function:+.`)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRuntimeManagementConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRuntimeManagementConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_runtime_management_config" {
@@ -158,7 +191,7 @@ func testAccCheckRuntimeManagementConfigDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckRuntimeManagementConfigExists(ctx context.Context, name string, cfg *lambda.GetRuntimeManagementConfigOutput) resource.TestCheckFunc {
+func testAccCheckRuntimeManagementConfigExists(ctx context.Context, t *testing.T, name string, cfg *lambda.GetRuntimeManagementConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -171,7 +204,7 @@ func testAccCheckRuntimeManagementConfigExists(ctx context.Context, name string,
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameRuntimeManagementConfig, name, errors.New("function_name not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		out, err := tflambda.FindRuntimeManagementConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 		if err != nil {
@@ -204,7 +237,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -220,16 +253,18 @@ resource "aws_lambda_runtime_management_config" "test" {
 `)
 }
 
-func testAccRuntimeManagementConfigConfig_runtimeVersionARN(rName, runtimeVersion string) string {
+func testAccRuntimeManagementConfigConfig_runtimeVersionARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRuntimeManagementConfigConfigBase(rName),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
+		`
+variable "runtime_version_arn" {
+  type = string
+}
 
 resource "aws_lambda_runtime_management_config" "test" {
   function_name       = aws_lambda_function.test.function_name
   update_runtime_on   = "Manual"
-  runtime_version_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}::runtime:%[1]s"
+  runtime_version_arn = var.runtime_version_arn
 }
-`, runtimeVersion))
+`)
 }

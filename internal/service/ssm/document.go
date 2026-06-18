@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -9,17 +11,16 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,11 +28,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +41,8 @@ const (
 
 // @SDKResource("aws_ssm_document", name="Document")
 // @Tags(identifierAttribute="id", resourceType="Document")
+// @IdentityAttribute("name")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,
@@ -48,173 +50,170 @@ func resourceDocument() *schema.Resource {
 		UpdateWithoutTimeout: resourceDocumentUpdate,
 		DeleteWithoutTimeout: resourceDocumentDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachments_source": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 20,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AttachmentsSourceKey](),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-								validation.StringLenBetween(3, 128),
-							),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							MinItems: 1,
-							Required: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachments_source": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 20,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AttachmentsSourceKey](),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+									validation.StringLenBetween(3, 128),
+								),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								MinItems: 1,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 1024),
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrContent: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DocumentFormatJson,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
-			},
-			"document_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentType](),
-			},
-			"document_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hash": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hash_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-					validation.StringLenBetween(3, 128),
-				),
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameter: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrContent: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DocumentFormatJson,
+					ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
+				},
+				"document_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DocumentType](),
+				},
+				"document_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hash": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hash_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"latest_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						validation.StringLenBetween(3, 128),
+					),
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameter: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPermissions: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPermissions: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"platform_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schema_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
-					validation.StringLenBetween(1, 200),
-				),
-			},
-			"version_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-					validation.StringLenBetween(3, 128),
-				),
-			},
+				"platform_types": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"schema_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
+						validation.StringLenBetween(1, 200),
+					),
+				},
+				"version_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						validation.StringLenBetween(3, 128),
+					),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
 					// Validates permissions keys, if set, to be type and account_ids
 					// since ValidateFunc validates only the value not the key.
-					tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+					tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 					if v, ok := tfMap[names.AttrType]; ok {
 						if awstypes.DocumentPermissionType(v) != awstypes.DocumentPermissionTypeShare {
@@ -253,7 +252,7 @@ func resourceDocument() *schema.Resource {
 	}
 }
 
-func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -266,8 +265,8 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
-		input.Attachments = expandAttachmentsSources(v.([]interface{}))
+	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]any)) > 0 {
+		input.Attachments = expandAttachmentsSources(v.([]any))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -286,13 +285,11 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(output.DocumentDescription.Name))
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
-		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToAdd: chunk,
 					Name:            aws.String(d.Id()),
@@ -315,13 +312,13 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDocumentRead(ctx, d, meta)...)
 }
 
-func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	doc, err := findDocumentByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Document %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -331,86 +328,18 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "document/" + aws.ToString(doc.Name),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
-	d.Set("default_version", doc.DefaultVersion)
-	d.Set(names.AttrDescription, doc.Description)
-	d.Set("document_format", doc.DocumentFormat)
-	d.Set("document_type", doc.DocumentType)
-	d.Set("document_version", doc.DocumentVersion)
-	d.Set("hash", doc.Hash)
-	d.Set("hash_type", doc.HashType)
-	d.Set("latest_version", doc.LatestVersion)
-	d.Set(names.AttrName, doc.Name)
-	d.Set(names.AttrOwner, doc.Owner)
-	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-	d.Set("platform_types", doc.PlatformTypes)
-	d.Set("schema_version", doc.SchemaVersion)
-	d.Set(names.AttrStatus, doc.Status)
-	d.Set("target_type", doc.TargetType)
-	d.Set("version_name", doc.VersionName)
-
-	{
-		input := &ssm.GetDocumentInput{
-			DocumentFormat:  awstypes.DocumentFormat(d.Get("document_format").(string)),
-			DocumentVersion: aws.String("$LATEST"),
-			Name:            aws.String(d.Id()),
-		}
-
-		output, err := conn.GetDocument(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
-		}
-
-		d.Set(names.AttrContent, output.Content)
-	}
-
-	{
-		input := &ssm.DescribeDocumentPermissionInput{
-			Name:           aws.String(d.Id()),
-			PermissionType: awstypes.DocumentPermissionTypeShare,
-		}
-
-		output, err := conn.DescribeDocumentPermission(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
-		}
-
-		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
-			d.Set(names.AttrPermissions, map[string]interface{}{
-				"account_ids":  strings.Join(accountsIDs, ","),
-				names.AttrType: awstypes.DocumentPermissionTypeShare,
-			})
-		} else {
-			d.Set(names.AttrPermissions, nil)
-		}
-	}
-
-	setTagsOut(ctx, doc.Tags)
-
-	return diags
+	return append(diags, resourceDocumentFlatten(ctx, conn, d, meta.(*conns.AWSClient), doc)...)
 }
 
-func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	if d.HasChange(names.AttrPermissions) {
-		var oldAccountIDs, newAccountIDs itypes.Set[string]
+		var oldAccountIDs, newAccountIDs inttypes.Set[string]
 		o, n := d.GetChange(names.AttrPermissions)
 
-		if v := o.(map[string]interface{}); len(v) > 0 {
+		if v := o.(map[string]any); len(v) > 0 {
 			tfMap := flex.ExpandStringValueMap(v)
 
 			if v, ok := tfMap["account_ids"]; ok && v != "" {
@@ -418,7 +347,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v := n.(map[string]interface{}); len(v) > 0 {
+		if v := n.(map[string]any); len(v) > 0 {
 			tfMap := flex.ExpandStringValueMap(v)
 
 			if v, ok := tfMap["account_ids"]; ok && v != "" {
@@ -426,7 +355,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToAdd: chunk,
 				Name:            aws.String(d.Id()),
@@ -440,7 +369,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToRemove: chunk,
 				Name:               aws.String(d.Id()),
@@ -467,8 +396,8 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				Name:            aws.String(d.Id()),
 			}
 
-			if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
-				input.Attachments = expandAttachmentsSources(v.([]interface{}))
+			if v, ok := d.GetOk("attachments_source"); ok && len(v.([]any)) > 0 {
+				input.Attachments = expandAttachmentsSources(v.([]any))
 			}
 
 			if v, ok := d.GetOk("target_type"); ok {
@@ -509,17 +438,15 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDocumentRead(ctx, d, meta)...)
 }
 
-func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
-		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToRemove: chunk,
 					Name:               aws.String(d.Id()),
@@ -564,8 +491,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -574,17 +500,17 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	}
 
 	if output == nil || output.Document == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Document, nil
 }
 
-func statusDocument(ctx context.Context, conn *ssm.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDocument(conn *ssm.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDocumentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -603,14 +529,14 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusCreating, awstypes.DocumentStatusUpdating),
 		Target:  enum.Slice(awstypes.DocumentStatusActive),
-		Refresh: statusDocument(ctx, conn, name),
+		Refresh: statusDocument(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -625,14 +551,14 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDocument(ctx, conn, name),
+		Refresh: statusDocument(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -640,7 +566,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	return nil, err
 }
 
-func expandAttachmentsSource(tfMap map[string]interface{}) *awstypes.AttachmentsSource {
+func expandAttachmentsSource(tfMap map[string]any) *awstypes.AttachmentsSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -655,14 +581,14 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *awstypes.Attachments
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource {
+func expandAttachmentsSources(tfList []any) []awstypes.AttachmentsSource {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -670,7 +596,7 @@ func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource
 	var apiObjects []awstypes.AttachmentsSource
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -688,12 +614,12 @@ func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource
 	return apiObjects
 }
 
-func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]interface{} {
+func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -712,16 +638,96 @@ func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]
 	return tfMap
 }
 
-func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interface{} {
+func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDocumentParameter(&apiObject))
 	}
 
 	return tfList
+}
+
+func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
+	var resource string
+	switch documentType {
+	case awstypes.DocumentTypeAutomation:
+		resource = "automation-definition/" + name
+	default:
+		resource = "document/" + name
+	}
+
+	return c.RegionalARN(ctx, "ssm", resource)
+}
+
+func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.ResourceData, awsClient *conns.AWSClient, output *awstypes.DocumentDescription) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	documentType, name := output.DocumentType, aws.ToString(output.Name)
+	d.Set(names.AttrARN, documentARN(ctx, awsClient, documentType, name))
+	d.Set(names.AttrCreatedDate, aws.ToTime(output.CreatedDate).Format(time.RFC3339))
+	d.Set("default_version", output.DefaultVersion)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("document_format", output.DocumentFormat)
+	d.Set("document_type", documentType)
+	d.Set("document_version", output.DocumentVersion)
+	d.Set("hash", output.Hash)
+	d.Set("hash_type", output.HashType)
+	d.Set("latest_version", output.LatestVersion)
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrOwner, output.Owner)
+	if err := d.Set(names.AttrParameter, flattenDocumentParameters(output.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	}
+	d.Set("platform_types", output.PlatformTypes)
+	d.Set("schema_version", output.SchemaVersion)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set("target_type", output.TargetType)
+	d.Set("version_name", output.VersionName)
+
+	{
+		input := &ssm.GetDocumentInput{
+			DocumentFormat:  awstypes.DocumentFormat(d.Get("document_format").(string)),
+			DocumentVersion: aws.String("$LATEST"),
+			Name:            aws.String(d.Id()),
+		}
+
+		output, err := conn.GetDocument(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
+		}
+
+		d.Set(names.AttrContent, output.Content)
+	}
+
+	{
+		input := &ssm.DescribeDocumentPermissionInput{
+			Name:           aws.String(d.Id()),
+			PermissionType: awstypes.DocumentPermissionTypeShare,
+		}
+
+		output, err := conn.DescribeDocumentPermission(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
+		}
+
+		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
+			d.Set(names.AttrPermissions, map[string]any{
+				"account_ids":  strings.Join(accountsIDs, ","),
+				names.AttrType: awstypes.DocumentPermissionTypeShare,
+			})
+		} else {
+			d.Set(names.AttrPermissions, nil)
+		}
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	return diags
 }

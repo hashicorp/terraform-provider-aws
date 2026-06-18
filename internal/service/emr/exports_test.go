@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -14,10 +14,11 @@ var (
 	ResourceStudio                         = resourceStudio
 	ResourceStudioSessionMapping           = resourceStudioSessionMapping
 
-	FetchInstanceGroup                 = fetchInstanceGroup
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
 	FindClusterByID                    = findClusterByID
 	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey
+	FindInstanceGroupByTwoPartKey      = findInstanceGroupByTwoPartKey
+	FindManagedScalingPolicyByID       = findManagedScalingPolicyByID
 	FindSecurityConfigurationByName    = findSecurityConfigurationByName
 	FindStudioByID                     = findStudioByID
 	FindStudioSessionMappingByIDOrName = findStudioSessionMappingByIDOrName

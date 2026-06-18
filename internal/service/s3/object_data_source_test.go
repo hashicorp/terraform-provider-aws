@@ -1,29 +1,30 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const rfc1123RegexPattern = `^[A-Za-z]{3}, [0-9]+ [A-Za-z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
+const rfc1123DateTimeRegexPattern = `^[A-Za-z]{3}, [0-9]+ [A-Za-z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
 
 func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -37,17 +38,18 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -56,12 +58,12 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 
 func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_object.test"
 	resourceName := "aws_s3_object.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,11 +81,11 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 
 func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -93,10 +95,10 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_readableBody(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -108,11 +110,11 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 
 func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -125,7 +127,7 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -139,11 +141,11 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 
 func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -157,7 +159,7 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -171,11 +173,11 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 
 func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -196,8 +198,8 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "expiration", ""),
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -206,7 +208,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "sse_kms_key_id", ""),
 					// Supported, but difficult to reproduce in short testing time
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageClass, resourceName, names.AttrStorageClass),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_id", resourceName, "version_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_redirect_location", resourceName, "website_redirect"),
 				),
@@ -217,11 +219,11 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 
 func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -234,7 +236,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -246,12 +248,12 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 
 func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -264,7 +266,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -276,7 +278,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 
 func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName1 := "data.aws_s3_object.test1"
 	dataSourceName2 := "data.aws_s3_object.test2"
@@ -284,7 +286,7 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingSlash(rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -297,22 +299,22 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 				),
 			},
 		},
@@ -321,7 +323,7 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 
 func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_s3_object.test1"
 	resourceName2 := "aws_s3_object.test2"
 	dataSourceName1 := "data.aws_s3_object.test1"
@@ -330,7 +332,7 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_multipleSlashes(rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -343,15 +345,15 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName2, names.AttrContentType),
 				),
 			},
@@ -361,9 +363,9 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 
 func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -379,14 +381,14 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 
 func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName1 := "data.aws_s3_object.test1"
 	dataSourceName2 := "data.aws_s3_object.test2"
 
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingDotSlash(rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -399,16 +401,16 @@ func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 				),
 			},
 		},
@@ -417,7 +419,7 @@ func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
 
 func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName1 := "data.aws_s3_object.test1"
 	dataSourceName2 := "data.aws_s3_object.test2"
@@ -425,7 +427,7 @@ func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingMultipleSlashes(rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -438,22 +440,22 @@ func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
 				),
 			},
 		},
@@ -462,11 +464,11 @@ func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 
 func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -478,6 +480,7 @@ func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "checksum_mode", "ENABLED"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32", resourceName, "checksum_crc32"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32c", resourceName, "checksum_crc32c"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc64nvme", resourceName, "checksum_crc64nvme"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha1", resourceName, "checksum_sha1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha256", resourceName, "checksum_sha256"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "checksum_sha256"),
@@ -489,10 +492,10 @@ func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
 
 func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -501,7 +504,7 @@ func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadata(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
 				),
@@ -512,12 +515,12 @@ func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 
 func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := fmt.Sprintf("%[1]s-key", rName)
 	bucketResourceName := "aws_s3_bucket.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -526,7 +529,7 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadataBucketOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketAddObjectWithMetadata(ctx, bucketResourceName, key, map[string]string{
+					testAccCheckBucketAddObjectWithMetadata(ctx, t, bucketResourceName, key, map[string]string{
 						acctest.CtKey1: acctest.CtValue1,
 						"Key2":         "Value2",
 					}),
@@ -535,7 +538,7 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#HeadObjectOutput
 					// Map keys will be normalized to lower-case.
@@ -548,11 +551,11 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 
 func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.test"
 	dataSourceName := "data.aws_s3_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -565,17 +568,77 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123DateTimeRegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.test"
+	dataSourceName := "data.aws_s3_object.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+
+					func(state *terraform.State) error {
+						base64String := base64.StdEncoding.EncodeToString([]byte("Hello World"))
+						return resource.TestCheckResourceAttr(dataSourceName, "body_base64", base64String)(state)
+					},
+
+					func(state *terraform.State) error {
+						bodyString := state.RootModule().Outputs["body_base64"].Value.(string)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrContent, bodyString)(state)
+					},
+				),
+			},
+			{
+				// body and body_base64 should be unset
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				// preserves legacy behavior with download_body unset/null with content_type as a downloadable type
+				Config: testAccObjectDataSourceConfig_bodyBase64_readable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "body", "Hello World"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
 				),
 			},
 		},
@@ -654,6 +717,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_object" "test" {
@@ -680,6 +744,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_object" "test" {
@@ -1027,7 +1092,7 @@ data "aws_s3_object" "test" {
 }
 
 func testAccObjectDataSourceConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 
@@ -1047,4 +1112,53 @@ data "aws_s3_object" "test" {
   key    = aws_s3_object.test.key
 }
 `, rName))
+}
+
+func testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName string, downloadBody bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-key"
+  content = "Hello World"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+
+  download_body = %[2]t
+}
+
+output "body_base64" {
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
+}
+`, rName, downloadBody)
+}
+
+func testAccObjectDataSourceConfig_bodyBase64_readable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket       = aws_s3_bucket.test.bucket
+  key          = "%[1]s-key"
+  content      = "Hello World"
+  content_type = "text/plain"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
+
+output "body_base64" {
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
+}
+`, rName)
 }

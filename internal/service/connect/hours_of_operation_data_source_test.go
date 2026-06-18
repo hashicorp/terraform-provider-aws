@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func testAccHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_hours_of_operation.test"
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,12 +42,12 @@ func testAccHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 
 func testAccHoursOfOperationDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_hours_of_operation.test"
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -121,7 +120,7 @@ resource "aws_connect_hours_of_operation" "test" {
 }
 
 func testAccHoursOfOperationDataSourceConfig_id(rName, rName2 string) string {
-	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = aws_connect_instance.test.id
   hours_of_operation_id = aws_connect_hours_of_operation.test.hours_of_operation_id
@@ -130,7 +129,7 @@ data "aws_connect_hours_of_operation" "test" {
 }
 
 func testAccHoursOfOperationDataSourceConfig_name(rName, rName2 string) string {
-	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
+	return acctest.ConfigCompose(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
   name        = aws_connect_hours_of_operation.test.name

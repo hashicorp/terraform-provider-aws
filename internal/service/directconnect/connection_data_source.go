@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -7,103 +9,94 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dx_connection")
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_dx_connection", name="Connection")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"partner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vlan_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"partner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vlan_id": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	var connections []*directconnect.Connection
-	input := &directconnect.DescribeConnectionsInput{}
 	name := d.Get(names.AttrName).(string)
+	input := &directconnect.DescribeConnectionsInput{}
 
-	// DescribeConnections is not paginated.
-	output, err := conn.DescribeConnectionsWithContext(ctx, input)
+	connection, err := findConnection(ctx, conn, input, func(v *awstypes.Connection) bool {
+		return aws.ToString(v.ConnectionName) == name
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connections: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Direct Connect Connection", err))
 	}
 
-	for _, connection := range output.Connections {
-		if aws.StringValue(connection.ConnectionName) == name {
-			connections = append(connections, connection)
-		}
-	}
-
-	switch count := len(connections); count {
-	case 0:
-		return sdkdiag.AppendErrorf(diags, "no matching Direct Connect Connection found")
-	case 1:
-	default:
-		return sdkdiag.AppendErrorf(diags, "%d Direct Connect Connections matched; use additional constraints to reduce matches to a single Direct Connect Connection", count)
-	}
-
-	connection := connections[0]
-
-	d.SetId(aws.StringValue(connection.ConnectionId))
-
+	d.SetId(aws.ToString(connection.ConnectionId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(connection.Region),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(connection.OwnerAccount),
+		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -111,6 +104,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("bandwidth", connection.Bandwidth)
 	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set(names.AttrProviderName, connection.ProviderName)

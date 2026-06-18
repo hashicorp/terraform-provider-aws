@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Changelog Process
 
 HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
@@ -25,6 +28,18 @@ resource/aws_example_thing: The `broken` attribute has been deprecated. All conf
 
 ```release-note:enhancement
 resource/aws_example_thing: Add `not_broken` attribute
+```
+``````
+
+While generally an antipattern to have a PR contain multiple resources/data sources, in the case that it is required a changelog file should have multiple new resource/data sources blocks. ie
+
+``````
+```release-note:new-resource
+aws_ecs_daemon
+```
+
+```release-note:new-resource
+aws_ecs_daemon_task_definition
 ```
 ``````
 
@@ -61,6 +76,26 @@ A new full-length documentation entry gives the title of the documentation added
 ``````
 ```release-note:new-guide
 Custom Service Endpoint Configuration
+```
+``````
+
+#### New list resource
+
+A new list resource should only contain the name of the resource, and use the `release-note:new-list-resource` header.
+
+``````
+```release-note:new-list-resource
+aws_ebs_volume_attachment
+```
+``````
+
+### Resource identity support
+
+Adding resource identity support should use the `release-note:enhancement` header and have a prefix indicating the resource it corresponds to, a colon and "Adding resource identity support".
+
+``````
+```release-note:enhancement
+resource/aws_ebs_volume_attachment: Add resource identity support
 ```
 ``````
 

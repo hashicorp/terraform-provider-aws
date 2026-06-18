@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chimesdkvoice
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,50 +38,51 @@ func ResourceSipMediaApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_region": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"lambda_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_region": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"lambda_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	createInput := &chimesdkvoice.CreateSipMediaApplicationInput{
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Endpoints: expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
+		Endpoints: expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]any)),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -92,7 +95,7 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSipMediaApplicationRead(ctx, d, meta)...)
 }
 
-func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -100,10 +103,14 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 		return findSIPMediaApplicationByID(ctx, conn, d.Id())
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Chime Sip Media Application %s not found", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Sip Media Application (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, resp.SipMediaApplicationArn)
@@ -114,7 +121,7 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -122,7 +129,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		updateInput := &chimesdkvoice.UpdateSipMediaApplicationInput{
 			SipMediaApplicationId: aws.String(d.Id()),
 			Name:                  aws.String(d.Get(names.AttrName).(string)),
-			Endpoints:             expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
+			Endpoints:             expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]any)),
 		}
 
 		if _, err := conn.UpdateSipMediaApplication(ctx, updateInput); err != nil {
@@ -133,7 +140,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSipMediaApplicationRead(ctx, d, meta)...)
 }
 
-func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -152,10 +159,10 @@ func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandSipMediaApplicationEndpoints(data []interface{}) []awstypes.SipMediaApplicationEndpoint {
+func expandSipMediaApplicationEndpoints(data []any) []awstypes.SipMediaApplicationEndpoint {
 	var sipMediaApplicationEndpoint []awstypes.SipMediaApplicationEndpoint
 
-	tfMap, ok := data[0].(map[string]interface{})
+	tfMap, ok := data[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -165,11 +172,11 @@ func expandSipMediaApplicationEndpoints(data []interface{}) []awstypes.SipMediaA
 	return sipMediaApplicationEndpoint
 }
 
-func flattenSipMediaApplicationEndpoints(apiObject []awstypes.SipMediaApplicationEndpoint) []interface{} {
-	var rawSipMediaApplicationEndpoints []interface{}
+func flattenSipMediaApplicationEndpoints(apiObject []awstypes.SipMediaApplicationEndpoint) []any {
+	var rawSipMediaApplicationEndpoints []any
 
 	for _, e := range apiObject {
-		rawEndpoint := map[string]interface{}{
+		rawEndpoint := map[string]any{
 			"lambda_arn": aws.ToString(e.LambdaArn),
 		}
 		rawSipMediaApplicationEndpoints = append(rawSipMediaApplicationEndpoints, rawEndpoint)
@@ -186,13 +193,12 @@ func findSIPMediaApplicationByID(ctx context.Context, conn *chimesdkvoice.Client
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
 	if resp == nil || resp.SipMediaApplication == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

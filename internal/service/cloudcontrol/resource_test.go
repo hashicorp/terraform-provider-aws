@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudcontrol_test
@@ -10,15 +10,12 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,14 +31,14 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccCloudControlResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_basic(rName),
@@ -56,21 +53,29 @@ func TestAccCloudControlResource_basic(t *testing.T) {
 
 func TestAccCloudControlResource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudcontrol.ResourceResource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudcontrol.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -78,14 +83,14 @@ func TestAccCloudControlResource_disappears(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_booleanValueAdded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValueRemoved(rName),
@@ -105,14 +110,14 @@ func TestAccCloudControlResource_DesiredState_booleanValueAdded(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_booleanValueRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, true),
@@ -132,14 +137,14 @@ func TestAccCloudControlResource_DesiredState_booleanValueRemoved(t *testing.T) 
 
 func TestAccCloudControlResource_DesiredState_booleanValueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateBooleanValue(rName, true),
@@ -159,15 +164,15 @@ func TestAccCloudControlResource_DesiredState_booleanValueUpdate(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_createOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateCreateOnly(rName1),
@@ -187,14 +192,14 @@ func TestAccCloudControlResource_DesiredState_createOnly(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_integerValueAdded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValueRemoved(rName),
@@ -214,14 +219,14 @@ func TestAccCloudControlResource_DesiredState_integerValueAdded(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_integerValueRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 14),
@@ -241,14 +246,14 @@ func TestAccCloudControlResource_DesiredState_integerValueRemoved(t *testing.T) 
 
 func TestAccCloudControlResource_DesiredState_integerValueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateIntegerValue(rName, 7),
@@ -268,13 +273,13 @@ func TestAccCloudControlResource_DesiredState_integerValueUpdate(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_invalidPropertyName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccResourceConfig_desiredStateInvalidPropertyName(rName),
@@ -286,13 +291,13 @@ func TestAccCloudControlResource_DesiredState_invalidPropertyName(t *testing.T) 
 
 func TestAccCloudControlResource_DesiredState_invalidPropertyValue(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccResourceConfig_desiredStateInvalidPropertyValue(rName),
@@ -304,14 +309,14 @@ func TestAccCloudControlResource_DesiredState_invalidPropertyValue(t *testing.T)
 
 func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
@@ -331,14 +336,14 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -358,14 +363,14 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -391,14 +396,14 @@ func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_stringValueAdded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateStringValueRemoved(rName),
@@ -418,14 +423,14 @@ func TestAccCloudControlResource_DesiredState_stringValueAdded(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_stringValueRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description1"),
@@ -445,14 +450,14 @@ func TestAccCloudControlResource_DesiredState_stringValueRemoved(t *testing.T) {
 
 func TestAccCloudControlResource_DesiredState_stringValueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_desiredStateStringValue(rName, "description1"),
@@ -472,14 +477,14 @@ func TestAccCloudControlResource_DesiredState_stringValueUpdate(t *testing.T) {
 
 func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID, cloudformation.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlEndpointID, names.CloudFormationEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_schema(rName),
@@ -494,14 +499,14 @@ func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/26351.
 func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_lambdaFunctionRole(rName),
@@ -521,18 +526,18 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudcontrolapi_resource" {
 				continue
 			}
 
-			_, err := tfcloudcontrol.FindResource(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+			_, err := tfcloudcontrol.FindResourceByFourPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

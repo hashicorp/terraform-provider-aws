@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -8,18 +8,43 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	"github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_lakeformation_permissions", sweepPermissions)
+	awsv2.Register("aws_lakeformation_identity_center_configuration", sweepIdentityCenterConfigurations)
 
-	sweep.Register("aws_lakeformation_resource", sweepResource)
+	awsv2.Register("aws_lakeformation_permissions", sweepPermissions,
+		"aws_datazone_environment",
+	)
+
+	awsv2.Register("aws_lakeformation_resource", sweepResource)
+}
+
+func sweepIdentityCenterConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LakeFormationClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := lakeformation.DescribeLakeFormationIdentityCenterConfigurationInput{}
+	v, err := conn.DescribeLakeFormationIdentityCenterConfiguration(ctx, &input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIdentityCenterConfiguration, client,
+		framework.NewAttribute(names.AttrCatalogID, aws.ToString(v.CatalogId)),
+	))
+
+	return sweepResources, nil
 }
 
 func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -31,13 +56,6 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	pages := lakeformation.NewListPermissionsPaginator(conn, &lakeformation.ListPermissionsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}
@@ -46,8 +64,8 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			d := r.Data(nil)
 
 			d.Set(names.AttrPrincipal, v.Principal.DataLakePrincipalIdentifier)
-			d.Set(names.AttrPermissions, flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
-			d.Set("permissions_with_grant_option", flattenGrantPermissions([]types.PrincipalResourcePermissions{v}))
+			d.Set(names.AttrPermissions, flattenResourcePermissions([]awstypes.PrincipalResourcePermissions{v}))
+			d.Set("permissions_with_grant_option", flattenGrantPermissions([]awstypes.PrincipalResourcePermissions{v}))
 
 			d.Set("catalog_resource", v.Resource.Catalog != nil)
 
@@ -95,13 +113,6 @@ func sweepResource(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	pages := lakeformation.NewListResourcesPaginator(conn, &lakeformation.ListResourcesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-				"error": err.Error(),
-			})
-			return nil, nil
-		}
 		if err != nil {
 			return nil, err
 		}

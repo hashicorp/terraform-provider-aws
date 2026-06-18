@@ -1,12 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
 
 import (
+	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,9 +21,9 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	dataSourceName := "data.aws_fsx_ontap_storage_virtual_machine.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,9 +55,9 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	dataSourceName := "data.aws_fsx_ontap_storage_virtual_machine.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,15 +81,33 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
-`)
+`, rName))
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
     name   = "file-system-id"
@@ -98,5 +116,5 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 
   depends_on = [aws_fsx_ontap_storage_virtual_machine.test]
 }
-`)
+`, rName))
 }

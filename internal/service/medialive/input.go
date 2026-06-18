@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -14,14 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,7 +31,8 @@ import (
 
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
-func ResourceInput() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
 		ReadWithoutTimeout:   resourceInputRead,
@@ -47,135 +49,135 @@ func ResourceInput() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attached_channels": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"destinations": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attached_channels": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"destinations": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"input_devices": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"input_devices": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_partner_ids": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"input_security_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"input_source_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"media_connect_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_partner_ids": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"input_security_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"input_source_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"media_connect_flows": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRoleARN: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-			},
-			"sources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password_param": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrURL: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRoleARN: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+				},
+				"sources": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"password_param": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrURL: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.InputType](),
-			},
-			"vpc": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 2,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.InputType](),
+				},
+				"vpc": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 2,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -185,13 +187,13 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
-		RequestId: aws.String(id.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get(names.AttrType).(string)),
@@ -205,8 +207,8 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.InputDevices = inputDevices(v.(*schema.Set).List()).expandToDeviceSettings()
 	}
 
-	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]interface{})) > 0 {
-		in.InputSecurityGroups = flex.ExpandStringValueList(d.Get("input_security_groups").([]interface{}))
+	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]any)) > 0 {
+		in.InputSecurityGroups = flex.ExpandStringValueList(d.Get("input_security_groups").([]any))
 	}
 
 	if v, ok := d.GetOk("media_connect_flows"); ok && v.(*schema.Set).Len() > 0 {
@@ -221,13 +223,13 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.Sources = expandSources(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
-		in.Vpc = expandVPC(v.([]interface{}))
+	if v, ok := d.GetOk("vpc"); ok && len(v.([]any)) > 0 {
+		in.Vpc = expandVPC(v.([]any))
 	}
 
 	// IAM propagation
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -256,14 +258,14 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
-func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputByID(ctx, conn, d.Id())
+	out, err := findInputByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Input (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -289,7 +291,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -324,7 +326,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
@@ -350,7 +352,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
-func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -381,7 +383,7 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -400,7 +402,7 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -419,7 +421,7 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.InputStateDeleting),
 		Target:  enum.Slice(types.InputStateDeleted),
-		Refresh: statusInput(ctx, conn, id),
+		Refresh: statusInput(conn, id),
 		Timeout: timeout,
 	}
 
@@ -431,10 +433,10 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	return nil, err
 }
 
-func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindInputByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+func statusInput(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findInputByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -446,7 +448,7 @@ func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.S
 	}
 }
 
-func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
+func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
 	in := &medialive.DescribeInputInput{
 		InputId: aws.String(id),
 	}
@@ -455,8 +457,7 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -464,18 +465,18 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interface{} {
+func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]any {
 	if apiObject == (types.MediaConnectFlow{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.FlowArn; v != nil {
 		m["flow_arn"] = aws.ToString(v)
@@ -483,12 +484,12 @@ func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interf
 
 	return m
 }
-func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{} {
+func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.MediaConnectFlow{}) {
@@ -501,12 +502,12 @@ func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{}
 	return l
 }
 
-func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interface{} {
+func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]any {
 	if apiObject == (types.InputDeviceSettings{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
 		m[names.AttrID] = aws.ToString(v)
@@ -515,12 +516,12 @@ func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interfac
 	return m
 }
 
-func flattenInputDevices(apiObjects []types.InputDeviceSettings) []interface{} {
+func flattenInputDevices(apiObjects []types.InputDeviceSettings) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputDeviceSettings{}) {
@@ -533,12 +534,12 @@ func flattenInputDevices(apiObjects []types.InputDeviceSettings) []interface{} {
 	return l
 }
 
-func flattenSource(apiObject types.InputSource) map[string]interface{} {
+func flattenSource(apiObject types.InputSource) map[string]any {
 	if apiObject == (types.InputSource{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Url; v != nil {
 		m[names.AttrURL] = aws.ToString(v)
@@ -552,12 +553,12 @@ func flattenSource(apiObject types.InputSource) map[string]interface{} {
 	return m
 }
 
-func flattenSources(apiObjects []types.InputSource) []interface{} {
+func flattenSources(apiObjects []types.InputSource) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputSource{}) {
@@ -570,7 +571,7 @@ func flattenSources(apiObjects []types.InputSource) []interface{} {
 	return l
 }
 
-func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
+func expandDestinations(tfList []any) []types.InputDestinationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -578,7 +579,7 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	var s []types.InputDestinationRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -593,7 +594,7 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	return s
 }
 
-type inputDevices []interface{}
+type inputDevices []any
 
 func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 	if len(i) == 0 {
@@ -603,7 +604,7 @@ func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 	var s []types.InputDeviceSettings
 
 	for _, v := range i {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -626,7 +627,7 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 	var s []types.InputDeviceRequest
 
 	for _, v := range i {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -641,7 +642,7 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 	return s
 }
 
-func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowRequest {
+func expandMediaConnectFlows(tfList []any) []types.MediaConnectFlowRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -649,7 +650,7 @@ func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowReque
 	var s []types.MediaConnectFlowRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -664,7 +665,7 @@ func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowReque
 	return s
 }
 
-func expandSources(tfList []interface{}) []types.InputSourceRequest {
+func expandSources(tfList []any) []types.InputSourceRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -672,7 +673,7 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 	var s []types.InputSourceRequest
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue
@@ -693,19 +694,19 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 	return s
 }
 
-func expandVPC(tfList []interface{}) *types.InputVpcRequest {
+func expandVPC(tfList []any) *types.InputVpcRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var s types.InputVpcRequest
-	vpc := tfList[0].(map[string]interface{})
+	vpc := tfList[0].(map[string]any)
 
 	if val, ok := vpc[names.AttrSubnetIDs]; ok {
-		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
+		s.SubnetIds = flex.ExpandStringValueList(val.([]any))
 	}
 	if val, ok := vpc[names.AttrSecurityGroupIDs]; ok {
-		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
+		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]any))
 	}
 
 	return &s

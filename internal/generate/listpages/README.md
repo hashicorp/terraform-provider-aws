@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # listpages
 
 The `listpages` generator creates paginated variants of AWS Go SDK functions that return collections of objects where the SDK does not define them. It should typically be called using [`go generate`](https://golang.org/cmd/go/#hdr-Generate_Go_files_by_processing_source).
@@ -17,7 +20,6 @@ Optional Flags:
 
 * `-Paginator`: Name of the pagination token field (default `NextToken`)
 * `-Export`: Whether to export the generated functions
-* `-AWSSDKVersion`: Version of the AWS Go SDK to use i.e. 1 or 2 (default `1`)
 * `-V2Suffix`: Whether to append a V2 suffix to the list functions
 
 To use with `go generate`, add the following directive to a Go file

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -31,25 +33,27 @@ func resourceAvailabilityZoneGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"opt_in_status": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					awstypes.AvailabilityZoneOptInStatusOptedIn,
-					awstypes.AvailabilityZoneOptInStatusNotOptedIn,
-				), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"opt_in_status": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						awstypes.AvailabilityZoneOptInStatusOptedIn,
+						awstypes.AvailabilityZoneOptInStatusNotOptedIn,
+					), false),
+				},
+			}
 		},
 	}
 }
 
-func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -71,7 +75,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceAvailabilityZoneGroupRead(ctx, d, meta)...)
 }
 
-func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -91,7 +95,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -103,12 +107,12 @@ func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.Resource
 }
 
 func modifyAvailabilityZoneOptInStatus(ctx context.Context, conn *ec2.Client, groupName, optInStatus string) error {
-	input := &ec2.ModifyAvailabilityZoneGroupInput{
+	input := ec2.ModifyAvailabilityZoneGroupInput{
 		GroupName:   aws.String(groupName),
 		OptInStatus: awstypes.ModifyAvailabilityZoneOptInStatus(optInStatus),
 	}
 
-	if _, err := conn.ModifyAvailabilityZoneGroup(ctx, input); err != nil {
+	if _, err := conn.ModifyAvailabilityZoneGroup(ctx, &input); err != nil {
 		return err
 	}
 

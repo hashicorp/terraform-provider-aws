@@ -1,16 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
 
 // Exports for use in tests only.
 var (
+	ResourceFleet            = resourceFleet
 	ResourceProject          = resourceProject
 	ResourceReportGroup      = resourceReportGroup
 	ResourceResourcePolicy   = resourceResourcePolicy
 	ResourceSourceCredential = resourceSourceCredential
 	ResourceWebhook          = resourceWebhook
 
+	FindFleetByARN             = findFleetByARN
 	FindProjectByNameOrARN     = findProjectByNameOrARN
 	FindReportGroupByARN       = findReportGroupByARN
 	FindResourcePolicyByARN    = findResourcePolicyByARN

@@ -22,8 +22,9 @@ data "aws_grafana_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workspace_id` - (Required) Grafana workspace ID.
 
 ## Attribute Reference
@@ -38,6 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Workspace description.
 * `endpoint` - Endpoint of the Grafana workspace.
 * `grafana_version` - Version of Grafana running on the workspace.
+* `kms_key_id` - The ID or ARN of the AWS KMS key for encrypting workspace data.
 * `last_updated_date` - Last updated date of the Grafana workspace.
 * `name` - Grafana workspace name.
 * `notification_destinations` - The notification destinations.

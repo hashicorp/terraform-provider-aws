@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resource
@@ -15,39 +15,39 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.tmpl
-var resourceFrameworkTmpl string
-
-//go:embed resourcetest.tmpl
+//go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
 
 type TemplateData struct {
 	Resource             string
+	ResourceAWS          string
 	ResourceLower        string
+	ResourceLowerCamel   string
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
 	IncludeTags          bool
+	SDKPackage           string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
-	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
+	ARNNamespace         string
 }
 
-func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -67,46 +67,36 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(resName, snakeName)
-
-	s, err := names.ProviderNameUpper(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting service connection name: %w", err)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(resName)
 	}
 
-	sn, err := names.FullHumanFriendly(servicePackage)
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		return fmt.Errorf("error getting AWS service name: %w", err)
-	}
-
-	hf, err := names.HumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting human-friendly name: %w", err)
+		return fmt.Errorf("error looking up service package data for %q: %w", servicePackage, err)
 	}
 
 	templateData := TemplateData{
 		Resource:             resName,
+		ResourceAWS:          convert.ToAWSCapitalization(resName),
 		ResourceLower:        strings.ToLower(resName),
+		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
-		HumanFriendlyService: hf,
+		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
+		SDKPackage:           service.GoV2Package(),
 		ServicePackage:       servicePackage,
-		Service:              s,
-		ServiceLower:         strings.ToLower(s),
-		AWSServiceName:       sn,
-		AWSGoSDKV2:           v2,
-		PluginFramework:      pluginFramework,
+		Service:              service.ProviderNameUpper(),
+		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:       service.FullHumanFriendly(),
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:         service.ARNNamespace(),
 	}
 
-	tmpl := resourceTmpl
-	if pluginFramework {
-		tmpl = resourceFrameworkTmpl
-	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 

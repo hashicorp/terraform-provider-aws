@@ -14,7 +14,7 @@ Get information on EC2 Transit Gateway VPC Attachments.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachments" "filtered" {
   filter {
     name   = "state"
@@ -32,21 +32,19 @@ data "aws_ec2_transit_gateway_vpc_attachment" "unit" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter check available value on [official documentation][1]
+* `name` - (Required) Name of the filter check available value on [official documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayVpcAttachments.html)
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_vpc_attachment][2] data source, searching by identifier.
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayVpcAttachments.html
-[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_vpc_attachment
+* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_vpc_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_vpc_attachment) data source, searching by identifier.
 
 ## Timeouts
 

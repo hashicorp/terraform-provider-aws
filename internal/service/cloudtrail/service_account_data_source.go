@@ -1,13 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudtrail
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -55,40 +56,32 @@ var serviceAccountPerRegionMap = map[string]string{
 }
 
 // @SDKDataSource("aws_cloudtrail_service_account", name="Service Account")
+// @Region(validateOverrideInPartition=false)
 func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		DeprecationMessage: "This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy.",
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
-
+	c := meta.(*conns.AWSClient)
+	region := c.Region(ctx)
 	if v, ok := serviceAccountPerRegionMap[region]; ok {
 		d.SetId(v)
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "iam",
-			AccountID: v,
-			Resource:  "root",
-		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrARN, c.GlobalARNWithAccount(ctx, "iam", v, "root"))
 
 		return diags
 	}

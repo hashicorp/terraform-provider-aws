@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -12,5 +12,5 @@ import (
 // This function matches on the types.NotFoundException or if the error text contains "DoesNotExist"
 func IsANotFoundError(err error) bool {
 	return errs.IsA[*types.NotFoundException](err) ||
-		errs.IsAErrorMessageContains[*errs.ErrorWithMessage](errs.NewErrorWithMessage(err), "DoesNotExist")
+		errs.IsAErrorMessageContains[*errs.MessageError](errs.NewMessageError(err), "DoesNotExist")
 }

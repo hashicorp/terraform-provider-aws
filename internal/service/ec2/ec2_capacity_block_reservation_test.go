@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,17 +33,17 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityBlockReservationConfig_basic(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityBlockReservationExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-:.+`)),
+					testAccCheckCapacityBlockReservationExists(ctx, t, resourceName, &reservation),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_block_offering_id", resourceName, "capacity_block_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "start_date", resourceName, "start_date"),
@@ -59,18 +58,14 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v *awstypes.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckCapacityBlockReservationExists(ctx context.Context, t *testing.T, n string, v *awstypes.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindCapacityReservationByID(ctx, conn, rs.Primary.ID)
 

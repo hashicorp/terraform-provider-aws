@@ -1,10 +1,11 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+{{ define "region" -}}
+{{- end -}}
+
 {{ define "tags" }}
-{{ if or (eq . "tags") (eq . "tags_ignore") }}
-  tags = var.resource_tags
-{{- else if eq . "tagsComputed1" }}
+{{ if eq . "tagsComputed1" }}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
@@ -13,6 +14,8 @@
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
   }
+{{- else }}
+  tags = var.resource_tags
 {{- end -}}
 {{ end -}}
 
@@ -23,7 +26,7 @@ provider "aws" {
   }
 }
 
-{{ else if eq .Tags "tags_ignore" -}}
+{{ else if or (eq .Tags "tags_ignore") (eq .Tags "data.tags_ignore") -}}
 provider "aws" {
   default_tags {
     tags = var.provider_tags
@@ -47,6 +50,11 @@ provider "null" {}
 
 {{ end -}}
 
+{{ if or (eq .Tags "data.tags") (eq .Tags "data.tags_ignore") -}}
+# tflint-ignore: terraform_unused_declarations
+{{ template "data_source" }}
+{{ end }}
+
 {{- block "body" .Tags }}
 Missing block "body" in template
 {{- end }}
@@ -69,14 +77,7 @@ variable "{{ . }}" {
 }
 
 {{ end -}}
-{{ if or (eq .Tags "tags") (eq .Tags "tags_ignore") -}}
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
-}
-{{- else if eq .Tags "tagsComputed1" -}}
+{{ if eq .Tags "tagsComputed1" -}}
 variable "unknownTagKey" {
   type     = string
   nullable = false
@@ -96,13 +97,20 @@ variable "knownTagValue" {
   type     = string
   nullable = false
 }
+{{- else -}}
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
 {{- end }}
 {{ if .WithDefaultTags }}
 variable "provider_tags" {
   type     = map(string)
   nullable = false
 }
-{{ else if eq .Tags "tags_ignore" }}
+{{ else if or (eq .Tags "tags_ignore") (eq .Tags "data.tags_ignore") }}
 variable "provider_tags" {
   type     = map(string)
   nullable = true
@@ -118,6 +126,13 @@ variable "ignore_tag_keys" {
 {{ if .AlternateRegionProvider }}
 variable "alt_region" {
   description = "Region for provider awsalternate"
+  type        = string
+  nullable    = false
+}
+{{ end -}}
+{{- if .AlternateRegionTfVars }}
+variable "secondary_region" {
+  description = "Secondary region"
   type        = string
   nullable    = false
 }

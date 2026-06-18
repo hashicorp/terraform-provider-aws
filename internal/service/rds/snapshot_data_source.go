@@ -1,15 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,118 +24,121 @@ import (
 
 // @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
 // @Tags
-func DataSourceSnapshot() *schema.Resource {
+// @Testing(tagsTest=false)
+func dataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"option_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"original_snapshot_create_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_create_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_db_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_snapshot_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_public": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"include_shared": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"option_group_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"original_snapshot_create_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_create_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"source_db_snapshot_identifier": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -151,10 +157,10 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	f := tfslices.PredicateTrue[*rds.DBSnapshot]()
+	f := tfslices.PredicateTrue[*types.DBSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		f = func(v *rds.DBSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		f = func(v *types.DBSnapshot) bool {
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 
@@ -168,18 +174,18 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *rds.DBSnapshot
-	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
-			snapshot = mostRecentDBSnapshot(snapshots)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
-		}
-	} else {
-		snapshot = snapshots[0]
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 	}
 
-	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
+	snapshot := slices.MaxFunc(snapshots, func(a, b types.DBSnapshot) int {
+		if a.SnapshotCreateTime == nil || b.SnapshotCreateTime == nil {
+			return 0
+		}
+		return a.SnapshotCreateTime.Compare(aws.ToTime(b.SnapshotCreateTime))
+	})
+
+	d.SetId(aws.ToString(snapshot.DBSnapshotIdentifier))
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
@@ -209,26 +215,4 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
-}
-
-type rdsSnapshotSort []*rds.DBSnapshot
-
-func (a rdsSnapshotSort) Len() int      { return len(a) }
-func (a rdsSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a rdsSnapshotSort) Less(i, j int) bool {
-	// Snapshot creation can be in progress
-	if a[i].SnapshotCreateTime == nil {
-		return true
-	}
-	if a[j].SnapshotCreateTime == nil {
-		return false
-	}
-
-	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
-}
-
-func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
-	sortedSnapshots := snapshots
-	sort.Sort(rdsSnapshotSort(sortedSnapshots))
-	return sortedSnapshots[len(sortedSnapshots)-1]
 }

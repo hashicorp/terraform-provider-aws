@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -8,40 +8,38 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESConfigurationSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s", rName)),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
@@ -58,22 +56,22 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 
 func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
@@ -86,7 +84,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_sending(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
@@ -94,7 +92,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
@@ -105,22 +103,22 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 
 func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
@@ -132,14 +130,14 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
@@ -149,24 +147,24 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 
 func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyRequire)),
 				),
 			},
 			{
@@ -180,30 +178,30 @@ func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 
 func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
 				),
 			},
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyRequire)),
 				),
 			},
 			{
@@ -212,18 +210,18 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyOptional),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyOptional)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct0),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
@@ -237,24 +235,24 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 
 func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
@@ -268,31 +266,31 @@ func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 
 func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct0),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
 				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
@@ -303,8 +301,8 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct0),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
@@ -349,78 +347,75 @@ func TestAccSESConfigurationSet_trackingOptions(t *testing.T) {
 
 func TestAccSESConfigurationSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceConfigurationSet(), resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceConfigurationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckConfigurationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConfigurationSetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES configuration set not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES configuration set ID not set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		_, err := tfses.FindConfigurationSetByName(ctx, conn, rs.Primary.ID)
 
-		response, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
-			ConfigurationSetName: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(response.ConfigurationSet.Name) != rs.Primary.ID {
-			return fmt.Errorf("The configuration set was not created")
-		}
-		return nil
+		return err
 	}
 }
 
-func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_configuration_set" {
 				continue
 			}
 
-			_, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
-				ConfigurationSetName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfses.FindConfigurationSetByName(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("SES Configuration Set %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

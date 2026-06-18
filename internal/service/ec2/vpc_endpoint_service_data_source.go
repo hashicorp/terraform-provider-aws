@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -10,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,12 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_endpoint_service")
-func DataSourceVPCEndpointService() *schema.Resource {
+// @SDKDataSource("aws_vpc_endpoint_service", name="Endpoint Service")
+// @Tags
+// @Testing(tagsTest=false)
+// @Region(overrideEnabled=false)
+func dataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
 
@@ -32,80 +38,101 @@ func DataSourceVPCEndpointService() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acceptance_required": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"base_endpoint_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"manages_vpc_endpoints": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrServiceName},
-			},
-			"service_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"service"},
-			},
-			"service_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
-			},
-			"supported_ip_address_types": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_policy_supported": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acceptance_required": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"base_endpoint_dns_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"manages_vpc_endpoints": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrRegion: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "region is deprecated. Use service_region instead.",
+				},
+				"service": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrServiceName},
+				},
+				"service_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"service"},
+				},
+				"service_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_regions": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"service_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
+				},
+				"supported_ip_address_types": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vpc_endpoint_policy_supported": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"service-type": d.Get("service_type").(string),
 			},
@@ -117,19 +144,23 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrServiceName); ok {
 		serviceName = v.(string)
 	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region(ctx), v.(string))
 	}
 
 	if serviceName != "" {
 		input.ServiceNames = []string{serviceName}
 	}
 
-	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))))...)
+	if v, ok := d.GetOk("service_regions"); ok {
+		input.ServiceRegions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	if v, ok := d.GetOk(names.AttrTags); ok {
+		input.Filters = append(input.Filters, newTagFilterList(
+			svcTags(tftags.New(ctx, v.(map[string]any))))...)
+	}
+
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set))...)
 
 	if len(input.Filters) == 0 {
@@ -169,26 +200,23 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	sd := serviceDetails[0]
 	serviceID := aws.ToString(sd.ServiceId)
 	serviceName = aws.ToString(sd.ServiceName)
+	serviceRegion := aws.ToString(sd.ServiceRegion)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(serviceName)))
-
 	d.Set("acceptance_required", sd.AcceptanceRequired)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
-	}.String()
-	d.Set(names.AttrARN, arn)
-
+	d.Set(names.AttrARN, vpcEndpointServiceARNWithRegion(ctx, c, serviceRegion, serviceID))
 	d.Set(names.AttrAvailabilityZones, sd.AvailabilityZones)
 	d.Set("base_endpoint_dns_names", sd.BaseEndpointDnsNames)
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+	d.Set("private_dns_names", tfslices.ApplyToAll(sd.PrivateDnsNames, func(v awstypes.PrivateDnsDetails) string {
+		return aws.ToString(v.PrivateDnsName)
+	}))
+	d.Set(names.AttrRegion, serviceRegion)
 	d.Set("service_id", serviceID)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", serviceRegion)
 	if len(sd.ServiceType) > 0 {
 		d.Set("service_type", sd.ServiceType[0].ServiceType)
 	} else {
@@ -197,11 +225,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("supported_ip_address_types", sd.SupportedIpAddressTypes)
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set(names.AttrTags, keyValueTagsV2(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, sd.Tags)
 
 	return diags
 }

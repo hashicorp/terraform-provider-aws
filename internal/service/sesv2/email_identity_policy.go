@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -14,20 +16,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sesv2_email_identity_policy", name="Email Identity Policy")
-func ResourceEmailIdentityPolicy() *schema.Resource {
+func resourceEmailIdentityPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityPolicyCreate,
 		ReadWithoutTimeout:   resourceEmailIdentityPolicyRead,
@@ -38,48 +41,50 @@ func ResourceEmailIdentityPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"policy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"policy_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
 
 const (
-	ResNameEmailIdentityPolicy = "Email Identity Policy"
+	resNameEmailIdentityPolicy = "Email Identity Policy"
 )
 
-func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	email_identity := d.Get("email_identity").(string)
 	policy_name := d.Get("policy_name").(string)
-	emailIdentityPolicyID := FormatEmailIdentityPolicyID(email_identity, policy_name)
+	emailIdentityPolicyID := emailIdentityPolicyCreateResourceID(email_identity, policy_name)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &sesv2.CreateEmailIdentityPolicyInput{
@@ -90,11 +95,11 @@ func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceDa
 
 	out, err := conn.CreateEmailIdentityPolicy(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityPolicy, emailIdentityPolicyID, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentityPolicy, emailIdentityPolicyID, err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityPolicy, emailIdentityPolicyID, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentityPolicy, emailIdentityPolicyID, errors.New("empty output"))
 	}
 
 	d.SetId(emailIdentityPolicyID)
@@ -102,35 +107,35 @@ func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceEmailIdentityPolicyRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(d.Id())
+	emailIdentity, policyName, err := emailIdentityPolicyParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindEmailIdentityPolicyByID(ctx, conn, d.Id())
+	out, err := findEmailIdentityPolicyByTwoPartKey(ctx, conn, emailIdentity, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 EmailIdentityPolicy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentityPolicy, d.Id(), err)
 	}
 
-	policy, err = verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
+	policy, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(out))
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentityPolicy, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policy, err = structure.NormalizeJsonString(policy)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentityPolicy, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("email_identity", emailIdentity)
@@ -140,103 +145,112 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
+	emailIdentity, policyName, err := emailIdentityPolicyParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &sesv2.UpdateEmailIdentityPolicyInput{
-		EmailIdentity: aws.String(d.Get("email_identity").(string)),
+		EmailIdentity: aws.String(emailIdentity),
 		Policy:        aws.String(policy),
-		PolicyName:    aws.String(d.Get("policy_name").(string)),
+		PolicyName:    aws.String(policyName),
 	}
 
-	log.Printf("[DEBUG] Updating SESV2 EmailIdentityPolicy (%s): %#v", d.Id(), in)
 	_, err = conn.UpdateEmailIdentityPolicy(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameEmailIdentityPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameEmailIdentityPolicy, d.Id(), err)
 	}
 
 	return append(diags, resourceEmailIdentityPolicyRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	log.Printf("[INFO] Deleting SESV2 EmailIdentityPolicy %s", d.Id())
-
-	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(d.Id())
+	emailIdentity, policyName, err := emailIdentityPolicyParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	log.Printf("[INFO] Deleting SESV2 EmailIdentityPolicy: %s", d.Id())
 	_, err = conn.DeleteEmailIdentityPolicy(ctx, &sesv2.DeleteEmailIdentityPolicyInput{
 		EmailIdentity: aws.String(emailIdentity),
 		PolicyName:    aws.String(policyName),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityPolicy, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameEmailIdentityPolicy, d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindEmailIdentityPolicyByID(ctx context.Context, conn *sesv2.Client, id string) (string, error) {
-	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(id)
-	if err != nil {
-		return "", err
+const emailIdentityPolicyResourceIDSeparator = "|"
+
+func emailIdentityPolicyCreateResourceID(emailIdentity, policyName string) string {
+	parts := []string{emailIdentity, policyName}
+	id := strings.Join(parts, emailIdentityPolicyResourceIDSeparator)
+
+	return id
+}
+
+func emailIdentityPolicyParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, emailIdentityPolicyResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected EMAIL_IDENTITY%[2]sPOLICY_NAME", id, emailIdentityPolicyResourceIDSeparator)
 	}
 
-	in := &sesv2.GetEmailIdentityPoliciesInput{
+	return parts[0], parts[1], nil
+}
+
+func findEmailIdentityPolicyByTwoPartKey(ctx context.Context, conn *sesv2.Client, emailIdentity, policyName string) (*string, error) {
+	input := &sesv2.GetEmailIdentityPoliciesInput{
 		EmailIdentity: aws.String(emailIdentity),
 	}
+	output, err := findEmailIdentityPolicies(ctx, conn, input)
 
-	out, err := conn.GetEmailIdentityPolicies(ctx, in)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return "", &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return "", err
+		return nil, err
 	}
 
-	if out == nil {
-		return "", tfresource.NewEmptyResultError(in)
+	if output, ok := output[policyName]; ok {
+		return aws.String(output), nil
 	}
 
-	for name, policy := range out.Policies {
-		if policyName == name {
-			return policy, nil
+	return nil, tfresource.NewEmptyResultError()
+}
+
+func findEmailIdentityPolicies(ctx context.Context, conn *sesv2.Client, input *sesv2.GetEmailIdentityPoliciesInput) (map[string]string, error) {
+	output, err := conn.GetEmailIdentityPolicies(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
-	return "", &retry.NotFoundError{}
-}
-
-func FormatEmailIdentityPolicyID(emailIdentity, policyName string) string {
-	return fmt.Sprintf("%s|%s", emailIdentity, policyName)
-}
-
-func ParseEmailIdentityPolicyID(id string) (string, string, error) {
-	idParts := strings.Split(id, "|")
-	if len(idParts) != 2 {
-		return "", "", errors.New("please make sure the ID is in the form EMAIL_IDENTITY|POLICY_NAME")
+	if err != nil {
+		return nil, err
 	}
 
-	return idParts[0], idParts[1], nil
+	if output == nil || output.Policies == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Policies, nil
 }

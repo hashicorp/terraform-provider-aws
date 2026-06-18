@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -16,7 +16,7 @@ func testAccFindingIDsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_guardduty_finding_ids.test"
 	detectorDataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
@@ -29,7 +29,6 @@ func testAccFindingIDsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "has_findings"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "finding_ids.#"),
 				),
 			},
 		},

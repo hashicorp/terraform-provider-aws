@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.expanded_prefixes_data_export` and `storage_lens_configuration.prefix_delimiter` arguments
+```

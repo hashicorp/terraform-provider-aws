@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidentity
 
@@ -36,98 +38,98 @@ func resourcePool() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentityPoolName,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_pool_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentityPoolName,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"cognito_identity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validIdentityProvidersClientID,
-						},
-						names.AttrProviderName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validIdentityProvidersProviderName,
-						},
-						"server_side_token_check": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+				"cognito_identity_providers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validIdentityProvidersClientID,
+							},
+							names.AttrProviderName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validIdentityProvidersProviderName,
+							},
+							"server_side_token_check": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
 
-			"developer_provider_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true, // Forcing a new resource since it cannot be edited afterwards
-				ValidateFunc: validProviderDeveloperName,
-			},
-
-			"allow_unauthenticated_identities": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"allow_classic_flow": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"openid_connect_provider_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"developer_provider_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ForceNew:     true, // Forcing a new resource since it cannot be edited afterwards
+					ValidateFunc: validProviderDeveloperName,
 				},
-			},
 
-			"saml_provider_arns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"allow_unauthenticated_identities": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
 
-			"supported_login_providers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validSupportedLoginProviders,
+				"allow_classic_flow": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
 
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"openid_connect_provider_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+
+				"saml_provider_arns": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+
+				"supported_login_providers": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validSupportedLoginProviders,
+					},
+				},
+
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
@@ -143,7 +145,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("supported_login_providers"); ok {
-		input.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
+		input.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("cognito_identity_providers"); ok {
@@ -151,7 +153,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		input.SamlProviderARNs = aws.ToStringSlice(flex.ExpandStringList(v.([]interface{})))
+		input.SamlProviderARNs = aws.ToStringSlice(flex.ExpandStringList(v.([]any)))
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
@@ -168,13 +170,14 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePoolRead(ctx, d, meta)...)
 }
 
-func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-	ip, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	input := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	ip, err := conn.DescribeIdentityPool(ctx, &input)
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
@@ -186,10 +189,10 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -219,7 +222,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
@@ -231,9 +234,9 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
 			IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 			CognitoIdentityProviders:       expandIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set)),
-			SupportedLoginProviders:        expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{})),
+			SupportedLoginProviders:        expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]any)),
 			OpenIdConnectProviderARNs:      flex.ExpandStringValueSet(d.Get("openid_connect_provider_arns").(*schema.Set)),
-			SamlProviderARNs:               flex.ExpandStringValueList(d.Get("saml_provider_arns").([]interface{})),
+			SamlProviderARNs:               flex.ExpandStringValueList(d.Get("saml_provider_arns").([]any)),
 		}
 
 		_, err := conn.UpdateIdentityPool(ctx, params)
@@ -245,22 +248,23 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePoolRead(ctx, d, meta)...)
 }
 
-func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
-	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
-	_, err := conn.DeleteIdentityPool(ctx, &cognitoidentity.DeleteIdentityPoolInput{
+	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
+	input := cognitoidentity.DeleteIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentityPool(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[DEBUG] Resource Pool already deleted: %s", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Pool (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }

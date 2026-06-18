@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codepipeline
 
@@ -20,15 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codepipeline_custom_action_type", name="Custom Action Type")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -40,150 +43,150 @@ func resourceCustomActionType() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"category": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ActionCategory](),
-			},
-			"configuration_property": {
-				Type:     schema.TypeList,
-				MaxItems: 10,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"queryable": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"required": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"secret": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"category": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ActionCategory](),
+				},
+				"configuration_property": {
+					Type:     schema.TypeList,
+					MaxItems: 10,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"queryable": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"required": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"secret": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
+							},
 						},
 					},
 				},
-			},
-			"input_artifact_details": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-						"minimum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-					},
-				},
-			},
-			"output_artifact_details": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-						"minimum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
+				"input_artifact_details": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
+							"minimum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
 						},
 					},
 				},
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 35),
-			},
-			"settings": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entity_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"execution_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"revision_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"third_party_configuration_url": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"output_artifact_details": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
+							"minimum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 9),
-			},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 35),
+				},
+				"settings": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"entity_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"execution_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"revision_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"third_party_configuration_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 9),
+				},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -198,20 +201,20 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 		Version:  aws.String(version),
 	}
 
-	if v, ok := d.GetOk("configuration_property"); ok && len(v.([]interface{})) > 0 {
-		input.ConfigurationProperties = expandActionConfigurationProperties(v.([]interface{}))
+	if v, ok := d.GetOk("configuration_property"); ok && len(v.([]any)) > 0 {
+		input.ConfigurationProperties = expandActionConfigurationProperties(v.([]any))
 	}
 
-	if v, ok := d.GetOk("input_artifact_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InputArtifactDetails = expandArtifactDetails(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("input_artifact_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.InputArtifactDetails = expandArtifactDetails(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("output_artifact_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OutputArtifactDetails = expandArtifactDetails(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("output_artifact_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OutputArtifactDetails = expandArtifactDetails(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Settings = expandActionTypeSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Settings = expandActionTypeSettings(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateCustomActionType(ctx, input)
@@ -225,7 +228,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceCustomActionTypeRead(ctx, d, meta)...)
 }
 
-func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -236,7 +239,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 
 	actionType, err := findCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Custom Action Type %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -247,10 +250,10 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codepipeline",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("actiontype:%s/%s/%s/%s", types.ActionOwnerCustom, category, provider, version),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -259,14 +262,14 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting configuration_property: %s", err)
 	}
 	if actionType.InputArtifactDetails != nil {
-		if err := d.Set("input_artifact_details", []interface{}{flattenArtifactDetails(actionType.InputArtifactDetails)}); err != nil {
+		if err := d.Set("input_artifact_details", []any{flattenArtifactDetails(actionType.InputArtifactDetails)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting input_artifact_details: %s", err)
 		}
 	} else {
 		d.Set("input_artifact_details", nil)
 	}
 	if actionType.OutputArtifactDetails != nil {
-		if err := d.Set("output_artifact_details", []interface{}{flattenArtifactDetails(actionType.OutputArtifactDetails)}); err != nil {
+		if err := d.Set("output_artifact_details", []any{flattenArtifactDetails(actionType.OutputArtifactDetails)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting output_artifact_details: %s", err)
 		}
 	} else {
@@ -277,7 +280,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	if actionType.Settings != nil &&
 		// Service can return empty ({}) Settings.
 		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {
-		if err := d.Set("settings", []interface{}{flattenActionTypeSettings(actionType.Settings)}); err != nil {
+		if err := d.Set("settings", []any{flattenActionTypeSettings(actionType.Settings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting settings: %s", err)
 		}
 	} else {
@@ -288,7 +291,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -296,7 +299,7 @@ func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceCustomActionTypeRead(ctx, d, meta)...)
 }
 
-func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
@@ -306,11 +309,12 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting CodePipeline Custom Action Type: %s", d.Id())
-	_, err = conn.DeleteCustomActionType(ctx, &codepipeline.DeleteCustomActionTypeInput{
+	input := codepipeline.DeleteCustomActionTypeInput{
 		Category: category,
 		Provider: aws.String(provider),
 		Version:  aws.String(version),
-	})
+	}
+	_, err = conn.DeleteCustomActionType(ctx, &input)
 
 	if errs.IsA[*types.ActionNotFoundException](err) {
 		return diags
@@ -359,11 +363,11 @@ func findActionType(ctx context.Context, conn *codepipeline.Client, input *codep
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]*types.ActionType, error) {
-	var output []*types.ActionType
+func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]types.ActionType, error) {
+	var output []types.ActionType
 
 	pages := codepipeline.NewListActionTypesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -374,8 +378,7 @@ func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *code
 		}
 
 		for _, v := range page.ActionTypes {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -384,7 +387,7 @@ func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *code
 	return output, nil
 }
 
-func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.ActionConfigurationProperty {
+func expandActionConfigurationProperty(tfMap map[string]any) *types.ActionConfigurationProperty {
 	if tfMap == nil {
 		return nil
 	}
@@ -422,7 +425,7 @@ func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.Acti
 	return apiObject
 }
 
-func expandActionConfigurationProperties(tfList []interface{}) []types.ActionConfigurationProperty {
+func expandActionConfigurationProperties(tfList []any) []types.ActionConfigurationProperty {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -430,7 +433,7 @@ func expandActionConfigurationProperties(tfList []interface{}) []types.ActionCon
 	var apiObjects []types.ActionConfigurationProperty
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -448,7 +451,7 @@ func expandActionConfigurationProperties(tfList []interface{}) []types.ActionCon
 	return apiObjects
 }
 
-func expandArtifactDetails(tfMap map[string]interface{}) *types.ArtifactDetails {
+func expandArtifactDetails(tfMap map[string]any) *types.ArtifactDetails {
 	if tfMap == nil {
 		return nil
 	}
@@ -466,7 +469,7 @@ func expandArtifactDetails(tfMap map[string]interface{}) *types.ArtifactDetails 
 	return apiObject
 }
 
-func expandActionTypeSettings(tfMap map[string]interface{}) *types.ActionTypeSettings {
+func expandActionTypeSettings(tfMap map[string]any) *types.ActionTypeSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -492,8 +495,8 @@ func expandActionTypeSettings(tfMap map[string]interface{}) *types.ActionTypeSet
 	return apiObject
 }
 
-func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject types.ActionConfigurationProperty) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject types.ActionConfigurationProperty) map[string]any {
+	tfMap := map[string]any{
 		names.AttrKey: apiObject.Key,
 		"queryable":   apiObject.Queryable,
 		"required":    apiObject.Required,
@@ -519,12 +522,12 @@ func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject
 	return tfMap
 }
 
-func flattenActionConfigurationProperties(d *schema.ResourceData, apiObjects []types.ActionConfigurationProperty) []interface{} {
+func flattenActionConfigurationProperties(d *schema.ResourceData, apiObjects []types.ActionConfigurationProperty) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for i, apiObject := range apiObjects {
 		tfList = append(tfList, flattenActionConfigurationProperty(d, i, apiObject))
@@ -533,12 +536,12 @@ func flattenActionConfigurationProperties(d *schema.ResourceData, apiObjects []t
 	return tfList
 }
 
-func flattenArtifactDetails(apiObject *types.ArtifactDetails) map[string]interface{} {
+func flattenArtifactDetails(apiObject *types.ArtifactDetails) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"maximum_count": apiObject.MaximumCount,
 		"minimum_count": apiObject.MinimumCount,
 	}
@@ -546,12 +549,12 @@ func flattenArtifactDetails(apiObject *types.ArtifactDetails) map[string]interfa
 	return tfMap
 }
 
-func flattenActionTypeSettings(apiObject *types.ActionTypeSettings) map[string]interface{} {
+func flattenActionTypeSettings(apiObject *types.ActionTypeSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EntityUrlTemplate; v != nil {
 		tfMap["entity_url_template"] = aws.ToString(v)

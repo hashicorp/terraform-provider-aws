@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appflow_flow: Add `prefix_hierarchy` attribute to `destination_flow_config.s3.s3_output_format_config`
+```
+
+```release-note:enhancement
+resource/aws_appflow_flow: Add `metadata_catalog_config` attribute
+```

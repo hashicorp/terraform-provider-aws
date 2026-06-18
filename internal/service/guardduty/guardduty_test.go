@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -9,9 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -20,23 +19,27 @@ func TestAccGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			acctest.CtBasic:                     testAccDetector_basic,
+			acctest.CtDisappears:                testAccDetector_disappears,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			"tags":                              testAccDetector_tags,
+			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
+			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
 		},
 		"DetectorFeature": {
-			acctest.CtBasic:            testAccDetectorFeature_basic,
-			"additional_configuration": testAccDetectorFeature_additionalConfiguration,
-			"multiple":                 testAccDetectorFeature_multiple,
+			acctest.CtBasic:                                testAccDetectorFeature_basic,
+			"multiple":                                     testAccDetectorFeature_multiple,
+			"additional_configuration":                     testAccDetectorFeature_additionalConfiguration,
+			"additional_configuration_new_order":           testAccDetectorFeature_additionalConfiguration_newOrder,
+			"additional_configuration_migrate_list_to_set": testAccDetectorFeature_additionalConfiguration_migrateListToSet,
 		},
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
 			"update":             testAccFilter_update,
-			"tags":               testAccFilter_tags,
+			"tags":               testAccGuardDutyFilter_tagsSerial,
 			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
@@ -46,11 +49,13 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			acctest.CtBasic: testAccInviteAccepter_basic,
 		},
 		"IPSet": {
-			acctest.CtBasic: testAccIPSet_basic,
-			"tags":          testAccIPSet_tags,
+			acctest.CtBasic:      testAccIPSet_basic,
+			acctest.CtDisappears: testAccIPSet_disappears,
+			"tags":               testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
-			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic:                 testAccOrganizationConfiguration_basic,
@@ -64,12 +69,19 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
 			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
 		},
+		"MemberDetectorFeature": {
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
+			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
+			"multiple":                 testAccMemberDetectorFeature_multiple,
+		},
 		"ThreatIntelSet": {
-			acctest.CtBasic: testAccThreatIntelSet_basic,
-			"tags":          testAccThreatIntelSet_tags,
+			acctest.CtBasic:      testAccThreatIntelSet_basic,
+			acctest.CtDisappears: testAccThreatIntelSet_disappears,
+			"tags":               testAccGuardDutyThreatIntelSet_tagsSerial,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
+			acctest.CtDisappears: testAccMember_disappears,
 			"inviteOnUpdate":     testAccMember_invite_onUpdate,
 			"inviteDisassociate": testAccMember_invite_disassociate,
 			"invitationMessage":  testAccMember_invitationMessage,
@@ -77,6 +89,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"PublishingDestination": {
 			acctest.CtBasic:      testAccPublishingDestination_basic,
 			acctest.CtDisappears: testAccPublishingDestination_disappears,
+			"tags":               testAccPublishingDestination_tags,
 		},
 	}
 
@@ -101,13 +114,24 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 	return accountID, email
 }
 
+func testAccMemberAccountFromEnv(t *testing.T) string {
+	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
+	if accountID == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_ACCOUNT_ID is not set. " +
+				"To properly test GuardDuty member accounts, " +
+				"a valid AWS account ID must be provided.")
+	}
+	return accountID
+}
+
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-	_, err := tfguardduty.FindDetector(ctx, conn)
+	_, err := tfguardduty.FindDetectorID(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("reading this AWS account's single GuardDuty Detector: %s", err)
 	}
 
@@ -118,11 +142,11 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-	_, err := tfguardduty.FindDetector(ctx, conn)
+	_, err := tfguardduty.FindDetectorID(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
