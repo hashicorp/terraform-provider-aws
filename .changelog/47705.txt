@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticache_user: Fix `user_id` producing inconsistent final plan when using mixed-case values
+```
+```release-note:bug
+resource/aws_elasticache_user_group: Fix `user_group_id` producing inconsistent final plan when using mixed-case values
+```

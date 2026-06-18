@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_cloudfront_function", name="Function")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,

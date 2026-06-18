@@ -1,3 +1,23 @@
+## 6.52.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_appautoscaling_target` ([#48449](https://github.com/hashicorp/terraform-provider-aws/issues/48449))
+
+ENHANCEMENTS:
+
+* provider: Generated names are now created using a cryptographically strong random generator instead of a timestamp and counter, so values are more uniformly distributed over the lowercase hexadecimal digit characters ([#47995](https://github.com/hashicorp/terraform-provider-aws/issues/47995))
+* resource/aws_appautoscaling_target: Add resource identity support ([#48449](https://github.com/hashicorp/terraform-provider-aws/issues/48449))
+
+BUG FIXES:
+
+* provider: Fix AWS API errors such as EC2's `IdempotentParameterMismatch` by generating client-supplied idempotency tokens using a cryptographically strong random generator and extended alphabet ([#47995](https://github.com/hashicorp/terraform-provider-aws/issues/47995))
+* provider: Restore HTTP request and response body content in `TF_LOG=DEBUG` output for resources, data sources, and list resources. Redaction continues to apply to ephemeral resources and actions ([#48463](https://github.com/hashicorp/terraform-provider-aws/issues/48463))
+* resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` and subsequent `too many results` warning that silently removed the resource from state when `id` was not set in configuration ([#48462](https://github.com/hashicorp/terraform-provider-aws/issues/48462))
+* resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination: Serverless Cache modifications only support modifying one field per request` error when changing multiple attributes in a single apply ([#47918](https://github.com/hashicorp/terraform-provider-aws/issues/47918))
+* resource/aws_elasticache_user: Fix `user_id` producing inconsistent final plan when using mixed-case values ([#47705](https://github.com/hashicorp/terraform-provider-aws/issues/47705))
+* resource/aws_elasticache_user_group: Fix `user_group_id` producing inconsistent final plan when using mixed-case values ([#47705](https://github.com/hashicorp/terraform-provider-aws/issues/47705))
+
 ## 6.51.0 (June 17, 2026)
 
 NOTES:
