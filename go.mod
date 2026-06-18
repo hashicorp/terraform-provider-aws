@@ -45,8 +45,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.65.6
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.55.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.15.6
@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.39.5
-	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.7.0
+	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.39.4
@@ -109,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
@@ -132,7 +132,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.55.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.36.6
-	github.com/aws/aws-sdk-go-v2/service/glue v1.144.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.145.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4
@@ -178,7 +178,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.8.7
-	github.com/aws/aws-sdk-go-v2/service/mq v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/mq v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.2
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.46.0
@@ -192,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.12.0
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.70.8
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.10
 	github.com/aws/aws-sdk-go-v2/service/osis v1.22.7
