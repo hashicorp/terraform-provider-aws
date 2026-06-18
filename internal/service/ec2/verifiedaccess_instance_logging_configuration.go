@@ -141,7 +141,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	vaiID := d.Get("verifiedaccess_instance_id").(string)
 	input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
-		ClientToken:              aws.String(create.UniqueId(ctx)),
+		ClientToken:              aws.String(create.UUID(ctx)),
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
 
@@ -194,7 +194,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 	if d.HasChange("access_logs") {
 		input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
-			ClientToken:              aws.String(create.UniqueId(ctx)),
+			ClientToken:              aws.String(create.UUID(ctx)),
 			VerifiedAccessInstanceId: aws.String(vaiID),
 		}
 
@@ -235,7 +235,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 	log.Printf("[INFO] Deleting Verified Access Instance Logging Configuration: %s", vaiID)
 	input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 		AccessLogs:               resetObject,
-		ClientToken:              aws.String(create.UniqueId(ctx)),
+		ClientToken:              aws.String(create.UUID(ctx)),
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
 
