@@ -24,6 +24,9 @@ on:
 env:
   AWS_DEFAULT_REGION: us-west-2
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   tflint-opa-policy-tests:
     uses: ./.github/workflows/tflint-opa-policy-tests.yml

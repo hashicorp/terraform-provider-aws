@@ -39,6 +39,9 @@ env:
   AWS_DEFAULT_REGION: us-west-2
   TERRAFORM_VERSION: "1.8.3"
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   go_mod_download:
     name: go mod download
