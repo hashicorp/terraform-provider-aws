@@ -8,8 +8,7 @@ description: |-
 
 # Data Source: aws_s3_bucket_notification
 
-Provides the existing notification configuration of an S3 bucket.
-
+Provides details about the notification configuration of an S3 bucket.
 Useful when [`aws_s3_bucket_notification`](../r/s3_bucket_notification.html.markdown) is the right resource but the bucket already has notifications you do not manage. Read the existing notifications with this data source and re-emit them — alongside your own — in a single `aws_s3_bucket_notification` resource. See [issue #501](https://github.com/hashicorp/terraform-provider-aws/issues/501) for the longer story. For sharing a bucket across many independent consumers, enabling [EventBridge](../r/s3_bucket_notification.html.markdown#emit-events-to-eventbridge) on the resource is usually a better fit.
 
 ## Example Usage
