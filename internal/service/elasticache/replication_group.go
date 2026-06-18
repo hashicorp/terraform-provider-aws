@@ -101,6 +101,18 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+						// For members of a global replication group, automatic_failover_enabled
+						// is controlled by the global replication group. Suppress diffs on
+						// existing members to avoid persistent plan churn and apply errors,
+						// while leaving creation unaffected to avoid inconsistent-final-plan
+						// errors during plan expansion.
+						if d.IsNewResource() {
+							return false
+						}
+						v, ok := d.GetOk("global_replication_group_id")
+						return ok && v.(string) != ""
+					},
 				},
 				"cluster_enabled": {
 					Type:     schema.TypeBool,
@@ -1714,17 +1726,6 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 				if err := diff.SetNew(attr, old); err != nil {
 					return fmt.Errorf("unable to set %q: %w", attr, err)
 				}
-			}
-		}
-		// automatic_failover_enabled is inherited from the global replication
-		// group. Suppress diffs only for existing members; on create the value
-		// has not yet been propagated by the API and forcing it to the zero
-		// value would cause "inconsistent final plan" errors during plan
-		// expansion when the global_replication_group_id reference resolves.
-		if diff.Id() != "" && diff.HasChange("automatic_failover_enabled") {
-			old, _ := diff.GetChange("automatic_failover_enabled")
-			if err := diff.SetNew("automatic_failover_enabled", old); err != nil {
-				return fmt.Errorf("unable to set %q: %w", "automatic_failover_enabled", err)
 			}
 		}
 	}
