@@ -38,7 +38,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
 // @Testing(importIgnore="retain_on_delete;wait_for_deployment", plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="v6.40.0")
-// @Testing(tagsTest=false)
 func resourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
