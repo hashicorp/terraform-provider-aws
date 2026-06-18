@@ -723,11 +723,11 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 				"flow_status": {
-          Type:         schema.TypeString,
-          Optional:     true,
-          Computed:     true,
-          ValidateFunc: validation.StringInSlice([]string{string(types.FlowStatusActive), string(types.FlowStatusSuspended)}, false),
-        },
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice([]string{string(types.FlowStatusActive), string(types.FlowStatusSuspended)}, false),
+				},
 				"kms_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -1392,7 +1392,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	name := d.Get(names.AttrName).(string)
@@ -1428,7 +1428,6 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
@@ -1462,7 +1461,6 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		_, err := conn.UpdateFlow(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 		}
@@ -1483,7 +1481,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
-func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	name := d.Get(names.AttrName).(string)

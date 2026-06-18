@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
+	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -148,7 +149,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 			{
 				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusActive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
@@ -162,7 +163,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 			{
 				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusSuspended),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
@@ -307,8 +308,8 @@ func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 
 func TestAccAppFlowFlow_createWithActiveFlowStatus(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var flowOutput appflow.DescribeFlowOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	description := "test description"
 
@@ -316,12 +317,12 @@ func TestAccAppFlowFlow_createWithActiveFlowStatus(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusActive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
@@ -335,7 +336,7 @@ func TestAccAppFlowFlow_createWithActiveFlowStatus(t *testing.T) {
 			{
 				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusSuspended),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
@@ -1015,7 +1016,6 @@ func testAccCheckFlowExists(ctx context.Context, t *testing.T, n string, v *appf
 		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
 
 		output, err := tfappflow.FindFlowByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
-
 		if err != nil {
 			return err
 		}
