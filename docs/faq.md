@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Frequently Asked Questions
 
 <!-- markdownlint-disable no-trailing-punctuation -->
@@ -14,6 +17,9 @@ The HashiCorp Terraform AWS provider team is :
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
 * Jared Baker, Engineer - GitHub [@jar-b](https://github.com/jar-b)
 * Kit Ewbank, Engineer - GitHub [@ewbankkit](https://github.com/ewbankkit)
+* Subham Mukhopadhyay, Engineer - Github [@subham-ibmhc](https://github.com/subham-ibmhc)
+* Tarun Teja, Engineer - Github [@taruntej-a](https://github.com/taruntej-a)
+* Bella Rosas, Intern - Github [@brosas07](https://github.com/brosas07)
 
 ## Why isn’t my PR merged yet?
 

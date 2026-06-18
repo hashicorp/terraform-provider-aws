@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -13,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,7 +44,7 @@ func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type deliveryResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliveryResourceModel]
 	framework.WithImportByID
 }
 
@@ -91,40 +92,23 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:              tftags.TagsAttribute(),
 			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{
-	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
-}
+var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{}
 
-func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	oldValPtr, di := oldValue.ToPtr(ctx)
-	diags = append(diags, di...)
-	if diags.HasError() {
-		return false, diags
+// normalizeS3SuffixPath strips AWS-added prefixes from the API-returned suffix path.
+// AWS automatically prepends "AWSLogs/{account-id}/CloudFront/" for CloudFront sources.
+// This normalization ensures the state matches the user's configuration value.
+func normalizeS3SuffixPath(apiPath, configPath string) string {
+	if strings.HasSuffix(apiPath, configPath) && apiPath != configPath {
+		return configPath
 	}
-
-	newValPtr, di := newValue.ToPtr(ctx)
-	diags = append(diags, di...)
-	if diags.HasError() {
-		return false, diags
-	}
-
-	if oldValPtr != nil && newValPtr != nil {
-		if strings.HasSuffix(oldValPtr.SuffixPath.ValueString(), newValPtr.SuffixPath.ValueString()) &&
-			oldValPtr.EnableHiveCompatiblePath.Equal(newValPtr.EnableHiveCompatiblePath) {
-			return true, diags
-		}
-	}
-
-	return false, diags
+	return apiPath
 }
 
 func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -184,7 +168,9 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 		}
 	}
 
-	// set s3_delivery_configuration.suffix_path to what was in configuration
+	// Normalize S3DeliveryConfiguration.SuffixPath to match user configuration.
+	// AWS modifies the suffix_path by prepending account/service-specific prefixes.
+	// We normalize after Create to ensure state consistency with the configuration.
 	if delivery.S3DeliveryConfiguration != nil && aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath) != "" {
 		if !data.S3DeliveryConfiguration.IsNull() {
 			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
@@ -192,9 +178,10 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 			if response.Diagnostics.HasError() {
 				return
 			}
-
 			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
-				delivery.S3DeliveryConfiguration.SuffixPath = s3DeliveryConfiguration.SuffixPath.ValueStringPointer()
+				configPath := s3DeliveryConfiguration.SuffixPath.ValueString()
+				apiPath := aws.ToString(delivery.S3DeliveryConfiguration.SuffixPath)
+				delivery.S3DeliveryConfiguration.SuffixPath = aws.String(normalizeS3SuffixPath(apiPath, configPath))
 			}
 		}
 	}
@@ -219,7 +206,7 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 
 	output, err := findDeliveryByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -247,6 +234,24 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 			}
 			if s3DeliveryConfiguration == nil || s3DeliveryConfiguration.EnableHiveCompatiblePath.IsNull() {
 				output.S3DeliveryConfiguration.EnableHiveCompatiblePath = nil
+			}
+		}
+	}
+
+	// Normalize S3DeliveryConfiguration.SuffixPath to match user configuration.
+	// AWS modifies the suffix_path by prepending account/service-specific prefixes.
+	// We normalize during Read to ensure state consistency across refreshes and updates.
+	if output.S3DeliveryConfiguration != nil && aws.ToString(output.S3DeliveryConfiguration.SuffixPath) != "" {
+		if !data.S3DeliveryConfiguration.IsNull() {
+			s3DeliveryConfiguration, diags := data.S3DeliveryConfiguration.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if s3DeliveryConfiguration != nil && !s3DeliveryConfiguration.SuffixPath.IsNull() {
+				configPath := s3DeliveryConfiguration.SuffixPath.ValueString()
+				apiPath := aws.ToString(output.S3DeliveryConfiguration.SuffixPath)
+				output.S3DeliveryConfiguration.SuffixPath = aws.String(normalizeS3SuffixPath(apiPath, configPath))
 			}
 		}
 	}
@@ -323,8 +328,10 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
 		var plan, state deliveryResourceModel
-
 		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -355,8 +362,7 @@ func findDelivery(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -365,13 +371,14 @@ func findDelivery(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 	}
 
 	if output == nil || output.Delivery == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Delivery, nil
 }
 
 type deliveryResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                  `tfsdk:"arn"`
 	DeliveryDestinationARN  fwtypes.ARN                                                   `tfsdk:"delivery_destination_arn"`
 	DeliverySourceName      types.String                                                  `tfsdk:"delivery_source_name"`

@@ -27,6 +27,43 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### Multimodal Parsing
+
+```terraform
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "multimodal-example"
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.example.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    chunking_configuration {
+      chunking_strategy = "FIXED_SIZE"
+      fixed_size_chunking_configuration {
+        max_tokens         = 512
+        overlap_percentage = 20
+      }
+    }
+
+    parsing_configuration {
+      parsing_strategy = "BEDROCK_FOUNDATION_MODEL"
+      bedrock_foundation_model_configuration {
+        model_arn        = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+        parsing_modality = "MULTIMODAL"
+        parsing_prompt {
+          parsing_prompt_string = "Extract and transcribe all text and visual content from the document."
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -37,6 +74,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_deletion_policy` - (Optional) Data deletion policy for a data source. Valid values: `RETAIN`, `DELETE`.
 * `description` - (Optional) Description of the data source.
 * `server_side_encryption_configuration` - (Optional) Details about the configuration of the server-side encryption. See [`server_side_encryption_configuration` block](#server_side_encryption_configuration-block) for details.
@@ -46,7 +84,7 @@ The following arguments are optional:
 
 The `data_source_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of storage for the data source. Valid values: `S3`.
+* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`.
 * `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
 * `s3_configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
 * `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
@@ -60,7 +98,7 @@ The `confluence_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Confluence data source. See [`source_configuration` block](#confluence-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Confluence content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Confluence documentation][1].
+For more details, see the [Amazon BedrockAgent Confluence documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html).
 
 ### Confluence `source_configuration` block
 
@@ -86,7 +124,7 @@ The `salesforce_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Salesforce data source. See [`source_configuration` block](#salesforce-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Salesforce documentation][2].
+For more details, see the [Amazon BedrockAgent Salesforce documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html).
 
 ### Salesforce `source_configuration` block
 
@@ -128,7 +166,7 @@ The `share_point_data_source_configuration` configuration block supports the fol
 * `source_configuration` - (Required) The endpoint information to connect to your SharePoint data source. See [`source_configuration` block](#sharepoint-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for SharePoint content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent SharePoint documentation][3].
+For more details, see the [Amazon BedrockAgent SharePoint documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html).
 
 ### SharePoint `source_configuration` block
 
@@ -276,15 +314,23 @@ The `transformation_lambda_configuration` block supports the following arguments
 
 The `parsing_configuration` configuration block supports the following arguments:
 
-* `parsing_strategy` - (Required) Currently only `BEDROCK_FOUNDATION_MODEL` is supported
+* `parsing_strategy` - (Required) The parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
+* `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` block](#bedrock_data_automation_configuration-block) for details.
 * `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` block](#bedrock_foundation_model_configuration-block) for details.
+
+### `bedrock_data_automation_configuration` block
+
+The `bedrock_data_automation_configuration` configuration block supports the following arguments:
+
+* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid value: `MULTIMODAL`.
 
 ### `bedrock_foundation_model_configuration` block
 
 The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
 
-* `model_arn` - (Required) The ARN of the model used to parse documents
-* `parsing_prompt` - (Optional) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
+* `model_arn` - (Required, Forces new resource) The ARN of the model used to parse documents
+* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid values: `MULTIMODAL`.
+* `parsing_prompt` - (Optional, Forces new resource) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
 
 ### `parsing_prompt` block
 
@@ -322,8 +368,3 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 ```console
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
-
-[1]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html
-[2]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html
-[3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
-[4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html

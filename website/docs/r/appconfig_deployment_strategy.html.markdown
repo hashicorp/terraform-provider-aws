@@ -32,6 +32,7 @@ resource "aws_appconfig_deployment_strategy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deployment_duration_in_minutes` - (Required) Total amount of time for a deployment to last. Minimum value of 0, maximum value of 1440.
 * `growth_factor` - (Required) Percentage of targets to receive a deployed configuration during each interval. Minimum value of 1.0, maximum value of 100.0.
 * `name` - (Required, Forces new resource) Name for the deployment strategy. Must be between 1 and 64 characters in length.

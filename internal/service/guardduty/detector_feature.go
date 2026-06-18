@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -17,56 +19,57 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
-func ResourceDetectorFeature() *schema.Resource {
+func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,
 		ReadWithoutTimeout:   resourceDetectorFeatureRead,
 		UpdateWithoutTimeout: resourceDetectorFeaturePut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"additional_configuration": {
-				Optional: true,
-				ForceNew: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_configuration": {
+					Optional: true,
+					Type:     schema.TypeSet,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+							},
 						},
 					},
 				},
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DetectorFeature](),
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
-			},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DetectorFeature](),
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+				},
+			}
 		},
 	}
 }
@@ -81,8 +84,8 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]any))
+	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{
@@ -112,9 +115,9 @@ func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	feature, err := FindDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
+	feature, err := findDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -153,8 +156,8 @@ func detectorFeatureParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, detectorFeatureResourceIDSeparator)
 }
 
-func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
-	output, err := FindDetectorByID(ctx, conn, detectorID)
+func findDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
+	output, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err

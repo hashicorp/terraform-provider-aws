@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,18 +23,18 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
@@ -61,21 +60,29 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceConnection(), resourceName),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -91,7 +98,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 	ckn := testAccMacSecGenerateHex()
 	cak := testAccMacSecGenerateHex()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,7 +114,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_encryptionModeNoEncrypt(connectionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "no_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
@@ -118,7 +125,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_encryptionModeShouldEncrypt(connectionName, ckn, cak),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "should_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
@@ -134,18 +141,18 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_macsecEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Gbps"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
@@ -170,18 +177,18 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_providerName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
@@ -205,18 +212,18 @@ func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionNoDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionNoDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
@@ -228,18 +235,18 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -254,7 +261,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -264,7 +271,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -279,12 +286,12 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		CheckDestroy: testAccCheckConnectionDestroy(ctx),
+		CheckDestroy: testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// At v5.0.1 the resource's schema is v0 and vlan_id is TypeString.
@@ -296,7 +303,7 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 				},
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),
 				),
 			},
@@ -304,7 +311,7 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
 				),
 			},
@@ -316,12 +323,12 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		CheckDestroy: testAccCheckConnectionDestroy(ctx),
+		CheckDestroy: testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// At v5.1.0 the resource's schema is v0 and vlan_id is TypeInt.
@@ -333,7 +340,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 				},
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
 				),
 			},
@@ -341,7 +348,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					testAccCheckConnectionExists(ctx, t, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
 				),
 			},
@@ -349,9 +356,9 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {
@@ -360,7 +367,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -375,14 +382,14 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConnectionExists(ctx context.Context, n string, v *awstypes.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, t *testing.T, n string, v *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -396,9 +403,9 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *awstypes.Con
 	}
 }
 
-func testAccCheckConnectionNoDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {

@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_s3_object: Add `body_base64` and `download_body` attributes. For improved performance, set `download_body = false` to ensure bodies are never downloaded
+```

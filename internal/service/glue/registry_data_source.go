@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -12,28 +14,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_glue_registry", name="Registry")
-func newDataSourceRegistry(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegistry{}, nil
+func newRegistryDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &registryDataSource{}, nil
 }
 
 const (
 	DSNameRegistry = "Registry Data Source"
 )
 
-type dataSourceRegistry struct {
-	framework.DataSourceWithConfigure
+type registryDataSource struct {
+	framework.DataSourceWithModel[registryDataSourceModel]
 }
 
-func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -47,10 +49,10 @@ func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRe
 	}
 }
 
-func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *registryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().GlueClient(ctx)
 
-	var data dataSourceRegistryData
+	var data registryDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -85,8 +87,7 @@ func findRegistryByName(ctx context.Context, conn *glue.Client, name string) (*g
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -97,7 +98,8 @@ func findRegistryByName(ctx context.Context, conn *glue.Client, name string) (*g
 	return output, nil
 }
 
-type dataSourceRegistryData struct {
+type registryDataSourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String `tfsdk:"arn"`
 	Description types.String `tfsdk:"description"`
 	Name        types.String `tfsdk:"name"`

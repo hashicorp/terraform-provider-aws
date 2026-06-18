@@ -23,7 +23,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
   }
   depends_on = [aws_macie2_account.test]
@@ -34,6 +34,7 @@ resource "aws_macie2_findings_filter" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `finding_criteria` - (Required) The criteria to use to filter findings.
 * `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -64,6 +65,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The unique identifier (ID) of the macie Findings Filter.
 * `arn` - The Amazon Resource Name (ARN) of the Findings Filter.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `4m`)
 
 ## Import
 

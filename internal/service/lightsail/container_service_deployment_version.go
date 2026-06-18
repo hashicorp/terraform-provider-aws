@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lightsail
 
@@ -16,17 +18,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service_deployment_version", name=Container Service Deployment Version")
+// @SDKResource("aws_lightsail_container_service_deployment_version", name="Container Service Deployment Version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
@@ -40,135 +42,137 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"container": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 53,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
-						},
-						"image": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						names.AttrEnvironment: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ports": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"container": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 53,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
-							}},
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringIsNotWhiteSpace,
+							},
+							"image": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"command": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrEnvironment: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ports": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(flattenContainerServiceProtocolValues(types.ContainerServiceProtocol("").Values()), false),
+								}},
+						},
 					},
 				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_endpoint": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"container_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrHealthCheck: {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"healthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
-									},
-									"interval_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      5,
-										ValidateFunc: validation.IntBetween(5, 300),
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "/",
-									},
-									"success_codes": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  "200-499",
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      2,
-										ValidateFunc: validation.IntBetween(2, 60),
-									},
-									"unhealthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  2,
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_endpoint": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"container_port": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrHealthCheck: {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"healthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
+										"interval_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      5,
+											ValidateFunc: validation.IntBetween(5, 300),
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "/",
+										},
+										"success_codes": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											Default:  "200-499",
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											Default:      2,
+											ValidateFunc: validation.IntBetween(2, 60),
+										},
+										"unhealthy_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  2,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -223,7 +227,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 
 	deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lightsail Container Service (%s) Deployment Version (%d) not found, removing from state", serviceName, version)
 		d.SetId("")
 		return diags
@@ -444,8 +448,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 
 	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -454,7 +457,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if output == nil || len(output.Deployments) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	var result types.ContainerServiceDeployment
@@ -472,8 +475,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 
 	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
 		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+			Message: "Empty result",
 		}
 	}
 

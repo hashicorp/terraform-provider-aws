@@ -50,6 +50,7 @@ resource "aws_cognito_identity_pool_provider_principal_tag" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_pool_id` (Required) - An identity pool ID.
 * `identity_provider_name` (Required) - The name of the identity provider.
 * `principal_tags`: (Optional: []) - String to string map of variables.

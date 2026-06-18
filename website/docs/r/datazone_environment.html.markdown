@@ -17,8 +17,6 @@ Terraform resource for managing an AWS DataZone Environment.
 ```terraform
 resource "aws_datazone_environment" "example" {
   name                 = "example"
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
@@ -52,12 +50,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
 * `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
-* `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
+* `user_parameters` - (Optional) The user parameters that are used in the environment.
+  See [User Parameters](#user-parameters) for more information.
+  Changing these values recreates the resource.
 
 ### User Parameters
 
@@ -84,6 +85,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_environment.example
+  identity = {
+    domain_identifier = "dzd_d2i7tzk3tnjjf4"
+    id                = "5vpywijpwryec0"
+  }
+}
+
+resource "aws_datazone_environment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the environment.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment using the `domain_identifier,id`. For example:
 

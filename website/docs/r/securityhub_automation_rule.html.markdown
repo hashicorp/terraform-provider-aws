@@ -53,6 +53,7 @@ resource "aws_securityhub_automation_rule" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions` - (Required) A block that specifies one or more actions to update finding fields if a finding matches the conditions specified in `Criteria`. [Documented below](#actions).
 * `criteria` - (Required) A block that specifies a set of ASFF finding field attributes and corresponding expected values that Security Hub uses to filter findings. [Documented below](#criteria).
 * `description` - (Required) The description of the rule.
@@ -201,7 +202,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub Automation Rule using their ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_automation_rule.example
+  identity = {
+    arn = "arn:aws:securityhub:us-east-1:123456789012:automation-rule/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_securityhub_automation_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Security Hub automation rule.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub automation rules using `arn`. For example:
 
 ```terraform
 import {
@@ -210,7 +232,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub automation rule using their ARN. For example:
+Using `terraform import`, import Security Hub automation rules using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc

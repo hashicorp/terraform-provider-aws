@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -57,6 +57,7 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -100,6 +101,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
+								"asn_match_statement":                   asnMatchStatementSchema(),
 								"byte_match_statement":                  byteMatchStatementSchema(),
 								"geo_match_statement":                   geoMatchStatementSchema(),
 								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -131,6 +133,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and_statement":                         previous,
+									"asn_match_statement":                   asnMatchStatementSchema(),
 									"byte_match_statement":                  byteMatchStatementSchema(),
 									"geo_match_statement":                   geoMatchStatementSchema(),
 									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -179,7 +182,7 @@ var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 200),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -288,8 +291,8 @@ var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 						validation.StringIsValidRegExp,
 					),
 				},
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -307,8 +310,8 @@ var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Sche
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -332,7 +335,7 @@ var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -351,7 +354,7 @@ var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -364,8 +367,8 @@ var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -418,6 +421,21 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
 								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
+						},
+					},
+				},
+			},
+			"uri_fragment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fallback_behavior": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 						},
 					},
 				},
@@ -995,6 +1013,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -1064,6 +1083,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 					MaxItems: 5,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"asn": emptySchema(),
 							"cookie": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1075,7 +1095,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1092,7 +1112,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1127,7 +1147,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1137,7 +1157,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1147,7 +1167,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1180,6 +1200,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
@@ -1252,6 +1273,64 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 						},
 					},
 				},
+				"aws_managed_rules_anti_ddos_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_side_action_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"challenge": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"exempt_uri_regular_expression": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 5,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"regex_string": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 512),
+																},
+															},
+														},
+													},
+													"sensitivity": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Default:          awstypes.SensitivityLevelHigh,
+														ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+													},
+													"usage_of_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.UsageOfAction](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"sensitivity_to_block": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.SensitivityLevelLow,
+								ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+							},
+						},
+					},
+				},
 				"aws_managed_rules_atp_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1285,7 +1364,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_machine_learning": {
 								Type:     schema.TypeBool,
 								Optional: true,
-								Default:  true,
+								Computed: true,
 							},
 							"inspection_level": {
 								Type:             schema.TypeString,
@@ -1634,3 +1713,25 @@ var managedRuleGroupConfigATPResponseInspectionSchema = sync.OnceValue(func() *s
 		},
 	}
 })
+
+func asnMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"asn_list": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 100,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeInt,
+					},
+				},
+				"forwarded_ip_config": forwardedIPConfigSchema(),
+			},
+		},
+	}
+}

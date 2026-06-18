@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecrpublic
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,81 +44,83 @@ func ResourceRepository() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrRepositoryName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 205),
-					validation.StringMatch(regexache.MustCompile(`(?:[0-9a-z]+(?:[._-][0-9a-z]+)*/)*[0-9a-z]+(?:[._-][0-9a-z]+)*`), "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
-				),
-			},
-			"catalog_data": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"about_text": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 10240),
-						},
-						"architectures": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrRepositoryName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 205),
+						validation.StringMatch(regexache.MustCompile(`(?:[0-9a-z]+(?:[._-][0-9a-z]+)*/)*[0-9a-z]+(?:[._-][0-9a-z]+)*`), "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
+					),
+				},
+				"catalog_data": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"about_text": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 10240),
 							},
-						},
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						"logo_image_blob": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"operating_systems": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"architectures": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						"usage_text": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 10240),
+							names.AttrDescription: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"logo_image_blob": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"operating_systems": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"usage_text": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 10240),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -164,21 +167,17 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var err error
-	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		out, err = conn.DescribeRepositories(ctx, input)
 		if d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeRepositories(ctx, input)
-	}
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
@@ -263,21 +262,17 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ecrpublic.DescribeRepositoriesInput{
 		RepositoryNames: []string{d.Id()},
 	}
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err = conn.DescribeRepositories(ctx, input)
 		if err != nil {
 			if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
-		return retry.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeRepositories(ctx, input)
-	}
 
 	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		return diags
@@ -361,7 +356,7 @@ func expandRepositoryCatalogData(tfMap map[string]any) *awstypes.RepositoryCatal
 	}
 
 	if v, ok := tfMap["logo_image_blob"].(string); ok && len(v) > 0 {
-		repositoryCatalogDataInput.LogoImageBlob = itypes.MustBase64Decode(v)
+		repositoryCatalogDataInput.LogoImageBlob = inttypes.MustBase64Decode(v)
 	}
 
 	if v, ok := tfMap["operating_systems"].(*schema.Set); ok {
@@ -391,7 +386,7 @@ func resourceRepositoryUpdateCatalogData(ctx context.Context, conn *ecrpublic.Cl
 			_, err := conn.PutRepositoryCatalogData(ctx, &input)
 
 			if err != nil {
-				return fmt.Errorf("updating catalog data for repository(%s): %s", d.Id(), err)
+				return fmt.Errorf("updating catalog data for repository (%s): %w", d.Id(), err)
 			}
 		}
 	}

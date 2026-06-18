@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -16,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,7 +36,12 @@ import (
 
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition", importIgnore="deregister_on_new_revision")
+// @ArnIdentity
+// @MutableIdentity
+// @CustomImport
+// @ArnFormat("job-definition/{name}:{revision}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
+// @Testing(preIdentityVersion="6.4.0")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -42,397 +50,415 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				rd.Set("deregister_on_new_revision", true)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"ecs_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentContainerPropertiesJSON(old, new)
-					return equal
+				"arn_prefix": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobContainerProperties,
-			},
-			"deregister_on_new_revision": {
-				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
-			},
-			"ecs_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"container_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"container_properties": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"ecs_properties", "eks_properties", "node_properties"},
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentContainerPropertiesJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          validJobContainerProperties,
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentECSPropertiesJSON(old, new)
-					return equal
+				"deregister_on_new_revision": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
 				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobECSProperties,
-			},
-			"eks_properties": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ConflictsWith: []string{"ecs_properties", "container_properties", "node_properties"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pod_properties": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"containers": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
+				"ecs_properties": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"container_properties", "eks_properties", "node_properties"},
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentECSPropertiesJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          validJobECSProperties,
+				},
+				"eks_properties": {
+					Type:          schema.TypeList,
+					MaxItems:      1,
+					Optional:      true,
+					ConflictsWith: []string{"ecs_properties", "container_properties", "node_properties"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"pod_properties": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"containers": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"args": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"command": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"env": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
 															},
 														},
 													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
+													"image": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_pull_policy": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrResources: {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"limits": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"requests": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
 															},
 														},
 													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
+													"security_context": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"allow_privilege_escalation": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"privileged": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"read_only_root_file_system": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"run_as_group": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"run_as_non_root": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"run_as_user": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
+													"volume_mounts": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"mount_path": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																"read_only": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"dns_policy": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(dnsPolicy_Values(), false),
-									},
-									"host_network": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"image_pull_secret": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
+										"dns_policy": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(dnsPolicy_Values(), false),
 										},
-									},
-									"init_containers": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
+										"host_network": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"image_pull_secret": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
 													},
 												},
 											},
 										},
-									},
-									"metadata": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"labels": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+										"init_containers": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"args": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"command": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"env": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+													"image": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_pull_policy": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrResources: {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"limits": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"requests": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+													"security_context": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"allow_privilege_escalation": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"privileged": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"read_only_root_file_system": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"run_as_group": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"run_as_non_root": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"run_as_user": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													"volume_mounts": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"mount_path": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																"read_only": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+															},
+														},
+													},
 												},
 											},
 										},
-									},
-									"service_account_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"share_process_namespace": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"volumes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"empty_dir": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"medium": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      "",
-																ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
-															},
-															"size_limit": {
-																Type:     schema.TypeString,
-																Required: true,
+										"metadata": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"labels": {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+												},
+											},
+										},
+										"service_account_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"share_process_namespace": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"volumes": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"empty_dir": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"medium": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	Default:      "",
+																	ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
+																},
+																"size_limit": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
 															},
 														},
 													},
-												},
-												"host_path": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrPath: {
-																Type:     schema.TypeString,
-																Required: true,
+													"host_path": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrPath: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
 															},
 														},
 													},
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "Default",
-												},
-												"secret": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"optional": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"secret_name": {
-																Type:     schema.TypeString,
-																Required: true,
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Optional: true,
+														Default:  "Default",
+													},
+													"secret": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"optional": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"secret_name": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
 															},
 														},
 													},
@@ -445,130 +471,130 @@ func resourceJobDefinition() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			"node_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"container_properties", "ecs_properties", "eks_properties"},
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentNodePropertiesJSON(old, new)
-					return equal
+				"node_properties": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"container_properties", "ecs_properties", "eks_properties"},
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentNodePropertiesJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          validJobNodeProperties,
 				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobNodeProperties,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"platform_capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"platform_capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.PlatformCapability](),
+					},
+				},
+				names.AttrPropagateTags: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"retry_strategy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attempts": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10),
+							},
+							"evaluate_on_exit": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MinItems: 0,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:             schema.TypeString,
+											Required:         true,
+											StateFunc:        sdkv2.ToLowerSchemaStateFunc,
+											ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RetryAction](),
+										},
+										"on_exit_code": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 512),
+												validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
+											),
+										},
+										"on_reason": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 512),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+											),
+										},
+										"on_status_reason": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 512),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"scheduling_priority": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTimeout: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attempt_duration_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(60),
+							},
+						},
+					},
+				},
+				names.AttrType: {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PlatformCapability](),
+					Required:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.JobDefinitionType](),
 				},
-			},
-			names.AttrPropagateTags: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"retry_strategy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
-						},
-						"evaluate_on_exit": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 0,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAction: {
-										Type:             schema.TypeString,
-										Required:         true,
-										StateFunc:        sdkv2.ToLowerSchemaStateFunc,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RetryAction](),
-									},
-									"on_exit_code": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
-										),
-									},
-									"on_reason": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
-										),
-									},
-									"on_status_reason": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
-										),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"scheduling_priority": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attempt_duration_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(60),
-						},
-					},
-				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.JobDefinitionType](),
-			},
+			}
 		},
 
 		CustomizeDiff: jobDefinitionCustomizeDiff,
@@ -830,7 +856,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	jobDefinition, err := findJobDefinitionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -840,54 +866,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
-	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_properties", containerProperties)
-	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("ecs_properties", ecsProperties)
-	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
-	}
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
-	}
-	d.Set(names.AttrParameters, jobDefinition.Parameters)
-	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
-	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
-	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
-		}
-	} else {
-		d.Set("retry_strategy", nil)
-	}
-	d.Set("revision", revision)
-	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
-	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
-		}
-	} else {
-		d.Set(names.AttrTimeout, nil)
-	}
-	d.Set(names.AttrType, jobDefinition.Type)
-
-	setTagsOut(ctx, jobDefinition.Tags)
-
-	return diags
+	return append(diags, resourceJobDefinitionFlatten(ctx, jobDefinition, d)...)
 }
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -947,7 +926,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					if node.Container != nil {
+						diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					}
 				}
 				input.NodeProperties = props
 			}
@@ -1055,8 +1036,7 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
 		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+			Message: status,
 		}
 	}
 
@@ -1094,7 +1074,7 @@ func validJobContainerProperties(v any, k string) (ws []string, errors []error) 
 	value := v.(string)
 	_, err := expandContainerProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1103,7 +1083,7 @@ func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1112,7 +1092,7 @@ func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandJobNodeProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1399,6 +1379,10 @@ func expandContainers(tfList []any) []awstypes.EksContainer {
 			securityContext := &awstypes.EksContainerSecurityContext{}
 			tfMap := v[0].(map[string]any)
 
+			if v, ok := tfMap["allow_privilege_escalation"]; ok {
+				securityContext.AllowPrivilegeEscalation = aws.Bool(v.(bool))
+			}
+
 			if v, ok := tfMap["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
 			}
@@ -1646,6 +1630,7 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []any {
 
 		if v := apiObject.SecurityContext; v != nil {
 			tfMap["security_context"] = []map[string]any{{
+				"allow_privilege_escalation": aws.ToBool(v.AllowPrivilegeEscalation),
 				"privileged":                 aws.ToBool(v.Privileged),
 				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
 				"run_as_group":               aws.ToInt64(v.RunAsGroup),
@@ -1742,4 +1727,50 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	}
 
 	return tfList
+}
+
+func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.JobDefinition, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
+	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("container_properties", containerProperties)
+	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("ecs_properties", ecsProperties)
+
+	d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties))
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
+	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("node_properties", nodeProperties)
+	d.Set(names.AttrParameters, jobDefinition.Parameters)
+	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
+	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
+	if jobDefinition.RetryStrategy != nil {
+		d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)})
+	} else {
+		d.Set("retry_strategy", nil)
+	}
+	d.Set("revision", revision)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
+	if jobDefinition.Timeout != nil {
+		d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)})
+	} else {
+		d.Set(names.AttrTimeout, nil)
+	}
+	d.Set(names.AttrType, jobDefinition.Type)
+
+	setTagsOut(ctx, jobDefinition.Tags)
+
+	return diags
 }

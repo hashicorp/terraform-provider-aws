@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk
@@ -15,4 +15,6 @@ var (
 	FindConfigurationSettingsByTwoPartKey = findConfigurationSettingsByTwoPartKey
 	FindEnvironmentByID                   = findEnvironmentByID
 	HostedZoneIDs                         = hostedZoneIDs
+
+	EnvironmentMigrateState = environmentMigrateState
 )

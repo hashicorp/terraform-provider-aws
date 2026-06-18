@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
@@ -13,12 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,32 +39,24 @@ func resourceIdentityPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
-				),
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
+					),
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -78,13 +73,13 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	identity := d.Get("identity").(string)
 	policyName := d.Get(names.AttrName).(string)
 	id := identityPolicyCreateResourceID(identity, policyName)
-	input := &ses.PutIdentityPolicyInput{
+	input := ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		Policy:     aws.String(policy),
 		PolicyName: aws.String(policyName),
 	}
 
-	_, err = conn.PutIdentityPolicy(ctx, input)
+	_, err = conn.PutIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Identity Policy (%s): %s", id, err)
@@ -106,7 +101,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	policy, err := findIdentityPolicyByTwoPartKey(ctx, conn, identity, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Identity Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -143,13 +138,13 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ses.PutIdentityPolicyInput{
+	input := ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		Policy:     aws.String(policy),
 		PolicyName: aws.String(policyName),
 	}
 
-	_, err = conn.PutIdentityPolicy(ctx, input)
+	_, err = conn.PutIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Identity Policy (%s): %s", d.Id(), err)
@@ -168,10 +163,11 @@ func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", d.Id())
-	_, err = conn.DeleteIdentityPolicy(ctx, &ses.DeleteIdentityPolicyInput{
+	input := ses.DeleteIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-	})
+	}
+	_, err = conn.DeleteIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Identity Policy (%s): %s", d.Id(), err)
@@ -200,11 +196,11 @@ func identityPolicyParseResourceID(id string) (string, string, error) {
 }
 
 func findIdentityPolicyByTwoPartKey(ctx context.Context, conn *ses.Client, identity, policyName string) (string, error) {
-	input := &ses.GetIdentityPoliciesInput{
+	input := ses.GetIdentityPoliciesInput{
 		Identity:    aws.String(identity),
 		PolicyNames: []string{policyName},
 	}
-	output, err := findIdentityPolicies(ctx, conn, input)
+	output, err := findIdentityPolicies(ctx, conn, &input)
 
 	if err != nil {
 		return "", err
@@ -226,7 +222,7 @@ func findIdentityPolicies(ctx context.Context, conn *ses.Client, input *ses.GetI
 	}
 
 	if output == nil || output.Policies == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policies, nil

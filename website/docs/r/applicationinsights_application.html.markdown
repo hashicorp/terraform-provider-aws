@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_config_enabled` - (Optional)  Indicates whether Application Insights automatically configures unmonitored resources in the resource group.
 * `auto_create` - (Optional) Configures all of the resources in the resource group by applying the recommended configurations.
 * `cwe_monitor_enabled` - (Optional)  Indicates whether Application Insights can listen to CloudWatch events for the application resources, such as instance terminated, failed deployment, and others.

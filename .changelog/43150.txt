@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_bedrock_inference_profiles: Add `type` argument
+```

@@ -23,16 +23,17 @@ resource "aws_dax_subnet_group" "example" {
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name of the subnet group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name of the subnet group.
 * `description` - (Optional) A description of the subnet group.
-* `subnet_ids` – (Required) A list of VPC subnet IDs for the subnet group.
+* `subnet_ids` - (Required) A list of VPC subnet IDs for the subnet group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the subnet group.
-* `vpc_id` – VPC ID of the subnet group.
+* `vpc_id` - VPC ID of the subnet group.
 
 ## Import
 

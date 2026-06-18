@@ -29,6 +29,9 @@ data "aws_ec2_managed_prefix_list" "test_env" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired .
@@ -47,9 +50,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 * `ids` - List of all the managed prefix list ids found.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `read` - (Default `20m`)

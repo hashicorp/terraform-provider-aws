@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account_test
@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -20,10 +18,10 @@ import (
 func testAccPrimaryContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_primary_contact.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,7 +30,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 			{
 				Config: testAccPrimaryConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrimaryContactExists(ctx, resourceName),
+					testAccCheckPrimaryContactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
@@ -43,7 +41,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+64211111111"),
 					resource.TestCheckResourceAttr(resourceName, "postal_code", "98101"),
 					resource.TestCheckResourceAttr(resourceName, "state_or_region", "WA"),
-					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.examplecorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.example.com"),
 				),
 			},
 			{
@@ -54,7 +52,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 			{
 				Config: testAccPrimaryConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrimaryContactExists(ctx, resourceName),
+					testAccCheckPrimaryContactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
@@ -65,14 +63,14 @@ func testAccPrimaryContact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+64211111111"),
 					resource.TestCheckResourceAttr(resourceName, "postal_code", "98101"),
 					resource.TestCheckResourceAttr(resourceName, "state_or_region", "WA"),
-					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.examplecorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.example.com"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPrimaryContactExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,7 +81,7 @@ func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Account Primary Contact ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AccountClient(ctx)
 
 		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes[names.AttrAccountID])
 
@@ -103,7 +101,7 @@ resource "aws_account_primary_contact" "test" {
   phone_number       = "+64211111111"
   postal_code        = "98101"
   state_or_region    = "WA"
-  website_url        = "https://www.examplecorp.com"
+  website_url        = "https://www.example.com"
 }
 `, name)
 }

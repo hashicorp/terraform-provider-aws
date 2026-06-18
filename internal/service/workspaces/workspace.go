@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspaces
 
@@ -13,16 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,109 +41,111 @@ func resourceWorkspace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"computer_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"volume_encryption_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"workspace_properties": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_type_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ComputeValue,
-							ValidateDiagFunc: enum.Validate[types.Compute](),
-						},
-						"root_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  80,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{80}),
-								validation.IntBetween(175, 2000),
-							),
-						},
-						"running_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  types.RunningModeAlwaysOn,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.RunningModeAlwaysOn,
-								types.RunningModeAutoStop,
-							), false),
-						},
-						"running_mode_auto_stop_timeout_in_minutes": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-								val := v.(int)
-								if val%60 != 0 {
-									errors = append(errors, fmt.Errorf(
-										"%q should be configured in 60-minute intervals, got: %d", k, val))
-								}
-								return
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bundle_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"computer_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"user_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"volume_encryption_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"workspace_properties": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_type_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ComputeValue,
+								ValidateDiagFunc: enum.Validate[types.Compute](),
 							},
-						},
-						"user_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  10,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{10, 50}),
-								validation.IntBetween(100, 2000),
-							),
+							"root_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  80,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{80}),
+									validation.IntBetween(175, 2000),
+								),
+							},
+							"running_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  types.RunningModeAlwaysOn,
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									types.RunningModeAlwaysOn,
+									types.RunningModeAutoStop,
+								), false),
+							},
+							"running_mode_auto_stop_timeout_in_minutes": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+									val := v.(int)
+									if val%60 != 0 {
+										errors = append(errors, fmt.Errorf(
+											"%q should be configured in 60-minute intervals, got: %d", k, val))
+									}
+									return
+								},
+							},
+							"user_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  10,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{10, 50}),
+									validation.IntBetween(100, 2000),
+								),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -199,7 +203,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	workspace, err := findWorkspaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -351,8 +355,8 @@ func findWorkspaceByID(ctx context.Context, conn *workspaces.Client, id string) 
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+	if inttypes.IsZero(output) {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -385,11 +389,11 @@ func findWorkspaces(ctx context.Context, conn *workspaces.Client, input *workspa
 	return output, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspace(conn *workspaces.Client, workspaceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, workspaceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -405,7 +409,7 @@ func waitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, worksp
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatePending, types.WorkspaceStateStarting),
 		Target:  enum.Slice(types.WorkspaceStateAvailable),
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -422,7 +426,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspac
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStateUpdating),
 		Target:  enum.Slice(types.WorkspaceStateAvailable, types.WorkspaceStateStopped),
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		// "OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment".
 		// AWS Workspaces service doesn't change instance status to "Updating" during property modification.
 		// Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
@@ -446,7 +450,7 @@ func waitWorkspaceTerminated(ctx context.Context, conn *workspaces.Client, works
 		// After a WorkSpace is terminated, the TERMINATED state is returned only briefly before the WorkSpace directory metadata is cleaned up.
 		Pending: enum.Slice(tfslices.RemoveAll(enum.EnumValues[types.WorkspaceState](), types.WorkspaceStateSuspended)...),
 		Target:  []string{},
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		Timeout: timeout,
 	}
 

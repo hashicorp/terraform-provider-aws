@@ -28,6 +28,9 @@ output "kubeconfig-certificate-authority-data" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -43,10 +46,13 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether the EKS Auto Mode compute capability is enabled or not.
     * `node_pools` - List of node pools for the EKS Auto Mode compute capability.
     * `node_role_arn` - The ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
+* `control_plane_scaling_config` - Configuration block for the control plane scaling tier. See [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/eks-provisioned-control-plane-getting-started.html) for more information.
+    * `tier` - The control plane scaling tier. Valid values are `standard`, `tier-xl`, `tier-2xl`, `tier-4xl`, or `tier-8xl`.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch time stamp in seconds for when the cluster was created.
+* `deletion_protection` - Whether deletion protection for the cluster is enabled.
 * `enabled_cluster_log_types` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
@@ -62,6 +68,10 @@ This data source exports the following attributes in addition to the arguments a
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
+        * `spread_level` - Placement group spread level for control plane instances.
+    * `etcd_instance_type` - Amazon EC2 instance type for etcd instances.
+    * `etcd_placement` - Placement configuration for the etcd instances.
+        * `spread_level` - Placement group spread level for etcd instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `remote_network_config` - Contains remote network configuration for EKS Hybrid Nodes.
@@ -83,8 +93,8 @@ This data source exports the following attributes in addition to the arguments a
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `security_group_ids` – List of security group IDs
-    * `subnet_ids` – List of subnet IDs
-    * `vpc_id` – The VPC associated with your cluster.
+    * `security_group_ids` - List of security group IDs
+    * `subnet_ids` - List of subnet IDs
+    * `vpc_id` - The VPC associated with your cluster.
 * `zonal_shift_config` - Contains Zonal Shift Configuration.
     * `enabled` - Whether zonal shift is enabled.

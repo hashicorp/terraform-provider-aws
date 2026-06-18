@@ -1,28 +1,28 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,195 +41,269 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_options": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active_directory_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"root_certificate_chain_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"saml_provider_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"self_service_saml_provider_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ClientVpnAuthenticationType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_options": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active_directory_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"root_certificate_chain_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"saml_provider_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"self_service_saml_provider_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ClientVpnAuthenticationType](),
+							},
 						},
 					},
 				},
-			},
-			"client_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-			},
-			"client_connect_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"lambda_function_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
+				"client_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsCIDR,
+				},
+				"client_connect_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"lambda_function_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"client_login_banner_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"banner_text": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1400),
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"connection_log_options": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"cloudwatch_log_stream": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
+				"client_login_banner_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"banner_text": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1400),
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"disconnect_on_session_timeout": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				MaxItems: 5,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"self_service_portal": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SelfServicePortalDisabled,
-				ValidateDiagFunc: enum.Validate[awstypes.SelfServicePortal](),
-			},
-			"self_service_portal_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"server_certificate_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"session_timeout_hours": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      24,
-				ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
-			},
-			"split_tunnel": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transport_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.TransportProtocolUdp,
-				ValidateDiagFunc: enum.Validate[awstypes.TransportProtocol](),
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpn_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  443,
-				ValidateFunc: validation.IntInSlice([]int{
-					443,
-					1194,
-				}),
-			},
+				"client_route_enforcement_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforced": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"connection_log_options": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_log_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"cloudwatch_log_stream": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"disconnect_on_session_timeout": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_servers": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"endpoint_ip_address_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					MaxItems: 5,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"self_service_portal": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SelfServicePortalDisabled,
+					ValidateDiagFunc: enum.Validate[awstypes.SelfServicePortal](),
+				},
+				"self_service_portal_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"server_certificate_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"session_timeout_hours": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      24,
+					ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
+				},
+				"split_tunnel": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_ip_address_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
+				},
+				"transit_gateway_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					ForceNew: true,
+					ConflictsWith: []string{
+						names.AttrSecurityGroupIDs,
+						names.AttrVPCID,
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{
+									"transit_gateway_configuration.0.availability_zone_ids",
+								},
+							},
+							"availability_zone_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{
+									"transit_gateway_configuration.0.availability_zones",
+								},
+							},
+							names.AttrTransitGatewayAttachmentID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"transport_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.TransportProtocolUdp,
+					ValidateDiagFunc: enum.Validate[awstypes.TransportProtocol](),
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"vpn_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  443,
+					ValidateFunc: validation.IntInSlice([]int{
+						443,
+						1194,
+					}),
+				},
+			}
 		},
 	}
 }
@@ -239,8 +313,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
-		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
-		ClientToken:          aws.String(id.UniqueId()),
+		ClientToken:          aws.String(create.UniqueId(ctx)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    getTagSpecificationsIn(ctx, awstypes.ResourceTypeClientVpnEndpoint),
@@ -252,12 +325,20 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("client_cidr_block"); ok {
+		input.ClientCidrBlock = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.ClientConnectOptions = expandClientConnectOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -276,6 +357,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.DnsServers = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_type"); ok {
+		input.EndpointIpAddressType = awstypes.EndpointIpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -286,6 +371,14 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("session_timeout_hours"); ok {
 		input.SessionTimeoutHours = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("traffic_ip_address_type"); ok {
+		input.TrafficIpAddressType = awstypes.TrafficIpAddressType(v.(string))
+	}
+
+	if v, ok := d.GetOk("transit_gateway_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TransitGatewayConfiguration = expandTransitGatewayConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
@@ -300,16 +393,30 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.ClientVpnEndpointId))
 
+	if input.TransitGatewayConfiguration != nil {
+		ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint: %s", err)
+		}
+		if ep.TransitGatewayConfiguration == nil {
+			return sdkdiag.AppendErrorf(diags, "finding EC2 Client VPN Endpoint TransitGatewayConfiguration: %s", err)
+		}
+		if _, err := waitTransitGatewayAttachmentAccepted(ctx, conn, aws.ToString(ep.TransitGatewayConfiguration.TransitGatewayAttachmentId), d.Timeout(schema.TimeoutDefault)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for transit gateway configuration to be available for EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
 
 func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -319,14 +426,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientVPNEndpointARN(ctx, c, d.Id()))
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
@@ -345,6 +445,13 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("client_login_banner_options", nil)
 	}
+	if ep.ClientRouteEnforcementOptions != nil {
+		if err := d.Set("client_route_enforcement_options", []any{flattenClientRouteEnforcementOptions(ep.ClientRouteEnforcementOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting client_route_enforcement_options: %s", err)
+		}
+	} else {
+		d.Set("client_route_enforcement_options", nil)
+	}
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []any{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_log_options: %s", err)
@@ -355,8 +462,9 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -366,6 +474,10 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
+	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
+	}
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
@@ -396,6 +508,12 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("client_login_banner_options") {
 			if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("client_route_enforcement_options") {
+			if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -731,4 +849,78 @@ func flattenConnectionLogResponseOptions(apiObject *awstypes.ConnectionLogRespon
 	}
 
 	return tfMap
+}
+
+func expandClientRouteEnforcementOptions(tfMap map[string]any) *awstypes.ClientRouteEnforcementOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ClientRouteEnforcementOptions{}
+
+	if v, ok := tfMap["enforced"].(bool); ok {
+		apiObject.Enforced = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenClientRouteEnforcementOptions(apiObject *awstypes.ClientRouteEnforcementResponseOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enforced; v != nil {
+		tfMap["enforced"] = v
+	}
+
+	return tfMap
+}
+
+func expandTransitGatewayConfiguration(tfMap map[string]any) *awstypes.TransitGatewayConfigurationInputStructure {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TransitGatewayConfigurationInputStructure{}
+
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
+		apiObject.TransitGatewayId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrAvailabilityZones]; ok {
+		apiObject.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["availability_zone_ids"]; ok {
+		apiObject.AvailabilityZoneIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	return apiObject
+}
+
+func flattenTransitGatewayConfiguration(apiObject *awstypes.TransitGatewayConfigurationDescribeEndpointStructure) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{}
+	if v := apiObject.AvailabilityZones; len(v) > 0 {
+		tfMap[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(v)
+	}
+	if v := apiObject.AvailabilityZoneIds; len(v) > 0 {
+		tfMap["availability_zone_ids"] = flex.FlattenStringValueSet(v)
+	}
+	if v := apiObject.TransitGatewayAttachmentId; v != nil {
+		tfMap[names.AttrTransitGatewayAttachmentID] = aws.ToString(v)
+	}
+	if v := apiObject.TransitGatewayId; v != nil {
+		tfMap[names.AttrTransitGatewayID] = aws.ToString(v)
+	}
+	return tfMap
+}
+
+func clientVPNEndpointARN(ctx context.Context, c *conns.AWSClient, clientVPNEndpointID string) string {
+	return c.RegionalARN(ctx, names.EC2, "client-vpn-endpoint/"+clientVPNEndpointID)
 }

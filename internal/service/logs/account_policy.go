@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,30 +40,32 @@ func resourceAccountPolicy() *schema.Resource {
 			State: resourceAccountPolicyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
-			},
-			names.AttrScope: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ScopeAll,
-				ValidateDiagFunc: enum.Validate[awstypes.Scope](),
-			},
-			"selection_criteria": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+				"policy_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+				},
+				names.AttrScope: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ScopeAll,
+					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+				},
+				"selection_criteria": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -104,7 +108,7 @@ func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := findAccountPolicyByTwoPartKey(ctx, conn, awstypes.PolicyType(d.Get("policy_type").(string)), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Account Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -181,7 +185,7 @@ func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Cli
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err
@@ -212,8 +216,7 @@ func findAccountPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 set -eo pipefail
+
+trap 'exit 130' INT TERM
 
 # This script works from stdin and expects one filename per line.
 # To call it, e.g.
@@ -14,6 +18,7 @@ exit_code=0
 
 # tflint always resolves config flies relative to the working directory when using --recursive
 TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+TFLINT_OPA_CONFIG="$(pwd -P)/.ci/.tflint_opa.hcl"
 
 # Configure the rules for tflint.
 rules=(
@@ -53,6 +58,19 @@ while read -r filename ; do
         set -e
 
         if [[ ${tflint_exitcode} -ne 0 ]]; then
+            echo "ERROR: File \"${filename}\", block #${block_number} (lines ${start_line}-${end_line}):"
+            echo "${tflint_output}"
+            echo
+            exit_code=1
+        fi
+
+        # Run OPA rules separately (--only is incompatible with OPA rules)
+        set +e
+        tflint_output=$(${TFLINT_CMD} --config "${TFLINT_OPA_CONFIG}" --chdir="${td}" 2>&1)
+        tflint_exitcode=$?
+        set -e
+
+        if [[ ${tflint_exitcode} -ne 0 ]] && [[ "${tflint_output}" != *"eval_builtin_error"* ]]; then
             echo "ERROR: File \"${filename}\", block #${block_number} (lines ${start_line}-${end_line}):"
             echo "${tflint_output}"
             echo

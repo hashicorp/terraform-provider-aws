@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -21,29 +23,31 @@ func dataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
 
-		Schema: map[string]*schema.Schema{
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"site_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags: tftags.TagsSchema(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"site_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags: tftags.TagsSchema(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -81,7 +85,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
+			if !keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

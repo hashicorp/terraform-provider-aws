@@ -23,6 +23,7 @@ data "aws_cloudformation_type" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the CloudFormation Type. For example, `arn:aws:cloudformation:us-west-2::type/resource/AWS-EC2-VPC`.
 * `type` - (Optional) CloudFormation Registry Type. For example, `RESOURCE`.
 * `type_name` - (Optional) CloudFormation Type name. For example, `AWS::EC2::VPC`.

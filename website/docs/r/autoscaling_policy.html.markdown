@@ -3,7 +3,7 @@ subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_policy"
 description: |-
-  Provides an AutoScaling Scaling Group resource.
+  Provides an AutoScaling Scaling Policy resource.
 ---
 
 # Resource: aws_autoscaling_policy
@@ -176,6 +176,9 @@ resource "aws_autoscaling_policy" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
 * `autoscaling_group_name` - (Required) Name of the autoscaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
@@ -415,24 +418,48 @@ This configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to the scaling policy.
-* `name` - Scaling policy's name.
-* `autoscaling_group_name` - The scaling policy's assigned autoscaling group.
-* `adjustment_type` - Scaling policy's adjustment type.
-* `policy_type` - Scaling policy's type.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling scaling policy using the role autoscaling_group_name and name separated by `/`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_autoscaling_policy.test-policy
-  id = "asg-name/policy-name"
+  to = aws_autoscaling_policy.example
+  identity = {
+    autoscaling_group_name = "example-asg"
+    name                   = "example-policy"
+  }
+}
+
+resource "aws_autoscaling_policy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AutoScaling scaling policy using the role autoscaling_group_name and name separated by `/`. For example:
+### Identity Schema
+
+#### Required
+
+* `autoscaling_group_name` (String) Name of the Auto Scaling group.
+* `name` (String) Name of the policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Policies using `autoscaling_group_name` and `name` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_policy.example
+  id = "example-asg/example-policy"
+}
+```
+
+Using `terraform import`, import AutoScaling Scaling Policies using `autoscaling_group_name` and `name` separated by a forward slash (`/`). For example:
 
 ```console
-% terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
+% terraform import aws_autoscaling_policy.example example-asg/example-policy
 ```

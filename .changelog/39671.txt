@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only
+```

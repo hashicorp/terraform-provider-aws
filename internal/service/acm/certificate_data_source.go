@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acm
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,59 +34,61 @@ func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
-			},
-			"key_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.KeyAlgorithm](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"statuses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Computed:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
+				},
+				"key_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.KeyAlgorithm](),
+					},
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"statuses": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: {
+					Type:         schema.TypeMap,
+					Optional:     true,
+					Computed:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
+				},
+				"types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -122,14 +127,14 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 1 * time.Minute
 	)
-	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
-		func() ([]awstypes.CertificateSummary, error) {
+	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout,
+		func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 			output, err := findCertificates(ctx, conn, &input, f)
 			switch {
 			case err != nil:
 				return nil, err
 			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError(input)
+				return nil, tfresource.NewEmptyResultError()
 			default:
 				return output, nil
 			}
@@ -145,7 +150,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		certificateARN := aws.ToString(certificateSummary.CertificateArn)
 		certificate, err := findCertificateByARN(ctx, conn, certificateARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			continue
 		}
 

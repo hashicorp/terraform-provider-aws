@@ -34,8 +34,9 @@ resource "aws_grafana_workspace_service_account_token" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the token to create. The name must be unique within the workspace.
 * `seconds_to_live` - (Required) Sets how long the token will be valid, in seconds. You can set the time up to 30 days in the future.
 * `service_account_id` - (Required) The ID of the service account for which to create a token.

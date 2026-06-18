@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -20,10 +20,16 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
 			"subnetIDs":                   testAccDirectory_subnetIDs,
 			"tags":                        testAccDirectory_tags,
+			"tenancy":                     testAccDirectory_tenancy,
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
+			"workspaceCertificateBasedAuthProperties":                     testAccDirectory_CertificateBasedAuthProperties,
 			"workspaceSamlProperties":                                     testAccDirectory_SamlProperties,
+			"workspacePoolsBasic":                                         testAccDirectory_poolsBasic,
+			"workspacePoolsADConfig":                                      testAccDirectory_poolsADConfig,
+			"workspacePoolsWorkspaceCreation":                             testAccDirectory_poolsWorkspaceCreation,
+			"workspacePoolsWorkspaceCreationAD":                           testAccDirectory_poolsWorkspaceCreationAD,
 		},
 		"IpGroup": {
 			acctest.CtBasic:       testAccIPGroup_basic,

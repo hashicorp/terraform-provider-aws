@@ -16,7 +16,7 @@ Manages a Config Organization Conformance Pack. More information can be found in
 
 ### Using Template Body
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name = "example"
 
@@ -50,7 +50,7 @@ resource "aws_organizations_organization" "example" {
 
 ### Using Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
   template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
@@ -87,6 +87,7 @@ EOT
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
 * `delivery_s3_key_prefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.
@@ -107,7 +108,6 @@ The `input_parameter` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
-* `id` - The name of the organization conformance pack.
 
 ## Timeouts
 
@@ -118,6 +118,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `20m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_config_organization_conformance_pack.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_conformance_pack" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the configuration recorder.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Conformance Packs using the `name`. For example:
 

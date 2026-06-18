@@ -22,7 +22,8 @@ data "aws_ecr_pull_through_cache_rule" "ecr_public" {
 
 This data source supports the following arguments:
 
-- `ecr_repository_prefix` - (Required) The repository name prefix to use when caching images from the source registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ecr_repository_prefix` - (Required) The repository name prefix to use when caching images from the source registry.
 
 ## Attribute Reference
 

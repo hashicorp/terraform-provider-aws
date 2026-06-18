@@ -34,6 +34,7 @@ resource "aws_ebs_snapshot_import" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_data` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.
 * `disk_container` - (Required) Information about the disk container. Detailed below.
@@ -64,13 +65,6 @@ This resource supports the following arguments:
 * `s3_bucket` - The name of the Amazon S3 bucket where the disk image is located.
 * `s3_key` - The file name of the disk image.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `60m`)
-- `delete` - (Default `10m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -82,3 +76,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `volume_size` - The size of the drive in GiBs.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `60m`)
+- `delete` - (Default `10m`)

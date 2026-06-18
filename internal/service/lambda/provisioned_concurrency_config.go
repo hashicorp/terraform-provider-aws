@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lambda
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,29 +53,31 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"provisioned_concurrent_executions": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"qualifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"provisioned_concurrent_executions": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"qualifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }
@@ -98,7 +102,11 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	if _, err := conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
+	if err = waitAliasRoutingWeightsCleared(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
+	}
+
+	if _, err = conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
 	}
 
@@ -124,7 +132,7 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 
 	output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,9 +166,11 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	_, err = conn.PutProvisionedConcurrencyConfig(ctx, input)
+	if err = waitAliasRoutingWeightsCleared(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
+	}
 
-	if err != nil {
+	if _, err = conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
@@ -209,8 +219,7 @@ func findProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, 
 
 	if errs.IsA[*awstypes.ProvisionedConcurrencyConfigNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -219,7 +228,7 @@ func findProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -234,11 +243,11 @@ func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lam
 	return findProvisionedConcurrencyConfig(ctx, conn, input)
 }
 
-func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedConcurrencyConfig(conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,7 +263,7 @@ func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumInProgress),
 		Target:  enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumReady),
-		Refresh: statusProvisionedConcurrencyConfig(ctx, conn, functionName, qualifier),
+		Refresh: statusProvisionedConcurrencyConfig(conn, functionName, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -262,7 +271,7 @@ func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetProvisionedConcurrencyConfigOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

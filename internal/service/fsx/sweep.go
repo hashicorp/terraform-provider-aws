@@ -1,104 +1,44 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_fsx_backup", &resource.Sweeper{
-		Name: "aws_fsx_backup",
-		F:    sweepBackups,
-	})
-
-	resource.AddTestSweepers("aws_fsx_lustre_file_system", &resource.Sweeper{
-		Name: "aws_fsx_lustre_file_system",
-		F:    sweepLustreFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_m2_environment",
-		},
-	})
-
-	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
-		Name: "aws_fsx_ontap_file_system",
-		F:    sweepONTAPFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_fsx_ontap_storage_virtual_machine",
-			"aws_m2_environment",
-		},
-	})
-
-	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
-		Name: "aws_fsx_ontap_storage_virtual_machine",
-		F:    sweepONTAPStorageVirtualMachine,
-		Dependencies: []string{
-			"aws_fsx_ontap_volume",
-		},
-	})
-
+	awsv2.Register("aws_fsx_backup", sweepBackups)
+	awsv2.Register("aws_fsx_lustre_file_system", sweepLustreFileSystems, "aws_datasync_location", "aws_m2_environment")
+	awsv2.Register("aws_fsx_ontap_file_system", sweepONTAPFileSystems, "aws_datasync_location", "aws_fsx_ontap_storage_virtual_machine", "aws_m2_environment")
+	awsv2.Register("aws_fsx_ontap_storage_virtual_machine", sweepONTAPStorageVirtualMachine, "aws_fsx_ontap_volume")
 	awsv2.Register("aws_fsx_ontap_volume", sweepONTAPVolumes)
-
-	resource.AddTestSweepers("aws_fsx_openzfs_file_system", &resource.Sweeper{
-		Name: "aws_fsx_openzfs_file_system",
-		F:    sweepOpenZFSFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_fsx_openzfs_volume",
-			"aws_m2_environment",
-		},
-	})
-
-	resource.AddTestSweepers("aws_fsx_openzfs_volume", &resource.Sweeper{
-		Name: "aws_fsx_openzfs_volume",
-		F:    sweepOpenZFSVolume,
-	})
-
-	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
-		Name: "aws_fsx_windows_file_system",
-		F:    sweepWindowsFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_m2_environment",
-			"aws_storagegateway_file_system_association",
-		},
-	})
+	awsv2.Register("aws_fsx_openzfs_file_system", sweepOpenZFSFileSystems, "aws_datasync_location", "aws_fsx_openzfs_volume", "aws_m2_environment")
+	awsv2.Register("aws_fsx_openzfs_volume", sweepOpenZFSVolume, "aws_fsx_s3_access_point_attachment")
+	awsv2.Register("aws_fsx_s3_access_point_attachment", sweepS3AccessPointAttachments)
+	awsv2.Register("aws_fsx_windows_file_system", sweepWindowsFileSystems, "aws_datasync_location", "aws_m2_environment", "aws_storagegateway_file_system_association")
 }
 
-func sweepBackups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepBackups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeBackupsInput{}
+	var input fsx.DescribeBackupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeBackupsPaginator(conn, input)
+	pages := fsx.NewDescribeBackupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx Backup sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx Backups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Backups {
@@ -110,36 +50,20 @@ func sweepBackups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx Backups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepLustreFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepLustreFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx Lustre File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx Lustre File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -155,36 +79,20 @@ func sweepLustreFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx Lustre File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepONTAPFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepONTAPFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx ONTAP File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx ONTAP File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -200,36 +108,20 @@ func sweepONTAPFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx ONTAP File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepONTAPStorageVirtualMachine(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepONTAPStorageVirtualMachine(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeStorageVirtualMachinesInput{}
+	var input fsx.DescribeStorageVirtualMachinesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, input)
+	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx ONTAP Storage Virtual Machine sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx ONTAP Storage Virtual Machines (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.StorageVirtualMachines {
@@ -241,24 +133,18 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx ONTAP Storage Virtual Machines (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
+	var input fsx.DescribeVolumesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	var sweepResources []sweep.Sweepable
-
-	input := fsx.DescribeVolumesInput{}
 	pages := fsx.NewDescribeVolumesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
@@ -267,7 +153,8 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			if v.VolumeType != awstypes.VolumeTypeOntap {
 				continue
 			}
-			// Skip root volumes
+
+			// Skip root volumes.
 			if v.OntapConfiguration != nil && aws.ToBool(v.OntapConfiguration.StorageVirtualMachineRoot) {
 				continue
 			}
@@ -276,7 +163,6 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			if v.OntapConfiguration != nil && v.OntapConfiguration.SnaplockConfiguration != nil {
 				bypassSnaplock = true
 			}
-
 			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VolumeId))
@@ -290,27 +176,17 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	return sweepResources, nil
 }
 
-func sweepOpenZFSFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepOpenZFSFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx OpenZFS File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx OpenZFS File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -326,36 +202,20 @@ func sweepOpenZFSFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx OpenZFS File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepOpenZFSVolume(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepOpenZFSVolume(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeVolumesInput{}
+	var input fsx.DescribeVolumesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeVolumesPaginator(conn, input)
+	pages := fsx.NewDescribeVolumesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx OpenZFS Volume sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx OpenZFS Volumes (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Volumes {
@@ -374,36 +234,42 @@ func sweepOpenZFSVolume(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx OpenZFS Volumes (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepWindowsFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepS3AccessPointAttachments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeS3AccessPointAttachmentsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeS3AccessPointAttachmentsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx Windows File System sweep for %s: %s", region, err)
-			return nil
+		if err != nil {
+			return nil, err
 		}
 
+		for _, v := range page.S3AccessPointAttachments {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newS3AccessPointAttachmentResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepWindowsFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.FSxClient(ctx)
+	var input fsx.DescribeFileSystemsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
-			return fmt.Errorf("error listing FSx Windows File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -420,11 +286,5 @@ func sweepWindowsFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx Windows File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

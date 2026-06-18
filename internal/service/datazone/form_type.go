@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -18,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -26,19 +28,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_form_type", name="Form Type")
-func newResourceFormType(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFormType{}
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("name")
+// @IdentityAttribute("revision")
+// @ImportIDHandler("formTypeImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetFormTypeOutput")
+// @Testing(importStateIdAttributes="domain_identifier;name;revision", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
+func newFormTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &formTypeResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Second)
 
 	return r, nil
@@ -48,13 +60,14 @@ const (
 	ResNameFormType = "Form Type"
 )
 
-type resourceFormType struct {
-	framework.ResourceWithConfigure
+type formTypeResource struct {
+	framework.ResourceWithModel[formTypeResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
-func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *formTypeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -154,10 +167,10 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceFormType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *formTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceFormTypeData
+	var plan formTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -186,7 +199,7 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetFormTypeOutput, error) {
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {
@@ -197,7 +210,6 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	output := outputRaws.(*datazone.GetFormTypeOutput)
 	option := flex.WithIgnoredFieldNames([]string{"Model"})
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, option)...)
 	if resp.Diagnostics.HasError() {
@@ -207,17 +219,17 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *formTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceFormTypeData
+	var state formTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findFormTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString(), state.Revision.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -237,13 +249,22 @@ func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, r
 
 	state.OwningProjectIdentifier = flex.StringToFramework(ctx, out.OwningProjectId)
 
+	if m, ok := out.Model.(*awstypes.ModelMemberSmithy); ok {
+		modelVal, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []modelData{{Smithy: flex.StringValueToFramework(ctx, m.Value)}})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.Model = modelVal
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFormType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *formTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceFormTypeData
+	var state formTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,19 +287,6 @@ func (r *resourceFormType) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 }
-func (r *resourceFormType) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 3 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", `Unexpected format for import ID, use: "DomainIdentifier:Name,Revision"`)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("revision"), parts[2])...)
-}
-
 func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId string, name string, revision string) (*datazone.GetFormTypeOutput, error) {
 	in := &datazone.GetFormTypeInput{
 		DomainIdentifier:   aws.String(domainId),
@@ -289,8 +297,7 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	out, err := conn.GetFormType(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -299,7 +306,7 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -317,7 +324,29 @@ func (m modelData) Expand(ctx context.Context) (result any, diags diag.Diagnosti
 	return
 }
 
-type resourceFormTypeData struct {
+var (
+	_ inttypes.ImportIDParser = formTypeImportID{}
+)
+
+type formTypeImportID struct{}
+
+func (formTypeImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, intflex.ResourceIdSeparator, 3)
+	if len(parts) != 3 {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<name>%s<revision>", id, intflex.ResourceIdSeparator, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": parts[0],
+		names.AttrName:      parts[1],
+		"revision":          parts[2],
+	}
+
+	return id, result, nil
+}
+
+type formTypeResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt               timetypes.RFC3339                           `tfsdk:"created_at"`
 	CreatedBy               types.String                                `tfsdk:"created_by"`
 	Description             types.String                                `tfsdk:"description"`

@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_api_gateway_deployment: Remove `canary_settings`, `execution_arn`, `invoke_url`, `stage_description`, and `stage_name` arguments. Instead, use the `aws_api_gateway_stage` resource to manage stages.
+```

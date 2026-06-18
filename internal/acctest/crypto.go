@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -6,10 +6,10 @@ package acctest
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- Test code generating public key fingerprints for acceptance tests
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/hex"
@@ -114,7 +114,7 @@ func TLSECDSAPublicKeyPEM(t *testing.T, keyPem string) (string, string) {
 		Type:  PEMBlockTypePublicKey,
 	}
 
-	md5sum := md5.Sum(publicKeyBytes)
+	md5sum := md5.Sum(publicKeyBytes) // nosemgrep: go/sast/internal/crypto/md5 -- Test code generating public key fingerprints for acceptance tests
 	hexarray := make([]string, len(md5sum))
 	for i, c := range md5sum {
 		hexarray[i] = hex.EncodeToString([]byte{c})
@@ -258,7 +258,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 		t.Fatal(err)
 	}
 
-	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
+	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes) // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
@@ -317,7 +317,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 		t.Fatal(err)
 	}
 
-	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
+	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes) // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
@@ -355,10 +355,25 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
-// TLSRSAX509SelfSignedCertificatePEM generates a x509 certificate PEM string.
+// TLSRSAX509SelfSignedCertificatePEM generates a x509 certificate PEM string with server authentication extended key usage.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
 func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string) string {
+	t.Helper()
+
+	return tlsRSAX509SelfSignedCertificatePEM(t, keyPem, commonName, x509.ExtKeyUsageServerAuth)
+}
+
+// TLSRSAX509SelfSignedClientCertificatePEM generates a x509 certificate PEM string with client authentication extended key usage.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: certificate_pem = "%[1]s"
+func TLSRSAX509SelfSignedClientCertificatePEM(t *testing.T, keyPem, commonName string) string {
+	t.Helper()
+
+	return tlsRSAX509SelfSignedCertificatePEM(t, keyPem, commonName, x509.ExtKeyUsageClientAuth)
+}
+
+func tlsRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string, extKeyUsage x509.ExtKeyUsage) string {
 	t.Helper()
 
 	keyBlock, _ := pem.Decode([]byte(keyPem))
@@ -377,7 +392,7 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 
 	certificate := &x509.Certificate{
 		BasicConstraintsValid: true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:           []x509.ExtKeyUsage{extKeyUsage},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		NotAfter:              time.Now().Add(hoursForCertificateValidity * time.Hour),
 		NotBefore:             time.Now(),

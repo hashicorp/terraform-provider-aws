@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -9,7 +9,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +19,8 @@ import (
 func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	ri := sdkacctest.RandInt()
+	ri := acctest.RandInt(t)
+	resourceName := "aws_opensearch_domain_policy.test"
 	policy := `{
     "Version": "2012-10-17",
     "Statement": [
@@ -51,16 +51,16 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 }`
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.test", &domain),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 						expectedArn, err := buildDomainARN(name, awsClient.Partition(ctx), awsClient.AccountID(ctx), awsClient.Region(ctx))
@@ -69,9 +69,14 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 						}
 						expectedPolicy := fmt.Sprintf(expectedPolicyTpl, expectedArn)
 
-						return testAccCheckPolicyMatch("aws_opensearch_domain_policy.test", "access_policies", expectedPolicy)(s)
+						return testAccCheckPolicyMatch(resourceName, "access_policies", expectedPolicy)(s)
 					},
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -95,7 +100,7 @@ func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.Tes
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(given, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+			return fmt.Errorf("Comparing AWS Policies failed: %w", err)
 		}
 
 		if !areEquivalent {

@@ -96,6 +96,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `long_description` - (Optional) Long description of entry.
 * `short_description` - (Optional) Short description of entry.
 * `status` - (Optional) If glossary term is ENABLED or DISABLED.
@@ -118,6 +119,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `30s`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_glossary_term.example
+  identity = {
+    domain_identifier = "domain-id-12345678"
+    id                = "glossary-term-id-12345678"
+  }
+}
+
+resource "aws_datazone_glossary_term" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the glossary term.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary Term using a comma-delimited string combining the `domain_identifier`, `id`, and the `glossary_identifier`. For example:
 

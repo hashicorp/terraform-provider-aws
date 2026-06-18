@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `rebalancing` configuration block to support intelligent rebalancing for Express broker clusters
+```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package account
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,63 +37,65 @@ func resourcePrimaryContact() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"address_line_1": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"address_line_2": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"address_line_3": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"city": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"company_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"country_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"district_or_county": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"full_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"phone_number": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
-			},
-			"postal_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"state_or_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"website_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"address_line_1": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"address_line_2": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"address_line_3": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"city": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"company_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"country_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"district_or_county": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"full_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"phone_number": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
+				},
+				"postal_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"state_or_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"website_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -163,7 +167,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 
 	contactInformation, err := findContactInformation(ctx, conn, d.Get(names.AttrAccountID).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -200,8 +204,7 @@ func findContactInformation(ctx context.Context, conn *account.Client, accountID
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -210,7 +213,7 @@ func findContactInformation(ctx context.Context, conn *account.Client, accountID
 	}
 
 	if output == nil || output.ContactInformation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactInformation, nil

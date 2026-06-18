@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -21,20 +23,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
-func newResourceUserProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserProfile{}
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("user_identifier")
+// @ImportIDHandler("userProfileImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetUserProfileOutput", checkDestroyNoop=true)
+// @Testing(importStateIdFunc="testAccUserProfileImportStateFunc", importStateIdAttribute="domain_identifier")
+// @Testing(importIgnore="user_type", plannableImportAction=Replace)
+// @Testing(preIdentityVersion="v6.47.0")
+func newUserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userProfileResource{}
+
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
@@ -45,13 +55,14 @@ const (
 	ResNameUserProfile = "User Profile"
 )
 
-type resourceUserProfile struct {
-	framework.ResourceWithConfigure
+type userProfileResource struct {
+	framework.ResourceWithModel[userProfileResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
-func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *userProfileResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
@@ -108,9 +119,9 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 	}
 }
 
-func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *userProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var plan userProfileData
+	var plan userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -122,7 +133,7 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(create.UniqueId(ctx))
 	out, err := conn.CreateUserProfile(ctx, in)
 	if resp.Diagnostics.HasError() {
 		return
@@ -141,7 +152,7 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id) // set partial state to taint if wait fails
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := tfresource.RetryGWhenNotFound(ctx, createTimeout, func() (*datazone.GetUserProfileOutput, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 		return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 	})
 
@@ -161,16 +172,16 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *userProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state userProfileData
+	var state userProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findUserProfileByID(ctx, conn, state.DomainIdentifier.ValueString(), state.UserIdentifier.ValueString(), state.Type.ValueEnum())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -191,10 +202,10 @@ func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state userProfileData
+	var plan, state userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -225,7 +236,7 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := tfresource.RetryGWhenNotFound(ctx, updateTimeout, func() (*datazone.GetUserProfileOutput, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, updateTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 			return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 		})
 
@@ -246,19 +257,6 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 3 {
-		resp.Diagnostics.AddError("resource import invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "user_identifier,domain_identifier,type"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrType), parts[2])...)
-}
-
 func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) (*datazone.GetUserProfileOutput, error) {
 	in := &datazone.GetUserProfileInput{
 		UserIdentifier:   aws.String(userId),
@@ -270,8 +268,7 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -280,13 +277,32 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type userProfileData struct {
+type userProfileImportID struct{}
+
+var _ inttypes.ImportIDParser = userProfileImportID{}
+
+func (userProfileImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, ",", 3)
+	if len(parts) != 3 {
+		return "", nil, fmt.Errorf("id %q should be in the format <user-identifier>,<domain-identifier>,<type>", id)
+	}
+
+	result := map[string]any{
+		"user_identifier":   parts[0],
+		"domain_identifier": parts[1],
+	}
+
+	return id, result, nil
+}
+
+type userProfileResourceModel struct {
+	framework.WithRegionModel
 	DomainIdentifier types.String                                   `tfsdk:"domain_identifier"`
 	Details          fwtypes.ListNestedObjectValueOf[detailsData]   `tfsdk:"details"`
 	ID               types.String                                   `tfsdk:"id"`

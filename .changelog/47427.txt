@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Prevents validation error when global secondary index `range_key` is set to empty string
+```

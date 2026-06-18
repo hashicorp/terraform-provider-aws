@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -15,6 +15,8 @@ var (
 	ResourceEmailIdentityFeedbackAttributes  = resourceEmailIdentityFeedbackAttributes
 	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
 	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
+	ResourceTenant                           = newTenantResource
+	ResourceTenantResource                   = newTenantResourceAssociationResource
 
 	FindAccountSuppressionAttributes                 = findAccountSuppressionAttributes
 	FindAccountVDMAttributes                         = findAccountVDMAttributes
@@ -25,4 +27,6 @@ var (
 	FindDedicatedIPPoolByName                        = findDedicatedIPPoolByName
 	FindEmailIdentityByID                            = findEmailIdentityByID
 	FindEmailIdentityPolicyByTwoPartKey              = findEmailIdentityPolicyByTwoPartKey
+	FindTenantByName                                 = findTenantByName
+	FindTenantResourceAssociationByID                = findTenantResourceAssociationByTwoPartKey
 )

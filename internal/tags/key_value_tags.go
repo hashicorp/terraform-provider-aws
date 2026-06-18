@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tags
@@ -15,8 +15,6 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -48,6 +46,13 @@ const (
 	// provider configuration. When multiple key prefixes are provided, the values are
 	// comma-separated.
 	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
+
+	// Environment variable specifying whether organizational tag policies should be enforced and
+	// the severity of resulting diagnostics
+	//
+	// Valid values are "error", "warning", and "disabled". Any other value will trigger an error
+	// during provider initialization.
+	TagPolicyComplianceEnvVar = "TF_AWS_TAG_POLICY_COMPLIANCE"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -59,6 +64,20 @@ type DefaultConfig struct {
 type IgnoreConfig struct {
 	Keys        KeyValueTags
 	KeyPrefixes KeyValueTags
+}
+
+// TagPolicyConfig contains options related to organizational tagging policies.
+type TagPolicyConfig struct {
+	// Severity indicates the severity of the diagnostic
+	//
+	// Must be one of "error" or "warning". This is a higher level abstraction on
+	// the diagnostic severity types exposed by the plugin libraries, as it must be
+	// shared across both Plugin SDK V2 and Plugin Framework based resources.
+	Severity string
+
+	// RequiredTags is a mapping of Terraform resource type names to the required
+	// tags defined in the effective tag policy
+	RequiredTags map[string]KeyValueTags
 }
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
@@ -394,6 +413,17 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	for key, value := range target {
 		if v, ok := tags[key]; !ok || !v.Equal(value) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ContainsAllKeys returns whether or not all the target tag keys are contained.
+func (tags KeyValueTags) ContainsAllKeys(target KeyValueTags) bool {
+	for key := range target {
+		if _, ok := tags[key]; !ok {
 			return false
 		}
 	}
@@ -750,9 +780,9 @@ func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string
 
 	// Split the attr string into the first part and the rest
 	var part, rest string
-	if dotIndex := strings.Index(attr, "."); dotIndex != -1 {
-		part = attr[:dotIndex]
-		rest = attr[dotIndex+1:]
+	if before, after, ok := strings.Cut(attr, "."); ok {
+		part = before
+		rest = after
 	} else {
 		part = attr
 		rest = ""
@@ -887,12 +917,9 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 }
 
 // ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags *fwdiag.Diagnostics) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, tagsAll Map, diags *fwdiag.Diagnostics) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
-
-	var tagsAll Map
-	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {
 		return KeyValueTags{}

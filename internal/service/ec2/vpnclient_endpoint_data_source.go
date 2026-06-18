@@ -1,15 +1,15 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -32,159 +32,208 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active_directory_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"root_certificate_chain_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"saml_provider_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"self_service_saml_provider_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active_directory_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"root_certificate_chain_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"saml_provider_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"self_service_saml_provider_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"client_cidr_block": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_connect_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"lambda_function_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"client_cidr_block": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"client_connect_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"lambda_function_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"client_login_banner_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"banner_text": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"connection_log_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cloudwatch_log_stream": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"client_login_banner_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"banner_text": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_servers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"self_service_portal": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"self_service_portal_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"server_certificate_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"session_timeout_hours": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"split_tunnel": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transport_protocol": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpn_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"client_route_enforcement_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforced": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"client_vpn_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"connection_log_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_log_group": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cloudwatch_log_stream": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_servers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"endpoint_ip_address_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"self_service_portal": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"self_service_portal_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"server_certificate_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"session_timeout_hours": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"split_tunnel": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"traffic_ip_address_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"availability_zone_ids": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrTransitGatewayAttachmentID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"transport_protocol": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpn_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
 func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
 
@@ -211,14 +260,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(aws.ToString(ep.ClientVpnEndpointId))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientVPNEndpointARN(ctx, c, d.Id()))
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
@@ -237,6 +279,13 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("client_login_banner_options", nil)
 	}
+	if ep.ClientRouteEnforcementOptions != nil {
+		if err := d.Set("client_route_enforcement_options", []any{flattenClientRouteEnforcementOptions(ep.ClientRouteEnforcementOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting client_route_enforcement_options: %s", err)
+		}
+	} else {
+		d.Set("client_route_enforcement_options", nil)
+	}
 	d.Set("client_vpn_endpoint_id", ep.ClientVpnEndpointId)
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []any{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
@@ -247,8 +296,9 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -258,7 +308,11 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	if err := d.Set("transit_gateway_configuration", []any{flattenTransitGatewayConfiguration(ep.TransitGatewayConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transit_gateway_configuration: %s", err)
+	}
 	d.Set("transport_protocol", ep.TransportProtocol)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 

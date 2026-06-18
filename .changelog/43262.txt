@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_ipam_pool_cidr: Fix netmask_length not being saved and diffed correctly
+```

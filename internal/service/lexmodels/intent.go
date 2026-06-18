@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexmodels
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,211 +55,213 @@ func resourceIntent() *schema.Resource {
 			Delete: schema.DefaultTimeout(intentDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"conclusion_statement": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      1,
-				MaxItems:      1,
-				ConflictsWith: []string{"follow_up_prompt"},
-				Elem:          statementResource,
-			},
-			"confirmation_prompt": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				MaxItems:     1,
-				RequiredWith: []string{"rejection_statement"},
-				Elem:         promptResource,
-			},
-			"create_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"dialog_code_hook": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     codeHookResource,
-			},
-			"follow_up_prompt": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      1,
-				MaxItems:      1,
-				ConflictsWith: []string{"conclusion_statement"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"prompt": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem:     promptResource,
-						},
-						"rejection_statement": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem:     statementResource,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"fulfillment_activity": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"code_hook": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem:     codeHookResource,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FulfillmentActivityType](),
-						},
-					},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
-			},
-			"parent_intent_signature": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rejection_statement": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				MaxItems:     1,
-				RequiredWith: []string{"confirmation_prompt"},
-				Elem:         statementResource,
-			},
-			"sample_utterances": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 1500,
-				Elem: &schema.Schema{
+				"conclusion_statement": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      1,
+					MaxItems:      1,
+					ConflictsWith: []string{"follow_up_prompt"},
+					Elem:          statementResource,
+				},
+				"confirmation_prompt": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MinItems:     1,
+					MaxItems:     1,
+					RequiredWith: []string{"rejection_statement"},
+					Elem:         promptResource,
+				},
+				"create_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 200),
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 200),
 				},
-			},
-			"slot": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: validation.StringLenBetween(0, 200),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
-							),
-						},
-						names.AttrPriority: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						"response_card": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 50000),
-						},
-						"sample_utterances": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 10,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 200),
+				"dialog_code_hook": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem:     codeHookResource,
+				},
+				"follow_up_prompt": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      1,
+					MaxItems:      1,
+					ConflictsWith: []string{"conclusion_statement"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"prompt": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem:     promptResource,
+							},
+							"rejection_statement": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem:     statementResource,
 							},
 						},
-						"slot_constraint": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SlotConstraint](),
-						},
-						"slot_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
-							),
-						},
-						"slot_type_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 64),
-								validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
-							),
-						},
-						"value_elicitation_prompt": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem:     promptResource,
+					},
+				},
+				"fulfillment_activity": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"code_hook": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem:     codeHookResource,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FulfillmentActivityType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+					),
+				},
+				"parent_intent_signature": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"rejection_statement": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MinItems:     1,
+					MaxItems:     1,
+					RequiredWith: []string{"confirmation_prompt"},
+					Elem:         statementResource,
+				},
+				"sample_utterances": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1500,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 200),
+					},
+				},
+				"slot": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "",
+								ValidateFunc: validation.StringLenBetween(0, 200),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+								),
+							},
+							names.AttrPriority: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"response_card": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 50000),
+							},
+							"sample_utterances": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 200),
+								},
+							},
+							"slot_constraint": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SlotConstraint](),
+							},
+							"slot_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+								),
+							},
+							"slot_type_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+								),
+							},
+							"value_elicitation_prompt": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem:     promptResource,
+							},
+						},
+					},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 		CustomizeDiff: updateComputedAttributesOnIntentCreateVersion,
 	}
@@ -334,7 +337,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.PutIntent(ctx, input)
 	})
 
@@ -469,22 +472,18 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.PutIntent(ctx, input)
 
 		if errs.IsA[*awstypes.ConflictException](err) {
-			return retry.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
+			return tfresource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutIntent(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating intent %s: %s", d.Id(), err)
@@ -498,7 +497,7 @@ func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Lex Model Intent: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteIntent(ctx, &lexmodelbuildingservice.DeleteIntentInput{
 			Name: aws.String(d.Id()),
 		})

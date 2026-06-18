@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_ivschat_room: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ivschat_logging_configuration: Add resource identity support
+```

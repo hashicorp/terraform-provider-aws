@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkmanager_vpc_attachment: Change `options` to Optional and Computed
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_vpc_attachment: Add `options.dns_support` and `options.security_group_referencing_support` arguments
+```

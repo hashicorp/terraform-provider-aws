@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloud9
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,74 +42,76 @@ func resourceEnvironmentEC2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic_stop_time_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtMost(20160),
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ConnectionTypeConnectSsh,
-				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"amazonlinux-1-x86_64",
-					"amazonlinux-2-x86_64",
-					"amazonlinux-2023-x86_64",
-					"ubuntu-18.04-x86_64",
-					"ubuntu-22.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
-				}, false),
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"owner_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic_stop_time_minutes": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtMost(20160),
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ConnectionTypeConnectSsh,
+					ValidateDiagFunc: enum.Validate[types.ConnectionType](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"amazonlinux-1-x86_64",
+						"amazonlinux-2-x86_64",
+						"amazonlinux-2023-x86_64",
+						"ubuntu-18.04-x86_64",
+						"ubuntu-22.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
+					}, false),
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 60),
+				},
+				"owner_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -118,7 +122,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
 		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
@@ -142,7 +146,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEnvironmentEC2(ctx, input)
 	}, "User")
 
@@ -165,7 +169,7 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cloud9 EC2 Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -245,7 +249,7 @@ func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.Des
 	}
 
 	if environment.Lifecycle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return environment, nil
@@ -256,8 +260,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -266,7 +269,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environments, nil
@@ -285,19 +288,17 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironmentStatus(conn *cloud9.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -316,7 +317,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
 		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -324,7 +325,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err
@@ -340,7 +341,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -348,7 +349,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err

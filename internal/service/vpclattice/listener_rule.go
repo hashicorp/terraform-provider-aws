@@ -1,26 +1,30 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,7 +42,18 @@ func resourceListenerRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
+				serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
+				}
+
+				d.Set("service_identifier", serviceID)
+				d.Set("listener_identifier", listenerID)
+				d.Set("rule_id", ruleID)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -47,150 +62,52 @@ func resourceListenerRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fixed_response": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_groups": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_group_identifier": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrWeight: {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      100,
-													Optional:     true,
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fixed_response": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatusCode: {
+											Type:     schema.TypeInt,
+											Required: true,
 										},
 									},
 								},
+								ExactlyOneOf: []string{
+									"action.0.fixed_response",
+									"action.0.forward",
+								},
 							},
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"match": {
-				Type:             schema.TypeList,
-				Required:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_match": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"header_matches": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MinItems:         1,
-										MaxItems:         5,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"case_sensitive": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"match": {
-													Type:             schema.TypeList,
-													Required:         true,
-													MaxItems:         1,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"contains": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															names.AttrPrefix: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+							"forward": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_groups": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_group_identifier": {
+														Type:     schema.TypeString,
+														Required: true,
 													},
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"method": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"path_match": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"case_sensitive": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"match": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															names.AttrPrefix: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+													names.AttrWeight: {
+														Type:         schema.TypeInt,
+														ValidateFunc: validation.IntBetween(0, 999),
+														Default:      100,
+														Optional:     true,
 													},
 												},
 											},
@@ -201,29 +118,139 @@ func resourceListenerRule() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"match": {
+					Type:             schema.TypeList,
+					Required:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"header_matches": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MinItems:         1,
+											MaxItems:         5,
+											AtLeastOneOf: []string{
+												"match.0.http_match.0.header_matches",
+												"match.0.http_match.0.method",
+												"match.0.http_match.0.path_match",
+											},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"case_sensitive": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"match": {
+														Type:             schema.TypeList,
+														Required:         true,
+														MaxItems:         1,
+														DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"contains": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"exact": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																names.AttrPrefix: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										"method": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"path_match": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"case_sensitive": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"match": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"exact": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																names.AttrPrefix: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+				"rule_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -233,14 +260,14 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	serviceID, listenerID := d.Get("service_identifier").(string), d.Get("listener_identifier").(string)
 	input := vpclattice.CreateRuleInput{
-		Action:             expandRuleAction(d.Get(names.AttrAction).([]any)[0].(map[string]any)),
-		ClientToken:        aws.String(sdkid.UniqueId()),
-		ListenerIdentifier: aws.String(listenerID),
-		Match:              expandRuleMatch(d.Get("match").([]any)[0].(map[string]any)),
+		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
+		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
+		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
-		ServiceIdentifier:  aws.String(serviceID),
+		Priority:           aws.Int32(int32(d.Get(names.AttrPriority).(int))),
+		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -254,7 +281,12 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
 	}
 
-	d.SetId(listenerRuleCreateResourceID(serviceID, listenerID, aws.ToString(output.Id)))
+	serviceID, listenerID, ruleID, err := listenerRuleParseARN(aws.ToString(output.Arn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
+	}
+
+	d.SetId(listenerRuleCreateResourceID(serviceID, listenerID, ruleID))
 
 	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
@@ -270,7 +302,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findListenerRuleByThreePartKey(ctx, conn, serviceID, listenerID, ruleID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -284,14 +316,12 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("listener_identifier", listenerID)
 	if err := d.Set("match", []any{flattenRuleMatch(output.Match)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting match: %s", err)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrPriority, output.Priority)
 	d.Set("rule_id", output.Id)
-	d.Set("service_identifier", serviceID)
 
 	return diags
 }
@@ -380,6 +410,35 @@ func listenerRuleParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
+func listenerRuleParseARN(arnS string) (serviceID string, listenerID string, ruleID string, err error) {
+	a, err := arn.Parse(arnS)
+	if err != nil {
+		return
+	}
+
+	resource := a.Resource
+	var ok bool
+
+	resource, ok = strings.CutPrefix(resource, "service/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	serviceID, resource, ok = strings.Cut(resource, "/listener/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	listenerID, ruleID, ok = strings.Cut(resource, "/rule/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+	return
+}
+
 func findListenerRuleByThreePartKey(ctx context.Context, conn *vpclattice.Client, serviceID, listenerID, ruleID string) (*vpclattice.GetRuleOutput, error) {
 	input := vpclattice.GetRuleInput{
 		ListenerIdentifier: aws.String(listenerID),
@@ -394,7 +453,7 @@ func findListenerRuleByThreePartKey(ctx context.Context, conn *vpclattice.Client
 	}
 
 	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -405,8 +464,7 @@ func findListenerRule(ctx context.Context, conn *vpclattice.Client, input *vpcla
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -415,7 +473,7 @@ func findListenerRule(ctx context.Context, conn *vpclattice.Client, input *vpcla
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -683,6 +741,14 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 	return tfMap
 }
 
+func expandRuleActions(tfList []any) types.RuleAction {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleAction(tfList[0].(map[string]any))
+}
+
 func expandRuleAction(tfMap map[string]any) types.RuleAction {
 	var apiObject types.RuleAction
 
@@ -746,6 +812,14 @@ func expandWeightedTargetGroup(tfMap map[string]any) types.WeightedTargetGroup {
 	}
 
 	return apiObject
+}
+
+func expandRuleMatches(tfList []any) types.RuleMatch {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleMatch(tfList[0].(map[string]any))
 }
 
 func expandRuleMatch(tfMap map[string]any) types.RuleMatch {

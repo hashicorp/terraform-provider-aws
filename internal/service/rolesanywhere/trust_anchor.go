@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rolesanywhere
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,97 +42,99 @@ func resourceTrustAnchor() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"notification_settings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				ForceNew: true,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:             schema.TypeString,
-							Computed:         true,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NotificationChannel](),
-						},
-						"configured_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-						},
-						"event": {
-							Type:             schema.TypeString,
-							Computed:         true,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
-						},
-						"threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"notification_settings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					ForceNew: true,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"channel": {
+								Type:             schema.TypeString,
+								Computed:         true,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NotificationChannel](),
+							},
+							"configured_by": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							"event": {
+								Type:             schema.TypeString,
+								Computed:         true,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+							},
+							"threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_data": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"acm_pca_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"x509_certificate_data": {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_data": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"acm_pca_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"x509_certificate_data": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrSourceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TrustAnchorType](),
+							names.AttrSourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TrustAnchorType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customizeDiffNotificationSettings,
@@ -209,7 +213,7 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	trustAnchor, err := findTrustAnchorByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Trust Anchor (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -298,8 +302,7 @@ func findTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id str
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -308,7 +311,7 @@ func findTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id str
 	}
 
 	if out == nil || out.TrustAnchor == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.TrustAnchor, nil
@@ -404,9 +407,10 @@ func expandSource(tfList []any) *awstypes.Source {
 	}
 
 	if v, ok := tfMap["source_data"].([]any); ok && len(v) > 0 && v[0] != nil {
-		if result.SourceType == awstypes.TrustAnchorTypeAwsAcmPca {
+		switch result.SourceType {
+		case awstypes.TrustAnchorTypeAwsAcmPca:
 			result.SourceData = expandSourceDataACMPCA(v[0].(map[string]any))
-		} else if result.SourceType == awstypes.TrustAnchorTypeCertificateBundle {
+		case awstypes.TrustAnchorTypeCertificateBundle:
 			result.SourceData = expandSourceDataCertificateBundle(v[0].(map[string]any))
 		}
 	}

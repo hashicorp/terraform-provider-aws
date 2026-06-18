@@ -160,10 +160,23 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Job Config
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  job_config {
+    build_compute_type = "STANDARD_8GB"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for an Amplify app.
 * `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
 * `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. See [`auto_branch_creation_config` Block](#auto_branch_creation_config-block) for details.
@@ -181,6 +194,7 @@ This resource supports the following arguments:
 * `enable_branch_auto_deletion` - (Optional) Automatically disconnects a branch in the Amplify Console when you delete a branch from your Git repository.
 * `environment_variables` - (Optional) Environment variables map for an Amplify app.
 * `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
+* `job_config` - (Optional) Used to configure the [Amplify Application build instance compute type](https://docs.aws.amazon.com/amplify/latest/APIReference/API_JobConfig.html#amplify-Type-JobConfig-buildComputeType). See [`job_config` Block](#job_config-block) for details.
 * `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
 * `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
 * `repository` - (Optional) Repository for an Amplify app.
@@ -215,6 +229,12 @@ The `custom_rule` configuration block supports the following arguments:
 * `source` - (Required) Source pattern for a URL rewrite or redirect rule.
 * `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) Target pattern for a URL rewrite or redirect rule.
+
+### `job_config` Block
+
+The `job_config` configuration block supports the following arguments:
+
+* `build_compute_type` - (Optional) Size of the build instance. Valid values: `STANDARD_8GB`, `LARGE_16GB`, and `XLARGE_72GB`. Default: `STANDARD_8GB`.
 
 ## Attribute Reference
 

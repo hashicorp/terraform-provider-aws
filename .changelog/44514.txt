@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ebs_volume: Update `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes
+```

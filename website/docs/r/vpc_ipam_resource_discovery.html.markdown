@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "main" {
   description = "My IPAM Resource Discovery"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -33,13 +33,21 @@ resource "aws_vpc_ipam_resource_discovery" "main" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the IPAM Resource Discovery.
 * `operating_regions` - (Required) Determines which regions the Resource Discovery will enable IPAM features for usage and monitoring. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM Resource Discovery. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. **You must set your provider block region as an operating_region.**
+* `organizational_unit_exclusion` - (Optional) Add an Organizational Unit (OU) exclusion to IPAM. If IPAM is integrated with AWS Organizations and OU exclusion is added, IPAM will not manage the IP addresses in accounts in the OU exclusion. Refer to [IPAM Quotas](https://docs.aws.amazon.com/vpc/latest/ipam/quotas-ipam.html) for the limit of exclusions that can be created.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### operating_regions
 
 * `region_name` - (Required) The name of the Region you want to add to the IPAM.
+
+### organizational_unit_exclusion
+
+The `organizational_unit_exclusion` configuration block supports the following arguments:
+
+* `organizations_entity_path` - (Required) AWS Organizations entity path. Build the path for the OU(s) using AWS Organizations IDs separated by a `/`. Include all child OUs by ending the path with `/*`.
 
 ## Attribute Reference
 
@@ -51,6 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The account ID for the account that manages the Resource Discovery
 * `ipam_resource_discovery_region` - The home region of the Resource Discovery
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

@@ -126,7 +126,6 @@ resource "aws_spot_fleet_request" "example" {
   wait_for_fulfillment                = "true"
   terminate_instances_with_expiration = "true"
 
-
   dynamic "launch_specification" {
     for_each = [for s in var.subnets : {
       subnet_id = s[1]
@@ -197,9 +196,9 @@ resource "aws_spot_fleet_request" "foo" {
 
 ## Argument Reference
 
-Most of these arguments directly correspond to the
-[official API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `iam_fleet_role` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
@@ -413,6 +412,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `update` - (Default `10m`)
 * `delete` - (Default `15m`)
 
 ## Import

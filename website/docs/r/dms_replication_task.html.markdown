@@ -37,6 +37,7 @@ resource "aws_dms_replication_task" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cdc_start_position` - (Optional, Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be a RFC3339 formatted date, a checkpoint, or a LSN/SCN format depending on the source engine. For more information see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
 * `cdc_start_time` - (Optional, Conflicts with `cdc_start_position`) RFC3339 formatted date string or UNIX timestamp for the start of the Change Data Capture (CDC) operation.
 * `migration_type` - (Required) Migration type. Can be one of `full-load | cdc | full-load-and-cdc`.

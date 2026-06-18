@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `saml_options` - (Optional) The SAML authentication options for an AWS Elasticsearch Domain.
 
 ### saml_options
@@ -74,6 +75,13 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the domain the SAML options are associated with.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 

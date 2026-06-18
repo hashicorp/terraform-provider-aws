@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package storagegateway
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,165 +48,167 @@ func resourceSMBFileShare() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_based_enumeration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"admin_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_destination_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"authentication": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      authenticationActiveDirectory,
-				ValidateFunc: validation.StringInSlice(authentication_Values(), false),
-			},
-			"bucket_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"vpc_endpoint_dns_name"},
-			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_based_enumeration": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"admin_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_destination_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"authentication": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      authenticationActiveDirectory,
+					ValidateFunc: validation.StringInSlice(authentication_Values(), false),
+				},
+				"bucket_region": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"vpc_endpoint_dns_name"},
+				},
+				"cache_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_stale_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(300, 2592000),
+							},
 						},
 					},
 				},
-			},
-			"case_sensitivity": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CaseSensitivityClientSpecified,
-				ValidateDiagFunc: enum.Validate[awstypes.CaseSensitivity](),
-			},
-			"default_storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      defaultStorageClassS3Standard,
-				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
-			},
-			"fileshare_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_share_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"guess_mime_type_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"invalid_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				RequiredWith: []string{"kms_encrypted"},
-			},
-			"location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"object_acl": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ObjectACLPrivate,
-				ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
-			},
-			"oplocks_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"requester_pays": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"smb_acl_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"valid_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_endpoint_dns_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				"case_sensitivity": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CaseSensitivityClientSpecified,
+					ValidateDiagFunc: enum.Validate[awstypes.CaseSensitivity](),
+				},
+				"default_storage_class": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      defaultStorageClassS3Standard,
+					ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
+				},
+				"fileshare_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_share_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"guess_mime_type_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"invalid_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"kms_encrypted": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"kms_encrypted"},
+				},
+				"location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"object_acl": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ObjectACLPrivate,
+					ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
+				},
+				"oplocks_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "{}",
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+						validation.StringLenBetween(2, 100),
+					),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"requester_pays": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"smb_acl_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"valid_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpc_endpoint_dns_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -215,7 +219,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
-		ClientToken:            aws.String(id.UniqueId()),
+		ClientToken:            aws.String(create.UniqueId(ctx)),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
@@ -308,7 +312,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	fileshare, err := findSMBFileShareByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway SMB File Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -319,7 +323,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
-	d.Set("admin_user_list", aws.StringSlice(fileshare.AdminUserList))
+	d.Set("admin_user_list", fileshare.AdminUserList)
 	d.Set(names.AttrARN, fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("authentication", fileshare.Authentication)
@@ -337,7 +341,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("file_share_name", fileshare.FileShareName)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
-	d.Set("invalid_user_list", aws.StringSlice(fileshare.InvalidUserList))
+	d.Set("invalid_user_list", fileshare.InvalidUserList)
 	d.Set("kms_encrypted", fileshare.KMSEncrypted) //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
@@ -349,7 +353,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
-	d.Set("valid_user_list", aws.StringSlice(fileshare.ValidUserList))
+	d.Set("valid_user_list", fileshare.ValidUserList)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
 	setTagsOut(ctx, fileshare.Tags)
@@ -488,8 +492,7 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -498,17 +501,17 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SMBFileShareInfoList, nil
 }
 
-func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSMBFileShare(conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSMBFileShareByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -524,7 +527,7 @@ func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -542,7 +545,7 @@ func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -560,7 +563,7 @@ func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        statusSMBFileShare(ctx, conn, arn),
+		Refresh:        statusSMBFileShare(conn, arn),
 		Timeout:        timeout,
 		Delay:          5 * time.Second,
 		NotFoundChecks: 1,

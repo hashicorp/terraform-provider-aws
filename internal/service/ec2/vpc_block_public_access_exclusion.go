@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -25,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +48,7 @@ func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.Resou
 }
 
 type vpcBlockPublicAccessExclusionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcBlockPublicAccessExclusionResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -86,7 +88,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Schema(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -126,7 +128,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Create(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -136,7 +138,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 
 	output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, data.ExclusionID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -164,10 +166,11 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 		return
 	}
 
-	if resource := resourceARN.Resource; strings.HasPrefix(resource, "vpc/") {
-		data.VPCID = types.StringValue(strings.TrimPrefix(resource, "vpc/"))
-	} else if strings.HasPrefix(resource, "subnet/") {
-		data.SubnetID = types.StringValue(strings.TrimPrefix(resource, "subnet/"))
+	resource := resourceARN.Resource
+	if trimmed, ok := strings.CutPrefix(resource, "vpc/"); ok {
+		data.VPCID = types.StringValue(trimmed)
+	} else if trimmed, ok := strings.CutPrefix(resource, "subnet/"); ok {
+		data.SubnetID = types.StringValue(trimmed)
 	} else {
 		response.Diagnostics.AddError("parsing Resource_ARN", fmt.Sprintf("unknown resource type: %s", resource))
 
@@ -180,7 +183,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old resourceVPCBlockPublicAccessExclusionModel
+	var new, old vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -217,7 +220,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Update(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -261,7 +264,8 @@ func (r *vpcBlockPublicAccessExclusionResource) ConfigValidators(context.Context
 	}
 }
 
-type resourceVPCBlockPublicAccessExclusionModel struct {
+type vpcBlockPublicAccessExclusionResourceModel struct {
+	framework.WithRegionModel
 	ExclusionID                  types.String                                              `tfsdk:"id"`
 	InternetGatewayExclusionMode fwtypes.StringEnum[awstypes.InternetGatewayExclusionMode] `tfsdk:"internet_gateway_exclusion_mode"`
 	ResourceARN                  types.String                                              `tfsdk:"resource_arn"`

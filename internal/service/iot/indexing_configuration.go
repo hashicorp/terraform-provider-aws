@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -21,6 +23,11 @@ import (
 )
 
 // @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,
@@ -28,153 +35,151 @@ func resourceIndexingConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceIndexingConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"thing_group_indexing_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"managed_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"thing_group_indexing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingGroupIndexingMode](),
-						},
-					},
-				},
-				AtLeastOneOf: []string{"thing_group_indexing_configuration", "thing_indexing_configuration"},
-			},
-			"thing_indexing_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"device_defender_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DeviceDefenderIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
-						},
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"named_shadow_names": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 64),
-												validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
-											),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"thing_group_indexing_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 										},
 									},
 								},
 							},
-						},
-						"managed_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+							"managed_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
 									},
 								},
 							},
-						},
-						"named_shadow_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.NamedShadowIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.NamedShadowIndexingMode](),
-						},
-						"thing_connectivity_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ThingConnectivityIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingConnectivityIndexingMode](),
-						},
-						"thing_indexing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingIndexingMode](),
+							"thing_group_indexing_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingGroupIndexingMode](),
+							},
 						},
 					},
+					AtLeastOneOf: []string{"thing_group_indexing_configuration", "thing_indexing_configuration"},
 				},
-				AtLeastOneOf: []string{"thing_indexing_configuration", "thing_group_indexing_configuration"},
-			},
+				"thing_indexing_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
+									},
+								},
+							},
+							"device_defender_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DeviceDefenderIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
+							},
+							names.AttrFilter: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"named_shadow_names": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 64),
+													validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
+												),
+											},
+										},
+									},
+								},
+							},
+							"managed_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
+									},
+								},
+							},
+							"named_shadow_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.NamedShadowIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.NamedShadowIndexingMode](),
+							},
+							"thing_connectivity_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ThingConnectivityIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingConnectivityIndexingMode](),
+							},
+							"thing_indexing_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingIndexingMode](),
+							},
+						},
+					},
+					AtLeastOneOf: []string{"thing_indexing_configuration", "thing_group_indexing_configuration"},
+				},
+			}
 		},
 	}
 }
@@ -291,7 +296,7 @@ func flattenIndexingFilter(apiObject *awstypes.IndexingFilter) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.NamedShadowNames; v != nil {
-		tfMap["named_shadow_names"] = aws.StringSlice(v)
+		tfMap["named_shadow_names"] = v
 	}
 
 	return tfMap

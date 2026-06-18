@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -24,7 +26,7 @@ func newVPCEndpointAssociationsDataSource(context.Context) (datasource.DataSourc
 }
 
 type vpcEndpointAssociationsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[vpcEndpointAssociationsDataSourceModel]
 }
 
 func (d *vpcEndpointAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -67,6 +69,7 @@ func (d *vpcEndpointAssociationsDataSource) Read(ctx context.Context, request da
 }
 
 type vpcEndpointAssociationsDataSourceModel struct {
+	framework.WithRegionModel
 	Associations  fwtypes.ListNestedObjectValueOf[vpcEndpointAssociationModel] `tfsdk:"associations"`
 	VPCEndpointID types.String                                                 `tfsdk:"vpc_endpoint_id"`
 }

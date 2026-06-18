@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3files_synchronization_configuration
+```
+
+```release-note:new-list-resource
+aws_s3files_synchronization_configuration
+```

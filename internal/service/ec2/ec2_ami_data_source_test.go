@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -22,10 +21,11 @@ func TestCheckMostRecentAndMissingFilters(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		input      *ec2.DescribeImagesInput
-		mostRecent bool
-		wantDiag   bool
+		name        string
+		input       *ec2.DescribeImagesInput
+		mostRecent  bool
+		allowUnsafe bool
+		wantDiag    bool
 	}{
 		{
 			name:       "most_recent false",
@@ -76,13 +76,27 @@ func TestCheckMostRecentAndMissingFilters(t *testing.T) {
 			mostRecent: true,
 			wantDiag:   true,
 		},
+		{
+			name: "missing filters, allow unsafe",
+			input: &ec2.DescribeImagesInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("name"), // nosemgrep:ci.literal-Name-string-test-constant,ci.literal-name-string-constant
+						Values: []string{"some-ami-name-*"},
+					},
+				},
+			},
+			mostRecent:  true,
+			allowUnsafe: true,
+			wantDiag:    true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var diags diag.Diagnostics
-			got := tfec2.CheckMostRecentAndMissingFilters(diags, tt.input, tt.mostRecent)
+			got := tfec2.CheckMostRecentAndMissingFilters(diags, tt.input, tt.mostRecent, tt.allowUnsafe)
 			if (len(got) > 0) != tt.wantDiag {
 				t.Errorf("CheckMostRecentAndMissingFilters() diag = %v, wantErr %v", got, tt.wantDiag)
 				return
@@ -95,7 +109,7 @@ func TestAccEC2AMIDataSource_linuxInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -150,7 +164,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -198,7 +212,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.ubuntu-bionic-ami-hvm-instance-store"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -242,7 +256,7 @@ func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -261,9 +275,9 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ami.test"
 	datasourceName := "data.aws_ami.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -293,7 +307,7 @@ func TestAccEC2AMIDataSource_productCode(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -303,6 +317,22 @@ func TestAccEC2AMIDataSource_productCode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2AMIDataSource_unsafeFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAMIDataSourceConfig_unsafeFilter,
+				ExpectError: regexache.MustCompile("Most Recent Image Not Filtered"),
 			},
 		},
 	})
@@ -432,6 +462,23 @@ data "aws_ami" "test" {
   filter {
     name   = "name"
     values = ["AwsMarketPublished_IBM App Connect v13.0.1.0 and IBM MQ v9.4.0.5 with RapidDeploy 5.1.15 by-422d2ddd-3288-4067-be37-4e2a69450606"]
+  }
+}
+`
+
+// Most recent AMI with no filter on owner or image ID
+const testAccAMIDataSourceConfig_unsafeFilter = `
+data "aws_ami" "test" {
+  most_recent = true
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*"]
   }
 }
 `

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -15,13 +17,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,17 +38,17 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // @SDKResource("aws_elb", name="Classic Load Balancer")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types;awstypes;awstypes.LoadBalancerDescription")
+// @Testing(name="LoadBalancer")
+// @Testing(preIdentityVersion="v6.33.0")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
 		UpdateWithoutTimeout: resourceLoadBalancerUpdate,
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIfChange(names.AttrSubnets, func(_ context.Context, o, n, meta any) bool {
@@ -66,204 +67,206 @@ func resourceLoadBalancer() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrBucketPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      60,
-							ValidateFunc: validAccessLogsInterval,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"connection_draining": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"connection_draining_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-			"cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "defensive",
-				ValidateFunc: validation.StringInSlice([]string{
-					"monitor",
-					"defensive",
-					"strictest",
-				}, false),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(5, 300),
-						},
-						names.AttrTarget: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validHeathCheckTarget,
-						},
-						names.AttrTimeout: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 60),
-						},
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_logs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrBucketPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      60,
+								ValidateFunc: validAccessLogsInterval,
+							},
 						},
 					},
 				},
-			},
-			"idle_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      60,
-				ValidateFunc: validation.IntBetween(1, 4000),
-			},
-			"instances": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"listener": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						"instance_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-						"lb_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						"lb_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-						"ssl_certificate_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"connection_draining": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"connection_draining_timeout": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  300,
+				},
+				"cross_zone_load_balancing": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"desync_mitigation_mode": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "defensive",
+					ValidateFunc: validation.StringInSlice([]string{
+						"monitor",
+						"defensive",
+						"strictest",
+					}, false),
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"healthy_threshold": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(5, 300),
+							},
+							names.AttrTarget: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validHeathCheckTarget,
+							},
+							names.AttrTimeout: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 60),
+							},
+							"unhealthy_threshold": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
 						},
 					},
 				},
-				Set: listenerHash,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validNamePrefix,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"source_security_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"source_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnets: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"idle_timeout": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      60,
+					ValidateFunc: validation.IntBetween(1, 4000),
+				},
+				"instances": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"internal": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"listener": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							"instance_protocol": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateListenerProtocol(),
+							},
+							"lb_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							"lb_protocol": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateListenerProtocol(),
+							},
+							"ssl_certificate_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+					Set: listenerHash,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validNamePrefix,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"source_security_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"source_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnets: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -281,7 +284,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
-	).Generate()
+	).Generate(ctx)
 	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
 		LoadBalancerName: aws.String(lbName),
@@ -304,7 +307,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateLoadBalancer(ctx, input)
 	})
 
@@ -319,11 +322,12 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.ELBClient(ctx)
 
 	lb, err := findLoadBalancerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -339,14 +343,27 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "loadbalancer/" + d.Id(),
+	if err := resourceLoadBalancerFlatten(ctx, awsClient, lb, lbAttrs, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set(names.AttrARN, arn.String())
+
+	if lb.SourceSecurityGroup != nil {
+		// Manually look up the ELB Security Group ID, since it's not provided
+		if lb.VPCId != nil {
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, awsClient.EC2Client(ctx), aws.ToString(lb.SourceSecurityGroup.GroupName), aws.ToString(lb.VPCId), aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) security group: %s", d.Id(), err)
+			} else {
+				d.Set("source_security_group_id", sg.GroupId)
+			}
+		}
+	}
+
+	return diags
+}
+
+func resourceLoadBalancerFlatten(ctx context.Context, awsClient *conns.AWSClient, lb *awstypes.LoadBalancerDescription, lbAttrs *awstypes.LoadBalancerAttributes, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "elasticloadbalancing", "loadbalancer/"+d.Id()))
 	d.Set(names.AttrAvailabilityZones, lb.AvailabilityZones)
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
@@ -374,16 +391,6 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 			group = aws.String(v + "/" + aws.ToString(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
-
-		// Manually look up the ELB Security Group ID, since it's not provided
-		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, meta.(*conns.AWSClient).EC2Client(ctx), aws.ToString(lb.SourceSecurityGroup.GroupName), aws.ToString(lb.VPCId), aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) security group: %s", d.Id(), err)
-			} else {
-				d.Set("source_security_group_id", sg.GroupId)
-			}
-		}
 	}
 
 	if lbAttrs.AccessLog != nil {
@@ -406,7 +413,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 			accessLog = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(accessLog)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
+			return fmt.Errorf("setting access_logs: %w", err)
 		}
 	}
 
@@ -421,11 +428,11 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	// currently can
 	if aws.ToString(lb.HealthCheck.Target) != "" {
 		if err := d.Set(names.AttrHealthCheck, flattenHealthCheck(lb.HealthCheck)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
+			return fmt.Errorf("setting health_check: %w", err)
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -469,7 +476,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.CreateLoadBalancerListeners(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -699,7 +706,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Subnets:          add,
 			}
 
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerToSubnets(ctx, input)
 			}, "cannot be attached to multiple subnets in the same AZ")
 
@@ -743,8 +750,7 @@ func findLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Clie
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -764,8 +770,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -774,7 +779,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	}
 
 	if output == nil || output.LoadBalancerAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoadBalancerAttributes, nil

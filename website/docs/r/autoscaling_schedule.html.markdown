@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `desired_capacity` - (Optional) The initial capacity of the Auto Scaling group after the scheduled action runs and the capacity it attempts to maintain. Set to `-1` if you don't want to change the desired capacity at the scheduled time. Defaults to `0`.
 * `end_time` - (Optional) The date and time for the recurring schedule to end, in UTC with the format `"YYYY-MM-DDThh:mm:ssZ"` (e.g. `"2021-06-01T00:00:00Z"`).
 * `max_size` - (Optional) The maximum size of the Auto Scaling group. Set to `-1` if you don't want to change the maximum size at the scheduled time. Defaults to `0`.
@@ -62,17 +63,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_autoscaling_schedule.resource-name
-  id = "auto-scaling-group-name/scheduled-action-name"
+  to = aws_autoscaling_schedule.example
+  identity = {
+    autoscaling_group_name = "example-asg"
+    scheduled_action_name  = "example-action"
+  }
+}
+
+resource "aws_autoscaling_schedule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+### Identity Schema
+
+#### Required
+
+* `autoscaling_group_name` (String) Name of the Auto Scaling group.
+* `scheduled_action_name` (String) Name of the scaling action.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Schedules using `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_schedule.example
+  id = "example-asg/example-action"
+}
+```
+
+Using `terraform import`, import AutoScaling Schedules using `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
 
 ```console
-% terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+% terraform import aws_autoscaling_schedule.example example-asg/example-action
 ```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,178 +47,180 @@ func resourceFleet() *schema.Resource {
 
 		CustomizeDiff: resourceFleetCustDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_capacity": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"available": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"desired_instances": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"compute_capacity.0.desired_sessions",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_capacity": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"available": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"desired_instances": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"compute_capacity.0.desired_sessions",
+								},
+							},
+							"desired_sessions": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"compute_capacity.0.desired_instances",
+								},
+							},
+							"in_use": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"running": {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
 						},
-						"desired_sessions": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"compute_capacity.0.desired_instances",
+					},
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"disconnect_timeout_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(60, 360000),
+				},
+				names.AttrDisplayName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+				"domain_join_info": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"directory_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"organizational_unit_distinguished_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
 							},
 						},
-						"in_use": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"running": {
-							Type:     schema.TypeInt,
-							Computed: true,
+					},
+				},
+				"enable_default_internet_access": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"fleet_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
+				},
+				names.AttrIAMRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"idle_disconnect_timeout_in_seconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(60, 360000),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"image_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"image_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"max_sessions_per_instance": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"max_user_duration_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(600, 432000),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"stream_view": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.StreamView](),
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"disconnect_timeout_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(60, 360000),
-			},
-			names.AttrDisplayName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"domain_join_info": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"directory_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"organizational_unit_distinguished_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"enable_default_internet_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"fleet_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
-			},
-			names.AttrIAMRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"idle_disconnect_timeout_in_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(60, 360000),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			"image_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"image_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"max_sessions_per_instance": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"max_user_duration_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(600, 432000),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"stream_view": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.StreamView](),
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -293,7 +297,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		timeout = 15 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateFleet(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -329,7 +333,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppStream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -590,8 +594,7 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -602,11 +605,11 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -625,14 +628,14 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStarting),
 		Target:  enum.Slice(awstypes.FleetStateRunning),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -647,14 +650,14 @@ func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStopping),
 		Target:  enum.Slice(awstypes.FleetStateStopped),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -699,7 +702,7 @@ func expandComputeCapacity(tfList []any) *awstypes.ComputeCapacity {
 		apiObject.DesiredSessions = aws.Int32(int32(v.(int)))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -762,7 +765,7 @@ func expandDomainJoinInfo(tfList []any) *awstypes.DomainJoinInfo {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -808,7 +811,7 @@ func expandVPCConfig(tfList []any) *awstypes.VpcConfig {
 		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 

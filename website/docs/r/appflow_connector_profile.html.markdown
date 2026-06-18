@@ -10,9 +10,9 @@ description: |-
 
 Provides an AppFlow connector profile resource.
 
-For information about AppFlow flows, see the [Amazon AppFlow API Reference][1].
+For information about AppFlow flows, see the [Amazon AppFlow API Reference](https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html).
 For specific information about creating an AppFlow connector profile, see the
-[CreateConnectorProfile][2] page in the Amazon AppFlow API Reference.
+[CreateConnectorProfile](https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html) page in the Amazon AppFlow API Reference.
 
 ## Example Usage
 
@@ -81,8 +81,9 @@ resource "aws_appflow_connector_profile" "example" {
 
 ## Argument Reference
 
-The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
 * `connector_label` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `CustomConnector` connector type.
@@ -323,20 +324,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow Connector Profile using the connector profile `arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_appflow_connector_profile.profile
-  id = "arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile"
+  to = aws_appflow_connector_profile.example
+  identity = {
+    name = "example_profile"
+  }
+}
+
+resource "aws_appflow_connector_profile" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AppFlow Connector Profile using the connector profile `arn`. For example:
+### Identity Schema
 
-```console
-% terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
+#### Required
+
+* `name` (String) Name of the Appflow connector profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow Connector Profile using the connector profile `name`. For example:
+
+```terraform
+import {
+  to = aws_appflow_connector_profile.example
+  id = "example-profile"
+}
 ```
 
-[1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
-[2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
+Using `terraform import`, import AppFlow Connector Profile using the connector profile `name`. For example:
+
+```console
+% terraform import aws_appflow_connector_profile.example example-profile
+```

@@ -103,6 +103,7 @@ resource "aws_verifiedaccess_instance_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_logs` - (Required) A block that specifies the configuration options for Verified Access instances. [Detailed below](#access_logs).
 * `verifiedaccess_instance_id` - (Required - Forces New resource) The ID of the Verified Access instance.
 

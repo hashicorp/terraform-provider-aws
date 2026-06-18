@@ -33,9 +33,10 @@ data "aws_ebs_volume" "ebs_volume" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
-[describe-volumes in the AWS CLI reference][1].
+[describe-volumes in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent volume.
 
@@ -58,11 +59,10 @@ This data source exports the following attributes in addition to the arguments a
 * `throughput` - Throughput that the volume supports, in MiB/s.
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_type` - Type of EBS volume.
+* `volume_initialization_rate` - EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html

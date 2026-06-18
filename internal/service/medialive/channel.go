@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -14,8 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,7 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
 // @Testing(importIgnore="start_channel")
-func ResourceChannel() *schema.Resource {
+func resourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
 		ReadWithoutTimeout:   resourceChannelRead,
@@ -745,7 +746,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		RequestId: aws.String(id.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -806,9 +807,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindChannelByID(ctx, conn, d.Id())
+	out, err := findChannelByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -896,7 +897,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
-		channel, err := FindChannelByID(ctx, conn, d.Id())
+		channel, err := findChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
@@ -925,7 +926,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("start_channel") {
-		channel, err := FindChannelByID(ctx, conn, d.Id())
+		channel, err := findChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
@@ -957,9 +958,9 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
-	channel, err := FindChannelByID(ctx, conn, d.Id())
+	channel, err := findChannelByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -998,13 +999,13 @@ func startChannel(ctx context.Context, conn *medialive.Client, timeout time.Dura
 	})
 
 	if err != nil {
-		return fmt.Errorf("starting Medialive Channel (%s): %s", id, err)
+		return fmt.Errorf("starting Medialive Channel (%s): %w", id, err)
 	}
 
 	_, err = waitChannelStarted(ctx, conn, id, timeout)
 
 	if err != nil {
-		return fmt.Errorf("waiting for Medialive Channel (%s) start: %s", id, err)
+		return fmt.Errorf("waiting for Medialive Channel (%s) start: %w", id, err)
 	}
 
 	return nil
@@ -1016,13 +1017,13 @@ func stopChannel(ctx context.Context, conn *medialive.Client, timeout time.Durat
 	})
 
 	if err != nil {
-		return fmt.Errorf("stopping Medialive Channel (%s): %s", id, err)
+		return fmt.Errorf("stopping Medialive Channel (%s): %w", id, err)
 	}
 
 	_, err = waitChannelStopped(ctx, conn, id, timeout)
 
 	if err != nil {
-		return fmt.Errorf("waiting for Medialive Channel (%s) stop: %s", id, err)
+		return fmt.Errorf("waiting for Medialive Channel (%s) stop: %w", id, err)
 	}
 
 	return nil
@@ -1032,7 +1033,7 @@ func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateCreating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
-		Refresh:                   statusChannel(ctx, conn, id),
+		Refresh:                   statusChannel(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1050,7 +1051,7 @@ func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateUpdating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
-		Refresh:                   statusChannel(ctx, conn, id),
+		Refresh:                   statusChannel(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1068,7 +1069,7 @@ func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateDeleting),
 		Target:  []string{},
-		Refresh: statusChannel(ctx, conn, id),
+		Refresh: statusChannel(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1084,7 +1085,7 @@ func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStarting),
 		Target:  enum.Slice(types.ChannelStateRunning),
-		Refresh: statusChannel(ctx, conn, id),
+		Refresh: statusChannel(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1100,7 +1101,7 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStopping),
 		Target:  enum.Slice(types.ChannelStateIdle),
-		Refresh: statusChannel(ctx, conn, id),
+		Refresh: statusChannel(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1112,10 +1113,10 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 	return nil, err
 }
 
-func statusChannel(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := FindChannelByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+func statusChannel(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findChannelByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1127,7 +1128,7 @@ func statusChannel(ctx context.Context, conn *medialive.Client, id string) retry
 	}
 }
 
-func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeChannelOutput, error) {
+func findChannelByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeChannelOutput, error) {
 	in := &medialive.DescribeChannelInput{
 		ChannelId: aws.String(id),
 	}
@@ -1135,8 +1136,7 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -1145,15 +1145,14 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Channel can still be found with a state of DELETED.
 	// Set result as not found when the state is deleted.
 	if out.State == types.ChannelStateDeleted {
 		return nil, &retry.NotFoundError{
-			LastResponse: string(types.ChannelStateDeleted),
-			LastRequest:  in,
+			Message: string(types.ChannelStateDeleted),
 		}
 	}
 

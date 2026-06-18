@@ -1,0 +1,39 @@
+```release-note:enhancement
+resource/aws_datazone_asset_type: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_domain: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_environment: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_environment_blueprint_configuration: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_environment_profile: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_form_type: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_glossary: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_glossary_term: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_project: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_datazone_user_profile: Add resource identity support
+```

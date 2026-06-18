@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -7,47 +9,53 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_iam_group_policy_attachment", name="Group Policy Attachment")
+// @IdentityAttribute("group")
+// @IdentityAttribute("policy_arn")
+// @ImportIDHandler("groupPolicyAttachmentImportID")
+// @Testing(preIdentityVersion="v6.42.0", importIgnore="id", plannableImportAction="NoOp")
+// @Testing(importStateIdAttribute="policy_arn")
+// @Testing(importStateIdFunc=testAccGroupPolicyAttachmentImportStateIdFunc)
+// @Testing(importIgnore="id")
+// @Testing(plannableImportAction="NoOp")
 func resourceGroupPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceGroupPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceGroupPolicyAttachmentDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceGroupPolicyAttachmentImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"group": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"group": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -64,7 +72,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
 
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -78,11 +86,11 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", group, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Group Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -106,25 +114,9 @@ func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())
-	}
-
-	groupName := idParts[0]
-	policyARN := idParts[1]
-
-	d.Set("group", groupName)
-	d.Set("policy_arn", policyARN)
-	d.SetId(fmt.Sprintf("%s-%s", groupName, policyARN))
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachGroupPolicy(ctx, &iam.AttachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
@@ -140,7 +132,7 @@ func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN
 
 func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachGroupPolicy(ctx, &iam.DetachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
@@ -159,16 +151,16 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyA
 }
 
 func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyARN string) (*awstypes.AttachedPolicy, error) {
-	input := &iam.ListAttachedGroupPoliciesInput{
+	input := iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	return findAttachedGroupPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
+	return findAttachedGroupPolicy(ctx, conn, &input, func(v *awstypes.AttachedPolicy) bool {
 		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedGroupPolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -178,7 +170,7 @@ func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
 	var output []awstypes.AttachedPolicy
 
 	pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
@@ -187,8 +179,7 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -197,11 +188,31 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 		}
 
 		for _, v := range page.AttachedPolicies {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}
 	}
 
 	return output, nil
+}
+
+type groupPolicyAttachmentImportID struct{}
+
+func (groupPolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s-%s", d.Get("group").(string), d.Get("policy_arn").(string))
+}
+
+func (groupPolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <group-name>/<policy_arn>", id)
+	}
+
+	result := map[string]any{
+		"group":      parts[0],
+		"policy_arn": parts[1],
+	}
+
+	return fmt.Sprintf("%s-%s", parts[0], parts[1]), result, nil
 }

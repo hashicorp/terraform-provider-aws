@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_site"
 description: |-
-  Retrieve information about a site.
+  Provides details about an existing Network Manager site.
 ---
 
 # Data Source:  aws_networkmanager_site
 
-Retrieve information about a site.
+Provides details about an existing Network Manager site.
 
 ## Example Usage
 
@@ -20,6 +20,8 @@ data "aws_networkmanager_site" "example" {
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `global_network_id` - (Required) ID of the Global Network of the site to retrieve.
 * `site_id` - (Required) ID of the specific site to retrieve.

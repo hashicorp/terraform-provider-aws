@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_codebuild_fleet: Add `instance_type` argument in `compute_configuration` block to support custom instance types
+```
+
+```release-note:enhancement
+data-source/aws_codebuild_fleet: Add `instance_type` attribute in `compute_configuration` block
+```

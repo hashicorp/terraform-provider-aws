@@ -1,9 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -21,15 +24,16 @@ import (
 	"github.com/hashicorp/go-cty/cty/gocty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -57,321 +61,390 @@ func resourceReplicationGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			"auth_token": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ValidateFunc:  validReplicationGroupAuthToken,
-				ConflictsWith: []string{"user_group_ids"},
-			},
-			"auth_token_update_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				Default:          awstypes.AuthTokenUpdateStrategyTypeRotate,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			"automatic_failover_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cluster_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cluster_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ClusterMode](),
-			},
-			"configuration_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_tiering_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validRedisVersionString,
-					validValkeyVersionString,
-				),
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"global_replication_group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ConflictsWith: []string{
-					"num_node_groups",
-					names.AttrParameterGroupName,
-					names.AttrEngine,
-					names.AttrEngineVersion,
-					"node_type",
-					"security_group_names",
-					"transit_encryption_enabled",
-					"transit_encryption_mode",
-					"at_rest_encryption_enabled",
-					"snapshot_arns",
-					"snapshot_name",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"ip_discovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
-						},
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"log_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"at_rest_encryption_enabled": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"auth_token": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ValidateFunc:  validReplicationGroupAuthToken,
+					ConflictsWith: []string{"user_group_ids"},
+				},
+				"auth_token_update_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"automatic_failover_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cluster_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"cluster_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ClusterMode](),
+				},
+				"configuration_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_tiering_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"durability": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Durability](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						// While the existing validator makes it technically possible to provide an
+						// uppercase engine value, the absence of a diff suppression function makes
+						// it impractical to do so (a persistent diff will be present). To be
+						// conservative we will still run the deprecation validator to notify
+						// practitioners that stricter validation will be enforced in v7.0.0.
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+					),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						validRedisVersionString,
+						validValkeyVersionString,
+					),
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"global_replication_group_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					ConflictsWith: []string{
+						"num_node_groups",
+						names.AttrParameterGroupName,
+						names.AttrEngine,
+						names.AttrEngineVersion,
+						"node_type",
+						"security_group_names",
+						"transit_encryption_enabled",
+						"transit_encryption_mode",
+						"at_rest_encryption_enabled",
+						"snapshot_arns",
+						"snapshot_name",
+					},
+				},
+				"ip_discovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
+							},
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"log_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
 						},
 					},
 				},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					// ElastiCache always changes the maintenance to lowercase
-					return strings.ToLower(val.(string))
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						// ElastiCache always changes the maintenance to lowercase
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"member_clusters": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multi_az_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"network_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_topic_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"num_cache_clusters": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
-			},
-			"num_node_groups": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.HasPrefix(old, "global-datastore-")
+				"member_clusters": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
-						return true
-					}
-					return false
+				"multi_az_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			"preferred_cache_cluster_azs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"primary_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reader_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replicas_per_node_group": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"num_cache_clusters"},
-				ValidateFunc:  validation.IntBetween(0, 5),
-			},
-			"replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateReplicationGroupID,
-				StateFunc: func(val any) string {
-					return strings.ToLower(val.(string))
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 				},
-			},
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"snapshot_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				// Note: Unlike aws_elasticache_cluster, this does not have a limit of 1 item.
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						verify.ValidARN,
-						validation.StringDoesNotContainAny(","),
-					),
+				"node_group_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Set: func(v any) int {
+						var buf bytes.Buffer
+						m := v.(map[string]any)
+						if v, ok := m["node_group_id"]; ok {
+							fmt.Fprintf(&buf, "%s-", v.(string))
+						}
+						return create.StringHashcode(buf.String())
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_group_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
+							},
+							"primary_availability_zone": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"primary_outpost_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"replica_availability_zones": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_outpost_arns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"slots": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
+							},
+						},
+					},
+					ConflictsWith: []string{"preferred_cache_cluster_azs"},
 				},
-			},
-			"snapshot_retention_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			"snapshot_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"transit_encryption_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TransitEncryptionMode](),
-			},
-			"user_group_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"auth_token"},
-			},
+				"node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_topic_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"num_cache_clusters": {
+					Type:          schema.TypeInt,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
+				},
+				"num_node_groups": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress default Redis ports when not defined
+						if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
+							return true
+						}
+						return false
+					},
+				},
+				"preferred_cache_cluster_azs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"primary_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"reader_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replicas_per_node_group": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"num_cache_clusters"},
+					ValidateFunc:  validation.IntAtLeast(0),
+				},
+				"replication_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateReplicationGroupID,
+					StateFunc: func(val any) string {
+						return strings.ToLower(val.(string))
+					},
+				},
+				"security_group_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"snapshot_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					// Note: Unlike aws_elasticache_cluster, this does not have a limit of 1 item.
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							verify.ValidARN,
+							validation.StringDoesNotContainAny(","),
+						),
+					},
+				},
+				"snapshot_retention_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				"snapshot_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"transit_encryption_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TransitEncryptionMode](),
+				},
+				"user_group_ids": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"auth_token"},
+				},
+			}
 		},
 
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
@@ -386,8 +459,15 @@ func resourceReplicationGroup() *schema.Resource {
 			// must be written to state via a state upgrader.
 			{
 				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
-				Upgrade: replicationGroupStateUpgradeV1,
+				Upgrade: replicationGroupStateUpgradeFromV1,
 				Version: 1,
+			},
+			// v6.0.0 removed the default auth_token_update_strategy value. To prevent
+			// differences, the default value is removed when auth_token is not set.
+			{
+				Type:    resourceReplicationGroupConfigV2().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeFromV2,
+				Version: 2,
 			},
 		},
 
@@ -398,16 +478,33 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
+			suppressDiffIfBelongsToGlobalReplicationGroup,
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
-			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if !diff.HasChange(names.AttrEngine) {
+			authTokenUpdateStrategyValidate,
+			customizeDiffEngineForceNewOnDowngrade(),
+			customdiff.ForceNewIf("node_group_configuration", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+				// Only force new if user explicitly configured node_group_configuration and made meaningful changes
+				old, new := d.GetChange("node_group_configuration")
+				oldSet, newSet := old.(*schema.Set), new.(*schema.Set)
+
+				// If both old and new are empty/computed-only, no force new
+				if oldSet.Len() == 0 && newSet.Len() == 0 {
 					return false
 				}
-				if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
-					return false
+
+				// If old was empty but new has explicit config, force new
+				if oldSet.Len() == 0 && newSet.Len() > 0 {
+					return true
 				}
-				return true
+
+				// If new is empty but old had explicit config, force new
+				if oldSet.Len() > 0 && newSet.Len() == 0 {
+					return true
+				}
+
+				// Both have configs - check for meaningful changes
+				return hasSignificantNodeGroupConfigChanges(oldSet, newSet)
 			}),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("num_cache_clusters") ||
@@ -459,6 +556,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("durability"); ok {
+		input.Durability = awstypes.Durability(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
@@ -477,8 +578,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
-		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+
+		// backwards-compatibility; imply redis engine if empty and not part of global replication group
+		if e, ok := d.GetOk(names.AttrEngine); ok {
+			input.Engine = aws.String(e.(string))
+		} else {
+			input.Engine = aws.String(engineRedis)
+		}
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -535,6 +642,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("preferred_cache_cluster_azs"); ok && len(v.([]any)) > 0 {
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk("node_group_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.(*schema.Set).List())
 	}
 
 	rawConfig := d.GetRawConfig()
@@ -647,7 +758,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	rgp, err := findReplicationGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -665,9 +776,11 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
+	} else {
+		if _, ok := d.GetOk("global_replication_group_id"); ok {
+			d.Set("global_replication_group_id", nil)
+		}
 	}
-
-	d.Set(names.AttrEngine, rgp.Engine)
 
 	switch rgp.AutomaticFailover {
 	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
@@ -697,10 +810,14 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("num_node_groups", len(rgp.NodeGroups))
 	if len(rgp.NodeGroups) > 0 {
 		d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+		if err := d.Set("node_group_configuration", flattenNodeGroupConfigurations(rgp.NodeGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_group_configuration: %s", err)
+		}
 	}
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("cluster_mode", rgp.ClusterMode)
+	d.Set("durability", rgp.Durability)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", rgp.DataTiering == awstypes.DataTieringStatusEnabled)
@@ -715,7 +832,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if rgp.ConfigurationEndpoint != nil {
 		d.Set(names.AttrPort, rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-	} else {
+	} else if len(rgp.NodeGroups) > 0 {
 		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
@@ -847,7 +964,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+		if old, new := d.GetChange(names.AttrEngine); old.(string) != new.(string) && new.(string) == engineValkey {
 			if !d.HasChange(names.AttrEngineVersion) {
 				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
 			}
@@ -857,7 +974,48 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-			requestUpdate = true
+			if input.Engine == nil {
+				// backwards-compatibility; imply redis engine if just given engine version
+				if e, ok := d.GetOk(names.AttrEngine); ok {
+					input.Engine = aws.String(e.(string))
+				} else {
+					input.Engine = aws.String(engineRedis)
+				}
+			}
+			if d.HasChange("log_delivery_configuration") {
+				_, n := d.GetChange("log_delivery_configuration")
+				nSet, ok := n.(*schema.Set)
+				if ok && checkIfLogTypeSlowLog(nSet.List()) &&
+					checkIfEngineSupportsSlowLog(input.Engine, input.EngineVersion) {
+					// log_type slow-log is supported in redis >= 6.0 and valkey >= 7.x .
+					// Apply the engine/engine_version change in a separate ModifyReplicationGroup
+					// call so that it completes before the subsequent update that adds the
+					// slow-log log_delivery_configuration. ApplyImmediately must be true here
+					// regardless of the user's apply_immediately setting; otherwise the engine
+					// upgrade is deferred to the next maintenance window and the immediately
+					// following log_delivery_configuration modification would fail because the
+					// running engine still does not support slow-log delivery.
+					engineVersionInput := elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						Engine:             input.Engine,
+						EngineVersion:      input.EngineVersion,
+						ReplicationGroupId: aws.String(d.Id()),
+					}
+					updateFuncs = append(updateFuncs, func() error {
+						_, err := conn.ModifyReplicationGroup(ctx, &engineVersionInput)
+						if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+							return nil
+						}
+
+						if err != nil {
+							return fmt.Errorf("modifying ElastiCache Replication Group (%s) engine version: %w", d.Id(), err)
+						}
+						return nil
+					})
+				}
+			} else {
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange("ip_discovery") {
@@ -935,12 +1093,28 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
-			// This is a real hack to set the Snapshotting Cluster ID to be the first Cluster in the RG.
+			// When transitioning from disabled (0) to enabled, SnapshottingClusterId
+			// must identify the primary cluster. The primary is not always "-001"
+			// (e.g., after a manual failover), so detect it dynamically.
 			o, _ := d.GetChange("snapshot_retention_limit")
 			if o.(int) == 0 {
-				input.SnapshottingClusterId = aws.String(fmt.Sprintf("%s-001", d.Id()))
-			}
+				rg, err := findReplicationGroupByID(ctx, conn, d.Id())
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", d.Id(), err)
+				}
 
+				// SnapshottingClusterId is not valid for cluster-mode-enabled
+				// replication groups. ElastiCache snapshots each shard's primary
+				// automatically, so the parameter must be omitted in that case.
+				if !aws.ToBool(rg.ClusterEnabled) && len(rg.NodeGroups) > 0 {
+					for _, m := range rg.NodeGroups[0].NodeGroupMembers {
+						if aws.ToString(m.CurrentRole) == "primary" {
+							input.SnapshottingClusterId = aws.String(aws.ToString(m.CacheClusterId))
+							break
+						}
+					}
+				}
+			}
 			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 			requestUpdate = true
 		}
@@ -966,6 +1140,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			add, del := ns.Difference(os), os.Difference(ns)
 
 			if add.Len() > 0 {
+				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+					// Transitioning to RBAC.
+					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
+				}
 				input.UserGroupIdsToAdd = flex.ExpandStringValueSet(add)
 				requestUpdate = true
 			}
@@ -985,32 +1163,35 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %w", d.Id(), err)
 				}
 				return nil
 			})
 		}
 
 		if d.HasChanges("auth_token", "auth_token_update_strategy") {
-			authInput := elasticache.ModifyReplicationGroupInput{
-				ApplyImmediately:        aws.Bool(true),
-				AuthToken:               aws.String(d.Get("auth_token").(string)),
-				AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
-				ReplicationGroupId:      aws.String(d.Id()),
-			}
+			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
+			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
+				authInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:        aws.Bool(true),
+					AuthToken:               aws.String(d.Get("auth_token").(string)),
+					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
+					ReplicationGroupId:      aws.String(d.Id()),
+				}
 
-			updateFuncs = append(updateFuncs, func() error {
-				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
-				// modifying to match out of band operations may result in this error
-				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+				updateFuncs = append(updateFuncs, func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+					// modifying to match out of band operations may result in this error
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %w", d.Id(), err)
+					}
 					return nil
-				}
-
-				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
-				}
-				return nil
-			})
+				})
+			}
 		}
 
 		if d.HasChange("num_cache_clusters") {
@@ -1067,7 +1248,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		timeout = 10 * time.Minute // 10 minutes should give any creating/deleting cache clusters or snapshots time to complete.
 	)
 	log.Printf("[INFO] Deleting ElastiCache Replication Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteReplicationGroup(ctx, input)
 	})
 
@@ -1099,7 +1280,7 @@ func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		ReplicationGroupRegion:   aws.String(region),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DisassociateGlobalReplicationGroup(ctx, input)
 	})
 
@@ -1149,19 +1330,36 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	}
 
 	if oldNodeGroupCount > newNodeGroupCount {
-		// Node Group IDs are 1 indexed: 0001 through 0015
-		// Loop from highest old ID until we reach highest new ID
-		nodeGroupsToRemove := []string{}
-		for i := oldNodeGroupCount; i > newNodeGroupCount; i-- {
-			nodeGroupID := fmt.Sprintf("%04d", i)
-			nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupID)
+		// Scaling down scenario.
+
+		nodeGroupIDs := []string{}
+		rg, err := findReplicationGroupByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 		}
-		input.NodeGroupsToRemove = nodeGroupsToRemove
+
+		for _, ng := range rg.NodeGroups {
+			if ng.NodeGroupId != nil {
+				nodeGroupIDs = append(nodeGroupIDs, *ng.NodeGroupId)
+			}
+		}
+		lengthOfNodeGroupIDs := len(nodeGroupIDs)
+
+		if lengthOfNodeGroupIDs > newNodeGroupCount {
+			slices.Sort(nodeGroupIDs)
+
+			nodeGroupsToRemove := []string{}
+
+			for i := lengthOfNodeGroupIDs; i > newNodeGroupCount; i-- {
+				nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupIDs[i-1])
+			}
+
+			input.NodeGroupsToRemove = nodeGroupsToRemove
+		}
 	}
 
-	_, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input)
-
-	if err != nil {
+	if _, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input); err != nil {
 		return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 	}
 
@@ -1290,8 +1488,7 @@ func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input 
 
 		if errs.IsA[*awstypes.ReplicationGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1309,11 +1506,11 @@ func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input 
 	return output, nil
 }
 
-func statusReplicationGroup(ctx context.Context, conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationGroup(conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationGroupByID(ctx, conn, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1342,7 +1539,7 @@ func waitReplicationGroupAvailable(ctx context.Context, conn *elasticache.Client
 			replicationGroupStatusSnapshotting,
 		},
 		Target:     []string{replicationGroupStatusAvailable},
-		Refresh:    statusReplicationGroup(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroup(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      delay,
@@ -1365,7 +1562,7 @@ func waitReplicationGroupDeleted(ctx context.Context, conn *elasticache.Client, 
 			replicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusReplicationGroup(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroup(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1396,7 +1593,7 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 	}
 
 	if len(clusters) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return clusters, nil
@@ -1404,11 +1601,11 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 
 // statusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func statusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationGroupMemberClusters(conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1437,7 +1634,7 @@ func waitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elas
 			cacheClusterStatusSnapshotting,
 		},
 		Target:     []string{cacheClusterStatusAvailable},
-		Refresh:    statusReplicationGroupMemberClusters(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroupMemberClusters(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1484,4 +1681,210 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 		return nil
 	}
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
+
+func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
+	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
+	tokenConfigured := !diff.GetRawConfig().GetAttr("auth_token").IsNull()
+
+	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+		if tokenConfigured {
+			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
+		}
+		return nil
+	}
+	if strategyOk && !tokenConfigured {
+		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
+	}
+
+	return nil
+}
+
+func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	val, ok := diff.GetOk("global_replication_group_id")
+	belongs := ok && val.(string) != ""
+
+	if belongs {
+		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName} {
+			if diff.HasChange(attr) {
+				old, _ := diff.GetChange(attr)
+				if err := diff.SetNew(attr, old); err != nil {
+					return fmt.Errorf("unable to set %q: %w", attr, err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
+	versionStr := aws.ToString(engineVersion)
+	major, _, _ := strings.Cut(versionStr, ".")
+	majorVersion, err := strconv.Atoi(major)
+	if err != nil {
+		return false
+	}
+	return (majorVersion >= 6 && aws.ToString(engine) == engineRedis) ||
+		(majorVersion >= 7 && aws.ToString(engine) == engineValkey)
+}
+
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
+	logTypeSlowLogExists := false
+
+	for _, current := range currentLogDeliveryConfig {
+		logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
+		if logDeliveryConfigurationRequest.LogType == awstypes.LogTypeSlowLog {
+			logTypeSlowLogExists = true
+			break
+		}
+	}
+	return logTypeSlowLogExists
+}
+
+func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
+	var apiObjects []awstypes.NodeGroupConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.NodeGroupConfiguration{}
+
+		if v, ok := tfMap["node_group_id"].(string); ok && v != "" {
+			apiObject.NodeGroupId = aws.String(v)
+		}
+		if v, ok := tfMap["primary_availability_zone"].(string); ok && v != "" {
+			apiObject.PrimaryAvailabilityZone = aws.String(v)
+		}
+		if v, ok := tfMap["primary_outpost_arn"].(string); ok && v != "" {
+			apiObject.PrimaryOutpostArn = aws.String(v)
+		}
+		if v, ok := tfMap["replica_availability_zones"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaAvailabilityZones = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_outpost_arns"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaOutpostArns = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_count"].(int); ok {
+			apiObject.ReplicaCount = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["slots"].(string); ok && v != "" {
+			apiObject.Slots = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.NodeGroupId; v != nil {
+			tfMap["node_group_id"] = aws.ToString(v)
+		}
+		if len(apiObject.NodeGroupMembers) > 1 {
+			tfMap["replica_count"] = len(apiObject.NodeGroupMembers) - 1
+		}
+		if v := apiObject.Slots; v != nil {
+			tfMap["slots"] = aws.ToString(v)
+		}
+
+		// Extract availability zones and outpost ARNs from node group members
+		// Since CurrentRole is not reliably set by AWS API, use member position
+		// First member is typically the primary, rest are replicas
+		var primaryAZ string
+		var primaryOutpostArn string
+		var replicaAZs []string
+		var replicaOutpostArns []string
+
+		for j, member := range apiObject.NodeGroupMembers {
+			if j == 0 {
+				// First member is primary
+				if member.PreferredAvailabilityZone != nil {
+					primaryAZ = aws.ToString(member.PreferredAvailabilityZone)
+				}
+				if member.PreferredOutpostArn != nil {
+					primaryOutpostArn = aws.ToString(member.PreferredOutpostArn)
+				}
+			} else {
+				// Remaining members are replicas
+				if member.PreferredAvailabilityZone != nil {
+					replicaAZs = append(replicaAZs, aws.ToString(member.PreferredAvailabilityZone))
+				}
+				if member.PreferredOutpostArn != nil {
+					replicaOutpostArns = append(replicaOutpostArns, aws.ToString(member.PreferredOutpostArn))
+				}
+			}
+		}
+
+		// Always set computed fields to ensure consistent state during import
+		tfMap["primary_availability_zone"] = primaryAZ
+		tfMap["primary_outpost_arn"] = primaryOutpostArn
+		tfMap["replica_availability_zones"] = replicaAZs
+		tfMap["replica_outpost_arns"] = replicaOutpostArns
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+// hasSignificantNodeGroupConfigChanges determines if node group configuration changes require ForceNew
+func hasSignificantNodeGroupConfigChanges(oldSet, newSet *schema.Set) bool {
+	// Convert sets to maps for easier comparison
+	oldConfigs := make(map[string]map[string]any)
+	newConfigs := make(map[string]map[string]any)
+
+	for _, item := range oldSet.List() {
+		config := item.(map[string]any)
+		nodeGroupID := config["node_group_id"].(string)
+		oldConfigs[nodeGroupID] = config
+	}
+
+	for _, item := range newSet.List() {
+		config := item.(map[string]any)
+		nodeGroupID := config["node_group_id"].(string)
+		newConfigs[nodeGroupID] = config
+	}
+
+	// Check if node groups were added or removed
+	if len(oldConfigs) != len(newConfigs) {
+		return true
+	}
+
+	// Check each node group for significant changes
+	for nodeGroupID, oldConfig := range oldConfigs {
+		newConfig, exists := newConfigs[nodeGroupID]
+		if !exists {
+			return true // Node group removed
+		}
+
+		// Check for changes in fields that require ForceNew
+		significantFields := []string{"node_group_id", "replica_count", "slots"}
+		for _, field := range significantFields {
+			if oldConfig[field] != newConfig[field] {
+				return true
+			}
+		}
+
+		// Check AZ changes only if they were explicitly set in old config
+		if oldPrimaryAZ, ok := oldConfig["primary_availability_zone"].(string); ok && oldPrimaryAZ != "" {
+			if newPrimaryAZ, ok := newConfig["primary_availability_zone"].(string); ok && oldPrimaryAZ != newPrimaryAZ {
+				return true
+			}
+		}
+
+		if oldReplicaAZs, ok := oldConfig["replica_availability_zones"].([]any); ok && len(oldReplicaAZs) > 0 {
+			newReplicaAZs, _ := newConfig["replica_availability_zones"].([]any)
+			if !slices.Equal(oldReplicaAZs, newReplicaAZs) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

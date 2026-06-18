@@ -44,6 +44,7 @@ resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) The 12-digit AWS account ID that you are permitting to put events to your default event bus. Specify `*` to permit any account to put events to your default event bus, optionally limited by `condition`.
 * `statement_id` - (Required) An identifier string for the external account that you are granting permissions to.
 * `action` - (Optional) The action that you are enabling the other account to perform. Defaults to `events:PutEvents`.

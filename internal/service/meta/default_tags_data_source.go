@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
@@ -16,6 +18,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_default_tags", name="Default Tags")
+// @Region(overrideEnabled=false)
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
@@ -23,16 +26,13 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type defaultTagsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[defaultTagsDataSourceModel]
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID:   idAttributeDeprecatedNoReplacement(),
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}

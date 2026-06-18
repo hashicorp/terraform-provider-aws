@@ -1,0 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = var.rName
+  schedule_expression = "rate(1 hour)"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -300,53 +300,138 @@ func TestDiffSlices(t *testing.T) {
 	}
 
 	cases := []struct {
+		name                      string
 		Old, New                  []x
 		Create, Remove, Unchanged []x
 	}{
-		// Add
 		{
+			name:      "add",
 			Old:       []x{{A: "foo", B: 1}},
 			New:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
 			Create:    []x{{A: "bar", B: 2}},
 			Remove:    []x{},
 			Unchanged: []x{{A: "foo", B: 1}},
 		},
-		// Modify
 		{
+			name:      "modify",
 			Old:       []x{{A: "foo", B: 1}},
 			New:       []x{{A: "foo", B: 2}},
 			Create:    []x{{A: "foo", B: 2}},
 			Remove:    []x{{A: "foo", B: 1}},
 			Unchanged: []x{},
 		},
-		// Overlap
 		{
+			name:      "overlap",
 			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
 			New:       []x{{A: "foo", B: 3}, {A: "bar", B: 2}},
 			Create:    []x{{A: "foo", B: 3}},
 			Remove:    []x{{A: "foo", B: 1}},
 			Unchanged: []x{{A: "bar", B: 2}},
 		},
-		// Remove
 		{
+			name:      "remove",
 			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
 			New:       []x{{A: "foo", B: 1}},
 			Create:    []x{},
 			Remove:    []x{{A: "bar", B: 2}},
 			Unchanged: []x{{A: "foo", B: 1}},
 		},
+		{
+			name:      "unchanged",
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []x{},
+			Remove:    []x{},
+			Unchanged: []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+		},
 	}
 	for _, tc := range cases {
-		c, r, u := DiffSlices(tc.Old, tc.New, func(x1, x2 x) bool { return x1.A == x2.A && x1.B == x2.B })
-		if diff := cmp.Diff(c, tc.Create); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
-		if diff := cmp.Diff(r, tc.Remove); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
-		if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
-			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, r, u := DiffSlices(tc.Old, tc.New, func(x1, x2 x) bool { return x1.A == x2.A && x1.B == x2.B })
+			if diff := cmp.Diff(c, tc.Create); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(r, tc.Remove); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestDiffPointerSlices(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A string
+		B int
+	}
+
+	cases := []struct {
+		name                      string
+		Old, New                  []*x
+		Create, Remove, Unchanged []*x
+	}{
+		{
+			name:      "add",
+			Old:       []*x{{A: "foo", B: 1}},
+			New:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []*x{{A: "bar", B: 2}},
+			Remove:    []*x{},
+			Unchanged: []*x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "modify",
+			Old:       []*x{{A: "foo", B: 1}},
+			New:       []*x{{A: "foo", B: 2}},
+			Create:    []*x{{A: "foo", B: 2}},
+			Remove:    []*x{{A: "foo", B: 1}},
+			Unchanged: []*x{},
+		},
+		{
+			name:      "overlap",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []*x{{A: "foo", B: 3}, {A: "bar", B: 2}},
+			Create:    []*x{{A: "foo", B: 3}},
+			Remove:    []*x{{A: "foo", B: 1}},
+			Unchanged: []*x{{A: "bar", B: 2}},
+		},
+		{
+			name:      "remove",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []*x{{A: "foo", B: 1}},
+			Create:    []*x{},
+			Remove:    []*x{{A: "bar", B: 2}},
+			Unchanged: []*x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "unchanged",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []*x{},
+			Remove:    []*x{},
+			Unchanged: []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, r, u := DiffSlices(tc.Old, tc.New, func(x1, x2 *x) bool { return x1.A == x2.A && x1.B == x2.B })
+			if diff := cmp.Diff(c, tc.Create); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(r, tc.Remove); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
 	}
 }
 
@@ -417,6 +502,90 @@ func TestDiffSlicesWithModify(t *testing.T) {
 			c, r, up, u := DiffSlicesWithModify(tc.Old, tc.New,
 				func(x1, x2 x) bool { return x1.A == x2.A && x1.B == x2.B },
 				func(x1, x2 x) bool { return x1.A == x2.A },
+			)
+			if diff := cmp.Diff(c, tc.Create); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(r, tc.Remove); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(up, tc.Modify); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestDiffPointerSlicesWithModify(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A string
+		B int
+	}
+
+	cases := []struct {
+		name                              string
+		Old, New                          []*x
+		Create, Remove, Modify, Unchanged []*x
+	}{
+		{
+			name:      "add",
+			Old:       []*x{{A: "foo", B: 1}},
+			New:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []*x{{A: "bar", B: 2}},
+			Remove:    []*x{},
+			Modify:    []*x{},
+			Unchanged: []*x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "modify",
+			Old:       []*x{{A: "foo", B: 1}},
+			New:       []*x{{A: "foo", B: 2}},
+			Create:    []*x{},
+			Remove:    []*x{},
+			Modify:    []*x{{A: "foo", B: 2}},
+			Unchanged: []*x{},
+		},
+		{
+			name:      "overlap",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}, {A: "baz", B: 3}},
+			New:       []*x{{A: "foo", B: 3}, {A: "bar", B: 2}, {A: "qux", B: 4}},
+			Create:    []*x{{A: "qux", B: 4}},
+			Remove:    []*x{{A: "baz", B: 3}},
+			Modify:    []*x{{A: "foo", B: 3}},
+			Unchanged: []*x{{A: "bar", B: 2}},
+		},
+		{
+			name:      "remove",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []*x{{A: "foo", B: 1}},
+			Create:    []*x{},
+			Remove:    []*x{{A: "bar", B: 2}},
+			Modify:    []*x{},
+			Unchanged: []*x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "unchanged",
+			Old:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []*x{},
+			Remove:    []*x{},
+			Modify:    []*x{},
+			Unchanged: []*x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, r, up, u := DiffSlicesWithModify(tc.Old, tc.New,
+				func(x1, x2 *x) bool { return x1.A == x2.A && x1.B == x2.B },
+				func(x1, x2 *x) bool { return x1.A == x2.A },
 			)
 			if diff := cmp.Diff(c, tc.Create); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

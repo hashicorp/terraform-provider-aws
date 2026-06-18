@@ -104,7 +104,7 @@ resource "aws_subnet" "example-secondary" {
 
 resource "aws_directory_service_region" "example" {
   directory_id = aws_directory_service_directory.example.id
-  region_name  = data.aws_region.example.name
+  region_name  = data.aws_region.example.region
 
   vpc_settings {
     vpc_id     = aws_vpc.example-secondary.id
@@ -121,6 +121,7 @@ resource "aws_directory_service_region" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `desired_number_of_domain_controllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directory_id` - (Required) The identifier of the directory to which you want to add Region replication.
 * `region_name` - (Required) The name of the Region where you want to add domain controllers for replication.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ import (
 func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,9 +43,9 @@ func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,9 +56,6 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ecs_task_definition.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "container_definitions"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrFamily, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.0.device_name", "device_1"),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.0.device_type", "eia1.medium"),
 					resource.TestCheckResourceAttr(dataSourceName, "ipc_mode", "host"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "awsvpc"),
 					resource.TestCheckResourceAttr(dataSourceName, "pid_mode", "host"),
@@ -88,9 +84,9 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -123,9 +119,9 @@ func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_proxyConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -252,21 +248,10 @@ resource "aws_ecs_task_definition" "test" {
     "command": ["sleep", "360"],
     "memory": 2048,
     "essential": true,
-    "portMappings": [{"protocol": "tcp", "containerPort": 8000}],
-     "resourceRequirements": [
-      {
-        "type": "InferenceAccelerator",
-        "value": "device_1"
-      }
-    ]
+    "portMappings": [{"protocol": "tcp", "containerPort": 8000}]
   }
 ]
 TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
 
   placement_constraints {
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}, ${data.aws_availability_zones.available.names[1]}]"

@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the verified access group.
 * `policy_document` - (Optional) The policy document that is associated with this resource.
 * `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption.
@@ -61,11 +62,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner` - AWS account number owning this resource.
 * `verifiedaccess_group_arn` - ARN of this verified acess group.
 * `verifiedaccess_group_id` - ID of this verified access group.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)

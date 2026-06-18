@@ -43,10 +43,13 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN for this account.
+* `arn` - ARN for this account.
 * `govcloud_id` - ID for a GovCloud account created with the account.
-* `id` - The AWS account id
-* `status` - The status of the account in the organization.
+* `id` - AWS account ID.
+* `joined_method` - Method by which the account joined the organization.
+* `joined_timestamp` - Date the account became a part of the organization.
+* `state` - State of the account in the organization.
+* `status` - (**Deprecated** use `state` instead) Status of the account in the organization.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -54,15 +57,41 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
+- `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_account.example
+  identity = {
+    id = "111111111111"
+  }
+}
+
+resource "aws_organizations_account" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the AWS Organizations account.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `account_id`. For example:
 
 ```terraform
 import {
-  to = aws_organizations_account.my_account
+  to = aws_organizations_account.example
   id = "111111111111"
 }
 ```
@@ -70,13 +99,13 @@ import {
 Using `terraform import`, import the AWS member account using the `account_id`. For example:
 
 ```console
-% terraform import aws_organizations_account.my_account 111111111111
+% terraform import aws_organizations_account.example 111111111111
 ```
 
 To import accounts that have set iam_user_access_to_billing, use the following:
 
 ```console
-% terraform import aws_organizations_account.my_account 111111111111_ALLOW
+% terraform import aws_organizations_account.example 111111111111_ALLOW
 ```
 
 Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:

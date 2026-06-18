@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,7 +42,7 @@ func newDefaultCreditSpecificationResource(_ context.Context) (resource.Resource
 }
 
 type defaultCreditSpecificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[defaultCreditSpecificationResourceModel]
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
@@ -94,7 +97,7 @@ func (r *defaultCreditSpecificationResource) Create(ctx context.Context, request
 		return
 	}
 
-	_, err = tfresource.RetryUntilEqual(ctx, r.CreateTimeout(ctx, data.Timeouts), data.CPUCredits.ValueString(), func() (string, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, r.CreateTimeout(ctx, data.Timeouts), data.CPUCredits.ValueString(), func(ctx context.Context) (string, error) {
 		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
 
 		if err != nil {
@@ -124,7 +127,7 @@ func (r *defaultCreditSpecificationResource) Read(ctx context.Context, request r
 
 	output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, data.InstanceFamily.ValueEnum())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -169,7 +172,7 @@ func (r *defaultCreditSpecificationResource) Update(ctx context.Context, request
 		return
 	}
 
-	_, err = tfresource.RetryUntilEqual(ctx, r.UpdateTimeout(ctx, new.Timeouts), new.CPUCredits.ValueString(), func() (string, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, r.UpdateTimeout(ctx, new.Timeouts), new.CPUCredits.ValueString(), func(ctx context.Context) (string, error) {
 		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
 
 		if err != nil {
@@ -193,6 +196,7 @@ func (r *defaultCreditSpecificationResource) ImportState(ctx context.Context, re
 }
 
 type defaultCreditSpecificationResourceModel struct {
+	framework.WithRegionModel
 	CPUCredits     types.String                                                  `tfsdk:"cpu_credits"`
 	InstanceFamily fwtypes.StringEnum[awstypes.UnlimitedSupportedInstanceFamily] `tfsdk:"instance_family"`
 	Timeouts       timeouts.Value                                                `tfsdk:"timeouts"`

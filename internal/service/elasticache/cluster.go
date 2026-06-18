@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -20,7 +22,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -54,285 +56,287 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				Default:      "true",
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AZMode](),
-			},
-			"cache_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outpost_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					Default:      "true",
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"az_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AZMode](),
+				},
+				"cache_nodes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrOutpostARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(val any) string {
-					// ElastiCache normalizes cluster ids to lowercase,
-					// so we have to do this too or else we can end up
-					// with non-converging diffs.
-					return strings.ToLower(val.(string))
+				"cluster_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			"configuration_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis, engineValkey}, false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ip_discovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				MaxItems: 2,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"destination_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
-						},
-						"log_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
-						},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(val any) string {
+						// ElastiCache normalizes cluster ids to lowercase,
+						// so we have to do this too or else we can end up
+						// with non-converging diffs.
+						return strings.ToLower(val.(string))
 					},
-				},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					// ElastiCache always changes the maintenance
-					// to lowercase
-					return strings.ToLower(val.(string))
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"network_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"outpost_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				RequiredWith:     []string{"preferred_outpost_arn"},
-				ValidateDiagFunc: enum.Validate[awstypes.OutpostMode](),
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
-						return true
-					}
-					return false
-				},
-			},
-			"preferred_availability_zones": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"preferred_outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"replication_group_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"replication_group_id", names.AttrEngine},
-				ValidateFunc: validateReplicationGroupID,
-				ConflictsWith: []string{
-					"az_mode",
-					names.AttrEngineVersion,
-					"maintenance_window",
-					"node_type",
-					"notification_topic_arn",
-					"num_cache_nodes",
-					names.AttrParameterGroupName,
-					names.AttrPort,
-					names.AttrSecurityGroupIDs,
-					"snapshot_arns",
-					"snapshot_name",
-					"snapshot_retention_limit",
-					"snapshot_window",
-					"subnet_group_name",
-				},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"snapshot_arns": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						verify.ValidARN,
-						validation.StringDoesNotContainAny(","),
+						validation.StringLenBetween(1, 50),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+						validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 					),
 				},
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"snapshot_retention_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			"snapshot_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"configuration_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
+					ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ip_discovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					MaxItems: 2,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"destination_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
+							},
+							"log_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
+						},
+					},
+				},
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						// ElastiCache always changes the maintenance
+						// to lowercase
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_topic_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"num_cache_nodes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"outpost_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					RequiredWith:     []string{"preferred_outpost_arn"},
+					ValidateDiagFunc: enum.Validate[awstypes.OutpostMode](),
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress default memcached/redis ports when not defined
+						if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
+							return true
+						}
+						return false
+					},
+				},
+				"preferred_availability_zones": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"preferred_outpost_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"replication_group_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"replication_group_id", names.AttrEngine},
+					ValidateFunc: validateReplicationGroupID,
+					ConflictsWith: []string{
+						"az_mode",
+						names.AttrEngineVersion,
+						"maintenance_window",
+						"node_type",
+						"notification_topic_arn",
+						"num_cache_nodes",
+						names.AttrParameterGroupName,
+						names.AttrPort,
+						names.AttrSecurityGroupIDs,
+						"snapshot_arns",
+						"snapshot_name",
+						"snapshot_retention_limit",
+						"snapshot_window",
+						"subnet_group_name",
+					},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"snapshot_arns": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							verify.ValidARN,
+							validation.StringDoesNotContainAny(","),
+						),
+					},
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"snapshot_retention_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				"snapshot_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -504,7 +508,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	c, err := findCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -770,26 +774,23 @@ func deleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", cacheClusterID)
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "serving as primary") {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "only member of a replication group") {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			// The cluster may be just snapshotting, so we retry until it's ready for deletion
 			if errs.IsA[*awstypes.InvalidCacheClusterStateFault](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheCluster(ctx, input)
-	}
 
 	return err
 }
@@ -831,8 +832,7 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 
 		if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -850,11 +850,11 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 	return output, nil
 }
 
-func statusCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCacheCluster(conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCacheClusterByID(ctx, conn, cacheClusterID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -887,7 +887,7 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.Client, ca
 			cacheClusterStatusRebootingClusterNodes,
 		},
 		Target:     []string{cacheClusterStatusAvailable},
-		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Refresh:    statusCacheCluster(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -914,7 +914,7 @@ func waitCacheClusterDeleted(ctx context.Context, conn *elasticache.Client, cach
 			cacheClusterStatusSnapshotting,
 		},
 		Target:     []string{},
-		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Refresh:    statusCacheCluster(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -955,7 +955,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
 			names.AttrPort:             aws.ToInt32(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.ToString(node.CustomerAvailabilityZone),
-			"outpost_arn":              aws.ToString(node.CustomerOutpostArn),
+			names.AttrOutpostARN:       aws.ToString(node.CustomerOutpostArn),
 		})
 	}
 
@@ -968,12 +968,12 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	engine := aws.ToString(c.Engine)
 	d.Set(names.AttrEngine, engine)
 	switch engine {
-	case engineValkey:
-		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
-		}
 	case engineRedis:
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
+	case engineValkey:
+		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	default:
@@ -1025,7 +1025,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -1033,7 +1033,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v any) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {

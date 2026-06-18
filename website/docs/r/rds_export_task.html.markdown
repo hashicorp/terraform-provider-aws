@@ -141,6 +141,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `export_only` - (Optional) Data to be exported from the snapshot. If this parameter is not provided, all the snapshot data is exported. Valid values are documented in the [AWS StartExportTask API documentation](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartExportTask.html#API_StartExportTask_RequestParameters).
 * `s3_prefix` - (Optional) Amazon S3 bucket prefix to use as the file name and path of the exported snapshot.
 
@@ -157,6 +158,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `task_end_time` - Time that the snapshot export task completed.
 * `task_start_time` - Time that the snapshot export task started.
 * `warning_message` - Warning about the snapshot export task, if any.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `60m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

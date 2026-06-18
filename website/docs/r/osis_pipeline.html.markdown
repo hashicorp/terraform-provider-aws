@@ -45,7 +45,7 @@ resource "aws_osis_pipeline" "example" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.example.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "example"
                     threshold:
                       event_collect_timeout: "60s"
@@ -75,13 +75,15 @@ The following arguments are required:
 * `max_units` - (Required) The maximum pipeline capacity, in Ingestion Compute Units (ICUs).
 * `min_units` - (Required) The minimum pipeline capacity, in Ingestion Compute Units (ICUs).
 * `pipeline_configuration_body` - (Required) The pipeline configuration in YAML format. This argument accepts the pipeline configuration as a string or within a .yaml file. If you provide the configuration as a string, each new line must be escaped with \n.
-* `pipeline_name` - (Required) The name of the OpenSearch Ingestion pipeline to create. Pipeline names are unique across the pipelines owned by an account within an AWS Region.
+* `pipeline_name` - (Required) Name of the pipeline. Pipeline names are unique across the pipelines owned by an account within an AWS Region.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `buffer_options` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`buffer_options`](#buffer_options) below.
 * `encryption_at_rest_options` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryption_at_rest_options`](#encryption_at_rest_options) below.
 * `log_publishing_options` - (Optional) Key-value pairs to configure log publishing. See [`log_publishing_options`](#log_publishing_options) below.
+* `pipeline_role_arn` - (Optional) ARN of the IAM role that grants the pipeline permission to access AWS resources.
 * `tags` - (Optional) A map of tags to assign to the pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Container for the values required to configure VPC access for the pipeline. If you don't specify these values, OpenSearch Ingestion creates the pipeline with a public endpoint. See [`vpc_options`](#vpc_options) below.
 
@@ -112,7 +114,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the pipeline.
+* `id` - (**Deprecated**) Name of the pipeline.
 * `ingest_endpoint_urls` - The list of ingestion endpoints for the pipeline, which you can send data to.
 * `pipeline_arn` - Amazon Resource Name (ARN) of the pipeline.
 
@@ -126,7 +128,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_osis_pipeline.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_osis_pipeline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the pipeline.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `pipeline_name`. For example:
 
 ```terraform
 import {
@@ -135,7 +163,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearch Ingestion Pipeline using the `id`. For example:
+Using `terraform import`, import OpenSearch Ingestion Pipeline using the `pipeline_name`. For example:
 
 ```console
 % terraform import aws_osis_pipeline.example example

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -22,21 +24,23 @@ func dataSourceSolutionStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSolutionStackRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name_regex": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsValidRegExp,
+				},
+			}
 		},
 	}
 }

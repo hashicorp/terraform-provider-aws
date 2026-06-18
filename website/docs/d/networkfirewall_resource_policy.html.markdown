@@ -20,6 +20,9 @@ data "aws_networkfirewall_resource_policy" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) that identifies the resource policy.
 
 ## Attribute Reference
@@ -27,6 +30,4 @@ data "aws_networkfirewall_resource_policy" "example" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the resource policy.
-* `policy` - The [policy][1] for the resource.
-
-[1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy
+* `policy` - The [policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy) for the resource.

@@ -3,14 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_link_association"
 description: |-
-  Associates a link to a device.
+  Manages a Network Manager link association.
 ---
 
 # Resource: aws_networkmanager_link_association
 
-Associates a link to a device.
-A device can be associated to multiple links and a link can be associated to multiple devices.
-The device and link must be in the same global network and the same site.
+Manages a Network Manager link association. Associates a link to a device. A device can be associated to multiple links and a link can be associated to multiple devices. The device and link must be in the same global network and the same site.
 
 ## Example Usage
 
@@ -24,15 +22,22 @@ resource "aws_networkmanager_link_association" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `device_id` - (Required) The ID of the device.
-* `global_network_id` - (Required) The ID of the global network.
-* `link_id` - (Required) The ID of the link.
+* `device_id` - (Required) ID of the device.
+* `global_network_id` - (Required) ID of the global network.
+* `link_id` - (Required) ID of the link.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -11,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,10 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,76 +51,96 @@ func resourceUser() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_string": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"passwords": {
-							Type:      schema.TypeSet,
-							Optional:  true,
-							MinItems:  1,
-							Sensitive: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_string": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"passwords": {
+								Type:      schema.TypeSet,
+								Optional:  true,
+								MinItems:  1,
+								Sensitive: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						"password_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							"password_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrEngine: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringInSlice([]string{engineRedis, engineValkey}, true),
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
-			"no_password_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"passwords": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(16, 128),
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+					),
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				},
-				Sensitive: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"no_password_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"passwords": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(16, 128),
+					},
+					Sensitive: true,
+				},
+				"passwords_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(16, 128),
+					ConflictsWith: []string{"passwords", "authentication_mode"},
+					RequiredWith:  []string{"passwords_wo_version"},
+				},
+				"passwords_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"passwords_wo"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -125,6 +149,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
+
+	// Get write-only password from configuration
+	passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
 
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
@@ -142,6 +173,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if v, ok := d.GetOk("passwords"); ok && v.(*schema.Set).Len() > 0 {
 		input.Passwords = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if passwordsWO != "" {
+		input.Passwords = []string{passwordsWO}
 	}
 
 	output, err := conn.CreateUser(ctx, input)
@@ -188,7 +223,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
 	user, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -249,6 +284,17 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("passwords") {
 			input.Passwords = flex.ExpandStringValueSet(d.Get("passwords").(*schema.Set))
+		}
+
+		if d.HasChange("passwords_wo_version") {
+			passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if passwordsWO != "" {
+				input.Passwords = []string{passwordsWO}
+			}
 		}
 
 		_, err := conn.ModifyUser(ctx, input)
@@ -317,8 +363,7 @@ func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache
 
 		if errs.IsA[*awstypes.UserNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -336,11 +381,11 @@ func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache
 	return output, nil
 }
 
-func statusUser(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusUser(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -363,7 +408,7 @@ func waitUserCreated(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusCreating},
 		Target:  []string{userStatusActive},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 
@@ -380,7 +425,7 @@ func waitUserUpdated(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 
@@ -397,7 +442,7 @@ func waitUserDeleted(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 

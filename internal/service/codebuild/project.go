@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codebuild
 
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +33,12 @@ import (
 
 // @SDKResource("aws_codebuild_project", name="Project")
 // @Tags
+// @ArnIdentity
+// @V60SDKv2Fix
+// @ArnFormat("project/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
@@ -37,710 +46,738 @@ func resourceProject() *schema.Resource {
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"artifacts": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"artifact_identifier": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"bucket_owner_access": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
-						},
-						"encryption_disabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == d.Get(names.AttrName) && new == "" {
-									return true
-								}
-								return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"artifacts": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"artifact_identifier": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-						},
-						"namespace_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType == types.ArtifactsTypeS3 {
-									return types.ArtifactNamespace(old) == types.ArtifactNamespaceNone && new == ""
-								}
-								return old == new
+							"bucket_owner_access": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
 							},
-							ValidateDiagFunc: enum.Validate[types.ArtifactNamespace](),
-						},
-						"override_artifact_name": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"packaging": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType {
-								case types.ArtifactsTypeCodepipeline:
-									return new == ""
-								case types.ArtifactsTypeS3:
-									return types.ArtifactPackaging(old) == types.ArtifactPackagingNone && new == ""
-								default:
+							"encryption_disabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if old == d.Get(names.AttrName) && new == "" {
+										return true
+									}
+									return false
+								},
+							},
+							"namespace_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType == types.ArtifactsTypeS3 {
+										return types.ArtifactNamespace(old) == types.ArtifactNamespaceNone && new == ""
+									}
 									return old == new
-								}
+								},
+								ValidateDiagFunc: enum.Validate[types.ArtifactNamespace](),
 							},
-							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
+							"override_artifact_name": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"packaging": {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									switch artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType {
+									case types.ArtifactsTypeCodepipeline:
+										return new == ""
+									case types.ArtifactsTypeS3:
+										return types.ArtifactPackaging(old) == types.ArtifactPackagingNone && new == ""
+									default:
+										return old == new
+									}
+								},
+								ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
+							},
 						},
 					},
 				},
-			},
-			"badge_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"badge_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"build_batch_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"combine_artifacts": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"restrictions": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"compute_types_allowed": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[types.ComputeType](),
+				"auto_retry_limit": {
+					Description: "Maximum number of additional automatic retries after a failed build. The default value is 0.",
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Computed:    true,
+				},
+				"badge_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"badge_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"build_batch_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"combine_artifacts": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"restrictions": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"compute_types_allowed": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[types.ComputeType](),
+											},
+										},
+										"maximum_builds_allowed": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 100),
 										},
 									},
-									"maximum_builds_allowed": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 100),
-									},
 								},
 							},
-						},
-						names.AttrServiceRole: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"timeout_in_mins": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(5, 2160),
+							names.AttrServiceRole: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"timeout_in_mins": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(5, 2160),
+							},
 						},
 					},
 				},
-			},
-			"build_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      60,
-				ValidateFunc: validation.IntBetween(5, 2160),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
-					case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
-						return true
-					default:
-						return old == new
-					}
+				"build_timeout": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      60,
+					ValidateFunc: validation.IntBetween(5, 2160),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
+						case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
+							return true
+						default:
+							return old == new
+						}
+					},
 				},
-			},
-			"cache": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"modes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
+				"cache": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_namespace": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"modes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.CacheMode](),
+								},
+							},
+							names.AttrType: {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.CacheMode](),
+								Optional:         true,
+								Default:          types.CacheTypeNoCache,
+								ValidateDiagFunc: enum.Validate[types.CacheType](),
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.CacheTypeNoCache,
-							ValidateDiagFunc: enum.Validate[types.CacheType](),
 						},
 					},
 				},
-			},
-			"concurrent_build_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"encryption_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrEnvironment: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCertificate: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
-						},
-						"compute_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ComputeType](),
-						},
-						"fleet": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"fleet_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+				"concurrent_build_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"encryption_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrEnvironment: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificate: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
+							},
+							"compute_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ComputeType](),
+							},
+							"docker_server": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"compute_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ComputeType](),
+										},
+										names.AttrSecurityGroupIDs: {
+											Type:     schema.TypeList,
+											MaxItems: 5,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"environment_variable": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.EnvironmentVariableTypePlaintext,
-										ValidateDiagFunc: enum.Validate[types.EnvironmentVariableType](),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
+							"fleet": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"fleet_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"image": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"image_pull_credentials_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ImagePullCredentialsTypeCodebuild,
-							ValidateDiagFunc: enum.Validate[types.ImagePullCredentialsType](),
-						},
-						"privileged_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"registry_credential": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"credential": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"credential_provider": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.CredentialProviderType](),
+							"environment_variable": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.EnvironmentVariableTypePlaintext,
+											ValidateDiagFunc: enum.Validate[types.EnvironmentVariableType](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
+							"image": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"image_pull_credentials_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ImagePullCredentialsTypeCodebuild,
+								ValidateDiagFunc: enum.Validate[types.ImagePullCredentialsType](),
+							},
+							"privileged_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"registry_credential": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"credential": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"credential_provider": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.CredentialProviderType](),
+										},
+									},
+								},
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
+							},
 						},
 					},
 				},
-			},
-			"file_system_locations": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIdentifier: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"mount_options": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"mount_point": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.FileSystemTypeEfs,
-							ValidateDiagFunc: enum.Validate[types.FileSystemType](),
+				"file_system_locations": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"mount_options": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"mount_point": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.FileSystemTypeEfs,
+								ValidateDiagFunc: enum.Validate[types.FileSystemType](),
+							},
 						},
 					},
 				},
-			},
-			"logs_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrGroupName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.LogsConfigStatusTypeEnabled,
-										ValidateDiagFunc: enum.Validate[types.LogsConfigStatusType](),
-									},
-									"stream_name": {
-										Type:     schema.TypeString,
-										Optional: true,
+				"logs_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrGroupName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.LogsConfigStatusTypeEnabled,
+											ValidateDiagFunc: enum.Validate[types.LogsConfigStatusType](),
+										},
+										"stream_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							"s3_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bucket_owner_access": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
+										},
+										"encryption_disabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										names.AttrLocation: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validProjectS3LogsLocation,
+										},
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.LogsConfigStatusTypeDisabled,
+											ValidateDiagFunc: enum.Validate[types.LogsConfigStatusType](),
+										},
+									},
+								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							},
 						},
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_owner_access": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
-									},
-									"encryption_disabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									names.AttrLocation: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validProjectS3LogsLocation,
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.LogsConfigStatusTypeDisabled,
-										ValidateDiagFunc: enum.Validate[types.LogsConfigStatusType](),
-									},
-								},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: ValidProjectName,
+				},
+				"project_visibility": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.ProjectVisibilityTypePrivate,
+					ValidateDiagFunc: enum.Validate[types.ProjectVisibilityType](),
+				},
+				"public_project_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"queued_timeout": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      480,
+					ValidateFunc: validation.IntBetween(5, 480),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
+						case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
+							return true
+						default:
+							return old == new
+						}
+					},
+				},
+				"resource_access_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"secondary_artifacts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 12,
+					Set:      resourceProjectArtifactsHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"artifact_identifier": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							"bucket_owner_access": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
+							},
+							"encryption_disabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"namespace_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ArtifactNamespaceNone,
+								ValidateDiagFunc: enum.Validate[types.ArtifactNamespace](),
+							},
+							"override_artifact_name": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"packaging": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ArtifactPackagingNone,
+								ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
+							},
 						},
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidProjectName,
-			},
-			"project_visibility": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ProjectVisibilityTypePrivate,
-				ValidateDiagFunc: enum.Validate[types.ProjectVisibilityType](),
-			},
-			"public_project_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"queued_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      480,
-				ValidateFunc: validation.IntBetween(5, 480),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
-					case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
-						return true
-					default:
-						return old == new
-					}
-				},
-			},
-			"resource_access_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"secondary_artifacts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 12,
-				Set:      resourceProjectArtifactsHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"artifact_identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"bucket_owner_access": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.BucketOwnerAccess](),
-						},
-						"encryption_disabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"namespace_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ArtifactNamespaceNone,
-							ValidateDiagFunc: enum.Validate[types.ArtifactNamespace](),
-						},
-						"override_artifact_name": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"packaging": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ArtifactPackagingNone,
-							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
+				"secondary_sources": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 12,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.AuthType](),
+										},
+									},
+								},
+							},
+							"build_status_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"context": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"target_url": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"buildspec": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"git_clone_depth": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"git_submodules_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"fetch_submodules": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+									},
+								},
+							},
+							"insecure_ssl": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"report_build_status": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"source_identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.SourceType](),
+							},
 						},
 					},
 				},
-			},
-			"secondary_sources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 12,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.AuthType](),
-									},
-								},
+				"secondary_source_version": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 12,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_identifier": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-						},
-						"build_status_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"context": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"target_url": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+							"source_version": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-						},
-						"buildspec": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"git_clone_depth": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"git_submodules_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"fetch_submodules": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
-						"insecure_ssl": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"report_build_status": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"source_identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceType](),
 						},
 					},
 				},
-			},
-			"secondary_source_version": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 12,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"source_version": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+				names.AttrServiceRole: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrServiceRole: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.AuthType](),
-									},
-									"resource": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.AuthType](),
+										},
+										"resource": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"build_status_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"context": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"target_url": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"buildspec": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"git_clone_depth": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"git_submodules_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"fetch_submodules": {
-										Type:     schema.TypeBool,
-										Required: true,
+							"build_status_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"context": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"target_url": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"insecure_ssl": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceType](),
-						},
-						"report_build_status": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"source_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							MaxItems: 16,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							MaxItems: 5,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
+							"buildspec": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"git_clone_depth": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"git_submodules_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"fetch_submodules": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+									},
+								},
+							},
+							"insecure_ssl": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.SourceType](),
+							},
+							"report_build_status": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+				"source_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MaxItems: 16,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MaxItems: 5,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -792,6 +829,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("artifacts"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("auto_retry_limit"); ok {
+		input.AutoRetryLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
@@ -860,7 +901,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// InvalidInputException: CodeBuild is not authorized to perform
 	// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, "ot authorized to perform")
 
@@ -898,7 +939,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	project, err := findProjectByNameOrARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -908,6 +949,17 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Project (%s): %s", d.Id(), err)
 	}
 
+	diags = append(diags, resourceProjectFlatten(ctx, d, project)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
+}
+
+func resourceProjectFlatten(ctx context.Context, d *schema.ResourceData, project *types.Project) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, project.Arn)
 	if project.Artifacts != nil {
 		if err := d.Set("artifacts", []any{flattenProjectArtifacts(project.Artifacts)}); err != nil {
@@ -916,6 +968,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("artifacts", nil)
 	}
+	d.Set("auto_retry_limit", project.AutoRetryLimit)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1008,6 +1061,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("artifacts"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("auto_retry_limit") {
+			input.AutoRetryLimit = aws.Int32(int32(d.Get("auto_retry_limit").(int)))
 		}
 
 		if d.HasChange("badge_enabled") {
@@ -1124,7 +1181,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		// But its a slice of pointers so if not set for every update, they get removed.
 		input.Tags = getTagsIn(ctx)
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateProject(ctx, input)
 		}, "ot authorized to perform")
 
@@ -1179,7 +1236,7 @@ func findProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Projects, nil
@@ -1372,6 +1429,10 @@ func expandProjectCache(tfMap map[string]any) *types.ProjectCache {
 		}
 	}
 
+	if v, ok := tfMap["cache_namespace"]; ok && v != "" {
+		apiObject.CacheNamespace = aws.String(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -1390,6 +1451,21 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 
 	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
 		apiObject.ComputeType = types.ComputeType(v)
+	}
+
+	if v, ok := tfMap["docker_server"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		dockerServer := &types.DockerServer{}
+
+		if v, ok := tfMap["compute_type"]; ok && v.(string) != "" {
+			dockerServer.ComputeType = types.ComputeType(v.(string))
+		}
+		if v, ok := tfMap[names.AttrSecurityGroupIDs].([]any); ok && len(v) > 0 {
+			dockerServer.SecurityGroupIds = flex.ExpandStringyValueList[string](v)
+		}
+
+		apiObject.DockerServer = dockerServer
 	}
 
 	if v, ok := tfMap["fleet"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -1876,6 +1952,10 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 		names.AttrType:     apiObject.Type,
 	}
 
+	if apiObject.CacheNamespace != nil {
+		tfMap["cache_namespace"] = aws.ToString(apiObject.CacheNamespace)
+	}
+
 	return []any{tfMap}
 }
 
@@ -1886,6 +1966,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 		names.AttrType:                apiObject.Type,
 	}
 
+	tfMap["docker_server"] = flattenDockerServer(apiObject.DockerServer)
 	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
@@ -1894,6 +1975,22 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDockerServer(apiObject *types.DockerServer) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"compute_type": apiObject.ComputeType,
+	}
+
+	if apiObject.SecurityGroupIds != nil {
+		tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	}
 
 	return []any{tfMap}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -28,13 +30,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -45,15 +45,19 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
-	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
-func newResourceBucketLifecycleConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBucketLifecycleConfiguration{}
+// @IdentityAttribute("bucket")
+// @Testing(importStateIdAttribute="bucket")
+// @Testing(preIdentityVersion="6.32.0")
+func newBucketLifecycleConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &bucketLifecycleConfigurationResource{}
+
 	r.SetDefaultCreateTimeout(3 * time.Minute)
 	r.SetDefaultUpdateTimeout(3 * time.Minute)
 
@@ -61,16 +65,17 @@ func newResourceBucketLifecycleConfiguration(context.Context) (resource.Resource
 }
 
 var (
-	_ resource.ResourceWithUpgradeState = &resourceBucketLifecycleConfiguration{}
+	_ resource.ResourceWithUpgradeState = &bucketLifecycleConfigurationResource{}
 )
 
-type resourceBucketLifecycleConfiguration struct {
-	framework.ResourceWithConfigure
+type bucketLifecycleConfigurationResource struct {
+	framework.ResourceWithModel[bucketLifecycleConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -93,6 +98,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			"transition_default_minimum_object_size": schema.StringAttribute{
@@ -111,12 +117,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						tfobjectvalidator.WarnExactlyOneOfChildren(
-							path.MatchRelative().AtName(names.AttrFilter),
-							path.MatchRelative().AtName(names.AttrPrefix),
-						),
-					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
@@ -194,13 +194,24 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.WarnAtMostOneOfChildren(
+										path.MatchRelative().AtName("object_size_greater_than"),
+										path.MatchRelative().AtName("object_size_less_than"),
+										path.MatchRelative().AtName(names.AttrPrefix),
+										path.MatchRelative().AtName("and"),
+										path.MatchRelative().AtName("tag"),
+									),
+								},
+								PlanModifiers: []planmodifier.Object{
+									emptyFilterPlanModifier(),
+								},
 								Attributes: map[string]schema.Attribute{
 									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
 											tfint64planmodifier.NullValue(),
-											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"object_size_less_than": schema.Int64Attribute{
@@ -208,23 +219,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
 											tfint64planmodifier.NullValue(),
-											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.String{
-											ruleFilterPrefixForUnknown(),
-										},
-										Validators: []validator.String{
-											tfstringvalidator.WarnExactlyOneOf(
-												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
-												path.MatchRelative().AtParent().AtName("object_size_less_than"),
-												path.MatchRelative().AtParent().AtName("and"),
-												path.MatchRelative().AtParent().AtName("tag"),
-											),
-										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -300,11 +299,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -327,11 +321,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -394,8 +383,8 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 	}
 }
 
-func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -425,7 +414,7 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 
 	input.LifecycleConfiguration = &lifecycleConfiguraton
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "LifecycleConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -452,8 +441,8 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -471,25 +460,22 @@ func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
-	err := retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
-			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	}
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -499,7 +485,7 @@ func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -507,8 +493,8 @@ func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new bucketLifecycleConfigurationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -544,7 +530,7 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 
 	input.LifecycleConfiguration = &lifecycleConfiguraton
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
 	if err != nil {
@@ -568,8 +554,8 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -590,7 +576,7 @@ func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, reque
 	}
 
 	_, err := conn.DeleteBucketLifecycle(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeMethodNotAllowed) {
 		return
 	}
 	if err != nil {
@@ -598,7 +584,7 @@ func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, reque
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 	if err != nil {
@@ -607,20 +593,31 @@ func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, reque
 	}
 }
 
-func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
-		return
+func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	var bucket, expectedBucketOwner string
+
+	if request.ID != "" {
+		var err error
+		bucket, expectedBucketOwner, err = parseResourceID(request.ID)
+		if err != nil {
+			response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
+			return
+		}
+
+		request.ID = bucket
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), types.StringValue(createResourceID(bucket, expectedBucketOwner)))...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, bucket, data)...)
+}
+
+func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := bucketLifeCycleConfigurationSchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -643,8 +640,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -653,7 +649,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	}
 
 	if output == nil || len(output.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -679,11 +675,11 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	return true
 }
 
-func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLifecycleConfigEquals(conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -698,7 +694,7 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
+		Refresh: statusLifecycleConfigEquals(conn, bucket, owner, transitionMinSize, rules),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 		// ContinuousTargetOccurence of 3 works in, e.g. us-west-2, but larger values are required in, e.g. eu-west-2
@@ -727,7 +723,8 @@ func lifecycleRuleStatus_Values() []string {
 	}
 }
 
-type resourceBucketLifecycleConfigurationModel struct {
+type bucketLifecycleConfigurationResourceModel struct {
+	framework.WithRegionModel
 	Bucket                             types.String                                                    `tfsdk:"bucket"`
 	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",legacy"`
 	ID                                 types.String                                                    `tfsdk:"id"`
@@ -1039,7 +1036,7 @@ func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, 
 
 	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
 
-	if tags := Tags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
+	if tags := svcTags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
 		r.Tags = tags
 	}
 
@@ -1100,58 +1097,6 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 		return
 	}
 	resp.PlanValue = v
-}
-
-// ruleFilterPrefixForUnknown handles the planned value for `rule.filter.prefix`
-// * If no value is set
-//   - If no other `filter` attributes are set, default to ""
-//   - Otherwise, default to `null`
-func ruleFilterPrefixForUnknown() planmodifier.String {
-	return ruleFilterPrefixUnknownModifier{}
-}
-
-type ruleFilterPrefixUnknownModifier struct{}
-
-func (m ruleFilterPrefixUnknownModifier) Description(_ context.Context) string {
-	return ""
-}
-
-func (m ruleFilterPrefixUnknownModifier) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m ruleFilterPrefixUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	// Nothing to do if a value is configured
-	if !req.ConfigValue.IsNull() {
-		return
-	}
-
-	// Do nothing if there is a known planned value.
-	if !req.PlanValue.IsUnknown() {
-		return
-	}
-
-	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
-	if req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	var parentConfig lifecycleRuleFilterModel
-	andPrefixPath := req.Path.ParentPath()
-	diags := req.Config.GetAttribute(ctx, andPrefixPath, &parentConfig)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	if parentConfig.And.IsNull() &&
-		parentConfig.ObjectSizeGreaterThan.IsNull() &&
-		parentConfig.ObjectSizeLessThan.IsNull() &&
-		parentConfig.Tag.IsNull() {
-		resp.PlanValue = types.StringValue("")
-	} else {
-		resp.PlanValue = types.StringNull()
-	}
 }
 
 // ruleTransitionForUnknownDays handles the planned value for `rule.transition.days`
@@ -1264,4 +1209,70 @@ func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, 
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", paths),
 		))
 	}
+}
+
+func emptyFilterPlanModifier() planmodifier.Object {
+	return emptyFilterPlanModifier_{}
+}
+
+type emptyFilterPlanModifier_ struct{}
+
+func (m emptyFilterPlanModifier_) Description(_ context.Context) string {
+	return ""
+}
+
+func (m emptyFilterPlanModifier_) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m emptyFilterPlanModifier_) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var config lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.And.IsUnknown() ||
+		config.ObjectSizeGreaterThan.IsUnknown() ||
+		config.ObjectSizeLessThan.IsUnknown() ||
+		config.Prefix.IsUnknown() ||
+		config.Tag.IsUnknown() {
+		return
+	}
+
+	var plan lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.And.IsNull() || !config.Tag.IsNull() {
+		plan.Prefix = types.StringNull()
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	// If none are set in config, set Prefix to ""
+	if config.And.IsNull() &&
+		config.ObjectSizeGreaterThan.IsNull() &&
+		config.ObjectSizeLessThan.IsNull() &&
+		config.Prefix.IsNull() &&
+		config.Tag.IsNull() {
+		plan.Prefix = types.StringValue("")
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	resp.PlanValue = req.ConfigValue
 }

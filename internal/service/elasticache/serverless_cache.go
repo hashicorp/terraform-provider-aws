@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -25,14 +30,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,7 +55,7 @@ func newServerlessCacheResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type serverlessCacheResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[serverlessCacheResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -92,16 +98,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-							// In-place updates are only supported for redis -> valkey
+							// In-place update support for redis -> valkey
 							if req.StateValue.Equal(types.StringValue(engineRedis)) && req.PlanValue.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+							// In-place updates support for valkey -> redis
+							if req.StateValue.Equal(types.StringValue(engineValkey)) && req.PlanValue.Equal(types.StringValue(engineRedis)) {
 								return
 							}
 
 							// Any other change will force a replacement
 							resp.RequiresReplace = true
 						},
-						"Engine modifications other than redis to valkey require a replacement",
-						"Engine modifications other than redis to valkey require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
 					),
 				},
 			},
@@ -120,12 +130,50 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+							var engineVal types.String
+							resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrEngine), &engineVal)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+
+							stateFloatVal, err := strconv.ParseFloat(req.StateValue.ValueString(), 64)
+							if err != nil {
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							planFloatVal, err := strconv.ParseFloat(req.PlanValue.ValueString(), 64)
+							if err != nil {
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							if stateFloatVal < planFloatVal && engineVal.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+
+							// Any other change will force a replacement
+							resp.RequiresReplace = true
+						},
+						"major_engine_version downgrade is not supported for valkey",
+						"major_engine_version downgrade is not supported for valkey",
+					),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"network_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NetworkType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -200,9 +248,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 5000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
@@ -220,14 +279,22 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -302,7 +369,7 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findServerlessCacheByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -331,48 +398,135 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// ModifyServerlessCache only supports one field modification per API call.
+	// Each changed field must be sent in a separate request.
+	// The name attribute requires replacement, so old.ServerlessCacheName == new.ServerlessCacheName.
+	// Track a single overall deadline so that the configured update timeout
+	// caps the total wall-clock time across all per-field API calls, rather
+	// than each call independently using the full timeout.
+	name := new.ID.ValueString()
+	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
-	if diff.HasChanges() {
+	if !new.Description.Equal(old.Description) {
 		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+			Description:         new.Description.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, diff.IgnoredFieldNamesOpts()...)...)
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+	}
 
-		// If no engine changes are made, unset related fields to prevent the following error:
-		// This API supports only cross-engine upgrades to Valkey engine currently.
-		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
-			input.Engine = nil
-			input.MajorEngineVersion = nil
+	if !new.DailySnapshotTime.Equal(old.DailySnapshotTime) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+			DailySnapshotTime:   new.DailySnapshotTime.ValueStringPointer(),
 		}
-
-		// If engine is changed but major_engine_version is omitted in configuration, explicitly
-		// include it in the request to prevent the following error:
-		// InvalidParameterCombination: No modifications were requested
-		if !new.Engine.Equal(old.Engine) && input.MajorEngineVersion == nil {
-			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
-		}
-
-		if _, err := conn.ModifyServerlessCache(ctx, &input); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
 			return
 		}
+	}
 
-		if _, err := waitServerlessCacheAvailable(ctx, conn, old.ServerlessCacheName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", new.ID.ValueString()), err.Error())
+	if !new.SnapshotRetentionLimit.Equal(old.SnapshotRetentionLimit) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName:    new.ServerlessCacheName.ValueStringPointer(),
+			SnapshotRetentionLimit: aws.Int32(int32(new.SnapshotRetentionLimit.ValueInt64())),
+		}
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if new.CacheUsageLimits.IsNull() {
+			// Removing CacheUsageLimits.
+			// https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Scaling.html#Pre-Scaling.console
+			input.CacheUsageLimits = &awstypes.CacheUsageLimits{
+				DataStorage: &awstypes.DataStorage{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+					Unit:    awstypes.DataStorageUnitGb,
+				},
+				ECPUPerSecond: &awstypes.ECPUPerSecond{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+				},
+			}
+		} else {
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.CacheUsageLimits, &input.CacheUsageLimits)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.SecurityGroupIDs, &input.SecurityGroupIds)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if !new.UserGroupID.Equal(old.UserGroupID) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if new.UserGroupID.IsNull() {
+			input.RemoveUserGroup = aws.Bool(true)
+		} else {
+			input.UserGroupId = new.UserGroupID.ValueStringPointer()
+		}
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// Engine and MajorEngineVersion must be sent together when engine changes.
+	if !new.Engine.Equal(old.Engine) || !new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
+		input := elasticache.ModifyServerlessCacheInput{
+			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
+		}
+		if !new.Engine.Equal(old.Engine) {
+			// Cross-engine upgrade (e.g., redis -> valkey).
+			input.Engine = new.Engine.ValueStringPointer()
+			if !new.MajorEngineVersion.IsNull() {
+				input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
+			} else {
+				// If engine is changed but major_engine_version is omitted in configuration, explicitly
+				// include it in the request to prevent the following error:
+				// InvalidParameterCombination: No modifications were requested
+				input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
+			}
+		} else {
+			// Only major_engine_version changed, engine stays the same.
+			input.MajorEngineVersion = new.MajorEngineVersion.ValueStringPointer()
+		}
+		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	// AWS returns null values for certain values that are available on redis/valkey only.
-	// always set these values to the state value to avoid unnecessary diff failures on computed values.
+	// Always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", old.ID.ValueString()), err.Error())
@@ -385,6 +539,22 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func updateServerlessCache(ctx context.Context, conn *elasticache.Client, name string, input *elasticache.ModifyServerlessCacheInput, timeout time.Duration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if _, err := conn.ModifyServerlessCache(ctx, input); err != nil {
+		diags.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", name), err.Error())
+		return diags
+	}
+
+	if _, err := waitServerlessCacheAvailable(ctx, conn, name, timeout); err != nil {
+		diags.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", name), err.Error())
+		return diags
+	}
+
+	return diags
 }
 
 func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -405,7 +575,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -443,8 +613,7 @@ func findServerlessCaches(ctx context.Context, conn *elasticache.Client, input *
 
 		if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -466,11 +635,11 @@ func findServerlessCacheByID(ctx context.Context, conn *elasticache.Client, id s
 	return findServerlessCache(ctx, conn, input)
 }
 
-func statusServerlessCache(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServerlessCache(conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServerlessCacheByID(ctx, conn, cacheClusterID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -496,7 +665,7 @@ func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache.Client,
 			serverlessCacheStatusModifying,
 		},
 		Target:     []string{serverlessCacheStatusAvailable},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Refresh:    statusServerlessCache(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -519,7 +688,7 @@ func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache.Client, c
 			serverlessCacheStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Refresh:    statusServerlessCache(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -535,6 +704,7 @@ func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache.Client, c
 }
 
 type serverlessCacheResourceModel struct {
+	framework.WithRegionModel
 	ARN                    types.String                                           `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimitsModel] `tfsdk:"cache_usage_limits"`
 	CreateTime             timetypes.RFC3339                                      `tfsdk:"create_time"`
@@ -546,6 +716,7 @@ type serverlessCacheResourceModel struct {
 	ID                     types.String                                           `tfsdk:"id"`
 	KmsKeyID               types.String                                           `tfsdk:"kms_key_id"`
 	MajorEngineVersion     types.String                                           `tfsdk:"major_engine_version"`
+	NetworkType            fwtypes.StringEnum[awstypes.NetworkType]               `tfsdk:"network_type"`
 	ReaderEndpoint         fwtypes.ListNestedObjectValueOf[endpointModel]         `tfsdk:"reader_endpoint"`
 	SecurityGroupIDs       fwtypes.SetValueOf[types.String]                       `tfsdk:"security_group_ids"`
 	ServerlessCacheName    types.String                                           `tfsdk:"name"`

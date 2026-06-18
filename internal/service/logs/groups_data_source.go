@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -22,21 +24,23 @@ func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"log_group_name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"log_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"log_group_name_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_group_names": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -50,17 +54,15 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any)
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	output, err := findLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	var arns, logGroupNames []string
-	for _, v := range output {
-		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(v.Arn)))
-		logGroupNames = append(logGroupNames, aws.ToString(v.LogGroupName))
+	for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
+		}
+
+		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(output.Arn)))
+		logGroupNames = append(logGroupNames, aws.ToString(output.LogGroupName))
 	}
 	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)

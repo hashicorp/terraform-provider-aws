@@ -12,7 +12,7 @@ Provides a resource to manage a Kinesis Stream Consumer.
 
 -> **Note:** You can register up to 20 consumers per stream. A given consumer can only be registered with one stream at a time.
 
-For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
+For more details, see the [Amazon Kinesis Stream Consumer Documentation](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html).
 
 ## Example Usage
 
@@ -32,8 +32,9 @@ resource "aws_kinesis_stream_consumer" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) Name of the stream consumer.
-* `stream_arn` – (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
+* `stream_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
 
 ## Attribute Reference
 
@@ -45,7 +46,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_kinesis_stream_consumer.example
+  identity = {
+    arn = "arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553"
+  }
+}
+
+resource "aws_kinesis_stream_consumer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the stream consumer.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Stream Consumers using `arn`. For example:
 
 ```terraform
 import {
@@ -54,10 +76,8 @@ import {
 }
 ```
 
-Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import Kinesis Stream Consumers using `arn`. For example:
 
 ```console
 % terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
-
-[1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
