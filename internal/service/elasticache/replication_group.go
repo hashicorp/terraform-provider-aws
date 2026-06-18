@@ -1708,12 +1708,23 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 	belongs := ok && val.(string) != ""
 
 	if belongs {
-		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName, "automatic_failover_enabled"} {
+		for _, attr := range []string{names.AttrEngine, names.AttrEngineVersion, names.AttrParameterGroupName} {
 			if diff.HasChange(attr) {
 				old, _ := diff.GetChange(attr)
 				if err := diff.SetNew(attr, old); err != nil {
 					return fmt.Errorf("unable to set %q: %w", attr, err)
 				}
+			}
+		}
+		// automatic_failover_enabled is inherited from the global replication
+		// group. Suppress diffs only for existing members; on create the value
+		// has not yet been propagated by the API and forcing it to the zero
+		// value would cause "inconsistent final plan" errors during plan
+		// expansion when the global_replication_group_id reference resolves.
+		if diff.Id() != "" && diff.HasChange("automatic_failover_enabled") {
+			old, _ := diff.GetChange("automatic_failover_enabled")
+			if err := diff.SetNew("automatic_failover_enabled", old); err != nil {
+				return fmt.Errorf("unable to set %q: %w", "automatic_failover_enabled", err)
 			}
 		}
 	}
