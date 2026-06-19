@@ -2377,6 +2377,30 @@ service "connectcases" {
   brand                    = "AWS"
 }
 
+service "connectcampaignsv2" {
+  sdk {
+    id            = "ConnectCampaignsV2"
+    arn_namespace = "connect-campaigns"
+  }
+
+  names {
+    provider_name_upper = "ConnectCampaignsV2"
+    human_friendly      = "Connect Campaigns V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCampaigns"
+  }
+
+  resource_prefix {
+    correct = "aws_connectcampaignsv2_"
+  }
+
+  provider_package_correct = "connectcampaignsv2"
+  doc_prefix               = ["connectcampaignsv2_"]
+  brand                    = "AWS"
+}
+
 service "connectcontactlens" {
   cli_v2_command {
     aws_cli_v2_command           = "connect-contact-lens"

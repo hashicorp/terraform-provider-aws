@@ -149,6 +149,7 @@ provider "aws" {
 |Compute Optimizer|`computeoptimizer`|`AWS_ENDPOINT_URL_COMPUTE_OPTIMIZER`|`compute_optimizer`|
 |Config|`configservice`(or `config`)|`AWS_ENDPOINT_URL_CONFIG_SERVICE`|`config_service`|
 |Connect|`connect`|`AWS_ENDPOINT_URL_CONNECT`|`connect`|
+|Connect Campaigns V2|`connectcampaignsv2`|`AWS_ENDPOINT_URL_CONNECTCAMPAIGNSV2`|`connectcampaignsv2`|
 |Connect Cases|`connectcases`|`AWS_ENDPOINT_URL_CONNECTCASES`|`connectcases`|
 |Control Tower|`controltower`|`AWS_ENDPOINT_URL_CONTROLTOWER`|`controltower`|
 |Cost Optimization Hub|`costoptimizationhub`|`AWS_ENDPOINT_URL_COST_OPTIMIZATION_HUB`|`cost_optimization_hub`|

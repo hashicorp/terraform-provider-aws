@@ -621,6 +621,12 @@ service/connect:
           - any-glob-to-any-file:
               - 'internal/service/connect/**/*'
               - 'website/**/connect_*'
+service/connectcampaignsv2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/connectcampaignsv2/**/*'
+              - 'website/**/connectcampaignsv2_*'
 service/connectcases:
   - any:
       - changed-files:

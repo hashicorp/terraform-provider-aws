@@ -506,6 +506,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// connectcampaignsv2
+
+				"connectcampaignsv2": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// connectcases
 
 				"connectcases": schema.StringAttribute{
