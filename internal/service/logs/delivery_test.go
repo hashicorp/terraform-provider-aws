@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -37,7 +38,10 @@ func testAccDelivery_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Delivery/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
@@ -53,12 +57,15 @@ func testAccDelivery_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Delivery/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"field_delimiter",
-					"s3_delivery_configuration.0.enable_hive_compatible_path",
+					"field_delimiter", "s3_delivery_configuration.0.enable_hive_compatible_path",
 				},
 			},
 		},
@@ -80,7 +87,10 @@ func testAccDelivery_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Delivery/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDelivery, resourceName),
@@ -134,8 +144,7 @@ func testAccDelivery_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"field_delimiter",
-					"s3_delivery_configuration.0.enable_hive_compatible_path",
+					"field_delimiter", "s3_delivery_configuration.0.enable_hive_compatible_path",
 				},
 			},
 			{
@@ -216,8 +225,7 @@ func testAccDelivery_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"field_delimiter",
-					"s3_delivery_configuration.0.enable_hive_compatible_path",
+					"field_delimiter", "s3_delivery_configuration.0.enable_hive_compatible_path",
 				},
 			},
 			{
@@ -247,8 +255,7 @@ func testAccDelivery_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"field_delimiter",
-					"s3_delivery_configuration.0.enable_hive_compatible_path",
+					"field_delimiter", "s3_delivery_configuration.0.enable_hive_compatible_path",
 				},
 			},
 		},
@@ -351,15 +358,6 @@ func testAccCheckDeliveryExists(ctx context.Context, t *testing.T, n string, v *
 
 		return nil
 	}
-}
-
-func testAccDeliveryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), testAccDeliveryDestinationConfig_basic(rName), `
-resource "aws_cloudwatch_log_delivery" "test" {
-  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
-  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
-}
-`)
 }
 
 func testAccDeliveryConfig_tags1(rName, tag1Key, tag1Value string) string {

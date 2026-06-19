@@ -19,6 +19,7 @@ func TestAccLogs_serial(t *testing.T) {
 			"cloudFrontDistribution": testAccDelivery_cloudFrontDistribution,
 			"tags":                   testAccDelivery_tags,
 			"update":                 testAccDelivery_update,
+			"Identity":               testAccLogsDelivery_identitySerial,
 		},
 		"DeliverySource": {
 			acctest.CtBasic:      testAccDeliverySource_basic,
