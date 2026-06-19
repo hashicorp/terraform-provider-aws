@@ -68,6 +68,7 @@ val services = mapOf(
     "computeoptimizer" to ServiceSpec("Compute Optimizer"),
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
+    "connectcampaignsv2" to ServiceSpec("Connect Campaigns V2"),
     "connectcases" to ServiceSpec("Connect Cases"),
     "controltower" to ServiceSpec("Control Tower"),
     "costoptimizationhub" to ServiceSpec("Cost Optimization Hub"),

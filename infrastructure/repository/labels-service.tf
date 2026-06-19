@@ -85,6 +85,7 @@ variable "service_labels" {
     "computeoptimizer",
     "configservice",
     "connect",
+    "connectcampaignsv2",
     "connectcases",
     "connectcontactlens",
     "connectparticipant",

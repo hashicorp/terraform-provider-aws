@@ -192,6 +192,8 @@ service/configservice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_config_'
 service/connect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connect_'
+service/connectcampaignsv2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcampaignsv2_'
 service/connectcases:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcases_'
 service/connectcontactlens:

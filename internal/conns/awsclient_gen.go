@@ -72,6 +72,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
+	"github.com/aws/aws-sdk-go-v2/service/connectcampaignsv2"
 	"github.com/aws/aws-sdk-go-v2/service/connectcases"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
@@ -534,6 +535,10 @@ func (c *AWSClient) ConfigServiceClient(ctx context.Context) *configservice.Clie
 
 func (c *AWSClient) ConnectClient(ctx context.Context) *connect.Client {
 	return errs.Must(client[*connect.Client](ctx, c, names.Connect, make(map[string]any)))
+}
+
+func (c *AWSClient) ConnectCampaignsV2Client(ctx context.Context) *connectcampaignsv2.Client {
+	return errs.Must(client[*connectcampaignsv2.Client](ctx, c, names.ConnectCampaignsV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases.Client {

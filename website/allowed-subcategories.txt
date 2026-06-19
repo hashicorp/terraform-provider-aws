@@ -74,6 +74,7 @@ Comprehend
 Compute Optimizer
 Config
 Connect
+Connect Campaigns V2
 Connect Cases
 Connect Customer Profiles
 Control Tower
