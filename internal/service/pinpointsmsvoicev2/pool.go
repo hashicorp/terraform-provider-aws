@@ -340,23 +340,29 @@ func (r *poolResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	poolID := plan.PoolID.ValueString()
 
-	if !plan.OriginationIdentities.Equal(state.OriginationIdentities) {
-		add, remove, d := diffOriginationIdentities(ctx, plan, state)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	current, err := findPoolOriginationIdentities(ctx, conn, poolID)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
+		return
+	}
+
+	add, remove, d := diffOriginationIdentities(ctx, plan, current)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(add) > 0 {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, add, intendedIdentityConfig{
+			MessageType:    plan.MessageType.ValueEnum(),
+			IsoCountryCode: plan.IsoCountryCode.ValueString(),
+		}))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	}
 
-		if len(add) > 0 {
-			smerr.AddEnrich(ctx, &resp.Diagnostics, validateOriginationIdentities(ctx, conn, add, intendedIdentityConfig{
-				MessageType:    plan.MessageType.ValueEnum(),
-				IsoCountryCode: plan.IsoCountryCode.ValueString(),
-			}))
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		}
-
+	if len(add) > 0 || len(remove) > 0 {
 		isoCC := fwflex.StringFromFramework(ctx, plan.IsoCountryCode)
 
 		// Associate before disassociate to mitigate pool transiently having zero identities.
@@ -458,38 +464,35 @@ func sortOriginationIdentities(ctx context.Context, model poolResourceModel) ([]
 	return identities, diags
 }
 
-func diffOriginationIdentities(ctx context.Context, plan, state poolResourceModel) (add, remove []string, diags diag.Diagnostics) {
-	// get identities sorted
+func diffOriginationIdentities(ctx context.Context, plan poolResourceModel, current []string) (add, remove []string, diags diag.Diagnostics) {
 	planSet, d := sortOriginationIdentities(ctx, plan)
 	diags.Append(d...)
 	if diags.HasError() {
 		return nil, nil, diags
 	}
-	var stateSet []string
-	diags.Append(state.OriginationIdentities.ElementsAs(ctx, &stateSet, false)...)
-	if diags.HasError() {
-		return nil, nil, diags
-	}
-	slices.Sort(stateSet)
 
 	// build maps for lookup
+	currentSet := slices.Clone(current)
+	slices.Sort(currentSet)
+
 	planMap := make(map[string]struct{}, len(planSet))
 	for _, v := range planSet {
 		planMap[v] = struct{}{}
 	}
-	stateMap := make(map[string]struct{}, len(stateSet))
-	for _, v := range stateSet {
-		stateMap[v] = struct{}{}
+	currentMap := make(map[string]struct{}, len(currentSet))
+	for _, v := range currentSet {
+		currentMap[v] = struct{}{}
 	}
 
-	// add identities in the plan but not in state
+	// add identities in the plan but not in AWS
 	for _, v := range planSet {
-		if _, ok := stateMap[v]; !ok {
+		if _, ok := currentMap[v]; !ok {
 			add = append(add, v)
 		}
 	}
-	// remove identities in state but not in the plan
-	for _, v := range stateSet {
+
+	// remove identities in AWS but not in the plan
+	for _, v := range currentSet {
 		if _, ok := planMap[v]; !ok {
 			remove = append(remove, v)
 		}
