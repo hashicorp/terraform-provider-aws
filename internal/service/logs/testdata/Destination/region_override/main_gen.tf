@@ -1,26 +1,26 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_cloudwatch_log_destination" "test" {
+  region = var.region
+
   name       = var.rName
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-  }
 
   depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_kinesis_stream" "test" {
+  region = var.region
+
   name        = var.rName
   shard_count = 1
 }
 
 data "aws_region" "current" {
+  region = var.region
+
 }
 
 data "aws_iam_policy_document" "role" {
@@ -78,15 +78,14 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.policy.json
 }
 
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

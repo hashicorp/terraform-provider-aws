@@ -29,3 +29,7 @@ resource/aws_cloudwatch_log_delivery: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_cloudwatch_log_destination_policy: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination: Add Resource Identity support
+```

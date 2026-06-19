@@ -1,16 +1,10 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_cloudwatch_log_destination" "test" {
   name       = var.rName
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-  }
 
   depends_on = [aws_iam_role_policy.test]
 }
@@ -78,15 +72,18 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.policy.json
 }
 
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
-
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.51.0"
+    }
+  }
 }
+
+provider "aws" {}
