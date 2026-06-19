@@ -1,3 +1,5 @@
-```release-notes:bugfix-enhancement
-resource/aws_bedrockagentcore_custom_jwt_authorizer: Allow colons in `match_value_string` and `match_value_string_list` regex validation
+```release-notes:enhancement
+`resource/aws_bedrockagentcore_agent_runtime`: Allow colons in `match_value_string` and `match_value_string_list` regex validation
 ```
+
+The regex validation for `match_value_string` and `match_value_string_list` in the `authorizer_configuration` block now accepts colons (`:`) in addition to letters, numbers, `_`, `.`, and `-`.
