@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_connectcampaignsv2_campaign
+```
