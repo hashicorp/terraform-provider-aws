@@ -55,34 +55,49 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
-* `authorizer_configuration` - (Optional) Authorizer configuration for the registry. Required when `authorizer_type` is `CUSTOM_JWT`. [See below](#authorizer_configuration).
+* `authorizer_configuration` - (Optional) Authorizer configuration for the registry. Required when `authorizer_type` is `CUSTOM_JWT`. [See below](#authorizer_configuration-block).
 * `authorizer_type` - (Optional, Forces new resource) Type of authorizer to use for the registry. Valid values are `AWS_IAM` (default) and `CUSTOM_JWT`. This controls the authorization method for the Search and Invoke APIs used by consumers.
+* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
 * `description` - (Optional) Description of the registry.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### authorizer_configuration
+### `authorizer_configuration` Block
 
-* `custom_jwt_authorizer` - (Optional) Inbound JWT-based authorization configuration. [See below](#custom_jwt_authorizer).
+The `authorizer_configuration` configuration block supports the following arguments:
 
-### custom_jwt_authorizer
+* `custom_jwt_authorizer` - (Optional) Inbound JWT-based authorization configuration. [See below](#custom_jwt_authorizer-block).
 
-* `discovery_url` - (Required) OpenID Connect discovery URL used to validate incoming tokens.
+### `custom_jwt_authorizer` Block
+
+The `custom_jwt_authorizer` configuration block supports the following arguments:
+
 * `allowed_audience` - (Optional) Set of audience values validated during incoming JWT token validation.
 * `allowed_clients` - (Optional) Set of client IDs validated during incoming JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes allowed to access the token.
-* `custom_claim` - (Optional) Set of custom claim validations. [See below](#custom_claim).
+* `custom_claim` - (Optional) Set of custom claim validations. [See below](#custom_claim-block).
+* `discovery_url` - (Required) OpenID Connect discovery URL used to validate incoming tokens.
 
-### custom_claim
+### `custom_claim` Block
 
+The `custom_claim` configuration block supports the following arguments:
+
+* `authorizing_claim_match_value` - (Required) Match value configuration for the claim. [See below](#authorizing_claim_match_value-block).
 * `inbound_token_claim_name` - (Required) Name of the inbound token claim to validate.
 * `inbound_token_claim_value_type` - (Required) Value type of the inbound token claim.
-* `authorizing_claim_match_value` - (Required) Match value configuration for the claim. [See below](#authorizing_claim_match_value).
 
-### authorizing_claim_match_value
+### `authorizing_claim_match_value` Block
+
+The `authorizing_claim_match_value` configuration block supports the following arguments:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values you are matching for.
-* `claim_match_value` - (Required) Value or values to match for. Exactly one of `match_value_string` or `match_value_string_list` must be set.
+* `claim_match_value` - (Required) Value or values to match for. [See below](#claim_match_value-block).
+
+### `claim_match_value` Block
+
+The `claim_match_value` configuration block supports the following arguments. Exactly one of `match_value_string` or `match_value_string_list` must be set.
+
+* `match_value_string` - (Optional) Single value to match for.
+* `match_value_string_list` - (Optional) Set of values to match for.
 
 ## Attribute Reference
 
