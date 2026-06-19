@@ -863,17 +863,21 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
-		// Wait for deployment if enabled
-		if new.Enabled.ValueBool() {
-			_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
-			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
-				return
-			}
+		// Wait for deployment
+		_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
+			return
 		}
 
 		// Update ETag from response
 		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
+	} else if !new.Tags.Equal(old.Tags) {
+		// Tags changed but config didn't — still need to wait for deployment
+		if _, err := waitDistributionDeployed(ctx, conn, new.ID.ValueString()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) tag update", new.ID.ValueString()), err.Error())
+			return
+		}
 	}
 
 	// Read back the updated distribution to ensure state consistency
