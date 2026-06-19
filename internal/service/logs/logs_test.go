@@ -24,6 +24,7 @@ func TestAccLogs_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDeliverySource_basic,
 			acctest.CtDisappears: testAccDeliverySource_disappears,
 			"tags":               testAccDeliverySource_tags,
+			"Identity":           testAccLogsDeliverySource_identitySerial,
 		},
 		"S3TableIntegrationSource": {
 			acctest.CtBasic:        testAccS3TableIntegrationSource_basic,

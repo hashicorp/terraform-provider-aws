@@ -37,6 +37,7 @@ import (
 // @Testing(preIdentityVersion="v6.51.0")
 // @Testing(importStateIdAttribute="name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.DeliverySource")
+// @Testing(serialize=true)
 func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliverySourceResource{}
 
