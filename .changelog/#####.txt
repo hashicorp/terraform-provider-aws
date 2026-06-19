@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_cloudwatch_log_account_policy: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_anomaly_detector: Add Resource Identity support
+```
