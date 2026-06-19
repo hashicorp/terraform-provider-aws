@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,6 +37,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^\S+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 
@@ -269,6 +271,45 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_Tags_concurrentUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_tags_concurrentUpdate("initial comment", acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "comment", "initial comment"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_tags_concurrentUpdate("updated comment", acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "comment", "updated comment"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
 			},
 		},
 	})
@@ -806,6 +847,64 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 %s
 }
 `, tagConfig)
+}
+
+func testAccMultiTenantDistributionConfig_tags_concurrentUpdate(comment, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = %[1]q
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, comment, tagKey1, tagValue1)
 }
 
 func testAccMultiTenantDistributionConfig_update(comment, httpVersion, defaultRootObject string) string {
