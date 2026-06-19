@@ -51,7 +51,7 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the registry. Must be unique within your account and contain only letters, numbers, and underscores. Maximum length of 64 characters.
+* `name` - (Required) Name of the registry. Must be unique within your account and contain only letters, numbers, hyphens, and underscores. Maximum length of 64 characters.
 
 The following arguments are optional:
 
