@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_cloudfront_distribution", name="Distribution")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func dataSourceDistribution() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributionRead,
