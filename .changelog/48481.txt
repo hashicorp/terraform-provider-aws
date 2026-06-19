@@ -1,3 +1,0 @@
-```release-note:enhancement
-service/connectcampaignsv2: Adds provider support for AWS Connect Campaigns V2
-```
