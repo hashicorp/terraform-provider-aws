@@ -13,7 +13,6 @@ rules:
             ...
           }
       - pattern: uuid.GenerateUUID()
-    fix: create.UUID($CTX)
     paths:
       include:
         - "**/*.go"
