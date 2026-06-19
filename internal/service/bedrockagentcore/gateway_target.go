@@ -1111,7 +1111,7 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TargetStatusCreating),
+		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
 		// CREATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
 		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
@@ -1131,7 +1131,7 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TargetStatusUpdating),
+		Pending:                   enum.Slice(awstypes.TargetStatusUpdating),
 		// UPDATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
 		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
