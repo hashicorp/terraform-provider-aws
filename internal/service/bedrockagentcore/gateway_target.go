@@ -1118,6 +1118,8 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
+		// CREATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
+		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
@@ -1136,6 +1138,8 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusUpdating),
+		// UPDATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
+		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
@@ -1153,10 +1157,17 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		// FAILED and SYNCHRONIZING can appear until AWS moves the target to DELETING.
-		// The *_PENDING_AUTH states (OAuth 3LO awaiting consent) also block delete until
-		// the auth window resolves, so treat them as pending rather than unexpected.
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing, awstypes.TargetStatusCreatePendingAuth, awstypes.TargetStatusUpdatePendingAuth, awstypes.TargetStatusSynchronizePendingAuth),
+		// FAILED, SYNCHRONIZING, and *_PENDING_AUTH states (OAuth 3LO awaiting consent)
+		// can appear until AWS moves the target to DELETING.
+		Pending: enum.Slice(
+			awstypes.TargetStatusDeleting,
+			awstypes.TargetStatusReady,
+			awstypes.TargetStatusFailed,
+			awstypes.TargetStatusSynchronizing,
+			awstypes.TargetStatusCreatePendingAuth,
+			awstypes.TargetStatusUpdatePendingAuth,
+			awstypes.TargetStatusSynchronizePendingAuth,
+		),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
