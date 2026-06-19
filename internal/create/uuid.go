@@ -20,10 +20,10 @@ func UUID(ctx context.Context) string {
 	if s, ok := vcr.FromContext(ctx); ok && s != nil {
 		data := make([]byte, 16)
 		rng := rand.New(s)
-		rng.Read(data) //nolint:errcheck // crypto/rand.Read returns nil on Go 1.24+ (or the program crashes)
+		rng.Read(data) //nolint:errcheck // rand.Rand.Read always returns a nil error
 		return guuid.NewSHA1(guuid.NameSpaceOID, data).String()
 	}
 
-	uuid, _ := huuid.GenerateUUID() //nolint:errcheck // crypto/rand.Read returns nil on Go 1.24+ (or the program crashes)
+	uuid, _ := huuid.GenerateUUID() //nolint:errcheck // crypto/rand.Reader.Read returns nil on Go 1.24+ (or the program crashes)
 	return uuid
 }
