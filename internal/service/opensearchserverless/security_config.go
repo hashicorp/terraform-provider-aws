@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -81,7 +82,7 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrType: schema.StringAttribute{
-				Description: "Type of configuration. Must be `saml`.",
+				Description: "Type of configuration. Valid values: `saml`, `iamidentitycenter` or `iamfederation`.",
 				CustomType:  fwtypes.StringEnumType[awstypes.SecurityConfigType](),
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -90,10 +91,95 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"iam_federation_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamFederationConfigOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Description: "Group attribute.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								stringvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("group_attribute"),
+									path.MatchRelative().AtParent().AtName("user_attribute"),
+								),
+							},
+						},
+						"user_attribute": schema.StringAttribute{
+							Description: "User attribute.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								stringvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("group_attribute"),
+									path.MatchRelative().AtParent().AtName("user_attribute"),
+								),
+							},
+						},
+					},
+				},
+			},
+			"iam_identity_center_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamIdentityCenterConfigOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"instance_arn": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Description: "Instance ARN.",
+							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"group_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterGroupAttribute](),
+							Description: "Group attribute.",
+							Optional:    true,
+							Computed:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"user_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterUserAttribute](),
+							Description: "User attribute.",
+							Optional:    true,
+							Computed:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+					},
+				},
+			},
 			"saml_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -235,7 +321,7 @@ func (r *securityConfigResource) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		input := opensearchserverless.UpdateSecurityConfigInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNameSuffix("Updates"))...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -284,12 +370,14 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 
 type securityConfigResourceModel struct {
 	framework.WithRegionModel
-	ID            types.String                                     `tfsdk:"id"`
-	ConfigVersion types.String                                     `tfsdk:"config_version"`
-	Description   types.String                                     `tfsdk:"description"`
-	Name          types.String                                     `tfsdk:"name"`
-	SamlOptions   fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
-	Type          fwtypes.StringEnum[awstypes.SecurityConfigType]  `tfsdk:"type"`
+	ID                       types.String                                                         `tfsdk:"id"`
+	ConfigVersion            types.String                                                         `tfsdk:"config_version"`
+	Description              types.String                                                         `tfsdk:"description"`
+	IamFederationOptions     fwtypes.ListNestedObjectValueOf[iamFederationConfigOptionsModel]     `tfsdk:"iam_federation_options"`
+	IamIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterConfigOptionsModel] `tfsdk:"iam_identity_center_options"`
+	Name                     types.String                                                         `tfsdk:"name"`
+	SamlOptions              fwtypes.ListNestedObjectValueOf[samlOptionsData]                     `tfsdk:"saml_options"`
+	Type                     fwtypes.StringEnum[awstypes.SecurityConfigType]                      `tfsdk:"type"`
 }
 
 type samlOptionsData struct {
@@ -327,4 +415,15 @@ func (securityConfigImportID) Create(ctx context.Context, state tfsdk.State) str
 	state.GetAttribute(ctx, path.Root(names.AttrType), &securityConfigType)
 
 	return fmt.Sprintf("%s/%s/%s", securityConfigType.ValueString(), client.AccountID(ctx), name.ValueString())
+}
+
+type iamFederationConfigOptionsModel struct {
+	GroupAttribute types.String `tfsdk:"group_attribute"`
+	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+type iamIdentityCenterConfigOptionsModel struct {
+	InstanceArn    fwtypes.ARN                                                  `tfsdk:"instance_arn"`
+	GroupAttribute fwtypes.StringEnum[awstypes.IamIdentityCenterGroupAttribute] `tfsdk:"group_attribute"`
+	UserAttribute  fwtypes.StringEnum[awstypes.IamIdentityCenterUserAttribute]  `tfsdk:"user_attribute"`
 }
