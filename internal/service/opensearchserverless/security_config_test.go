@@ -43,6 +43,8 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "iam_federation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_identity_center_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_options.0.session_timeout"),
 				),
