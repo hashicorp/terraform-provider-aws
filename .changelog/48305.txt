@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_networkmanager_core_network_policy_attachment: Respect the configured `create` and `update` timeouts when waiting for the core network policy change set to finish generating, instead of a hardcoded 5 minute limit
+```
+
+```release-note:bug
+resource/aws_networkmanager_core_network: Respect the configured `update` timeout when waiting for the base policy change set to finish generating, instead of a hardcoded 5 minute limit
+```
