@@ -742,7 +742,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	// Set ID immediately
 	data.ID = types.StringValue(aws.ToString(output.Distribution.Id))
-	data.ARN = types.StringValue(aws.ToString(output.Distribution.ARN))
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
 
 	// Wait for distribution to be deployed
 	distro, err := waitDistributionDeployed(ctx, conn, data.ID.ValueString())
