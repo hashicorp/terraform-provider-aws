@@ -816,8 +816,11 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
+	hasUpdate := false
+
 	// Handle tag updates first
 	if !new.Tags.Equal(old.Tags) {
+		hasUpdate = true
 		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
 			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
 			return
@@ -826,6 +829,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 	// Check if distribution config needs updating (anything other than tags)
 	if mtDistributionHasChanges(old, new) {
+		hasUpdate = true
 		// Get current distribution to get ETag for update
 		output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
 		if err != nil {
@@ -857,35 +861,32 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
 
 		// Update the distribution
-		updateOutput, err := conn.UpdateDistribution(ctx, &input)
+		_, err = conn.UpdateDistribution(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution", err.Error())
 			return
 		}
+	}
 
-		// Wait for deployment
-		_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
+	var output *cloudfront.GetDistributionOutput
+	if hasUpdate {
+		var err error
+		output, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
 			return
 		}
-
-		// Update ETag from response
-		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
-	} else if !new.Tags.Equal(old.Tags) {
-		// Tags changed but config didn't — still need to wait for deployment
-		if _, err := waitDistributionDeployed(ctx, conn, new.ID.ValueString()); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) tag update", new.ID.ValueString()), err.Error())
+	} else {
+		var err error
+		// Read back the updated distribution to ensure state consistency
+		output, err = findDistributionByID(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution", err.Error())
 			return
 		}
 	}
 
-	// Read back the updated distribution to ensure state consistency
-	output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution after update", err.Error())
-		return
-	}
+	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &new)...)
 	if response.Diagnostics.HasError() {
