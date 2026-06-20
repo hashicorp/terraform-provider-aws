@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_opensearchserverless_security_config: Add `iam_federation_options` configuration block
+```
+
+```release-note:enhancement
+resource/aws_opensearchserverless_security_config: Add `iam_identity_center_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_opensearchserverless_security_config: Add `iam_federation_options` block
+```
+
+```release-note:enhancement
+data-source/aws_opensearchserverless_security_config: Add `iam_identity_center_options` block
+```
