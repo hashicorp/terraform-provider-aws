@@ -291,7 +291,7 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_concurrentUpdate(t *testing.T
 				Config: testAccMultiTenantDistributionConfig_tags_concurrentUpdate("initial comment", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "comment", "initial comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "initial comment"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -300,7 +300,7 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_concurrentUpdate(t *testing.T
 				Config: testAccMultiTenantDistributionConfig_tags_concurrentUpdate("updated comment", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "comment", "updated comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "updated comment"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 				),
