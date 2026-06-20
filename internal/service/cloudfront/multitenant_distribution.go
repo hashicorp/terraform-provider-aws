@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -751,13 +752,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
-	// Read the distribution to get consistent state
-	data.ETag = fwflex.StringToFramework(ctx, distro.ETag)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, distro, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -789,12 +784,7 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -886,14 +876,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		}
 	}
 
-	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &new)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -989,6 +972,22 @@ func (r *multiTenantDistributionResource) ImportState(ctx context.Context, reque
 	}
 
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+}
+
+func flattenMultiTenantDistribution(ctx context.Context, output *cloudfront.GetDistributionOutput, data *multiTenantDistributionResourceModel) (diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	diags.Append(fwflex.Flatten(ctx, output.Distribution, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
 }
 
 func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
