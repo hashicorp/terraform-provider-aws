@@ -498,7 +498,7 @@ resource "aws_opensearchserverless_security_config" "test" {
   type = "iamidentitycenter"
 
   iam_identity_center_options {
-    instance_arn    = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+    instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   }
 }
 `, rName)

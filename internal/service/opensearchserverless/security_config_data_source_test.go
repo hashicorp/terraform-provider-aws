@@ -145,7 +145,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_opensearchserverless_security_config" "test" {
   name        = %[1]q
   description = %[2]q
-  type = "iamfederation"
+  type        = "iamfederation"
 
   iam_federation_options {
     group_attribute = %[3]q
@@ -166,7 +166,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_opensearchserverless_security_config" "test" {
   name        = %[1]q
   description = %[2]q
-  type = "iamidentitycenter"
+  type        = "iamidentitycenter"
 
   iam_identity_center_options {
     instance_arn    = tolist(data.aws_ssoadmin_instances.test.arns)[0]
