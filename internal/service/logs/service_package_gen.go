@@ -261,8 +261,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceStream,
 			TypeName: "aws_cloudwatch_log_stream",
-			Name:     "Log Stream",
+			Name:     "Stream",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      streamImportID{},
+			},
 		},
 		{
 			Factory:  resourceSubscriptionFilter,
