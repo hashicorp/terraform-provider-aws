@@ -295,8 +295,8 @@ func (resourcePolicyImportID) Parse(id string) (string, map[string]any, error) {
 }
 
 func (resourcePolicyImportID) Create(d *schema.ResourceData) string {
-	if v, ok := d.GetOk("policy_scope"); ok && awstypes.PolicyScope(v.(string)) == awstypes.PolicyScopeResource {
-		return d.Get(names.AttrResourceARN).(string)
+	if v, ok := d.GetOk("policy_name"); ok {
+		return v.(string)
 	}
-	return d.Get("policy_name").(string)
+	return d.Get(names.AttrResourceARN).(string)
 }
