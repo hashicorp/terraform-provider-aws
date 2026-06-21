@@ -32,10 +32,11 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_query_definition", name="Query Definition")
-// @ArnIdentity
+// @IdentityAttribute("query_definition_id")
 // @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.QueryDefinition")
 // @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importStateIdAttribute="arn")
 func resourceQueryDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryDefinitionPut,
@@ -166,6 +167,10 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
+	}
+
+	if !arn.IsARN(d.Id()) {
+		return []*schema.ResourceData{d}, nil
 	}
 
 	errUnexpectedFormat := fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch Logs query definition ARN", d.Id())

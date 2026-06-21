@@ -53,7 +53,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_cloudwatch_query_definition.example
   identity = {
-    arn = "arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd"
+    query_definition_id = "269951d7-6f75-496d-9d7b-6b7a5486bdbd"
   }
 }
 
@@ -66,7 +66,12 @@ resource "aws_cloudwatch_query_definition" "example" {
 
 #### Required
 
-- `arn` (String) ARN of the query definition.
+* `query_definition_id` (String) ID of the query definition.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Query Definitions using `arn`. The ARN can be found on the "Edit Query" page for the query in the AWS Console. For example:
 
