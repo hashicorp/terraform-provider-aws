@@ -401,6 +401,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"additional_params": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
 									"api_format": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.HarnessBedrockApiFormat](),
 										Optional:   true,
@@ -1276,6 +1280,16 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if v := t.Value.AdditionalParams; v != nil {
+			s, err := tfsmithy.DocumentToJSONString(v)
+			if err != nil {
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
+				return diags
+			}
+			model.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+		} else {
+			model.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
 		var d diag.Diagnostics
 		m.BedrockModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1351,6 +1365,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberBedrockModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !model.AdditionalParams.IsNull() {
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, model.AdditionalParams), document.NewLazyDocument)
+			if err != nil {
+				diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+				return nil, diags
+			}
+			r.Value.AdditionalParams = json
+		}
 		return &r, diags
 
 	case !m.GeminiModelConfig.IsNull():
@@ -1410,11 +1435,12 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 }
 
 type harnessBedrockModelConfigModel struct {
-	APIFormat   fwtypes.StringEnum[awstypes.HarnessBedrockApiFormat] `tfsdk:"api_format"`
-	MaxTokens   types.Int32                                          `tfsdk:"max_tokens"`
-	ModelID     types.String                                         `tfsdk:"model_id"`
-	Temperature types.Float64                                        `tfsdk:"temperature"`
-	TopP        types.Float64                                        `tfsdk:"top_p"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface]               `tfsdk:"additional_params" autoflex:"-"`
+	APIFormat        fwtypes.StringEnum[awstypes.HarnessBedrockApiFormat] `tfsdk:"api_format"`
+	MaxTokens        types.Int32                                          `tfsdk:"max_tokens"`
+	ModelID          types.String                                         `tfsdk:"model_id"`
+	Temperature      types.Float64                                        `tfsdk:"temperature"`
+	TopP             types.Float64                                        `tfsdk:"top_p"`
 }
 
 type harnessGeminiModelConfigModel struct {

@@ -119,11 +119,12 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"api_format":  knownvalue.Null(),
-									"max_tokens":  knownvalue.Null(),
-									"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
-									"temperature": knownvalue.Null(),
-									"top_p":       knownvalue.Null(),
+									"additional_params": knownvalue.Null(),
+									"api_format":        knownvalue.Null(),
+									"max_tokens":        knownvalue.Null(),
+									"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+									"temperature":       knownvalue.Null(),
+									"top_p":             knownvalue.Null(),
 								}),
 							}),
 							"gemini_model_config":  knownvalue.ListSizeExact(0),
@@ -586,11 +587,12 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"api_format":  knownvalue.NotNull(),
-							"max_tokens":  knownvalue.Null(),
-							"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
-							"temperature": knownvalue.Float64Exact(0.8),
-							"top_p":       knownvalue.Float64Exact(0.7),
+							"additional_params": knownvalue.Null(),
+							"api_format":        knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
 						})}),
 						"gemini_model_config":  knownvalue.ListSizeExact(0),
 						"litellm_model_config": knownvalue.ListSizeExact(0),
@@ -615,11 +617,42 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"api_format":  tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions),
-							"max_tokens":  knownvalue.Null(),
-							"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
-							"temperature": knownvalue.Float64Exact(0.8),
-							"top_p":       knownvalue.Float64Exact(0.7),
+							"additional_params": knownvalue.Null(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
+						})}),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessBedrockApiFormatChatCompletions),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions), // Prior state value.
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
 						})}),
 						"gemini_model_config":  knownvalue.ListSizeExact(0),
 						"litellm_model_config": knownvalue.ListSizeExact(0),

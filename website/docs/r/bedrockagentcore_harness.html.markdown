@@ -180,6 +180,7 @@ The `model` block supports exactly one of the following:
 
 ### `bedrock_model_config` Block
 
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Bedrock model provider unchanged.
 * `api_format` - (Optional) API format for the model. Valid values are `converse_stream`, `responses`, and `chat_completions`.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
