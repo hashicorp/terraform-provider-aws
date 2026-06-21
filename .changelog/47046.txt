@@ -1,0 +1,2 @@
+release-note:enhancement
+resource/aws_connect_approved_origin: New resource
