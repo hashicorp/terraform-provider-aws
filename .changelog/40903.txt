@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_node_group: Fix issue where updating `version` would reset `release_version` to latest AMI version instead of maintaining the configured value
+```
