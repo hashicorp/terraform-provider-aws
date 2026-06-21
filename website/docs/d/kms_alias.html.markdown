@@ -32,7 +32,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name(ARN) of the key alias.
-* `id` - Amazon Resource Name(ARN) of the key alias.
+* `id` - The unique identifier for the key alias.
 * `target_key_id` - Key identifier pointed to by the alias.
 * `target_key_arn` - ARN pointed to by the alias.
 * `name` - Name of the alias
