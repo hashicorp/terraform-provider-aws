@@ -249,6 +249,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudwatch_log_resource_policy",
 			Name:     "Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_name", false),
+				inttypes.StringIdentityAttribute(names.AttrResourceARN, false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      resourcePolicyImportID{},
+			},
 		},
 		{
 			Factory:  resourceStream,

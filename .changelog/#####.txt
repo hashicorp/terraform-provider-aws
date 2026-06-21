@@ -45,3 +45,7 @@ resource/aws_cloudwatch_query_definition: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_cloudwatch_query_definition: Add `arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_resource_policy: Add Resource Identity support
+```
