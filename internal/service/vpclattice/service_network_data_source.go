@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,8 +54,10 @@ func dataSourceServiceNetwork() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrName, "service_network_identifier"},
 				},
 				"number_of_associated_services": {
 					Type:     schema.TypeInt,
@@ -65,8 +68,10 @@ func dataSourceServiceNetwork() *schema.Resource {
 					Computed: true,
 				},
 				"service_network_identifier": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrName, "service_network_identifier"},
 				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
@@ -78,11 +83,35 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	serviceNetworkID := d.Get("service_network_identifier").(string)
-	output, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
+	var output *vpclattice.GetServiceNetworkOutput
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", serviceNetworkID, err)
+	if v, ok := d.GetOk("service_network_identifier"); ok {
+		serviceNetworkID := v.(string)
+		out, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", serviceNetworkID, err)
+		}
+
+		output = out
+	} else if v, ok := d.GetOk(names.AttrName); ok {
+		name := v.(string)
+		filter := func(x types.ServiceNetworkSummary) bool {
+			return aws.ToString(x.Name) == name
+		}
+		summary, err := findServiceNetworkSummary(ctx, conn, filter)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", name, err)
+		}
+
+		out, err := findServiceNetworkByID(ctx, conn, aws.ToString(summary.Id))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", name, err)
+		}
+
+		output = out
 	}
 
 	d.SetId(aws.ToString(output.Id))

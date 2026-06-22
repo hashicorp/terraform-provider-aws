@@ -12,11 +12,19 @@ Terraform data source for managing an AWS VPC Lattice Service Network.
 
 ## Example Usage
 
-### Basic Usage
+### By Identifier
 
 ```terraform
 data "aws_vpclattice_service_network" "example" {
   service_network_identifier = "snsa-01112223334445556"
+}
+```
+
+### By Name
+
+```terraform
+data "aws_vpclattice_service_network" "example" {
+  name = "my-service-network"
 }
 ```
 
@@ -25,7 +33,10 @@ data "aws_vpclattice_service_network" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `service_network_identifier` - (Required) Identifier of the service network.
+* `name` - (Optional) Name of the service network.
+* `service_network_identifier` - (Optional) ID or ARN of the service network.
+
+~> **NOTE:** One of `name` or `service_network_identifier` must be specified.
 
 ## Attribute Reference
 
