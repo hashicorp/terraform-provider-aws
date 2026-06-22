@@ -401,6 +401,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"api_format": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HarnessBedrockApiFormat](),
+										Optional:   true,
+									},
 									"max_tokens": schema.Int32Attribute{
 										Optional: true,
 										Validators: []validator.Int32{
@@ -520,6 +524,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								Attributes: map[string]schema.Attribute{
 									"additional_params": schema.StringAttribute{
 										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
+									"api_format": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HarnessOpenAiApiFormat](),
 										Optional:   true,
 									},
 									"api_key_arn": schema.StringAttribute{
@@ -1394,10 +1402,11 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 }
 
 type harnessBedrockModelConfigModel struct {
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float64 `tfsdk:"temperature"`
-	TopP        types.Float64 `tfsdk:"top_p"`
+	APIFormat   fwtypes.StringEnum[awstypes.HarnessBedrockApiFormat] `tfsdk:"api_format"`
+	MaxTokens   types.Int32                                          `tfsdk:"max_tokens"`
+	ModelID     types.String                                         `tfsdk:"model_id"`
+	Temperature types.Float64                                        `tfsdk:"temperature"`
+	TopP        types.Float64                                        `tfsdk:"top_p"`
 }
 
 type harnessGeminiModelConfigModel struct {
@@ -1420,12 +1429,13 @@ type harnessLiteLLMModelConfigModel struct {
 }
 
 type harnessOpenAIModelConfigModel struct {
-	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
-	APIKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
-	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
-	ModelID          types.String                           `tfsdk:"model_id"`
-	Temperature      types.Float64                          `tfsdk:"temperature"`
-	TopP             types.Float64                          `tfsdk:"top_p"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface]              `tfsdk:"additional_params" autoflex:"-"`
+	APIFormat        fwtypes.StringEnum[awstypes.HarnessOpenAiApiFormat] `tfsdk:"api_format"`
+	APIKeyARN        fwtypes.ARN                                         `tfsdk:"api_key_arn"`
+	MaxTokens        types.Int32                                         `tfsdk:"max_tokens"`
+	ModelID          types.String                                        `tfsdk:"model_id"`
+	Temperature      types.Float64                                       `tfsdk:"temperature"`
+	TopP             types.Float64                                       `tfsdk:"top_p"`
 }
 
 // System prompt union.

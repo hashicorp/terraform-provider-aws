@@ -7,6 +7,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
   model {
     bedrock_model_config {
+      api_format  = var.api_format
       model_id    = "anthropic.claude-sonnet-4-20250514"
       temperature = 0.8
       top_p       = 0.7
@@ -63,4 +64,10 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "api_format" {
+  type     = string
+  nullable = true
+  default  = null
 }

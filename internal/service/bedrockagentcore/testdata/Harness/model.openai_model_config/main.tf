@@ -7,6 +7,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
   model {
     openai_model_config {
+      api_format  = var.api_format
       api_key_arn = aws_bedrockagentcore_api_key_credential_provider.test.credential_provider_arn
       model_id    = "gpt-5"
     }
@@ -62,4 +63,10 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "api_format" {
+  type     = string
+  nullable = true
+  default  = null
 }
