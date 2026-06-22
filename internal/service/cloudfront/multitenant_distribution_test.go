@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,6 +50,40 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"allowed_methods": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"items": knownvalue.SetExact([]knownvalue.Check{
+										tfknownvalue.StringExact(awstypes.MethodGet),
+										tfknownvalue.StringExact(awstypes.MethodHead),
+										tfknownvalue.StringExact(awstypes.MethodPost),
+										tfknownvalue.StringExact(awstypes.MethodPut),
+										tfknownvalue.StringExact(awstypes.MethodPatch),
+										tfknownvalue.StringExact(awstypes.MethodOptions),
+										tfknownvalue.StringExact(awstypes.MethodDelete),
+									}),
+									"cached_methods": knownvalue.SetExact([]knownvalue.Check{
+										tfknownvalue.StringExact(awstypes.MethodGet),
+										tfknownvalue.StringExact(awstypes.MethodHead),
+										tfknownvalue.StringExact(awstypes.MethodOptions),
+									}),
+								}),
+							}),
+							"cache_policy_id":             knownvalue.StringExact("4135ea2d-6df8-44a3-9df3-4b5a84be39ad"),
+							"compress":                    knownvalue.Bool(false),
+							"field_level_encryption_id":   knownvalue.StringExact(""),
+							"function_association":        knownvalue.SetSizeExact(0),
+							"lambda_function_association": knownvalue.SetSizeExact(0),
+							"origin_request_policy_id":    knownvalue.Null(),
+							"realtime_log_config_arn":     knownvalue.Null(),
+							"response_headers_policy_id":  knownvalue.Null(),
+							"target_origin_id":            knownvalue.StringExact("example"),
+							"trusted_key_groups":          knownvalue.ListSizeExact(0),
+							"viewer_protocol_policy":      knownvalue.StringExact("redirect-to-https"),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_acl_id"), knownvalue.Null()),
 				},
 			},
