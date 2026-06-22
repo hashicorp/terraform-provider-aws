@@ -22,6 +22,9 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   tflint-opa-policy-tests:
     uses: ./.github/workflows/tflint-opa-policy-tests.yml

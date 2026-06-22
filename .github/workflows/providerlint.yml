@@ -22,6 +22,9 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   providerlint:
     runs-on: custom-ubuntu-22.04-large
