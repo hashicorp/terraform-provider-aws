@@ -7,7 +7,10 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_acm_certificate` ([#48283](https://github.com/hashicorp/terraform-provider-aws/issues/48283))
+* **New List Resource:** `aws_bedrockagentcore_evaluator` ([#47964](https://github.com/hashicorp/terraform-provider-aws/issues/47964))
 * **New List Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
+* **New Resource:** `aws_bedrockagentcore_evaluator` ([#47964](https://github.com/hashicorp/terraform-provider-aws/issues/47964))
 * **New Resource:** `aws_sagemaker_hub_content_reference` ([#48379](https://github.com/hashicorp/terraform-provider-aws/issues/48379))
 
 ENHANCEMENTS:
