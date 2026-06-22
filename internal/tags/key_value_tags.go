@@ -27,10 +27,20 @@ const (
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 
+	// Environment variable specifying `default_tags` as comma-separated "key=value" pairs,
+	// e.g. "key1=value1,key2=value2". Empty values are permitted. Useful where tag keys
+	// contain characters not allowed in environment variable names.
+	//
+	// Tags read from this environment variable have lower precedence than tags specified
+	// via DefaultTagsEnvVarPrefix environment variables.
+	DefaultTagsEnvVar = "TF_AWS_DEFAULT_TAGS"
+
 	// Environment variables with this prefix will be treated as a `default_tags` key value pair
 	//
 	// The environment variable name after this suffix will be treated as the tag key. The
 	// value of the variable will be treated as the tag value. Empty values are permitted.
+	// Tags read from these environment variables have lower precedence than tags specified
+	// in the provider configuration.
 	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
 
 	// Environment variable specifying a list of tag keys to be ignored
