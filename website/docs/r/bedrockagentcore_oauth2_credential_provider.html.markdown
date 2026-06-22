@@ -81,7 +81,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
-* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values include `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, `SlackOauth2`, `AtlassianOauth2`, `LinkedinOauth2`, and a number of additional supported vendors (e.g. `OktaOauth2`, `Auth0Oauth2`, `CognitoOauth2`) configured via `included_oauth2_provider_config`. Refer to the AWS API for the full, current list.
 * `name` - (Required) Name of the OAuth2 credential provider.
 * `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
@@ -94,12 +94,15 @@ The following arguments are optional:
 
 The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
+* `atlassian_oauth2_provider_config` - (Optional) Atlassian OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `custom_oauth2_provider_config` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
-* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
-* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
-* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
-* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
+* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `included_oauth2_provider_config` - (Optional) Configuration for an included (vendor-supported) OAuth2 provider, used for the additional supported vendors. See [`predefined providers`](#predefined-providers) below.
+* `linkedin_oauth2_provider_config` - (Optional) LinkedIn OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 
 ### `custom`
 
@@ -120,9 +123,9 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
-### `github`, `google`, `microsoft`, `salesforce`, `slack`
+### Predefined providers
 
-These predefined provider blocks support the following:
+The `atlassian_oauth2_provider_config`, `github_oauth2_provider_config`, `google_oauth2_provider_config`, `included_oauth2_provider_config`, `linkedin_oauth2_provider_config`, `microsoft_oauth2_provider_config`, `salesforce_oauth2_provider_config`, and `slack_oauth2_provider_config` blocks support the following:
 
 **Standard Credentials (choose one pair):**
 

@@ -243,6 +243,90 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_atlassian(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_atlassian(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.atlassian_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.atlassian_oauth2_provider_config.0.client_id",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_linkedin(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_linkedin(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.linkedin_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.linkedin_oauth2_provider_config.0.client_id",
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
@@ -510,4 +594,36 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccOAuth2CredentialProviderConfig_atlassian(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "AtlassianOauth2"
+  oauth2_provider_config {
+    atlassian_oauth2_provider_config {
+      client_id     = "test-client-id"
+      client_secret = "test-client-secret"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_linkedin(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "LinkedinOauth2"
+  oauth2_provider_config {
+    linkedin_oauth2_provider_config {
+      client_id     = "test-client-id"
+      client_secret = "test-client-secret"
+    }
+  }
+}
+`, rName)
 }
