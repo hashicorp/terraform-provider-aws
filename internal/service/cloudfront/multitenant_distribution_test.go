@@ -490,7 +490,7 @@ func TestAccCloudFrontMultiTenantDistribution_updateCommentHTTPVersionAndDefault
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssociationSwapBlocks(t *testing.T) {
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	ctx := acctest.Context(t)
@@ -505,19 +505,19 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, false),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, true),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_functionAssociation(rName, false),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
@@ -531,7 +531,7 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
@@ -554,19 +554,19 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, false),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, true),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName, false),
+				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
@@ -1144,7 +1144,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, rName)
 }
 
-func testAccMultiTenantDistributionConfig_functionAssociation(rName string, swapBlocks bool) string {
+func testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName string, swapBlocks bool) string {
 	functionAssociationBlocks := `
     function_association {
       event_type   = "viewer-response"
@@ -1341,7 +1341,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, origins)
 }
 
-func testAccMultiTenantDistributionConfig_lambdaFunctionAssociation(rName string, swapBlocks bool) string {
+func testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName string, swapBlocks bool) string {
 	lambdaFunctionAssociationBlocks := `
     lambda_function_association {
       event_type         = "viewer-response"
