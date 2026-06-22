@@ -25,30 +25,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_resource_policy", name="Resource Policy")
+// @IdentityAttribute("policy_name", optional="true", testNotNull="true")
+// @IdentityAttribute("resource_arn", optional="true")
+// @ImportIDHandler("resourcePolicyImportID")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.ResourcePolicy")
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
 		UpdateWithoutTimeout: resourceResourcePolicyPut,
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if arn.IsARN(d.Id()) {
-					d.Set(names.AttrResourceARN, d.Id())
-					d.Set("policy_scope", awstypes.PolicyScopeResource)
-				} else {
-					d.Set("policy_name", d.Id())
-					d.Set("policy_scope", awstypes.PolicyScopeAccount)
-				}
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -95,7 +88,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	name := d.Get("policy_name").(string)
-	input := &cloudwatchlogs.PutResourcePolicyInput{
+	input := cloudwatchlogs.PutResourcePolicyInput{
 		PolicyDocument: aws.String(policy),
 	}
 
@@ -112,7 +105,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 			input.ExpectedRevisionId = aws.String(v.(string))
 		}
 	}
-	_, err = conn.PutResourcePolicy(ctx, input)
+	_, err = conn.PutResourcePolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Resource Policy (%s): %s", name, err)
@@ -139,7 +132,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	var resourcePolicy *awstypes.ResourcePolicy
 	var err error
-	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
+	if v, ok := d.GetOk("policy_scope"); ok && awstypes.PolicyScope(v.(string)) == awstypes.PolicyScopeResource {
 		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, d.Id())
 	} else {
 		resourcePolicy, err = findResourcePolicyByName(ctx, conn, d.Id())
@@ -177,8 +170,8 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	input := cloudwatchlogs.DeleteResourcePolicyInput{}
-	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
+	var input cloudwatchlogs.DeleteResourcePolicyInput
+	if v, ok := d.GetOk("policy_scope"); ok && awstypes.PolicyScope(v.(string)) == awstypes.PolicyScopeResource {
 		log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy by ARN: %s", d.Id())
 		revisionID := d.Get("revision_id").(string)
 		if revisionID == "" {
@@ -205,7 +198,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.ResourcePolicy, error) {
-	input := cloudwatchlogs.DescribeResourcePoliciesInput{}
+	var input cloudwatchlogs.DescribeResourcePoliciesInput
 	output, err := findResourcePolicy(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.ResourcePolicy) bool {
 		return aws.ToString(v.PolicyName) == name
 	}), tfslices.WithReturnFirstMatch[awstypes.ResourcePolicy]())
@@ -274,4 +267,34 @@ func listResourcePolicyPages(ctx context.Context, conn *cloudwatchlogs.Client, i
 			return
 		}
 	}
+}
+
+var (
+	_ inttypes.SDKv2ImportID = resourcePolicyImportID{}
+)
+
+type resourcePolicyImportID struct{}
+
+func (resourcePolicyImportID) Parse(id string) (string, map[string]any, error) {
+	var result map[string]any
+	if arn.IsARN(id) {
+		result = map[string]any{
+			"policy_scope":        awstypes.PolicyScopeResource,
+			names.AttrResourceARN: id,
+		}
+	} else {
+		result = map[string]any{
+			"policy_name":  id,
+			"policy_scope": awstypes.PolicyScopeAccount,
+		}
+	}
+
+	return id, result, nil
+}
+
+func (resourcePolicyImportID) Create(d *schema.ResourceData) string {
+	if v, ok := d.GetOk("policy_name"); ok {
+		return v.(string)
+	}
+	return d.Get(names.AttrResourceARN).(string)
 }

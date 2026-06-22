@@ -5,6 +5,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -30,6 +31,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
 	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines)
+	awsv2.Register("aws_bedrockagentcore_evaluator", sweepEvaluators)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -344,6 +346,34 @@ func sweepOnlineEvaluationConfigs(ctx context.Context, client *conns.AWSClient) 
 		for _, v := range page.OnlineEvaluationConfigs {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newOnlineEvaluationConfigResource, client,
 				framework.NewAttribute("online_evaluation_config_id", aws.ToString(v.OnlineEvaluationConfigId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListEvaluatorsInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListEvaluatorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Evaluators {
+			evaluatorID := aws.ToString(v.EvaluatorId)
+			if strings.HasPrefix(evaluatorID, "Builtin.") {
+				// Skip built-in evaluators, which cannot be deleted.
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
+				framework.NewAttribute("evaluator_id", evaluatorID)),
 			)
 		}
 	}
