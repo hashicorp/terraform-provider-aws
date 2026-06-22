@@ -7,6 +7,7 @@ package dynamodb
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"reflect"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -28,6 +30,15 @@ import (
 )
 
 // @SDKResource("aws_dynamodb_table_item", name="Table Item")
+// @IdentityAttribute("table_name")
+// @IdentityAttribute("hash_key_value")
+// @IdentityAttribute("range_key_value", optional="true")
+// @ImportIDHandler("tableItemImportID")
+// @MutableIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;map[string]awstypes.AttributeValue")
+// @Testing(importIgnore="item")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.51.0")
 func resourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableItemCreate,
@@ -42,6 +53,10 @@ func resourceTableItem() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"hash_key_value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"item": {
 					Type:                  schema.TypeString,
 					Required:              true,
@@ -53,6 +68,10 @@ func resourceTableItem() *schema.Resource {
 					Type:     schema.TypeString,
 					ForceNew: true,
 					Optional: true,
+				},
+				"range_key_value": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				names.AttrTableName: {
 					Type:     schema.TypeString,
@@ -97,7 +116,9 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Table (%s) Item: %s", tableName, err)
 	}
 
-	d.SetId(tableItemCreateResourceID(tableName, hashKey, d.Get("range_key").(string), attributes))
+	rangeKey := d.Get("range_key").(string)
+	hkv, rkv := tableItemKeyValues(attributes, hashKey, rangeKey)
+	d.SetId(tableItemCreateResourceID(tableName, hkv, rkv))
 
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
@@ -109,11 +130,37 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 	tableName := d.Get(names.AttrTableName).(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	attributes, err := expandTableItemAttributes(d.Get("item").(string))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	itemJSON := d.Get("item").(string)
+
+	var (
+		currentAttrs map[string]awstypes.AttributeValue
+		key          map[string]awstypes.AttributeValue
+	)
+
+	if itemJSON != "" {
+		// Normal path: derive the key from the `item` JSON in state.
+		attrs, err := expandTableItemAttributes(itemJSON)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		currentAttrs = attrs
+		key = expandTableItemQueryKey(attrs, hashKey, rangeKey)
+	} else {
+		// Post-import path: state has identity attributes but no `item`. Recover the key names
+		// and AttributeValue types from the table's KeySchema/AttributeDefinitions.
+		recoveredKey, recoveredHashKey, recoveredRangeKey, err := tableItemKeyFromIdentity(ctx, conn, d, tableName)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		key = recoveredKey
+		hashKey = recoveredHashKey
+		rangeKey = recoveredRangeKey
+		d.Set("hash_key", hashKey)
+		if rangeKey != "" {
+			d.Set("range_key", rangeKey)
+		}
 	}
-	key := expandTableItemQueryKey(attributes, hashKey, rangeKey)
+
 	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -126,15 +173,27 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
 	}
 
-	// The record exists, now test if it differs from what is desired
-	if !reflect.DeepEqual(item, attributes) {
+	// Surface the key values as identity attributes.
+	hkv, rkv := tableItemKeyValues(item, hashKey, rangeKey)
+	if hkv != "" {
+		d.Set("hash_key_value", hkv)
+	}
+	if rangeKey != "" && rkv != "" {
+		d.Set("range_key_value", rkv)
+	}
+
+	// If the remote item differs from state (or state was empty due to import), refresh `item`.
+	if !reflect.DeepEqual(item, currentAttrs) {
 		itemAttrs, err := flattenTableItemAttributes(item)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 		d.Set("item", itemAttrs)
-		d.SetId(tableItemCreateResourceID(tableName, hashKey, rangeKey, item))
 	}
+
+	// Always canonicalize the resource ID. Handles the post-import case as well as
+	// state migration from earlier id formats.
+	d.SetId(tableItemCreateResourceID(tableName, hkv, rkv))
 
 	return diags
 }
@@ -213,7 +272,8 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		d.SetId(tableItemCreateResourceID(tableName, hashKey, rangeKey, attributes))
+		hkvNew, rkvNew := tableItemKeyValues(attributes, hashKey, rangeKey)
+		d.SetId(tableItemCreateResourceID(tableName, hkvNew, rkvNew))
 	}
 
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
@@ -244,32 +304,24 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string, attrs map[string]awstypes.AttributeValue) string {
-	id := []string{tableName, hashKey}
-
-	if v, ok := attrs[hashKey]; ok {
-		switch v := v.(type) {
-		case *awstypes.AttributeValueMemberB:
-			id = append(id, inttypes.Base64EncodeOnce(v.Value))
-		case *awstypes.AttributeValueMemberN:
-			id = append(id, v.Value)
-		case *awstypes.AttributeValueMemberS:
-			id = append(id, v.Value)
-		}
+func tableItemCreateResourceID(tableName string, hashKeyValue string, rangeKeyValue string) string {
+	parts := []string{tableName, hashKeyValue}
+	if rangeKeyValue != "" {
+		parts = append(parts, rangeKeyValue)
 	}
+	return strings.Join(parts, flex.ResourceIdSeparator)
+}
 
-	if v, ok := attrs[rangeKey]; ok && rangeKey != "" {
-		switch v := v.(type) {
-		case *awstypes.AttributeValueMemberB:
-			id = append(id, inttypes.Base64EncodeOnce(v.Value))
-		case *awstypes.AttributeValueMemberN:
-			id = append(id, v.Value)
-		case *awstypes.AttributeValueMemberS:
-			id = append(id, v.Value)
-		}
+// tableItemKeyValues extracts the canonical string representations of the hash
+// key and (optional) range key values from a fully-expanded item. Empty strings
+// are returned for missing or non-key-eligible attribute types.
+func tableItemKeyValues(attrs map[string]awstypes.AttributeValue, hashKey, rangeKey string) (string, string) {
+	hashKeyValue, _ := attributeValueToString(attrs[hashKey])
+	var rangeKeyValue string
+	if rangeKey != "" {
+		rangeKeyValue, _ = attributeValueToString(attrs[rangeKey])
 	}
-
-	return strings.Join(id, "|")
+	return hashKeyValue, rangeKeyValue
 }
 
 func findTableItemByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName string, key map[string]awstypes.AttributeValue) (map[string]awstypes.AttributeValue, error) {
@@ -311,4 +363,154 @@ func expandTableItemQueryKey(attrs map[string]awstypes.AttributeValue, hashKey, 
 	}
 
 	return queryKey
+}
+
+// attributeValueToString returns the canonical string form of a DynamoDB key
+// AttributeValue for use in identity attributes and resource IDs. Binary values
+// are encoded as standard base64. Returns false if the value is unset or of an
+// unsupported (non-key-eligible) type.
+func attributeValueToString(v awstypes.AttributeValue) (string, bool) {
+	switch v := v.(type) {
+	case *awstypes.AttributeValueMemberB:
+		return inttypes.Base64EncodeOnce(v.Value), true
+	case *awstypes.AttributeValueMemberN:
+		return v.Value, true
+	case *awstypes.AttributeValueMemberS:
+		return v.Value, true
+	default:
+		return "", false
+	}
+}
+
+// attributeValueFromString is the inverse of attributeValueToString. It uses
+// the table's declared ScalarAttributeType to build a typed AttributeValue
+// from the canonical string form. The type information cannot be recovered
+// from the string alone, which is why the table's AttributeDefinitions are
+// consulted during import.
+func attributeValueFromString(s string, attrType awstypes.ScalarAttributeType) (awstypes.AttributeValue, error) {
+	switch attrType {
+	case awstypes.ScalarAttributeTypeB:
+		data, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			return nil, fmt.Errorf("decoding base64 binary key value: %w", err)
+		}
+		return &awstypes.AttributeValueMemberB{Value: data}, nil
+	case awstypes.ScalarAttributeTypeN:
+		return &awstypes.AttributeValueMemberN{Value: s}, nil
+	case awstypes.ScalarAttributeTypeS:
+		return &awstypes.AttributeValueMemberS{Value: s}, nil
+	default:
+		return nil, fmt.Errorf("unsupported key attribute type: %q", attrType)
+	}
+}
+
+// tableItemKeyFromIdentity builds a DynamoDB GetItem key from the resource's
+// identity attributes (hash_key_value, range_key_value) and the table's
+// KeySchema/AttributeDefinitions. It also returns the discovered hash key name
+// and range key name so callers can populate state.
+func tableItemKeyFromIdentity(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData, tableName string) (map[string]awstypes.AttributeValue, string, string, error) {
+	hashKeyValue := d.Get("hash_key_value").(string)
+	rangeKeyValue := d.Get("range_key_value").(string)
+
+	if hashKeyValue == "" {
+		return nil, "", "", fmt.Errorf("hash_key_value must be set to import DynamoDB Table Item from %s", tableName)
+	}
+
+	table, err := findTableByName(ctx, conn, tableName)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("describing DynamoDB Table (%s): %w", tableName, err)
+	}
+
+	var hashKeyName, rangeKeyName string
+	for _, k := range table.KeySchema {
+		switch k.KeyType {
+		case awstypes.KeyTypeHash:
+			hashKeyName = aws.ToString(k.AttributeName)
+		case awstypes.KeyTypeRange:
+			rangeKeyName = aws.ToString(k.AttributeName)
+		}
+	}
+
+	attrTypes := make(map[string]awstypes.ScalarAttributeType, len(table.AttributeDefinitions))
+	for _, ad := range table.AttributeDefinitions {
+		attrTypes[aws.ToString(ad.AttributeName)] = ad.AttributeType
+	}
+
+	hashKeyType, ok := attrTypes[hashKeyName]
+	if !ok {
+		return nil, "", "", fmt.Errorf("table %s missing AttributeDefinition for hash key %q", tableName, hashKeyName)
+	}
+	hashKeyAV, err := attributeValueFromString(hashKeyValue, hashKeyType)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("hash_key_value: %w", err)
+	}
+
+	key := map[string]awstypes.AttributeValue{hashKeyName: hashKeyAV}
+
+	switch {
+	case rangeKeyName != "":
+		if rangeKeyValue == "" {
+			return nil, "", "", fmt.Errorf("table %s has range key %q but range_key_value is not set", tableName, rangeKeyName)
+		}
+		rangeKeyType, ok := attrTypes[rangeKeyName]
+		if !ok {
+			return nil, "", "", fmt.Errorf("table %s missing AttributeDefinition for range key %q", tableName, rangeKeyName)
+		}
+		rangeKeyAV, err := attributeValueFromString(rangeKeyValue, rangeKeyType)
+		if err != nil {
+			return nil, "", "", fmt.Errorf("range_key_value: %w", err)
+		}
+		key[rangeKeyName] = rangeKeyAV
+	case rangeKeyValue != "":
+		return nil, "", "", fmt.Errorf("table %s has no range key but range_key_value is set to %q", tableName, rangeKeyValue)
+	}
+
+	return key, hashKeyName, rangeKeyName, nil
+}
+
+var _ inttypes.SDKv2ImportID = tableItemImportID{}
+
+type tableItemImportID struct{}
+
+// Create assembles a comma-delimited import ID from state. The form is
+// `tableName,hashKeyValue[,rangeKeyValue]`. Used by the identity-block import
+// path to derive a legacy CLI-form import ID from identity attributes.
+func (tableItemImportID) Create(d *schema.ResourceData) string {
+	parts := []string{
+		d.Get(names.AttrTableName).(string),
+		d.Get("hash_key_value").(string),
+	}
+	if v, ok := d.GetOk("range_key_value"); ok && v.(string) != "" {
+		parts = append(parts, v.(string))
+	}
+	return strings.Join(parts, flex.ResourceIdSeparator)
+}
+
+// Parse splits a comma-delimited import ID of the form
+// `tableName,hashKeyValue[,rangeKeyValue]` into resource attributes. Returns
+// the import ID unchanged as the resource ID; Read will canonicalize the ID
+// to the internal `tableName|hashKey|hashKeyValue[|rangeKey|rangeKeyValue]`
+// form after recovering the key names via DescribeTable.
+//
+// Hash key or range key values containing commas must be imported via an
+// `import` block with the `identity` attribute set rather than the legacy
+// `terraform import` CLI form.
+func (tableItemImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, flex.ResourceIdSeparator)
+	if len(parts) < 2 || len(parts) > 3 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf(
+			"id %q should be of the form tableName%shashKeyValue[%srangeKeyValue]",
+			id, flex.ResourceIdSeparator, flex.ResourceIdSeparator,
+		)
+	}
+
+	result := map[string]any{
+		names.AttrTableName: parts[0],
+		"hash_key_value":    parts[1],
+	}
+	if len(parts) == 3 && parts[2] != "" {
+		result["range_key_value"] = parts[2]
+	}
+
+	return id, result, nil
 }
