@@ -19,7 +19,7 @@ func TestAccLogs_serial(t *testing.T) {
 			"cloudFrontDistribution": testAccDelivery_cloudFrontDistribution,
 			"tags":                   testAccDelivery_tags,
 			"update":                 testAccDelivery_update,
-			"updateRecordFieldsNoS3": testAccDelivery_updateRecordFields_noS3,
+			"updateRecordFieldsNoS3": testAccDelivery_updateRecordFieldsNoS3,
 		},
 		"DeliverySource": {
 			acctest.CtBasic:      testAccDeliverySource_basic,
