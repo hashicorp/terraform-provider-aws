@@ -128,7 +128,7 @@ This resource supports the following arguments:
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Optional) The password for the directory administrator or connector user. Exactly one of `password` or `password_wo` is required.
 * `password_wo` - (Optional, [Write-Only](https://developer.hashicorp.com/terraform/language/resources/ephemeral/write-only)) The password for the directory administrator or connector user. The value is not stored in state. Exactly one of `password` or `password_wo` is required. Requires `password_wo_version`.
-* `password_wo_version` - (Optional) Used together with `password_wo` to trigger an update. Increment this value when an update to `password_wo` is required.
+* `password_wo_version` - (Optional) Used together with `password_wo` to trigger a password change. Because the directory password cannot be changed in place, incrementing this value replaces the directory.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
 * `vpc_settings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
