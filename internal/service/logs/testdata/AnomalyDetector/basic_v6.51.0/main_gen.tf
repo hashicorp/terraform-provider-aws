@@ -10,7 +10,7 @@ resource "aws_cloudwatch_log_anomaly_detector" "test" {
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name  = var.rName
+  name = var.rName
 }
 
 variable "rName" {
