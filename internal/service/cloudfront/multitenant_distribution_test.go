@@ -417,6 +417,11 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccMultiTenantDistributionConfig_originOrder(true),
@@ -424,6 +429,11 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccMultiTenantDistributionConfig_originOrder(false),
@@ -431,6 +441,11 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
