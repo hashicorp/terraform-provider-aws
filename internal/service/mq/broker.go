@@ -1167,11 +1167,14 @@ func brokerEndpointPriority(endpoint string, engineType types.EngineType) int {
 	if !found {
 		return math.MaxInt
 	}
+	if idx := strings.IndexAny(rest, "/?#"); idx >= 0 {
+		rest = rest[:idx]
+	}
 	portIdx := strings.LastIndex(rest, ":")
 	if portIdx < 0 {
 		return math.MaxInt
 	}
-	key := strings.ToLower(string(engineType)) + ":" + scheme + ":" + rest[portIdx+1:]
+	key := strings.ToLower(string(engineType)) + ":" + strings.ToLower(scheme) + ":" + rest[portIdx+1:]
 	if p, ok := brokerEndpointOrder[key]; ok {
 		return p
 	}

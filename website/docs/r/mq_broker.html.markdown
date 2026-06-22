@@ -218,7 +218,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `instances` - List of information about allocated brokers (both active & standby).
     * `instances.0.console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
     * `instances.0.ip_address` - IP Address of the broker.
-    * `instances.0.endpoints` - Broker's wire-level protocol endpoints referenceable e.g., as `instances.0.endpoints.0`. The order is guaranteed and determined by the protocol prefix and port number.
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints referenceable e.g., as `instances.0.endpoints.0`. Known endpoints are returned in the deterministic order below, based on protocol prefix and port number; any additional endpoint types introduced in the future are appended afterward in the order returned by the API.
         * For `ActiveMQ`:
             * `instances.0.endpoints.0` - `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
             * `instances.0.endpoints.1` - `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
