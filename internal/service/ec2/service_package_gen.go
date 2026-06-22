@@ -1098,7 +1098,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
 			},
