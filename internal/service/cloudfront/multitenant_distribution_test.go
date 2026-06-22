@@ -394,7 +394,7 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_updateCommentHTTPVersionAndDefaultRootObject(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
@@ -406,7 +406,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_update("Initial comment", "http1.1", ""),
+				Config: testAccMultiTenantDistributionConfig_updateCommentHTTPVersionAndDefaultRootObject("Initial comment", "http1.1", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -415,7 +415,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_update("Updated comment", "http2", "updated.html"),
+				Config: testAccMultiTenantDistributionConfig_updateCommentHTTPVersionAndDefaultRootObject("Updated comment", "http2", "updated.html"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -898,7 +898,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, comment, tagKey1, tagValue1)
 }
 
-func testAccMultiTenantDistributionConfig_update(comment, httpVersion, defaultRootObject string) string {
+func testAccMultiTenantDistributionConfig_updateCommentHTTPVersionAndDefaultRootObject(comment, httpVersion, defaultRootObject string) string {
 	defaultRootObjectConfig := ""
 	if defaultRootObject != "" {
 		defaultRootObjectConfig = fmt.Sprintf("default_root_object = %q", defaultRootObject)
