@@ -7,7 +7,6 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
-	"sort"
 )
 
 // Severity classifies a finding's impact.
@@ -361,19 +360,4 @@ func min3(a, b, c int) int {
 		m = c
 	}
 	return m
-}
-
-// sortFindings is exposed for tests so they can compare against expected
-// output without depending on Validate's internal ordering. Production
-// callers don't need it: Validate returns findings already sorted.
-func sortFindings(fs []Finding) {
-	sort.SliceStable(fs, func(i, j int) bool {
-		if fs[i].File != fs[j].File {
-			return fs[i].File < fs[j].File
-		}
-		if fs[i].Line != fs[j].Line {
-			return fs[i].Line < fs[j].Line
-		}
-		return fs[i].Code < fs[j].Code
-	})
 }

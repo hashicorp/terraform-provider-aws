@@ -4,7 +4,8 @@
 package main
 
 import (
-	"os"
+	"errors"
+	"io/fs"
 	"path/filepath"
 	"testing"
 )
@@ -80,7 +81,7 @@ func TestMakeRefRegex(t *testing.T) {
 func TestParseCIDoc_MissingFile(t *testing.T) {
 	t.Parallel()
 	_, err := ParseCIDoc(filepath.Join(t.TempDir(), "nope.md"))
-	if !os.IsNotExist(err) {
+	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("expected not-exist error, got %v", err)
 	}
 }
