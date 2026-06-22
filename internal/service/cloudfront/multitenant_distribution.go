@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -829,6 +830,8 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
+		new.WebACLID = flex.NullAsEmptyString(new.WebACLID)
+
 		distributionConfig := output.Distribution.DistributionConfig
 
 		// Expand the new configuration over the existing config
@@ -991,6 +994,8 @@ func flattenMultiTenantDistribution(ctx context.Context, output *cloudfront.GetD
 		return diags
 	}
 
+	data.WebACLID = flex.EmptyStringAsNull(data.WebACLID)
+
 	return diags
 }
 
@@ -1084,7 +1089,7 @@ type multiTenantDistributionResourceModel struct {
 	TenantConfig                  fwtypes.ListNestedObjectValueOf[tenantConfigModel]           `tfsdk:"tenant_config"`
 	Timeouts                      timeouts.Value                                               `tfsdk:"timeouts"`
 	ViewerCertificate             fwtypes.ListNestedObjectValueOf[viewerCertificateModel]      `tfsdk:"viewer_certificate"`
-	WebACLID                      types.String                                                 `tfsdk:"web_acl_id" autoflex:",omitempty"`
+	WebACLID                      types.String                                                 `tfsdk:"web_acl_id"`
 }
 
 type originModel struct {
