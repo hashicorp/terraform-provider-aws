@@ -9,7 +9,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/lambda/layer_version_list.go"
         - "/internal/service/route53/record_list.go"
         - "/internal/service/route53resolver/rule_association_list.go"
         - "/internal/service/s3/bucket_acl_list.go"
