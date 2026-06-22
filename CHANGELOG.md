@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * provider: Generated names are now created using a cryptographically strong random generator instead of a timestamp and counter, so values are more uniformly distributed over the lowercase hexadecimal digit characters ([#47995](https://github.com/hashicorp/terraform-provider-aws/issues/47995))
 * resource/aws_appautoscaling_target: Add resource identity support ([#48449](https://github.com/hashicorp/terraform-provider-aws/issues/48449))
+* resource/aws_default_network_acl: Prevents error on creation when tag-based authorization in use. ([#44798](https://github.com/hashicorp/terraform-provider-aws/issues/44798))
 
 BUG FIXES:
 
