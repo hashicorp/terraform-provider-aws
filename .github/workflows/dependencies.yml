@@ -4,7 +4,7 @@
 name: Dependency Checks
 
 permissions:
-  contents: read
+  contents: read # required for checkout
 
 on:
   push:
