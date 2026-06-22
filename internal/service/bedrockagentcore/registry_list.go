@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -68,11 +67,10 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 
 			var data registryResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
-				flattenRegistryApproval(output, &data)
 
 				result.DisplayName = aws.ToString(item.Name)
 			})

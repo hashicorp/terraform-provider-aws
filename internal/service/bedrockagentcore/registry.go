@@ -16,10 +16,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -37,12 +38,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_registry", name="Registry")
+// @IdentityAttribute("registry_id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="registry_id")
-// @IdentityAttribute("registry_id")
+// @Testing(preCheck="testAccPreCheckRegistries")
 func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &registryResource{}
 
@@ -62,13 +63,7 @@ type registryResource struct {
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"auto_approval": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"approval_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[approvalConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"authorizer_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
 				Optional:   true,
@@ -96,10 +91,6 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"registry_arn": framework.ARNAttributeComputedOnly(),
 			"registry_id":  framework.IDAttribute(),
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.RegistryStatus](),
-				Computed:   true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
@@ -137,25 +128,19 @@ func (r *registryResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input bedrockagentcorecontrol.CreateRegistryInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
-
-	// auto_approval is Optional+Computed and maps to a nested AWS struct,
-	// so it is handled outside of AutoFlex.
-	if !plan.AutoApproval.IsNull() && !plan.AutoApproval.IsUnknown() {
-		input.ApprovalConfiguration = &awstypes.ApprovalConfiguration{
-			AutoApproval: plan.AutoApproval.ValueBool(),
-		}
-	}
 
 	out, err := conn.CreateRegistry(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -172,7 +157,6 @@ func (r *registryResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	flattenRegistryApproval(created, &plan)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -186,22 +170,22 @@ func (r *registryResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	out, err := findRegistryByID(ctx, conn, state.RegistryID.ValueString())
+	registryID := fwflex.StringValueFromFramework(ctx, state.RegistryID)
+	out, err := findRegistryByID(ctx, conn, registryID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RegistryID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	flattenRegistryApproval(out, &state)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -216,33 +200,47 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.AutoApproval.Equal(state.AutoApproval) ||
-		!plan.AuthorizerConfiguration.Equal(state.AuthorizerConfiguration) {
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		registryID := fwflex.StringValueFromFramework(ctx, plan.RegistryID)
 		input := bedrockagentcorecontrol.UpdateRegistryInput{
-			RegistryId: plan.RegistryID.ValueStringPointer(),
+			RegistryId: aws.String(registryID),
+		}
+
+		if !plan.ApprovalConfiguration.Equal(state.ApprovalConfiguration) {
+			if plan.ApprovalConfiguration.IsNull() {
+				input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{}
+			} else {
+				v, d := plan.ApprovalConfiguration.ToPtr(ctx)
+				smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{
+					OptionalValue: &awstypes.ApprovalConfiguration{
+						AutoApproval: fwflex.BoolValueFromFramework(ctx, v.AutoApproval),
+					},
+				}
+			}
+		}
+
+		if !plan.Description.Equal(state.Description) {
+			if plan.Description.IsNull() {
+				input.Description = &awstypes.UpdatedDescription{}
+			} else {
+				input.Description = &awstypes.UpdatedDescription{
+					OptionalValue: fwflex.StringFromFramework(ctx, plan.Description),
+				}
+			}
 		}
 
 		if !plan.Name.Equal(state.Name) {
 			input.Name = plan.Name.ValueStringPointer()
-		}
-
-		if !plan.Description.Equal(state.Description) {
-			// A nil OptionalValue clears the description (PATCH semantics of
-			// UpdatedDescription). ValueStringPointer returns nil when the
-			// configured description is removed.
-			input.Description = &awstypes.UpdatedDescription{
-				OptionalValue: plan.Description.ValueStringPointer(),
-			}
-		}
-
-		if !plan.AutoApproval.Equal(state.AutoApproval) && !plan.AutoApproval.IsUnknown() {
-			input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{
-				OptionalValue: &awstypes.ApprovalConfiguration{
-					AutoApproval: plan.AutoApproval.ValueBool(),
-				},
-			}
 		}
 
 		if !plan.AuthorizerConfiguration.Equal(state.AuthorizerConfiguration) {
@@ -264,21 +262,14 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 
 		_, err := conn.UpdateRegistry(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RegistryID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 			return
 		}
 
-		updated, err := waitRegistryUpdated(ctx, conn, plan.RegistryID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
+		if _, err := waitRegistryUpdated(ctx, conn, registryID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RegistryID.String())
 			return
 		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, updated, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		flattenRegistryApproval(updated, &plan)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -293,8 +284,7 @@ func (r *registryResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	registryID := state.RegistryID.ValueString()
-
+	registryID := fwflex.StringValueFromFramework(ctx, state.RegistryID)
 	input := bedrockagentcorecontrol.DeleteRegistryInput{
 		RegistryId: aws.String(registryID),
 	}
@@ -312,6 +302,12 @@ func (r *registryResource) Delete(ctx context.Context, req resource.DeleteReques
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
+}
+
+func (r *registryResource) flatten(ctx context.Context, registry *bedrockagentcorecontrol.GetRegistryOutput, data *registryResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, registry, data)...)
+	return diags
 }
 
 func waitRegistryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryOutput, error) {
@@ -387,7 +383,11 @@ func findRegistryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 		RegistryId: aws.String(id),
 	}
 
-	out, err := conn.GetRegistry(ctx, &input)
+	return findRegistry(ctx, conn, &input)
+}
+
+func findRegistry(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetRegistryInput) (*bedrockagentcorecontrol.GetRegistryOutput, error) {
+	out, err := conn.GetRegistry(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
@@ -408,24 +408,16 @@ func findRegistryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 
 type registryResourceModel struct {
 	framework.WithRegionModel
-	AutoApproval            types.Bool                                                    `tfsdk:"auto_approval"`
+	ApprovalConfiguration   fwtypes.ListNestedObjectValueOf[approvalConfigurationModel]   `tfsdk:"approval_configuration"`
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel] `tfsdk:"authorizer_configuration"`
 	AuthorizerType          fwtypes.StringEnum[awstypes.RegistryAuthorizerType]           `tfsdk:"authorizer_type"`
 	Description             types.String                                                  `tfsdk:"description"`
 	Name                    types.String                                                  `tfsdk:"name"`
 	RegistryARN             types.String                                                  `tfsdk:"registry_arn"`
 	RegistryID              types.String                                                  `tfsdk:"registry_id"`
-	Status                  fwtypes.StringEnum[awstypes.RegistryStatus]                   `tfsdk:"status"`
 	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
-// flattenRegistryApproval maps the nested AWS ApprovalConfiguration onto the flat
-// auto_approval attribute. AWS always returns this configuration, defaulting
-// auto_approval to false.
-func flattenRegistryApproval(out *bedrockagentcorecontrol.GetRegistryOutput, m *registryResourceModel) {
-	if out.ApprovalConfiguration != nil {
-		m.AutoApproval = types.BoolValue(out.ApprovalConfiguration.AutoApproval)
-		return
-	}
-	m.AutoApproval = types.BoolValue(false)
+type approvalConfigurationModel struct {
+	AutoApproval types.Bool `tfsdk:"auto_approval"`
 }

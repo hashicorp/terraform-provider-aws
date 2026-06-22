@@ -10,6 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -39,7 +41,10 @@ func TestAccBedrockAgentCoreRegistry_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
@@ -52,11 +57,14 @@ func TestAccBedrockAgentCoreRegistry_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`registry/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_type"), knownvalue.StringExact("AWS_IAM")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("READY")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_type"), tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam)),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -83,7 +91,10 @@ func TestAccBedrockAgentCoreRegistry_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceRegistry, resourceName),
@@ -142,7 +153,10 @@ func TestAccBedrockAgentCoreRegistry_description(t *testing.T) {
 			},
 			{
 				// Removing the description clears it on the registry.
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
@@ -325,14 +339,6 @@ func testAccPreCheckRegistries(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccRegistryConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_registry" "test" {
-  name = %[1]q
-}
-`, rName)
-}
-
 func testAccRegistryConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_registry" "test" {
@@ -346,7 +352,10 @@ func testAccRegistryConfig_approvalConfiguration(rName string, autoApproval bool
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_registry" "test" {
   name          = %[1]q
-  auto_approval = %[2]t
+
+  approval_configuration {
+    auto_approval = %[2]t
+  }
 }
 `, rName, autoApproval)
 }

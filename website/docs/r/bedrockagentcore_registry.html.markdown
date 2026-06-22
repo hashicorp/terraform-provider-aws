@@ -55,11 +55,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `approval_configuration` - (Optional)  Approval configuration for registry records. [See below](#approval_configuration-block).
 * `authorizer_configuration` - (Optional) Authorizer configuration for the registry. Required when `authorizer_type` is `CUSTOM_JWT`. [See below](#authorizer_configuration-block).
 * `authorizer_type` - (Optional, Forces new resource) Type of authorizer to use for the registry. Valid values are `AWS_IAM` (default) and `CUSTOM_JWT`. This controls the authorization method for the Search and Invoke APIs used by consumers.
-* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
 * `description` - (Optional) Description of the registry.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `approval_configuration` Block
+
+The `approval_configuration` configuration block supports the following arguments:
+
+* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
 
 ### `authorizer_configuration` Block
 
@@ -105,7 +111,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `registry_arn` - ARN of the registry.
 * `registry_id` - Unique identifier of the registry.
-* `status` - Current status of the registry.
 
 ## Timeouts
 
