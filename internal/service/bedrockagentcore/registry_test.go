@@ -194,7 +194,9 @@ func TestAccBedrockAgentCoreRegistry_approvalConfiguration(t *testing.T) {
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_approval"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapExact(map[string]knownvalue.Check{
+						"auto_approval": knownvalue.Bool(true),
+					})})),
 				},
 			},
 			{
@@ -215,7 +217,9 @@ func TestAccBedrockAgentCoreRegistry_approvalConfiguration(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_approval"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapExact(map[string]knownvalue.Check{
+						"auto_approval": knownvalue.Bool(false),
+					})})),
 				},
 			},
 		},

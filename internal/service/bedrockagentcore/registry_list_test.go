@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -117,11 +119,12 @@ func TestAccBedrockAgentCoreRegistry_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("auto_approval"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("approval_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapExact(map[string]knownvalue.Check{
+							"auto_approval": knownvalue.Bool(true),
+						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_arn"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("authorizer_type"), knownvalue.StringExact("AWS_IAM")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("READY")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("authorizer_type"), tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),
 				},

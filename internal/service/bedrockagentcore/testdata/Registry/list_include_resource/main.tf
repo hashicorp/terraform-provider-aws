@@ -6,7 +6,10 @@ resource "aws_bedrockagentcore_registry" "test" {
 
   name          = "${var.rName}_${count.index}"
   description   = "test description"
-  auto_approval = true
+
+  approval_configuration {
+    auto_approval = true
+  }
 }
 
 variable "rName" {
