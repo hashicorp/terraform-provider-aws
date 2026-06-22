@@ -22,6 +22,7 @@ func TestAccS3BucketNotificationDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationDataSourceConfig_basic(rName),
@@ -61,6 +62,7 @@ func TestAccS3BucketNotificationDataSource_eventbridge(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationDataSourceConfig_eventbridge(rName),
@@ -96,6 +98,7 @@ func TestAccS3BucketNotificationDataSource_readAndReemit(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationDataSourceConfig_readAndReemit(rName),
