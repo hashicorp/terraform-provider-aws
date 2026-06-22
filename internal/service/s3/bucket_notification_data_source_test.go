@@ -42,17 +42,6 @@ func TestAccS3BucketNotificationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBucketNotificationDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccBucketNotificationConfig_lambdaFunction(rName),
-		`
-data "aws_s3_bucket_notification" "test" {
-  bucket = aws_s3_bucket_notification.test.bucket
-}
-`,
-	)
-}
-
 func TestAccS3BucketNotificationDataSource_eventbridge(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -75,17 +64,6 @@ func TestAccS3BucketNotificationDataSource_eventbridge(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccBucketNotificationDataSourceConfig_eventbridge(rName string) string {
-	return acctest.ConfigCompose(
-		testAccBucketNotificationConfig_eventBridge(rName),
-		`
-data "aws_s3_bucket_notification" "test" {
-  bucket = aws_s3_bucket_notification.test.bucket
-}
-`,
-	)
 }
 
 func TestAccS3BucketNotificationDataSource_readAndReemit(t *testing.T) {
@@ -119,6 +97,28 @@ func TestAccS3BucketNotificationDataSource_readAndReemit(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccBucketNotificationDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketNotificationConfig_lambdaFunction(rName),
+		`
+data "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket_notification.test.bucket
+}
+`,
+	)
+}
+
+func testAccBucketNotificationDataSourceConfig_eventbridge(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketNotificationConfig_eventBridge(rName),
+		`
+data "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket_notification.test.bucket
+}
+`,
+	)
 }
 
 func testAccBucketNotificationDataSourceConfig_readAndReemit(rName string) string {
