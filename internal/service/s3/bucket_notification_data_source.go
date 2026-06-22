@@ -95,19 +95,19 @@ func bucketNotificationDataSourceFlatten(ctx context.Context, output *s3.GetBuck
 	return diags
 }
 
-func bucketNotificationFilterRulePrefixSuffix(filter *awstypes.NotificationConfigurationFilter) (string, string) {
+func bucketNotificationFilterRulePrefixSuffix(filter *awstypes.NotificationConfigurationFilter) (types.String, types.String) {
+	prefix, suffix := types.StringNull(), types.StringNull()
 	if filter == nil || filter.Key == nil {
-		return "", ""
+		return prefix, suffix
 	}
-	var prefix, suffix string
 	// AWS returns "Prefix"/"Suffix" with title case while the SDK enum
 	// constants are lowercase, so normalize before matching.
 	for _, rule := range filter.Key.FilterRules {
 		switch strings.ToLower(string(rule.Name)) {
 		case string(awstypes.FilterRuleNamePrefix):
-			prefix = aws.ToString(rule.Value)
+			prefix = types.StringValue(aws.ToString(rule.Value))
 		case string(awstypes.FilterRuleNameSuffix):
-			suffix = aws.ToString(rule.Value)
+			suffix = types.StringValue(aws.ToString(rule.Value))
 		}
 	}
 	return prefix, suffix
@@ -162,9 +162,7 @@ func (m *bucketNotificationLambdaFunctionModel) Flatten(ctx context.Context, v a
 	m.ID = types.StringPointerValue(c.Id)
 	m.LambdaFunctionARN = types.StringPointerValue(c.LambdaFunctionArn)
 	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
-	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-	m.FilterPrefix = types.StringValue(prefix)
-	m.FilterSuffix = types.StringValue(suffix)
+	m.FilterPrefix, m.FilterSuffix = bucketNotificationFilterRulePrefixSuffix(c.Filter)
 	return diags
 }
 
@@ -200,9 +198,7 @@ func (m *bucketNotificationQueueModel) Flatten(ctx context.Context, v any) diag.
 	m.ID = types.StringPointerValue(c.Id)
 	m.QueueARN = types.StringPointerValue(c.QueueArn)
 	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
-	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-	m.FilterPrefix = types.StringValue(prefix)
-	m.FilterSuffix = types.StringValue(suffix)
+	m.FilterPrefix, m.FilterSuffix = bucketNotificationFilterRulePrefixSuffix(c.Filter)
 	return diags
 }
 
@@ -238,8 +234,6 @@ func (m *bucketNotificationTopicModel) Flatten(ctx context.Context, v any) diag.
 	m.ID = types.StringPointerValue(c.Id)
 	m.TopicARN = types.StringPointerValue(c.TopicArn)
 	m.Events = fwflex.FlattenFrameworkStringValueSetOfString(ctx, eventsToStrings(c.Events))
-	prefix, suffix := bucketNotificationFilterRulePrefixSuffix(c.Filter)
-	m.FilterPrefix = types.StringValue(prefix)
-	m.FilterSuffix = types.StringValue(suffix)
+	m.FilterPrefix, m.FilterSuffix = bucketNotificationFilterRulePrefixSuffix(c.Filter)
 	return diags
 }
