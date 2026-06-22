@@ -5,6 +5,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -146,6 +147,13 @@ func (m *bucketNotificationLambdaFunctionModel) Flatten(ctx context.Context, v a
 	case *awstypes.LambdaFunctionConfiguration:
 		c = t
 	default:
+		if v == nil {
+			return diags
+		}
+		diags.AddError(
+			"Unexpected source type",
+			fmt.Sprintf("flattening bucket_notification.lambda_function: got %T, expected awstypes.LambdaFunctionConfiguration", v),
+		)
 		return diags
 	}
 	if c == nil {
@@ -177,6 +185,13 @@ func (m *bucketNotificationQueueModel) Flatten(ctx context.Context, v any) diag.
 	case *awstypes.QueueConfiguration:
 		c = t
 	default:
+		if v == nil {
+			return diags
+		}
+		diags.AddError(
+			"Unexpected source type",
+			fmt.Sprintf("flattening bucket_notification.queue: got %T, expected awstypes.QueueConfiguration", v),
+		)
 		return diags
 	}
 	if c == nil {
@@ -208,6 +223,13 @@ func (m *bucketNotificationTopicModel) Flatten(ctx context.Context, v any) diag.
 	case *awstypes.TopicConfiguration:
 		c = t
 	default:
+		if v == nil {
+			return diags
+		}
+		diags.AddError(
+			"Unexpected source type",
+			fmt.Sprintf("flattening bucket_notification.topic: got %T, expected awstypes.TopicConfiguration", v),
+		)
 		return diags
 	}
 	if c == nil {
