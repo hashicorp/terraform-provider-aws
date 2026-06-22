@@ -264,6 +264,9 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model").AtSliceIndex(0).AtMapKey("bedrock_model_config").AtSliceIndex(0).AtMapKey("api_format"), knownvalue.StringExact("converse_stream")),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -801,6 +804,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
   model {
     bedrock_model_config {
+      api_format  = "converse_stream"
       model_id    = "anthropic.claude-sonnet-4-20250514"
       temperature = 0.7
       top_p       = 0.9
