@@ -289,6 +289,7 @@ variable "service_labels" {
     "redshiftserverless",
     "rekognition",
     "resiliencehub",
+    "resiliencehubv2",
     "resourceexplorer2",
     "resourcegroups",
     "resourcegroupstaggingapi",
