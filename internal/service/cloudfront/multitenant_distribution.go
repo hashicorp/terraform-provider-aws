@@ -705,36 +705,38 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.CreateDistributionWithTagsInput{
-		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
-			DistributionConfig: &awstypes.DistributionConfig{},
-			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
-		},
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input.DistributionConfigWithTags.DistributionConfig)...)
+	var distributionConfig awstypes.DistributionConfig
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &distributionConfig)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 	// This is needed for S3 origins using Origin Access Control (OAC)
-	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
+	fixOriginConfigs(distributionConfig.Origins)
 
 	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-	fixCacheBehaviors(input.DistributionConfigWithTags.DistributionConfig)
-
-	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
+	fixCacheBehaviors(&distributionConfig)
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
-	input.DistributionConfigWithTags.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+	distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
+	// Set required computed fields that AutoFlex can't handle
+	distributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
+
+	input := cloudfront.CreateDistributionWithTagsInput{
+		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
+			DistributionConfig: &distributionConfig,
+			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
+		},
+	}
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.DistributionConfigWithTags.Tags.Items = tags
 	}
 
-	output, err := conn.CreateDistributionWithTags(ctx, input)
+	output, err := conn.CreateDistributionWithTags(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError("creating CloudFront Multi-tenant Distribution", err.Error())
 		return
@@ -827,28 +829,30 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
-		// Prepare update input - start with existing config to preserve all fields
-		input := cloudfront.UpdateDistributionInput{
-			Id:                 new.ID.ValueStringPointer(),
-			IfMatch:            output.ETag,
-			DistributionConfig: output.Distribution.DistributionConfig,
-		}
+		distributionConfig := output.Distribution.DistributionConfig
 
 		// Expand the new configuration over the existing config
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.DistributionConfig)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, distributionConfig)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
-		fixOriginConfigs(input.DistributionConfig.Origins)
+		fixOriginConfigs(distributionConfig.Origins)
 
 		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-		fixCacheBehaviors(input.DistributionConfig)
+		fixCacheBehaviors(distributionConfig)
 
 		// Ensure ConnectionMode remains tenant-only
-		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+		distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
+		// Prepare update input - start with existing config to preserve all fields
+		input := cloudfront.UpdateDistributionInput{
+			Id:                 new.ID.ValueStringPointer(),
+			IfMatch:            output.ETag,
+			DistributionConfig: distributionConfig,
+		}
 
 		// Update the distribution
 		_, err = conn.UpdateDistribution(ctx, &input)
