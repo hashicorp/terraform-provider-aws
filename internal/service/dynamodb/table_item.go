@@ -480,7 +480,7 @@ func (tableItemImportID) Create(d *schema.ResourceData) string {
 		d.Get(names.AttrTableName).(string),
 		d.Get("hash_key_value").(string),
 	}
-	if v, ok := d.GetOk("range_key_value"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("range_key_value"); ok {
 		parts = append(parts, v.(string))
 	}
 	return strings.Join(parts, flex.ResourceIdSeparator)
@@ -488,9 +488,9 @@ func (tableItemImportID) Create(d *schema.ResourceData) string {
 
 // Parse splits a comma-delimited import ID of the form
 // `tableName,hashKeyValue[,rangeKeyValue]` into resource attributes. Returns
-// the import ID unchanged as the resource ID; Read will canonicalize the ID
-// to the internal `tableName|hashKey|hashKeyValue[|rangeKey|rangeKeyValue]`
-// form after recovering the key names via DescribeTable.
+// the import ID unchanged as the resource ID, which is also the canonical
+// internal form. Read recovers the hash and range key names via
+// DescribeTable.
 //
 // Hash key or range key values containing commas must be imported via an
 // `import` block with the `identity` attribute set rather than the legacy
