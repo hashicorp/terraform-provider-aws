@@ -37,7 +37,13 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_log_delivery", name="Delivery")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Delivery")
+// @Testing(serialize=true)
+// @Testing(importIgnore="field_delimiter;s3_delivery_configuration.0.enable_hive_compatible_path")
+// @Testing(plannableImportAction="NoOp")
 func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliveryResource{}
 
@@ -46,7 +52,7 @@ func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error
 
 type deliveryResource struct {
 	framework.ResourceWithModel[deliveryResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -93,14 +99,12 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:              tftags.TagsAttribute(),
 			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
-
-var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{}
 
 // deliveryMutexLock acquires locks on both delivery source and destination to prevent concurrent modification conflicts.
 // Locks are acquired in a consistent order (source first, then destination) to prevent deadlocks.
@@ -137,7 +141,7 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := cloudwatchlogs.CreateDeliveryInput{}
+	var input cloudwatchlogs.CreateDeliveryInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -147,7 +151,6 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	defer deliveryMutexLock(&data)()
-
 	output, err := conn.CreateDelivery(ctx, &input)
 
 	if err != nil {
@@ -157,13 +160,14 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	// Set values for unknowns.
-	data.ID = fwflex.StringToFramework(ctx, output.Delivery.Id)
+	id := aws.ToString(output.Delivery.Id)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	delivery, err := findDeliveryByID(ctx, conn, data.ID.ValueString())
+	delivery, err := findDeliveryByID(ctx, conn, id)
 
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", id), err.Error())
 
 		return
 	}
@@ -223,7 +227,8 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findDeliveryByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findDeliveryByID(ctx, conn, id)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -233,7 +238,7 @@ func (r *deliveryResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery (%s)", id), err.Error())
 
 		return
 	}
@@ -308,7 +313,8 @@ func (r *deliveryResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if diff.HasChanges() {
-		input := cloudwatchlogs.UpdateDeliveryConfigurationInput{}
+		id := fwflex.StringValueFromFramework(ctx, new.ID)
+		var input cloudwatchlogs.UpdateDeliveryConfigurationInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -319,11 +325,10 @@ func (r *deliveryResource) Update(ctx context.Context, request resource.UpdateRe
 		}
 
 		defer deliveryMutexLock(&new)()
-
 		_, err := conn.UpdateDeliveryConfiguration(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery (%s)", id), err.Error())
 
 			return
 		}
@@ -341,18 +346,19 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().LogsClient(ctx)
 
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	input := cloudwatchlogs.DeleteDeliveryInput{
+		Id: aws.String(id),
+	}
 	defer deliveryMutexLock(&data)()
-
-	_, err := conn.DeleteDelivery(ctx, &cloudwatchlogs.DeleteDeliveryInput{
-		Id: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	_, err := conn.DeleteDelivery(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery (%s)", id), err.Error())
 
 		return
 	}
