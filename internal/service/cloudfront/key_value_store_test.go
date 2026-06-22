@@ -10,11 +10,8 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -136,88 +133,66 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontKeyValueStore_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var keyvaluestore awstypes.KeyValueStore
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudfront_key_value_store.test"
+func testAccCheckKeyValueStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyValueStoreConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tags"), knownvalue.MapExact(map[string]knownvalue.Check{
-						"key1": knownvalue.StringExact("value1"),
-					})),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccKeyValueStoreConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tags"), knownvalue.MapExact(map[string]knownvalue.Check{
-						"key1": knownvalue.StringExact("value1updated"),
-						"key2": knownvalue.StringExact("value2"),
-					})),
-				},
-			},
-			{
-				Config: testAccKeyValueStoreConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_key_value_store" {
+				continue
+			}
+
+			_, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront Key Value Store %q still exists", rs.Primary.Attributes[names.AttrName])
+		}
+
+		return nil
+	}
 }
 
-func testAccKeyValueStoreConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccCheckKeyValueStoreExists(ctx context.Context, t *testing.T, n string, v *awstypes.KeyValueStore) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
+
+		output, err := tfcloudfront.FindKeyValueStoreByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output.KeyValueStore
+
+		return nil
+	}
+}
+
+func testAccKeyValueStoreConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test" {
   name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
 }
-`, rName, tagKey1, tagValue1)
+`, rName)
 }
 
-func testAccKeyValueStoreConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccKeyValueStoreConfig_comment(rName string, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
+  name    = %[1]q
+  comment = %[2]q
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, comment)
 }
