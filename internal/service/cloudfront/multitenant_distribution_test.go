@@ -13,8 +13,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -36,6 +39,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "distribution/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^\S+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
@@ -44,6 +48,9 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					// Check ResponseCompletionTimeout is not enabled with no value set
 					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_acl_id"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
