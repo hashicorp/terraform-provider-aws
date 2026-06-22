@@ -132,10 +132,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 	rangeKey := d.Get("range_key").(string)
 	itemJSON := d.Get("item").(string)
 
-	var (
-		currentAttrs map[string]awstypes.AttributeValue
-		key          map[string]awstypes.AttributeValue
-	)
+	var key map[string]awstypes.AttributeValue
 
 	if itemJSON != "" {
 		// Normal path: derive the key from the `item` JSON in state.
@@ -143,7 +140,6 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		currentAttrs = attrs
 		key = expandTableItemQueryKey(attrs, hashKey, rangeKey)
 	} else {
 		// Post-import path: state has identity attributes but no `item`. Recover the key names
@@ -155,10 +151,6 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 		key = recoveredKey
 		hashKey = recoveredHashKey
 		rangeKey = recoveredRangeKey
-		d.Set("hash_key", hashKey)
-		if rangeKey != "" {
-			d.Set("range_key", rangeKey)
-		}
 	}
 
 	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
@@ -173,27 +165,39 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
 	}
 
-	// Surface the key values as identity attributes.
+	return append(diags, resourceTableItemFlatten(d, tableName, hashKey, rangeKey, item)...)
+}
+
+// resourceTableItemFlatten populates the resource data with the canonical
+// representation of a DynamoDB table item. Used by both Read and the list
+// resource so that resource state is set consistently between the two paths.
+//
+// The `item` attribute uses SuppressEquivalentJSONDiffs with DiffSuppressOnRefresh,
+// so always setting it here is safe even when the API response is byte-different
+// from the user-supplied JSON.
+func resourceTableItemFlatten(d *schema.ResourceData, tableName, hashKey, rangeKey string, item map[string]awstypes.AttributeValue) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	hkv, rkv := tableItemKeyValues(item, hashKey, rangeKey)
+
+	d.SetId(tableItemCreateResourceID(tableName, hkv, rkv))
+	d.Set(names.AttrTableName, tableName)
+	d.Set("hash_key", hashKey)
 	if hkv != "" {
 		d.Set("hash_key_value", hkv)
 	}
-	if rangeKey != "" && rkv != "" {
-		d.Set("range_key_value", rkv)
-	}
-
-	// If the remote item differs from state (or state was empty due to import), refresh `item`.
-	if !reflect.DeepEqual(item, currentAttrs) {
-		itemAttrs, err := flattenTableItemAttributes(item)
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+	if rangeKey != "" {
+		d.Set("range_key", rangeKey)
+		if rkv != "" {
+			d.Set("range_key_value", rkv)
 		}
-		d.Set("item", itemAttrs)
 	}
 
-	// Always canonicalize the resource ID. Handles the post-import case as well as
-	// state migration from earlier id formats.
-	d.SetId(tableItemCreateResourceID(tableName, hkv, rkv))
+	itemAttrs, err := flattenTableItemAttributes(item)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("item", itemAttrs)
 
 	return diags
 }
