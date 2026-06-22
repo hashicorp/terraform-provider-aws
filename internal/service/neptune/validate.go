@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validEventSubscriptionName(v any, k string) (ws []string, errors []error) {
@@ -29,7 +29,7 @@ func validEventSubscriptionNamePrefix(v any, k string) (ws []string, errors []er
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 255 - id.UniqueIDSuffixLength
+	prefixMaxLength := 255 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -135,7 +135,7 @@ func validParamGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	prefixMaxLength := 255 - id.UniqueIDSuffixLength
+	prefixMaxLength := 255 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -166,7 +166,7 @@ func validSubnetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
-	prefixMaxLength := 255 - id.UniqueIDSuffixLength
+	prefixMaxLength := 255 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

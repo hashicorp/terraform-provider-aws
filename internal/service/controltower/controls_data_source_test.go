@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,7 +20,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_controltower_controls.test"
 	ouName := "Security"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -42,7 +41,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	// Leverage the Control Tower created "aws-controltower-BaselineCloudTrail" to confirm Control Tower is deployed.
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CloudTrailClient(ctx)
 	_, err := tfcloudtrail.FindTrailInfoByName(ctx, conn, "aws-controltower-BaselineCloudTrail")
 
 	if retry.NotFound(err) {

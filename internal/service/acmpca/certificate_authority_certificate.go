@@ -28,34 +28,35 @@ import (
 // @ArnIdentity("certificate_authority_arn")
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca;acmpca.GetCertificateAuthorityCertificateOutput")
-// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(generator="acctest.RandomDomainName(t)")
 // @Testing(checkDestroyNoop=true)
-// @Testing(existsTakesT=true)
 func resourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificate: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32768),
-			},
-			"certificate_authority_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrCertificateChain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2097152),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificate: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 32768),
+				},
+				"certificate_authority_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrCertificateChain: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2097152),
+				},
+			}
 		},
 	}
 }

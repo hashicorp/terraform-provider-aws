@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,7 +29,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowOutput")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowCreate,
@@ -38,56 +36,58 @@ func resourceMaintenanceWindow() *schema.Resource {
 		UpdateWithoutTimeout: resourceMaintenanceWindowUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowDelete,
 
-		Schema: map[string]*schema.Schema{
-			"allow_unassociated_targets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cutoff": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"end_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"schedule_offset": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 6),
-			},
-			"schedule_timezone": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"start_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_unassociated_targets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cutoff": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"end_date": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"schedule_offset": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 6),
+				},
+				"schedule_timezone": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"start_date": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -253,9 +253,8 @@ func findMaintenanceWindowByID(ctx context.Context, conn *ssm.Client, id string)
 	output, err := conn.GetMaintenanceWindow(ctx, input)
 
 	if errs.IsA[*awstypes.DoesNotExistException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -16,10 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -41,19 +40,21 @@ func resourceResourceAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"resource_share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -140,7 +141,7 @@ func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceDa
 
 func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -159,7 +160,7 @@ func createResourceShareResourceAssociation(ctx context.Context, conn *ram.Clien
 
 func deleteResourceShareResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		ResourceArns:     []string{resourceARN},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -194,9 +195,8 @@ func findResourceAssociationByTwoPartKey(ctx context.Context, conn *ram.Client, 
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -221,9 +221,8 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -237,8 +236,8 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 	return output, nil
 }
 
-func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceAssociation(conn *ram.Client, resourceShareARN, resourceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 		if retry.NotFound(err) {
@@ -257,10 +256,10 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:  enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
-		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
+		Refresh: statusResourceAssociation(conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
 	}
 
@@ -279,10 +278,10 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
+		Refresh: statusResourceAssociation(conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
 	}
 

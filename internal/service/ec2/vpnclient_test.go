@@ -39,6 +39,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
 			"endpointIpAddressType":        testAccClientVPNEndpoint_endpointIPAddressType,
 			"trafficIpAddressType":         testAccClientVPNEndpoint_trafficIPAddressType,
+			"transitGatewayConfiguration":  testAccClientVPNEndpoint_transitGatewayConfiguration,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {

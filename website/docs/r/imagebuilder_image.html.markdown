@@ -94,6 +94,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the image.
 * `arn` - Amazon Resource Name (ARN) of the image.
 * `date_created` - Date the image was created.
 * `platform` - Platform of the image.

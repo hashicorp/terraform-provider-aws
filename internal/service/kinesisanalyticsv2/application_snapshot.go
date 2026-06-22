@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,33 +43,35 @@ func resourceApplicationSnapshot() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"application_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
-			"application_version_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_creation_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"application_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					),
+				},
+				"application_version_id": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_creation_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					),
+				},
+			}
 		},
 	}
 }
@@ -210,16 +211,14 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	output, err := conn.DescribeApplicationSnapshot(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -234,8 +233,8 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	return output.SnapshotDetails, nil
 }
 
-func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshotDetails(conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
 		if retry.NotFound(err) {
@@ -251,10 +250,10 @@ func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client,
 }
 
 func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusReady),
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 
@@ -268,10 +267,10 @@ func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 

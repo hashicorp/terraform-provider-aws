@@ -9,8 +9,8 @@ import (
 
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -19,10 +19,10 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *r53rcc.Client, clusterArn string) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusCluster(ctx, conn, clusterArn),
+		Refresh:    statusCluster(conn, clusterArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -37,10 +37,10 @@ func waitClusterCreated(ctx context.Context, conn *r53rcc.Client, clusterArn str
 }
 
 func waitClusterUpdated(ctx context.Context, conn *r53rcc.Client, clusterArn string) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusCluster(ctx, conn, clusterArn),
+		Refresh:    statusCluster(conn, clusterArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -55,10 +55,10 @@ func waitClusterUpdated(ctx context.Context, conn *r53rcc.Client, clusterArn str
 }
 
 func waitClusterDeleted(ctx context.Context, conn *r53rcc.Client, clusterArn string) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusCluster(ctx, conn, clusterArn),
+		Refresh:        statusCluster(conn, clusterArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -74,10 +74,10 @@ func waitClusterDeleted(ctx context.Context, conn *r53rcc.Client, clusterArn str
 }
 
 func waitRoutingControlCreated(ctx context.Context, conn *r53rcc.Client, routingControlArn string) (*awstypes.RoutingControl, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusRoutingControl(ctx, conn, routingControlArn),
+		Refresh:    statusRoutingControl(conn, routingControlArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -92,10 +92,10 @@ func waitRoutingControlCreated(ctx context.Context, conn *r53rcc.Client, routing
 }
 
 func waitRoutingControlDeleted(ctx context.Context, conn *r53rcc.Client, routingControlArn string) (*awstypes.RoutingControl, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusRoutingControl(ctx, conn, routingControlArn),
+		Refresh:        statusRoutingControl(conn, routingControlArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -111,10 +111,10 @@ func waitRoutingControlDeleted(ctx context.Context, conn *r53rcc.Client, routing
 }
 
 func waitControlPanelCreated(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) (*awstypes.ControlPanel, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusControlPanel(ctx, conn, controlPanelArn),
+		Refresh:    statusControlPanel(conn, controlPanelArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -129,10 +129,10 @@ func waitControlPanelCreated(ctx context.Context, conn *r53rcc.Client, controlPa
 }
 
 func waitControlPanelDeleted(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) (*awstypes.ControlPanel, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusControlPanel(ctx, conn, controlPanelArn),
+		Refresh:        statusControlPanel(conn, controlPanelArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -148,10 +148,10 @@ func waitControlPanelDeleted(ctx context.Context, conn *r53rcc.Client, controlPa
 }
 
 func waitSafetyRuleCreated(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusSafetyRule(ctx, conn, safetyRuleArn),
+		Refresh:    statusSafetyRule(conn, safetyRuleArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -166,10 +166,10 @@ func waitSafetyRuleCreated(ctx context.Context, conn *r53rcc.Client, safetyRuleA
 }
 
 func waitSafetyRuleDeleted(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusSafetyRule(ctx, conn, safetyRuleArn),
+		Refresh:        statusSafetyRule(conn, safetyRuleArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,

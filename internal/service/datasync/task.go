@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeTaskOutput")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
@@ -48,271 +46,279 @@ func resourceTask() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCloudWatchLogGroupARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"destination_location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"excludes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filter_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCloudWatchLogGroupARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"destination_location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"excludes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"includes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filter_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"atime": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.AtimeBestEffort,
-							ValidateDiagFunc: enum.Validate[awstypes.Atime](),
-						},
-						"bytes_per_second": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      -1,
-							ValidateFunc: validation.IntAtLeast(-1),
-						},
-						"gid": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.GidIntValue,
-							ValidateDiagFunc: enum.Validate[awstypes.Gid](),
-						},
-						"log_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.LogLevelOff,
-							ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
-						},
-						"mtime": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.MtimePreserve,
-							ValidateDiagFunc: enum.Validate[awstypes.Mtime](),
-						},
-						"object_tags": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ObjectTagsPreserve,
-							ValidateDiagFunc: enum.Validate[awstypes.ObjectTags](),
-						},
-						"overwrite_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.OverwriteModeAlways,
-							ValidateDiagFunc: enum.Validate[awstypes.OverwriteMode](),
-						},
-						"posix_permissions": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.PosixPermissionsPreserve,
-							ValidateDiagFunc: enum.Validate[awstypes.PosixPermissions](),
-						},
-						"preserve_deleted_files": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.PreserveDeletedFilesPreserve,
-							ValidateDiagFunc: enum.Validate[awstypes.PreserveDeletedFiles](),
-						},
-						"preserve_devices": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.PreserveDevicesNone,
-							ValidateDiagFunc: enum.Validate[awstypes.PreserveDevices](),
-						},
-						"security_descriptor_copy_flags": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SmbSecurityDescriptorCopyFlags](),
-						},
-						"task_queueing": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.TaskQueueingEnabled,
-							ValidateDiagFunc: enum.Validate[awstypes.TaskQueueing](),
-						},
-						"transfer_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.TransferModeChanged,
-							ValidateDiagFunc: enum.Validate[awstypes.TransferMode](),
-						},
-						"uid": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.UidIntValue,
-							ValidateDiagFunc: enum.Validate[awstypes.Uid](),
-						},
-						"verify_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.VerifyModePointInTimeConsistent,
-							ValidateDiagFunc: enum.Validate[awstypes.VerifyMode](),
+				"includes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrScheduleExpression: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\s #()*+,/?^|-]*$`),
-									"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
-							),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"atime": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.AtimeBestEffort,
+								ValidateDiagFunc: enum.Validate[awstypes.Atime](),
+							},
+							"bytes_per_second": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      -1,
+								ValidateFunc: validation.IntAtLeast(-1),
+							},
+							"gid": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.GidIntValue,
+								ValidateDiagFunc: enum.Validate[awstypes.Gid](),
+							},
+							"log_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.LogLevelOff,
+								ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
+							},
+							"mtime": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.MtimePreserve,
+								ValidateDiagFunc: enum.Validate[awstypes.Mtime](),
+							},
+							"object_tags": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ObjectTagsPreserve,
+								ValidateDiagFunc: enum.Validate[awstypes.ObjectTags](),
+							},
+							"overwrite_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.OverwriteModeAlways,
+								ValidateDiagFunc: enum.Validate[awstypes.OverwriteMode](),
+							},
+							"posix_permissions": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.PosixPermissionsPreserve,
+								ValidateDiagFunc: enum.Validate[awstypes.PosixPermissions](),
+							},
+							"preserve_deleted_files": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.PreserveDeletedFilesPreserve,
+								ValidateDiagFunc: enum.Validate[awstypes.PreserveDeletedFiles](),
+							},
+							"preserve_devices": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.PreserveDevicesNone,
+								ValidateDiagFunc: enum.Validate[awstypes.PreserveDevices](),
+							},
+							"security_descriptor_copy_flags": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SmbSecurityDescriptorCopyFlags](),
+							},
+							"task_queueing": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.TaskQueueingEnabled,
+								ValidateDiagFunc: enum.Validate[awstypes.TaskQueueing](),
+							},
+							"transfer_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.TransferModeChanged,
+								ValidateDiagFunc: enum.Validate[awstypes.TransferMode](),
+							},
+							"uid": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.UidIntValue,
+								ValidateDiagFunc: enum.Validate[awstypes.Uid](),
+							},
+							"verify_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.VerifyModePointInTimeConsistent,
+								ValidateDiagFunc: enum.Validate[awstypes.VerifyMode](),
+							},
 						},
 					},
 				},
-			},
-			"source_location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TaskMode](),
-			},
-			"task_report_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_destination": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_access_role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"s3_bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"subdirectory": {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrSchedule: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrScheduleExpression: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\s #()*+,/?^|-]*$`),
+										"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
+								),
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ScheduleStatus](),
+							},
+						},
+					},
+				},
+				"source_location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"task_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TaskMode](),
+				},
+				"task_report_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_destination": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bucket_access_role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"s3_bucket_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"subdirectory": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"s3_object_versioning": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ObjectVersionIds](),
-						},
-						"output_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ReportOutputType](),
-						},
-						"report_overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"deleted_override": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
-									},
-									"skipped_override": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
-									},
-									"transferred_override": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
-									},
-									"verified_override": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+							"s3_object_versioning": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ObjectVersionIds](),
+							},
+							"output_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ReportOutputType](),
+							},
+							"report_overrides": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"deleted_override": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+										},
+										"skipped_override": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+										},
+										"transferred_override": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+										},
+										"verified_override": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+										},
 									},
 								},
 							},
-						},
-						"report_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+							"report_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ReportLevel](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -486,9 +492,8 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	output, err := conn.DescribeTask(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -503,8 +508,8 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	return output, nil
 }
 
-func statusTask(ctx context.Context, conn *datasync.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTask(conn *datasync.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -520,10 +525,10 @@ func statusTask(ctx context.Context, conn *datasync.Client, arn string) sdkretry
 }
 
 func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TaskStatusCreating, awstypes.TaskStatusUnavailable),
 		Target:  enum.Slice(awstypes.TaskStatusAvailable, awstypes.TaskStatusRunning),
-		Refresh: statusTask(ctx, conn, arn),
+		Refresh: statusTask(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -667,6 +672,10 @@ func expandTaskSchedule(l []any) *awstypes.TaskSchedule {
 		ScheduleExpression: aws.String(m[names.AttrScheduleExpression].(string)),
 	}
 
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		schedule.Status = awstypes.ScheduleStatus(v)
+	}
+
 	return schedule
 }
 
@@ -677,6 +686,10 @@ func flattenTaskSchedule(schedule *awstypes.TaskSchedule) []any {
 
 	m := map[string]any{
 		names.AttrScheduleExpression: aws.ToString(schedule.ScheduleExpression),
+	}
+
+	if schedule.Status != "" {
+		m[names.AttrStatus] = string(schedule.Status)
 	}
 
 	return []any{m}

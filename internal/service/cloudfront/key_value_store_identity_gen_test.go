@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
+func TestAccCloudFrontKeyValueStore_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyValueStore
@@ -35,7 +35,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &v),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cloudfront", "key-value-store/{id}"),
@@ -107,7 +107,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
+func TestAccCloudFrontKeyValueStore_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyValueStore
@@ -120,7 +120,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy: testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy: testAccCheckKeyValueStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -129,7 +129,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &v),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -143,7 +143,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &v),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -189,7 +189,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontKeyValueStore_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCloudFrontKeyValueStore_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyValueStore
@@ -202,7 +202,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource_NoRefresh_NoChange
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy: testAccCheckKeyValueStoreDestroy(ctx),
+		CheckDestroy: testAccCheckKeyValueStoreDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -216,7 +216,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource_NoRefresh_NoChange
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyValueStoreExists(ctx, resourceName, &v),
+					testAccCheckKeyValueStoreExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

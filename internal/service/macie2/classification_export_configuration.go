@@ -24,7 +24,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,
@@ -32,29 +31,31 @@ func resourceClassificationExportConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"s3_destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"key_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"s3_destination": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"key_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

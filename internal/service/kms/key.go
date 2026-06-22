@@ -17,7 +17,6 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -40,7 +39,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
@@ -52,84 +50,86 @@ func resourceKey() *schema.Resource {
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bypass_policy_lockout_safety_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"custom_key_store_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 22),
-			},
-			"customer_master_key_spec": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.KeySpecSymmetricDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
-			},
-			"deletion_window_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(7, 30),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 8192),
-			},
-			"enable_key_rotation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_usage": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.KeyUsageTypeEncryptDecrypt,
-				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
-			},
-			"multi_region": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"rotation_period_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(90, 2560),
-				RequiredWith: []string{"enable_key_rotation"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"xks_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"custom_key_store_id"},
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bypass_policy_lockout_safety_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"custom_key_store_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 22),
+				},
+				"customer_master_key_spec": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.KeySpecSymmetricDefault,
+					ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
+				},
+				"deletion_window_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(7, 30),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 8192),
+				},
+				"enable_key_rotation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"is_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_usage": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.KeyUsageTypeEncryptDecrypt,
+					ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
+				},
+				"multi_region": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"rotation_period_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(90, 2560),
+					RequiredWith: []string{"enable_key_rotation"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"xks_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"custom_key_store_id"},
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			}
 		},
 	}
 }
@@ -234,34 +234,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if aws.ToBool(key.metadata.MultiRegion) && key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypePrimary {
-		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
-	}
-
-	d.Set(names.AttrARN, key.metadata.Arn)
-	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
-	d.Set("customer_master_key_spec", key.metadata.KeySpec)
-	d.Set(names.AttrDescription, key.metadata.Description)
-	d.Set("enable_key_rotation", key.rotation)
-	d.Set("is_enabled", key.metadata.Enabled)
-	d.Set(names.AttrKeyID, key.metadata.KeyId)
-	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("multi_region", key.metadata.MultiRegion)
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
-	if v := key.metadata.XksKeyConfiguration; v != nil {
-		d.Set("xks_key_id", v.Id)
-	} else {
-		d.Set("xks_key_id", nil)
-	}
-
-	setTagsOut(ctx, key.tags)
-
-	return diags
+	return append(diags, resourceKeyFlatten(ctx, d, key)...)
 }
 
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -385,7 +358,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		tags, err := listTags(ctx, conn, keyID)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{LastError: err}
+			return nil, &retry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -411,9 +384,8 @@ func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
 	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -424,9 +396,8 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -463,9 +434,8 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -488,9 +458,8 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -634,8 +603,8 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeyState(conn *kms.Client, keyID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if retry.NotFound(err) {
@@ -679,10 +648,10 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
-		Refresh: statusKeyState(ctx, conn, keyID),
+		Refresh: statusKeyState(conn, keyID),
 		Timeout: timeout,
 	}
 
@@ -775,4 +744,37 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	)
 
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
+}
+
+func resourceKeyFlatten(ctx context.Context, d *schema.ResourceData, key *kmsKeyInfo) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if aws.ToBool(key.metadata.MultiRegion) && key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypePrimary {
+		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
+	}
+
+	d.Set(names.AttrARN, key.metadata.Arn)
+	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
+	d.Set("customer_master_key_spec", key.metadata.KeySpec)
+	d.Set(names.AttrDescription, key.metadata.Description)
+	d.Set("enable_key_rotation", key.rotation)
+	d.Set("is_enabled", key.metadata.Enabled)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
+	d.Set("key_usage", key.metadata.KeyUsage)
+	d.Set("multi_region", key.metadata.MultiRegion)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
+	if v := key.metadata.XksKeyConfiguration; v != nil {
+		d.Set("xks_key_id", v.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
+
+	setTagsOut(ctx, key.tags)
+
+	return diags
 }

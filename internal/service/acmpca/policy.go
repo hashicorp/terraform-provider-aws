@@ -28,8 +28,6 @@ import (
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(generator=false)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
@@ -37,13 +35,15 @@ func resourcePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourcePolicyPut,
 		DeleteWithoutTimeout: resourcePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

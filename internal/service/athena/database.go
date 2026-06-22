@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,80 +41,82 @@ func resourceDatabase() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acl_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_acl_option": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acl_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_acl_option": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_option": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
-						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_option": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"workgroup": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				names.AttrExpectedBucketOwner: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"workgroup": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -241,9 +242,8 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 	output, err := conn.GetDatabase(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -319,10 +319,10 @@ func executeAndExpectNoRows(ctx context.Context, conn *athena.Client, qeid strin
 }
 
 func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string) (*types.ResultSet, error) {
-	executionStateConf := &sdkretry.StateChangeConf{
+	executionStateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.QueryExecutionStateQueued, types.QueryExecutionStateRunning),
 		Target:     enum.Slice(types.QueryExecutionStateSucceeded),
-		Refresh:    queryExecutionStateRefreshFunc(ctx, conn, qeid),
+		Refresh:    queryExecutionStateRefreshFunc(conn, qeid),
 		Timeout:    10 * time.Minute,
 		Delay:      3 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -343,8 +343,8 @@ func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string)
 	return resp.ResultSet, nil
 }
 
-func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Client, qeid string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func queryExecutionStateRefreshFunc(conn *athena.Client, qeid string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),
 		}

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,7 +24,7 @@ func TestAccCloudFrontCreateInvalidationAction_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -35,13 +34,13 @@ func TestAccCloudFrontCreateInvalidationAction_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckDistributionDestroy(ctx),
+		CheckDestroy: testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateInvalidationActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					testAccCheckInvalidationExists(ctx, &distribution, []string{"/*"}),
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					testAccCheckInvalidationExists(ctx, t, &distribution, []string{"/*"}),
 				),
 			},
 		},
@@ -49,13 +48,13 @@ func TestAccCloudFrontCreateInvalidationAction_basic(t *testing.T) {
 }
 
 // Helper: Check invalidation exists and is completed
-func testAccCheckInvalidationExists(ctx context.Context, distribution *awstypes.Distribution, expectedPaths []string) resource.TestCheckFunc {
+func testAccCheckInvalidationExists(ctx context.Context, t *testing.T, distribution *awstypes.Distribution, expectedPaths []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if distribution == nil || distribution.Id == nil {
 			return fmt.Errorf("Distribution is nil or has no ID")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		// List invalidations for this distribution
 		listInput := &cloudfront.ListInvalidationsInput{

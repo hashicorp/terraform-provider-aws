@@ -47,7 +47,6 @@ var (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
@@ -64,48 +63,50 @@ func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elements": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"elements": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+							},
+							"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
+							"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
+							"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
+							"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
+							"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
+							"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 						},
-						"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
-						"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
-						"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
-						"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
-						"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
-						"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 					},
 				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_access_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
-			names.AttrTags:                  tftags.TagsSchema(),
-			names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_access_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
+				names.AttrTags:                  tftags.TagsSchema(),
+				names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

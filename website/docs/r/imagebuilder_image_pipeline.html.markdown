@@ -154,6 +154,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the image pipeline.
 * `arn` - Amazon Resource Name (ARN) of the image pipeline.
 * `date_created` - Date the image pipeline was created.
 * `date_last_run` - Date the image pipeline was last run.

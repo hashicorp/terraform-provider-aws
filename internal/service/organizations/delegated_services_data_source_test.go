@@ -17,7 +17,7 @@ func testAccDelegatedServicesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -42,7 +42,7 @@ func testAccDelegatedServicesDataSource_multiple(t *testing.T) {
 	servicePrincipal1 := "config-multiaccountsetup.amazonaws.com"
 	servicePrincipal2 := "config.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

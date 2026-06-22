@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Instance_Identity_Basic(t *testing.T) {
+func TestAccEC2Instance_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance
@@ -34,7 +34,7 @@ func TestAccEC2Instance_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -42,7 +42,7 @@ func TestAccEC2Instance_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -101,7 +101,7 @@ func TestAccEC2Instance_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_Identity_RegionOverride(t *testing.T) {
+func TestAccEC2Instance_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_instance.test"
@@ -187,7 +187,7 @@ func TestAccEC2Instance_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccEC2Instance_Identity_ExistingResource(t *testing.T) {
+func TestAccEC2Instance_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance
@@ -199,14 +199,14 @@ func TestAccEC2Instance_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/basic_v6.10.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -240,7 +240,7 @@ func TestAccEC2Instance_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccEC2Instance_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccEC2Instance_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance
@@ -252,7 +252,7 @@ func TestAccEC2Instance_Identity_ExistingResource_NoRefresh_NoChange(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -264,7 +264,7 @@ func TestAccEC2Instance_Identity_ExistingResource_NoRefresh_NoChange(t *testing.
 				ConfigDirectory: config.StaticDirectory("testdata/Instance/basic_v6.10.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

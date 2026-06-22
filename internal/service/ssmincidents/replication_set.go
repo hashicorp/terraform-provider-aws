@@ -19,7 +19,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -47,84 +46,86 @@ func resourceReplicationSet() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protected": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"last_modified_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyARN: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "DefaultKey",
-							ValidateDiagFunc: validateNonAliasARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_protected": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"last_modified_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRegion: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyARN: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "DefaultKey",
+								ValidateDiagFunc: validateNonAliasARN,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+					Deprecated: "region is deprecated. Use regions instead.",
+				},
+				"regions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyARN: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "DefaultKey",
+								ValidateDiagFunc: validateNonAliasARN,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-				Deprecated: "region is deprecated. Use regions instead.",
-			},
-			"regions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyARN: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "DefaultKey",
-							ValidateDiagFunc: validateNonAliasARN,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -278,9 +279,8 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	output, err := conn.GetReplicationSet(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -295,8 +295,8 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	return output.ReplicationSet, nil
 }
 
-func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationSet(conn *ssmincidents.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationSetByID(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -312,10 +312,10 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn st
 }
 
 func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusCreating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
@@ -331,10 +331,10 @@ func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusUpdating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
@@ -350,10 +350,10 @@ func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetDeleted(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,

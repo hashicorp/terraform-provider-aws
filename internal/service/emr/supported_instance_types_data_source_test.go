@@ -17,7 +17,7 @@ func TestAccEMRSupportedInstanceTypesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_emr_supported_instance_types.test"
 	releaseLabel := "emr-6.15.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)

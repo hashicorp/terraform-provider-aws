@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -31,11 +30,14 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="Api Key Credential Provider")
+// @Tags(identifierAttribute="credential_provider_arn")
+// @Testing(tagsTest=false)
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil
@@ -96,6 +98,8 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -124,6 +128,8 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 	if !config.APIKeyWO.IsNull() {
 		input.ApiKey = fwflex.StringFromFramework(ctx, config.APIKeyWO)
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateApiKeyCredentialProvider(ctx, &input)
 	if err != nil {
@@ -248,9 +254,8 @@ func findAPIKeyCredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	out, err := conn.GetApiKeyCredentialProvider(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -273,6 +278,8 @@ type apiKeyCredentialProviderResourceModel struct {
 	APIKeyWOVersion       types.Int64                                  `tfsdk:"api_key_wo_version"`
 	CredentialProviderARN types.String                                 `tfsdk:"credential_provider_arn"`
 	Name                  types.String                                 `tfsdk:"name"`
+	Tags                  tftags.Map                                   `tfsdk:"tags"`
+	TagsAll               tftags.Map                                   `tfsdk:"tags_all"`
 }
 
 type secretModel struct {

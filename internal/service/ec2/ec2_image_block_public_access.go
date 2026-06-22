@@ -31,6 +31,7 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")
@@ -45,12 +46,14 @@ func resourceImageBlockPublicAccess() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrState: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrState: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
+				},
+			}
 		},
 	}
 }

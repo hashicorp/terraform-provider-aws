@@ -14,7 +14,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +28,6 @@ import (
 
 // @SDKResource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -41,38 +39,40 @@ func resourceCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
-			},
-			"certificate_pem": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
-			},
-			"certificate_wallet": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+					),
+				},
+				"certificate_pem": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
+				},
+				"certificate_wallet": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -200,9 +200,8 @@ func findCertificates(ctx context.Context, conn *dms.Client, input *dms.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

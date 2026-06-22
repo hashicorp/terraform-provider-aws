@@ -4,111 +4,63 @@
 package networkflowmonitor
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_networkflowmonitor_monitor", &resource.Sweeper{
-		Name: "aws_networkflowmonitor_monitor",
-		F:    sweepMonitors,
-	})
-
-	resource.AddTestSweepers("aws_networkflowmonitor_scope", &resource.Sweeper{
-		Name: "aws_networkflowmonitor_scope",
-		F:    sweepScopes,
-	})
+	awsv2.Register("aws_networkflowmonitor_monitor", sweepMonitors)
+	awsv2.Register("aws_networkflowmonitor_scope", sweepScopes)
 }
 
-func sweepMonitors(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepMonitors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.NetworkFlowMonitorClient(ctx)
-	input := networkflowmonitor.ListMonitorsInput{}
+	var input networkflowmonitor.ListMonitorsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := networkflowmonitor.NewListMonitorsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Network Flow Monitor Monitor sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Network Flow Monitor Monitors (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Monitors {
-			arn := aws.ToString(v.MonitorArn)
-			name := aws.ToString(v.MonitorName)
-
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMonitorResource, client,
-				framework.NewAttribute(names.AttrID, arn),
-				framework.NewAttribute("monitor_name", name),
+				framework.NewAttribute("monitor_name", aws.ToString(v.MonitorName)),
 			))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Network Flow Monitor Monitors (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
-func sweepScopes(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+
+func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.NetworkFlowMonitorClient(ctx)
-	input := networkflowmonitor.ListScopesInput{}
+	var input networkflowmonitor.ListScopesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := networkflowmonitor.NewListScopesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Network Flow Monitor Scope sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Network Flow Monitor Scopes (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Scopes {
-			scopeId := aws.ToString(v.ScopeId)
-			scopeArn := aws.ToString(v.ScopeArn)
-
 			sweepResources = append(sweepResources, framework.NewSweepResource(newScopeResource, client,
-				framework.NewAttribute(names.AttrID, scopeArn),
-				framework.NewAttribute("scope_id", scopeId),
+				framework.NewAttribute("scope_id", aws.ToString(v.ScopeId)),
 			))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Network Flow Monitor Scopes (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

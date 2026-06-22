@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,52 +39,54 @@ func resourceSigningProfilePermission() *schema.Resource {
 			StateContext: resourceSigningProfilePermissionImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"signer:StartSigningJob",
-					"signer:GetSigningProfile",
-					"signer:RevokeSignature",
-					"signer:SignPayload",
-				}, false),
-			},
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"profile_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 64),
-			},
-			"profile_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(10, 10),
-			},
-			"statement_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
-			},
-			"statement_id_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"signer:StartSigningJob",
+						"signer:GetSigningProfile",
+						"signer:RevokeSignature",
+						"signer:SignPayload",
+					}, false),
+				},
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"profile_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(2, 64),
+				},
+				"profile_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(10, 10),
+				},
+				"statement_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"statement_id_prefix"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
+				},
+				"statement_id_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"statement_id"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
+				},
+			}
 		},
 	}
 }
@@ -110,7 +111,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s) Permissions: %s", profileName, err)
 	}
 
-	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 	input := &signer.AddProfilePermissionInput{
 		Action:      aws.String(d.Get(names.AttrAction).(string)),
 		Principal:   aws.String(d.Get(names.AttrPrincipal).(string)),
@@ -274,9 +275,8 @@ func findPermissions(ctx context.Context, conn *signer.Client, input *signer.Lis
 		output, err := conn.ListProfilePermissions(ctx, input)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

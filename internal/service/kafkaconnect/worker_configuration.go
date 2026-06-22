@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -45,40 +44,42 @@ func resourceWorkerConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"properties_file_content": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return decodePropertiesFileContent(v)
-					default:
-						return ""
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"latest_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"properties_file_content": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						switch v := v.(type) {
+						case string:
+							return decodePropertiesFileContent(v)
+						default:
+							return ""
+						}
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -180,9 +181,8 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 	output, err := conn.DescribeWorkerConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -197,8 +197,8 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 	return output, nil
 }
 
-func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkerConfiguration(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkerConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -214,10 +214,10 @@ func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, a
 }
 
 func waitWorkerConfigurationDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkerConfigurationStateDeleting),
 		Target:  []string{},
-		Refresh: statusWorkerConfiguration(ctx, conn, arn),
+		Refresh: statusWorkerConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 

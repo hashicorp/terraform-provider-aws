@@ -27,7 +27,6 @@ import (
 // @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.SchedulingPolicyDetail")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
@@ -39,58 +38,60 @@ func resourceSchedulingPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fair_share_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_reservation": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 99),
-						},
-						"share_decay_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 604800),
-						},
-						"share_distribution": {
-							Type: schema.TypeSet,
-							// There can be no more than 500 fair share identifiers active in a job queue.
-							MaxItems: 500,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"share_identifier": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validShareIdentifier,
-									},
-									"weight_factor": {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: validation.FloatBetween(0.0001, 999.9999),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"fair_share_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_reservation": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 99),
+							},
+							"share_decay_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 604800),
+							},
+							"share_distribution": {
+								Type: schema.TypeSet,
+								// There can be no more than 500 fair share identifiers active in a job queue.
+								MaxItems: 500,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"share_identifier": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validShareIdentifier,
+										},
+										"weight_factor": {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: validation.FloatBetween(0.0001, 999.9999),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

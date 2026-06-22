@@ -7,12 +7,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusFeature(ctx context.Context, conn *evidently.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFeature(conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		featureName, projectNameOrARN, err := FeatureParseID(id)
 
 		if err != nil {
@@ -33,8 +32,8 @@ func statusFeature(ctx context.Context, conn *evidently.Client, id string) sdkre
 	}
 }
 
-func statusLaunch(ctx context.Context, conn *evidently.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLaunch(conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		launchName, projectNameOrARN, err := LaunchParseID(id)
 
 		if err != nil {
@@ -55,8 +54,8 @@ func statusLaunch(ctx context.Context, conn *evidently.Client, id string) sdkret
 	}
 }
 
-func statusProject(ctx context.Context, conn *evidently.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProject(conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindProjectByNameOrARN(ctx, conn, id)
 
 		if retry.NotFound(err) {

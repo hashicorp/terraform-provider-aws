@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("tf-acctest-%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf-acctest-%d", acctest.RandInt(t))
 	resourceName := "aws_codecommit_repository.default"
 	datasourceName := "data.aws_codecommit_repository.default"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

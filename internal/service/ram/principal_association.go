@@ -16,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -42,25 +41,27 @@ func resourcePrincipalAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringIsNotEmpty,
-					validation.Any(
-						verify.ValidAccountID,
-						verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringIsNotEmpty,
+						validation.Any(
+							verify.ValidAccountID,
+							verify.ValidARN,
+						),
 					),
-				),
-			},
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				},
+				"resource_share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -147,7 +148,7 @@ func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -174,7 +175,7 @@ func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Clie
 
 func deleteResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -212,17 +213,16 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, err
 }
 
-func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPrincipalAssociation(conn *ram.Client, resourceShareARN, principal string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 		if retry.NotFound(err) {
@@ -241,10 +241,10 @@ func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:         enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
-		Refresh:        statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
+		Refresh:        statusPrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout:        timeout,
 		NotFoundChecks: 20,
 	}
@@ -264,10 +264,10 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
+		Refresh: statusPrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout: timeout,
 	}
 

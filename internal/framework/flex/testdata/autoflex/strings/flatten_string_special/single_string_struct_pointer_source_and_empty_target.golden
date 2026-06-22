@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct",
-    "source_type": "flex.awsSingleStringValue"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct"
   },
   {
     "@level": "info",
@@ -27,7 +26,7 @@
   },
   {
     "@level": "debug",
-    "@message": "No corresponding field",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Field1",
     "autoflex.source.path": "",

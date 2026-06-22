@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -33,53 +32,55 @@ func resourceBGPPeer() *schema.Resource {
 		ReadWithoutTimeout:   resourceBGPPeerRead,
 		DeleteWithoutTimeout: resourceBGPPeerDelete,
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
-			},
-			"amazon_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"bgp_auth_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"bgp_peer_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"virtual_interface_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
+				},
+				"amazon_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_asn": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				"bgp_auth_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"bgp_peer_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"virtual_interface_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -205,7 +206,7 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	}
 
 	if state := output.BgpPeerState; state == awstypes.BGPPeerStateDeleted {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: string(state),
 		}
 	}
@@ -213,8 +214,8 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	return output, nil
 }
 
-func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBGPPeer(conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
 		if retry.NotFound(err) {
@@ -230,10 +231,10 @@ func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string
 }
 
 func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStatePending),
 		Target:     enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateVerifying),
-		Refresh:    statusBGPPeer(ctx, conn, vifID, addrFamily, asn),
+		Refresh:    statusBGPPeer(conn, vifID, addrFamily, asn),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -249,10 +250,10 @@ func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID s
 }
 
 func waitBGPPeerDeleted(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateDeleting, awstypes.BGPPeerStatePending, awstypes.BGPPeerStateVerifying),
 		Target:     []string{},
-		Refresh:    statusBGPPeer(ctx, conn, vifID, addrFamily, asn),
+		Refresh:    statusBGPPeer(conn, vifID, addrFamily, asn),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

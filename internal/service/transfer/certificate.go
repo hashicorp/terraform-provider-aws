@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,58 +39,60 @@ func resourceCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 16384),
-			},
-			names.AttrCertificateChain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 2097152),
-			},
-			"certificate_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"inactive_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPrivateKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 16384),
-				//ExactlyOneOf: []string{"certificate_chain", "private_key"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"usage": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CertificateUsageType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificate: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 16384),
+				},
+				names.AttrCertificateChain: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 2097152),
+				},
+				"certificate_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				"inactive_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPrivateKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 16384),
+					//ExactlyOneOf: []string{"certificate_chain", "private_key"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"usage": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CertificateUsageType](),
+				},
+			}
 		},
 	}
 }
@@ -208,9 +209,8 @@ func findCertificateByID(ctx context.Context, conn *transfer.Client, id string) 
 	output, err := conn.DescribeCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

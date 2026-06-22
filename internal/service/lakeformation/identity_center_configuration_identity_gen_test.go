@@ -21,18 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccLakeFormationIdentityCenterConfiguration_IdentitySerial(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccLakeFormationIdentityCenterConfiguration_Identity_Basic,
-		"RegionOverride": testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:  testAccLakeFormationIdentityCenterConfiguration_Identity_basic,
+		"RegionOverride": testAccLakeFormationIdentityCenterConfiguration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput
@@ -47,7 +47,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
-		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -55,7 +55,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &v),
+					testAccCheckIdentityCenterConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -114,7 +114,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 	})
 }
 
-func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lakeformation_identity_center_configuration.test"

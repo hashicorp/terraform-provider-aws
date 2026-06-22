@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,6 +20,7 @@ func TestAccECRAccountSetting_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:       testAccAccountSetting_basic,
+		"blobMounting":        testAccAccountSetting_blobMounting,
 		"registryPolicyScope": testAccAccountSetting_registryPolicyScope,
 	}
 
@@ -32,7 +32,7 @@ func testAccAccountSetting_basic(t *testing.T) {
 	resourceName := "aws_ecr_account_setting.test"
 	rName := "BASIC_SCAN_TYPE_VERSION"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -41,7 +41,7 @@ func testAccAccountSetting_basic(t *testing.T) {
 			{
 				Config: testAccAccountSettingConfig_basic(rName, "AWS_NATIVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "AWS_NATIVE")),
 			},
@@ -55,7 +55,7 @@ func testAccAccountSetting_basic(t *testing.T) {
 			{
 				Config: testAccAccountSettingConfig_basic(rName, "CLAIR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "CLAIR")),
 			},
@@ -68,7 +68,7 @@ func testAccAccountSetting_registryPolicyScope(t *testing.T) {
 	resourceName := "aws_ecr_account_setting.test"
 	rName := "REGISTRY_POLICY_SCOPE"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,7 +77,7 @@ func testAccAccountSetting_registryPolicyScope(t *testing.T) {
 			{
 				Config: testAccAccountSettingConfig_basic(rName, "V1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "V1")),
 			},
@@ -91,7 +91,7 @@ func testAccAccountSetting_registryPolicyScope(t *testing.T) {
 			{
 				Config: testAccAccountSettingConfig_basic(rName, "V2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "V2")),
 			},
@@ -99,14 +99,50 @@ func testAccAccountSetting_registryPolicyScope(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccAccountSetting_blobMounting(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_account_setting.test"
+	rName := "BLOB_MOUNTING"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "ENABLED")),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateId:                        rName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "DISABLED")),
+			},
+		},
+	})
+}
+
+func testAccCheckAccountSettingExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		_, err := tfecr.FindAccountSettingByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

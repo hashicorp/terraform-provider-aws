@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +27,7 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,7 +59,7 @@ func TestAccNeptuneEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,7 +83,7 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,7 +111,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredVersionsPreferredUpgradeTarg
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,7 +137,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredUpgradeTargetsVersion(t *tes
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,7 +161,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 	majorTarget := "1.4"
 	oneLess := `^1\.3\.`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -182,7 +181,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -203,7 +202,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	updateDataSourceName := "data.aws_neptune_engine_version.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -225,7 +224,7 @@ func TestAccNeptuneEngineVersionDataSource_latest(t *testing.T) {
 	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 	dataSourceNameEarlier2 := "data.aws_neptune_engine_version.earlier2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -251,7 +250,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -325,7 +324,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String(tfneptune.DefaultEngine),

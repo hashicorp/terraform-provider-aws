@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualNodeData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualNodeImportStateIdFunc)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -1127,9 +1125,8 @@ func findVirtualNodeByThreePartKey(ctx context.Context, conn *appmesh.Client, me
 	}
 
 	if output.Status.Status == awstypes.VirtualNodeStatusCodeDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.Status.Status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.Status.Status),
 		}
 	}
 
@@ -1140,9 +1137,8 @@ func findVirtualNode(ctx context.Context, conn *appmesh.Client, input *appmesh.D
 	output, err := conn.DescribeVirtualNode(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

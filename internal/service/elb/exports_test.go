@@ -31,4 +31,9 @@ var (
 	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID
 	ServiceAccountPerRegionMap                      = serviceAccountPerRegionMap
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
+
+	ValidAccessLogsInterval = validAccessLogsInterval
+	ValidHeathCheckTarget   = validHeathCheckTarget
+	ValidName               = validName
+	ValidNamePrefix         = validNamePrefix
 )

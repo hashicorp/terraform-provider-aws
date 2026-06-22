@@ -14,7 +14,7 @@ import (
 
 func CheckResourceAttrGlobalARNFormat(ctx context.Context, resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resource, err := populateARNFormat(s, resourceName, arnFormat)
+		resource, err := populateFromResourceState(s, resourceName, arnFormat)
 		if err != nil {
 			return err
 		}
@@ -25,7 +25,7 @@ func CheckResourceAttrGlobalARNFormat(ctx context.Context, resourceName, attribu
 
 func CheckResourceAttrGlobalARNNoAccountFormat(resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resource, err := populateARNFormat(s, resourceName, arnFormat)
+		resource, err := populateFromResourceState(s, resourceName, arnFormat)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func CheckResourceAttrGlobalARNNoAccountFormat(resourceName, attributeName, arnS
 
 func CheckResourceAttrRegionalARNFormat(ctx context.Context, resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resource, err := populateARNFormat(s, resourceName, arnFormat)
+		resource, err := populateFromResourceState(s, resourceName, arnFormat)
 		if err != nil {
 			return err
 		}
@@ -45,14 +45,14 @@ func CheckResourceAttrRegionalARNFormat(ctx context.Context, resourceName, attri
 	}
 }
 
-func populateARNFormat(s *terraform.State, resourceName, arnFormat string) (string, error) {
+func populateFromResourceState(s *terraform.State, resourceName, format string) (string, error) {
 	is, err := PrimaryInstanceState(s, resourceName)
 	if err != nil {
 		return "", err
 	}
 
 	var buf strings.Builder
-	str := arnFormat
+	str := format
 	for str != "" {
 		var (
 			stuff string
@@ -64,12 +64,12 @@ func populateARNFormat(s *terraform.State, resourceName, arnFormat string) (stri
 			var param string
 			param, str, found = strings.Cut(str, "}")
 			if !found {
-				return "", fmt.Errorf("missing closing '}' in ARN format %q", arnFormat)
+				return "", fmt.Errorf("missing closing '}' in format %q", format)
 			}
 
 			attr, ok := is.Attributes[param]
 			if !ok {
-				return "", fmt.Errorf("attribute %q not found in resource %q, referenced in ARN format %q", param, resourceName, arnFormat)
+				return "", fmt.Errorf("attribute %q not found in resource %q, referenced in format %q", param, resourceName, format)
 			}
 			buf.WriteString(attr)
 		}

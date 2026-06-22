@@ -28,8 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -48,7 +47,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -153,7 +151,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateCluster(ctx, &input)
@@ -274,7 +272,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateCluster(ctx, &input)
 
@@ -326,7 +324,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		input := dsql.UpdateClusterInput{
 			Identifier:                data.Identifier.ValueStringPointer(),
 			DeletionProtectionEnabled: aws.Bool(false),
-			ClientToken:               aws.String(sdkid.UniqueId()),
+			ClientToken:               aws.String(create.UniqueId(ctx)),
 		}
 		// Changing DeletionProtectionEnabled is instantaneous, no need to wait.
 		if _, err := conn.UpdateCluster(ctx, &input); err != nil {
@@ -376,9 +374,8 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	output, err := conn.GetCluster(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -400,9 +397,8 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	output, err := conn.GetVpcEndpointServiceName(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -417,8 +413,8 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	return output.ServiceName, nil
 }
 
-func statusCluster(ctx context.Context, conn *dsql.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -434,10 +430,10 @@ func statusCluster(ctx context.Context, conn *dsql.Client, id string) sdkretry.S
 }
 
 func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive, awstypes.ClusterStatusPendingSetup),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -452,10 +448,10 @@ func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeo
 }
 
 func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ClusterStatusUpdating),
 		Target:  enum.Slice(awstypes.ClusterStatusActive),
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -469,10 +465,10 @@ func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeo
 }
 
 func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
 		Target:       []string{},
-		Refresh:      statusCluster(ctx, conn, id),
+		Refresh:      statusCluster(conn, id),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -487,8 +483,8 @@ func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeo
 	return nil, err
 }
 
-func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterEncryption(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -508,10 +504,10 @@ func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) 
 }
 
 func waitClusterEncryptionEnabled(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*awstypes.EncryptionDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EncryptionStatusEnabling, awstypes.EncryptionStatusUpdating),
 		Target:  enum.Slice(awstypes.EncryptionStatusEnabled),
-		Refresh: statusClusterEncryption(ctx, conn, id),
+		Refresh: statusClusterEncryption(conn, id),
 		Timeout: timeout,
 	}
 

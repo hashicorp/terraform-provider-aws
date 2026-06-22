@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @ArnFormat("report-group/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
 // @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
@@ -42,80 +40,82 @@ func resourceReportGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceReportGroupUpdate,
 		DeleteWithoutTimeout: resourceReportGroupDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delete_reports": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"export_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"encryption_disabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"encryption_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"packaging": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.ReportPackagingTypeNone,
-										ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delete_reports": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"export_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"encryption_disabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"encryption_key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"packaging": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.ReportPackagingTypeNone,
+											ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 128),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ReportType](),
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(2, 128),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ReportType](),
+				},
+			}
 		},
 	}
 }
@@ -251,8 +251,8 @@ func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebu
 	return output.ReportGroups, nil
 }
 
-func statusReportGroup(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReportGroup(conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReportGroupByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -271,10 +271,10 @@ func waitReportGroupDeleted(ctx context.Context, conn *codebuild.Client, arn str
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ReportGroupStatusTypeDeleting),
 		Target:  []string{},
-		Refresh: statusReportGroup(ctx, conn, arn),
+		Refresh: statusReportGroup(conn, arn),
 		Timeout: timeout,
 	}
 

@@ -177,7 +177,7 @@ This resource supports the following arguments:
 * `auto_accept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `private_dns_enabled` - (Optional; AWS services and AWS Marketplace partner services only) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`. Most users will want this enabled to allow services within the VPC to automatically use the endpoint.
-Defaults to `false`.
+Defaults to `false`. If `vpc_endpoint_type` is anything other than `Interface`, changing this value forces a new resource to be created.
 * `dns_options` - (Optional) The DNS options for the endpoint. See dns_options below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `resource_configuration_arn` - (Optional) The ARN of a Resource Configuration to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
@@ -205,14 +205,6 @@ If no security groups are specified, the VPC's [default security group](https://
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
 * `subnet_id` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `10m`)
-- `update` - (Default `10m`)
-- `delete` - (Default `10m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -232,6 +224,14 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - The DNS name.
 * `hosted_zone_id` - The ID of the private hosted zone.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

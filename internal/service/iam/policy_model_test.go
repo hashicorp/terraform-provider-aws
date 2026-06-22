@@ -6,6 +6,7 @@ package iam_test
 import (
 	"encoding/json"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -426,5 +427,95 @@ func TestPolicyUnmarshalServicePrincipalOrder(t *testing.T) {
 	}
 	if !reflect.DeepEqual(data1, data2) {
 		t.Fatalf("should be equal, but was:\n%#v\nVS\n%#v\n", data1, data2)
+	}
+}
+
+func TestIAMPolicyStatementPrincipalSet_UnmarshalJSON(t *testing.T) { // nosemgrep:ci.iam-in-func-name
+	t.Parallel()
+
+	testcases := map[string]struct {
+		b       []byte
+		want    tfiam.IAMPolicyStatementPrincipalSet
+		wantErr bool
+	}{
+		"wildcard, wildcard": {
+			b: []byte(`{"*": "*"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "*", Identifiers: "*"},
+			},
+		},
+		"single key, wildcard": {b: []byte(`{"AWS": "*"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "*"},
+			},
+		},
+		"single key, single value": {
+			b: []byte(`{"AWS": "111122223333"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "111122223333"},
+			},
+		},
+		"single key, multiple value": {
+			b: []byte(`{"AWS": ["111122223333", "444455556666"]}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: []string{"111122223333", "444455556666"}},
+			},
+		},
+		"multiple key": {
+			b: []byte(`{
+  "AWS": "111122223333",
+  "CanonicalUser": "abcdef123456"
+}`,
+			),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "111122223333"},
+				{Type: "CanonicalUser", Identifiers: "abcdef123456"},
+			},
+		},
+		"invalid json": {
+			b:       []byte(`{{{"*"}`),
+			wantErr: true,
+		},
+		"invalid data type": {
+			b:       []byte(`["AWS"]`),
+			wantErr: true,
+		},
+		"invalid value type": {
+			b:       []byte(`{"AWS": 0}`),
+			wantErr: true,
+		},
+		"invalid array value type": {
+			b:       []byte(`{"AWS": ["111122223333", 0]}`),
+			wantErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got tfiam.IAMPolicyStatementPrincipalSet
+			err := got.UnmarshalJSON(tc.b)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() error = %v, wantErr %t", err, tc.wantErr)
+				return
+			}
+			// Sort both slices by Type to ensure deterministic comparison
+			// (JSON object key iteration order is non-deterministic)
+			sortByType := func(a, b tfiam.IAMPolicyStatementPrincipal) int {
+				if a.Type < b.Type {
+					return -1
+				}
+				if a.Type > b.Type {
+					return 1
+				}
+				return 0
+			}
+			slices.SortFunc(got, sortByType)
+			slices.SortFunc(tc.want, sortByType)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() = %+v, want %+v", got, tc.want)
+			}
+		})
 	}
 }

@@ -87,6 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -133,6 +134,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -166,6 +168,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
+	"github.com/aws/aws-sdk-go-v2/service/mpa"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/aws-sdk-go-v2/service/mwaaserverless"
@@ -218,6 +221,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rum"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3files"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -257,6 +261,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	"github.com/aws/aws-sdk-go-v2/service/uxc"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -599,6 +604,10 @@ func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
 	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
+func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
+	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
+}
+
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {
 	return errs.Must(client[*devopsguru.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
@@ -779,6 +788,10 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
 	return errs.Must(client[*inspector2.Client](ctx, c, names.Inspector2, make(map[string]any)))
 }
 
+func (c *AWSClient) InterconnectClient(ctx context.Context) *interconnect.Client {
+	return errs.Must(client[*interconnect.Client](ctx, c, names.Interconnect, make(map[string]any)))
+}
+
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {
 	return errs.Must(client[*internetmonitor.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
@@ -865,6 +878,10 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
 
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {
 	return errs.Must(client[*m2.Client](ctx, c, names.M2, make(map[string]any)))
+}
+
+func (c *AWSClient) MPAClient(ctx context.Context) *mpa.Client {
+	return errs.Must(client[*mpa.Client](ctx, c, names.MPA, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq.Client {
@@ -1115,6 +1132,10 @@ func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control.Client {
 	return errs.Must(client[*s3control.Client](ctx, c, names.S3Control, make(map[string]any)))
 }
 
+func (c *AWSClient) S3FilesClient(ctx context.Context) *s3files.Client {
+	return errs.Must(client[*s3files.Client](ctx, c, names.S3Files, make(map[string]any)))
+}
+
 func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
 	return errs.Must(client[*s3outposts.Client](ctx, c, names.S3Outposts, make(map[string]any)))
 }
@@ -1269,6 +1290,10 @@ func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe.Client {
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer.Client {
 	return errs.Must(client[*transfer.Client](ctx, c, names.Transfer, make(map[string]any)))
+}
+
+func (c *AWSClient) UXCClient(ctx context.Context) *uxc.Client {
+	return errs.Must(client[*uxc.Client](ctx, c, names.UXC, make(map[string]any)))
 }
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice.Client {

@@ -8,6 +8,10 @@ The Terraform AWS Provider is the work of thousands of contributors, and is main
 !!! tip
     This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
 
+!!! tip
+    New Resources and Data Sources need to be implemented using [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).
+    Preferred tooling for the same would be our scaffolding tool, [skaff](skaff.md).
+
 ## Contribute
 
 Please follow the following steps to ensure your contribution goes smoothly.
@@ -37,7 +41,7 @@ Follow the guide for your contribution type and refer to the Development Referen
 | [Tagging Support](resource-tagging.md) | Many AWS resources allow assigning metadata via tags. However, frequently AWS services are launched without tagging support so this will often need to be added later. |
 | [Import Support](add-import-support.md) | Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this will need to be added later. |
 | [Enhanced Region Support](enhanced-region-support.md) | Most AWS resources are Regional – they are created and exist in a single AWS Region. By default Regional resources have a top-level `region` argument that allows the Region to be configured. |
-| [Documentation Changes](documentation-changes.md)| The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process. |
+| [End User Documentation](end-user-documentation.md)| The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process. |
 
 ### 4. Write Tests
 

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.NetworkProfile")
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceNetworkProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkProfileCreate,
@@ -42,76 +40,78 @@ func resourceNetworkProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceNetworkProfileUpdate,
 		DeleteWithoutTimeout: resourceNetworkProfileDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 16384),
-			},
-			"downlink_bandwidth_bits": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      104857600,
-				ValidateFunc: validation.IntBetween(0, 104857600),
-			},
-			"downlink_delay_ms": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"downlink_jitter_ms": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"downlink_loss_percent": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"project_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"uplink_bandwidth_bits": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      104857600,
-				ValidateFunc: validation.IntBetween(0, 104857600),
-			},
-			"uplink_delay_ms": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"uplink_jitter_ms": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"uplink_loss_percent": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.NetworkProfileTypePrivate,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkProfileType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 16384),
+				},
+				"downlink_bandwidth_bits": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      104857600,
+					ValidateFunc: validation.IntBetween(0, 104857600),
+				},
+				"downlink_delay_ms": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				"downlink_jitter_ms": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				"downlink_loss_percent": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 100),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"project_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"uplink_bandwidth_bits": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      104857600,
+					ValidateFunc: validation.IntBetween(0, 104857600),
+				},
+				"uplink_delay_ms": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				"uplink_jitter_ms": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				"uplink_loss_percent": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 100),
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.NetworkProfileTypePrivate,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkProfileType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -312,9 +312,8 @@ func findNetworkProfileByARN(ctx context.Context, conn *devicefarm.Client, arn s
 	output, err := conn.GetNetworkProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

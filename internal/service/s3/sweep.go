@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -31,6 +31,7 @@ func RegisterSweepers() {
 		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",
 		"aws_s3control_multi_region_access_point",
+		"aws_s3files_file_system",
 	)
 
 	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)
@@ -211,7 +212,7 @@ func bucketNameFilter(ctx context.Context, bucket types.Bucket) bool {
 		}
 	}
 
-	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, sdkid.UniqueIdPrefix))
 	if defaultNameRegexp.MatchString(name) {
 		return true
 	}

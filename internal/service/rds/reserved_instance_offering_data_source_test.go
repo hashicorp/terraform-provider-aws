@@ -20,7 +20,7 @@ func TestAccRDSReservedInstanceOffering_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -59,7 +59,7 @@ func TestAccRDSReservedInstanceOffering_mysql(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),

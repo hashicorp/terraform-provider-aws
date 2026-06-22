@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -30,51 +29,52 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
 		ReadWithoutTimeout:   resourceObservabilityConfigurationRead,
 		UpdateWithoutTimeout: resourceObservabilityConfigurationUpdate,
 		DeleteWithoutTimeout: resourceObservabilityConfigurationDelete,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"observability_configuration_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"observability_configuration_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"trace_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vendor": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.TracingVendor](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"latest": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"observability_configuration_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"observability_configuration_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"trace_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"vendor": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.TracingVendor](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -177,9 +177,8 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	output, err := conn.DescribeObservabilityConfiguration(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -192,17 +191,16 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	}
 
 	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output.ObservabilityConfiguration, nil
 }
 
-func statusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusObservabilityConfiguration(conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findObservabilityConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -221,10 +219,10 @@ func waitObservabilityConfigurationCreated(ctx context.Context, conn *apprunner.
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.ObservabilityConfigurationStatusActive),
-		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
+		Refresh: statusObservabilityConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -241,10 +239,10 @@ func waitObservabilityConfigurationDeleted(ctx context.Context, conn *apprunner.
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ObservabilityConfigurationStatusActive),
 		Target:  []string{},
-		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
+		Refresh: statusObservabilityConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 

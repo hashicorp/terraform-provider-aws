@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -42,62 +41,64 @@ func resourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"administrator_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"invitation_disable_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"invitation_message": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"invited_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"administrator_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"invitation_disable_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"invitation_message": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"invite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"invited_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"relationship_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -282,9 +283,8 @@ func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie
 	output, err := conn.GetMember(ctx, &input)
 
 	if isMemberNotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -340,8 +340,8 @@ func findMembers(ctx context.Context, conn *macie2.Client, input *macie2.ListMem
 	return output, nil
 }
 
-func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMemberRelationship(conn *macie2.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMemberNotAssociated(ctx, conn, adminAccountID)
 
 		if retry.NotFound(err) {
@@ -360,10 +360,10 @@ func waitMemberInvited(ctx context.Context, conn *macie2.Client, adminAccountID 
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEmailVerificationInProgress),
 		Target:  enum.Slice(awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusPaused),
-		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
+		Refresh: statusMemberRelationship(conn, adminAccountID),
 		Timeout: timeout,
 	}
 

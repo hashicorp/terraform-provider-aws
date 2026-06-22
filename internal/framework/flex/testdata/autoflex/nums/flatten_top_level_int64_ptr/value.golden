@@ -1,0 +1,18 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*int64",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "*int64",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
+  }
+]

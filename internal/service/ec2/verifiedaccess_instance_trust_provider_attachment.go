@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -33,17 +33,19 @@ func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"verifiedaccess_instance_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"verifiedaccess_trust_provider_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"verifiedaccess_instance_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"verifiedaccess_trust_provider_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -56,7 +58,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	vatpID := d.Get("verifiedaccess_trust_provider_id").(string)
 	resourceID := verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID)
 	input := &ec2.AttachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(id.UniqueId()),
+		ClientToken:                   aws.String(create.UniqueId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}
@@ -110,7 +112,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 
 	log.Printf("[INFO] Deleting Verified Access Instance Trust Provider Attachment: %s", d.Id())
 	input := ec2.DetachVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(id.UniqueId()),
+		ClientToken:                   aws.String(create.UniqueId(ctx)),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	}

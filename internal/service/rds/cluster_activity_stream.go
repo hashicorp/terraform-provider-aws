@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -36,34 +35,36 @@ func resourceClusterActivityStream() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"engine_native_audit_fields_included": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"kinesis_stream_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrMode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ActivityStreamMode](),
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"engine_native_audit_fields_included": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"kinesis_stream_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrMode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ActivityStreamMode](),
+				},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -153,7 +154,7 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	}
 
 	if status := output.ActivityStreamStatus; status == types.ActivityStreamStatusStopped {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: string(status),
 		}
 	}
@@ -161,8 +162,8 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	return output, nil
 }
 
-func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterActivityStream(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterWithActivityStream(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -181,10 +182,10 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStarting),
 		Target:     enum.Slice(types.ActivityStreamStatusStarted),
-		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusDBClusterActivityStream(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -203,10 +204,10 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStopping),
 		Target:     []string{},
-		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusDBClusterActivityStream(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

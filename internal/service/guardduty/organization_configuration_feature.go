@@ -33,43 +33,45 @@ func resourceOrganizationConfigurationFeature() *schema.Resource {
 		UpdateWithoutTimeout: resourceOrganizationConfigurationFeaturePut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"additional_configuration": {
-				Optional: true,
-				ForceNew: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_enable": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
-						},
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureAdditionalConfiguration](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_configuration": {
+					Optional: true,
+					ForceNew: true,
+					Type:     schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_enable": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
+							},
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureAdditionalConfiguration](),
+							},
 						},
 					},
 				},
-			},
-			"auto_enable": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OrgFeature](),
-			},
+				"auto_enable": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OrgFeatureStatus](),
+				},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OrgFeature](),
+				},
+			}
 		},
 	}
 }
@@ -85,7 +87,7 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	conns.GlobalMutexKV.Lock(detectorID)
 	defer conns.GlobalMutexKV.Unlock(detectorID)
 
-	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
+	output, err := findOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", detectorID, err)
@@ -129,7 +131,7 @@ func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	feature, err := FindOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, detectorID, name)
+	feature, err := findOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration Feature (%s) not found, removing from state", d.Id())
@@ -170,8 +172,8 @@ func organizationConfigurationFeatureParseResourceID(id string) (string, string,
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, organizationConfigurationFeatureResourceIDSeparator)
 }
 
-func FindOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.OrganizationFeatureConfigurationResult, error) {
-	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
+func findOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.OrganizationFeatureConfigurationResult, error) {
+	output, err := findOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err

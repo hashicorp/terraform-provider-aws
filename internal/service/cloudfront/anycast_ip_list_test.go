@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,19 +38,19 @@ func TestAccCloudFrontAnycastIPList_serial(t *testing.T) {
 
 func testAccAnycastIPList_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_anycast_ip_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx),
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnycastIPListConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnycastIPListExists(ctx, resourceName),
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -79,19 +77,19 @@ func testAccAnycastIPList_basic(t *testing.T) {
 
 func testAccAnycastIPList_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_anycast_ip_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx),
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnycastIPListConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnycastIPListExists(ctx, resourceName),
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceAnycastIPList, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -112,19 +110,19 @@ func testAccAnycastIPList_disappears(t *testing.T) {
 
 func testAccAnycastIPList_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_anycast_ip_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx),
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnycastIPListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnycastIPListExists(ctx, resourceName),
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -145,7 +143,7 @@ func testAccAnycastIPList_tags(t *testing.T) {
 			{
 				Config: testAccAnycastIPListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnycastIPListExists(ctx, resourceName),
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -162,7 +160,7 @@ func testAccAnycastIPList_tags(t *testing.T) {
 			{
 				Config: testAccAnycastIPListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnycastIPListExists(ctx, resourceName),
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -179,14 +177,14 @@ func testAccAnycastIPList_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAnycastIPListExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAnycastIPListExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		_, err := tfcloudfront.FindAnycastIPListByID(ctx, conn, rs.Primary.ID)
 
@@ -194,9 +192,9 @@ func testAccCheckAnycastIPListExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccCheckAnycastIPListDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAnycastIPListDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_anycast_ip_list" {

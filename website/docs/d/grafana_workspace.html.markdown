@@ -39,6 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Workspace description.
 * `endpoint` - Endpoint of the Grafana workspace.
 * `grafana_version` - Version of Grafana running on the workspace.
+* `kms_key_id` - The ID or ARN of the AWS KMS key for encrypting workspace data.
 * `last_updated_date` - Last updated date of the Grafana workspace.
 * `name` - Grafana workspace name.
 * `notification_destinations` - The notification destinations.

@@ -11,8 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"maps"
 	"os"
 	"slices"
@@ -21,6 +19,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -72,7 +71,19 @@ func main() {
 			sdkListResources:       make(map[string]ResourceDatum, 0),
 		}
 
-		v.processDir(".")
+		for file, err := range common.ScanDirectory(".") {
+			if err != nil {
+				g.Fatalf("%s", err.Error())
+			}
+
+			v.packageName = file.PackageName()
+			v.fileName = file.Name()
+
+			v.processFile(file.File())
+
+			v.fileName = ""
+			v.packageName = ""
+		}
 
 		if err := errors.Join(v.errs...); err != nil {
 			g.Fatalf("%s", err.Error())
@@ -200,6 +211,10 @@ func main() {
 	}
 }
 
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
+
 type arnFormatState uint
 
 const (
@@ -213,10 +228,11 @@ type ResourceDatum struct {
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
 	IsGlobal                          bool
 	regionOverrideEnabled             bool
+	RegionOverrideDeprecated          bool
+	ValidateRegionOverrideInPartition bool
 	TransparentTagging                bool
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
-	ValidateRegionOverrideInPartition bool
 	isARNFormatGlobal                 arnFormatState
 	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
@@ -290,35 +306,6 @@ type visitor struct {
 	sdkListResources       map[string]ResourceDatum
 }
 
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
-}
-
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	ast.Walk(v, file)
@@ -357,7 +344,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		var implementation common.Implementation
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
 				implementation = common.ImplementationFramework
 
@@ -381,6 +373,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.regionOverrideEnabled = enabled
+					}
+				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
 					}
 				}
 				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
@@ -449,6 +448,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
 
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
@@ -462,6 +481,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	if d.HasResourceIdentity() {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
+		}
+		if d.ImportIDHandler != "" {
+			if len(d.IdentityAttributes) < 2 {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: \"@ImportIDHandler\" should only be specified for Resource Identities with multiple attributes", v.packageName, v.functionName))
+			}
+		}
+		if d.HasV6_0NullValuesError {
+			d.PreIdentityVersion = v5_100_0
+		}
+		if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
 		}
 	} else {
 		if d.HasNoPreExistingResource {
@@ -486,7 +516,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			d.FactoryName = v.functionName
 
-			args := common.ParseArgs(m[3])
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
 
 			if attr, ok := args.Keyword["name"]; ok {
 				d.Name = attr
@@ -599,10 +633,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkResources[typeName] = d
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				if d.IdentityVersion > 0 {

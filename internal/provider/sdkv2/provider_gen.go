@@ -718,6 +718,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// devopsagent
+
+				"devopsagent": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// devopsguru
 
 				"devopsguru": {
@@ -1178,6 +1186,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// interconnect
+
+				"interconnect": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// internetmonitor
 
 				"internetmonitor": {
@@ -1493,6 +1509,14 @@ func endpointsSchema() *schema.Schema {
 				// mgn
 
 				"mgn": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mpa
+
+				"mpa": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -1968,6 +1992,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// s3files
+
+				"s3files": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// s3outposts
 
 				"s3outposts": {
@@ -2305,6 +2337,14 @@ func endpointsSchema() *schema.Schema {
 				// transfer
 
 				"transfer": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// uxc
+
+				"uxc": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

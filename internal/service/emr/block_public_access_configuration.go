@@ -32,31 +32,33 @@ func resourceBlockPublicAccessConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"block_public_security_group_rules": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			"permitted_public_security_group_rule_range": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_range": {
-							Type:             schema.TypeInt,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
-						},
-						"min_range": {
-							Type:             schema.TypeInt,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"block_public_security_group_rules": {
+					Type:     schema.TypeBool,
+					Required: true,
+					ForceNew: true,
+				},
+				"permitted_public_security_group_rule_range": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_range": {
+								Type:             schema.TypeInt,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
+							},
+							"min_range": {
+								Type:             schema.TypeInt,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

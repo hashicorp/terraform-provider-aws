@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -62,37 +61,39 @@ func resourceGatewayAssociationProposal() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"allowed_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"associated_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"associated_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associated_gateway_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dx_gateway_owner_account_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"associated_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"associated_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associated_gateway_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dx_gateway_owner_account_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+			}
 		},
 	}
 }
@@ -238,9 +239,8 @@ func findGatewayAssociationProposalByID(ctx context.Context, conn *directconnect
 	}
 
 	if state := output.ProposalState; state == awstypes.DirectConnectGatewayAssociationProposalStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 

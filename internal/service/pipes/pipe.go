@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,7 +102,7 @@ func resourcePipe() *schema.Resource {
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
+						validation.StringLenBetween(1, 64-sdkid.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 					),
 				},
@@ -142,7 +142,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pipes.CreatePipeInput{
 		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),

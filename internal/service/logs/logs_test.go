@@ -26,6 +26,14 @@ func TestAccLogs_serial(t *testing.T) {
 			acctest.CtDisappears: testAccDeliverySource_disappears,
 			"tags":               testAccDeliverySource_tags,
 		},
+		"S3TableIntegrationSource": {
+			acctest.CtBasic:        testAccS3TableIntegrationSource_basic,
+			acctest.CtDisappears:   testAccS3TableIntegrationSource_disappears,
+			"Identity":             testAccLogsS3TableIntegrationSource_identitySerial,
+			"List_basic":           testAccS3TableIntegrationSource_List_basic,
+			"List_includeResource": testAccS3TableIntegrationSource_List_includeResource,
+			"List_regionOverride":  testAccS3TableIntegrationSource_List_regionOverride,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

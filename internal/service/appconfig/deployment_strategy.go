@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +27,6 @@ import (
 
 // @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
@@ -40,51 +38,53 @@ func resourceDeploymentStrategy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_duration_in_minutes": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(0, 1440),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"final_bake_time_in_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 1440),
-			},
-			"growth_factor": {
-				Type:         schema.TypeFloat,
-				Required:     true,
-				ValidateFunc: validation.FloatBetween(1.0, 100.0),
-			},
-			"growth_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.GrowthTypeLinear,
-				ValidateDiagFunc: enum.Validate[awstypes.GrowthType](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"replicate_to": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ReplicateTo](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_duration_in_minutes": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(0, 1440),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"final_bake_time_in_minutes": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 1440),
+				},
+				"growth_factor": {
+					Type:         schema.TypeFloat,
+					Required:     true,
+					ValidateFunc: validation.FloatBetween(1.0, 100.0),
+				},
+				"growth_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.GrowthTypeLinear,
+					ValidateDiagFunc: enum.Validate[awstypes.GrowthType](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"replicate_to": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ReplicateTo](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -172,7 +172,7 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("growth_factor") {
-			input.GrowthFactor = aws.Float32(d.Get("growth_factor").(float32))
+			input.GrowthFactor = aws.Float32(float32(d.Get("growth_factor").(float64)))
 		}
 
 		if d.HasChange("growth_type") {
@@ -222,9 +222,8 @@ func findDeploymentStrategy(ctx context.Context, conn *appconfig.Client, input *
 	output, err := conn.GetDeploymentStrategy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

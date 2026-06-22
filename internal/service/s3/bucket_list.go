@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,9 +46,13 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 (Simple Storage) Bucket")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input s3.ListBucketsInput
+		input := s3.ListBucketsInput{
+			BucketRegion: aws.String(l.Meta().Region(ctx)),
+			MaxBuckets:   aws.Int32(int32(request.Limit)),
+		}
 		for item, err := range listBuckets(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -57,30 +61,35 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 			}
 
 			bucketName := aws.ToString(item.Name)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), bucketName)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrBucket), bucketName)
 
 			result := request.NewListResult(ctx)
+
 			rd := l.ResourceData()
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			tflog.Info(ctx, "Reading S3 (Simple Storage) Bucket")
-			diags := resourceBucketRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading S3 (Simple Storage) Bucket", map[string]any{
-					names.AttrID: bucketName,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+			tflog.Info(ctx, "Reading Resource")
+
+			// Verify access to the Bucket
+			_, err := findBucket(ctx, conn, bucketName)
+			if retry.NotFound(err) {
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+				continue
+			}
+			if err != nil {
+				tflog.Error(ctx, "Reading Resource", map[string]any{
+					"error": err.Error(),
 				})
 				continue
 			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				resourceBucketFlatten(ctx, l.Meta(), bucketName, rd)
 			}
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -101,7 +110,7 @@ func listBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInpu
 	return func(yield func(awstypes.Bucket, error) bool) {
 		output, err := conn.ListBuckets(ctx, input)
 		if err != nil {
-			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 (Simple Storage) Bucket resources: %w", err))
+			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
 			return
 		}
 

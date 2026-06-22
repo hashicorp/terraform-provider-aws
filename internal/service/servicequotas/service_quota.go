@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,103 +39,105 @@ func resourceServiceQuota() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"adjustable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"quota_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"quota_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"request_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_metric": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_dimensions": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"class": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"service": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"adjustable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"quota_code": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"quota_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"request_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"request_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_metric": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_dimensions": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"class": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"resource": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"service": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrMetricName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_statistic_recommendation": {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_statistic_recommendation": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrValue: {
-				Type:     schema.TypeFloat,
-				Required: true,
-			},
+				names.AttrValue: {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -323,9 +324,8 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -353,9 +353,8 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -390,9 +389,8 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

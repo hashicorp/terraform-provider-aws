@@ -105,7 +105,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 
 			result.DisplayName = aws.ToString(item.Name)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting Route 53 Record result", map[string]any{
 					names.AttrID: recordID,

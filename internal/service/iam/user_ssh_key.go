@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -38,43 +37,45 @@ func resourceUserSSHKey() *schema.Resource {
 			StateContext: resourceUserSSHKeyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"encoding": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
-			},
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("encoding").(string) == "SSH" {
-						old = cleanSSHKey(old)
-						new = cleanSSHKey(new)
-					}
-					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"encoding": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
 				},
-			},
-			"ssh_public_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.Get("encoding").(string) == "SSH" {
+							old = cleanSSHKey(old)
+							new = cleanSSHKey(new)
+						}
+						return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+					},
+				},
+				"ssh_public_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrUsername: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -220,9 +221,8 @@ func findSSHPublicKeyByThreePartKey(ctx context.Context, conn *iam.Client, id, e
 	output, err := conn.GetSSHPublicKey(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

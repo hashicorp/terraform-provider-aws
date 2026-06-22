@@ -51,3 +51,22 @@ func TestIsAErrorMessageContains(t *testing.T) {
 		t.Error("unexpected false")
 	}
 }
+
+func TestContains(t *testing.T) {
+	t.Parallel()
+
+	var e1 FirstError
+	var e2 SecondError
+
+	if !errs.Contains(e1, "First") {
+		t.Error("unexpected false")
+	}
+
+	if errs.Contains(e1, "Second") {
+		t.Error("unexpected true")
+	}
+
+	if !errs.Contains(&e2, "Second") {
+		t.Error("unexpected false")
+	}
+}

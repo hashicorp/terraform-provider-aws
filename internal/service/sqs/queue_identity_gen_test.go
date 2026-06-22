@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSQSQueue_Identity_Basic(t *testing.T) {
+func TestAccSQSQueue_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[awstypes.QueueAttributeName]string
@@ -35,7 +35,7 @@ func TestAccSQSQueue_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
-		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		CheckDestroy:             testAccCheckQueueDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSQSQueue_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &v),
+					testAccCheckQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrURL), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccSQSQueue_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueue_Identity_RegionOverride(t *testing.T) {
+func TestAccSQSQueue_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sqs_queue.test"
@@ -229,7 +229,7 @@ func TestAccSQSQueue_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccSQSQueue_Identity_ExistingResource(t *testing.T) {
+func TestAccSQSQueue_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[awstypes.QueueAttributeName]string
@@ -242,7 +242,7 @@ func TestAccSQSQueue_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SQSServiceID),
-		CheckDestroy: testAccCheckQueueDestroy(ctx),
+		CheckDestroy: testAccCheckQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -251,7 +251,7 @@ func TestAccSQSQueue_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &v),
+					testAccCheckQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -285,7 +285,7 @@ func TestAccSQSQueue_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccSQSQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSQSQueue_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[awstypes.QueueAttributeName]string
@@ -298,7 +298,7 @@ func TestAccSQSQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SQSServiceID),
-		CheckDestroy: testAccCheckQueueDestroy(ctx),
+		CheckDestroy: testAccCheckQueueDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -312,7 +312,7 @@ func TestAccSQSQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &v),
+					testAccCheckQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -343,7 +343,7 @@ func TestAccSQSQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) 
 }
 
 // Resource Identity version 1 was added in version 6.19.0
-func TestAccSQSQueue_Identity_Upgrade(t *testing.T) {
+func TestAccSQSQueue_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[awstypes.QueueAttributeName]string
@@ -356,7 +356,7 @@ func TestAccSQSQueue_Identity_Upgrade(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SQSServiceID),
-		CheckDestroy: testAccCheckQueueDestroy(ctx),
+		CheckDestroy: testAccCheckQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
@@ -365,7 +365,7 @@ func TestAccSQSQueue_Identity_Upgrade(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &v),
+					testAccCheckQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -399,7 +399,7 @@ func TestAccSQSQueue_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version 1 was added in version 6.19.0
-func TestAccSQSQueue_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccSQSQueue_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[awstypes.QueueAttributeName]string
@@ -412,7 +412,7 @@ func TestAccSQSQueue_Identity_Upgrade_NoRefresh(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SQSServiceID),
-		CheckDestroy: testAccCheckQueueDestroy(ctx),
+		CheckDestroy: testAccCheckQueueDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -426,7 +426,7 @@ func TestAccSQSQueue_Identity_Upgrade_NoRefresh(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &v),
+					testAccCheckQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

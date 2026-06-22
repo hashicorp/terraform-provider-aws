@@ -12,9 +12,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +24,18 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 				),
 			},
@@ -52,21 +52,29 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -76,18 +84,18 @@ func TestAccEC2EIPAssociation_instance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
@@ -105,18 +113,18 @@ func TestAccEC2EIPAssociation_instance_publicIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_instance_publicIP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
@@ -134,18 +142,18 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_networkInterface(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
@@ -168,22 +176,22 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					testAccCheckEIPAssociationExists(ctx, t, resourceName, &a),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
@@ -202,14 +210,14 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	})
 }
 
-func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *awstypes.Address) resource.TestCheckFunc {
+func testAccCheckEIPAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
@@ -223,9 +231,9 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *awstypes
 	}
 }
 
-func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEIPAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip_association" {

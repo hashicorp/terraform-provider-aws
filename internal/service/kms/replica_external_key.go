@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,7 +36,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check;key_material_base64")
 // @Testing(altRegionProvider=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaExternalKeyCreate,
@@ -49,68 +47,70 @@ func resourceReplicaExternalKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bypass_policy_lockout_safety_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"deletion_window_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(7, 30),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 8192),
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"expiration_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_material_base64": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"key_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"primary_key_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"valid_to": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bypass_policy_lockout_safety_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"deletion_window_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      30,
+					ValidateFunc: validation.IntBetween(7, 30),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 8192),
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"expiration_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_material_base64": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"key_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_usage": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"primary_key_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"valid_to": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+			}
 		},
 	}
 }
@@ -346,10 +346,10 @@ func waitReplicaExternalKeyCreated(ctx context.Context, conn *kms.Client, id str
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStatePendingImport),
-		Refresh: statusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(conn, id),
 		Timeout: timeout,
 	}
 

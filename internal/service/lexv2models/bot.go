@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -303,9 +302,8 @@ func findBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	output, err := conn.DescribeBot(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -324,8 +322,8 @@ func botFailureReasons(failureReasons []string) error {
 	return errors.Join(tfslices.ApplyToAll(failureReasons, errors.New)...)
 }
 
-func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBot(conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBotByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -341,10 +339,10 @@ func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) sdkretr
 }
 
 func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusCreating),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
-		Refresh:                   statusBot(ctx, conn, id),
+		Refresh:                   statusBot(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -361,10 +359,10 @@ func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusUpdating),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
-		Refresh:                   statusBot(ctx, conn, id),
+		Refresh:                   statusBot(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -381,10 +379,10 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},
-		Refresh: statusBot(ctx, conn, id),
+		Refresh: statusBot(conn, id),
 		Timeout: timeout,
 	}
 

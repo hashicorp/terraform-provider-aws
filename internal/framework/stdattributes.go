@@ -37,7 +37,7 @@ func IDAttributeDeprecatedNoReplacement() schema.StringAttribute {
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.UseStateForUnknown(),
 		},
-		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
+		DeprecationMessage: "This attribute will be removed in a future version of the provider.",
 	}
 }
 
@@ -61,5 +61,5 @@ func ARNAttributeComputedOnlyDeprecatedWithAlternate(altPath path.Path) schema.S
 }
 
 func deprecatedWithAlternateMessage(altPath path.Path) string {
-	return fmt.Sprintf("Use '%s' instead. This attribute will be removed in a future verion of the provider.", altPath.String())
+	return fmt.Sprintf("Use '%s' instead. This attribute will be removed in a future version of the provider.", altPath.String())
 }

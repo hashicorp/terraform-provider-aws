@@ -34,7 +34,7 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 		},
 		"invalid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `(`),
-			expected: fwtypes.RegexpUnknown(),
+			expected: fwtypes.RegexpValue(`(`),
 		},
 	}
 

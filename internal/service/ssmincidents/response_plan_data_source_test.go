@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,18 +15,18 @@ import (
 
 func testAccResponsePlanDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTitle := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssmincidents_response_plan.test"
 	resourceName := "aws_ssmincidents_response_plan.test"
 
 	snsTopic1 := "aws_sns_topic.topic1"
 	snsTopic2 := "aws_sns_topic.topic2"
 
-	displayName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	chatChannelTopic := "aws_sns_topic.channel_topic"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)

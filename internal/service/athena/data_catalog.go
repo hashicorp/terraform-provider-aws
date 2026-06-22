@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,40 +41,42 @@ func resourceDataCatalog() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 129),
-					validation.StringMatch(regexache.MustCompile(`[\w@-]*`), ""),
-				),
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 255),
-					validation.MapValueLenBetween(0, 51200),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.DataCatalogType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 129),
+						validation.StringMatch(regexache.MustCompile(`[\w@-]*`), ""),
+					),
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateDiagFunc: validation.AllDiag(
+						validation.MapKeyLenBetween(1, 255),
+						validation.MapValueLenBetween(0, 51200),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.DataCatalogType](),
+				},
+			}
 		},
 	}
 }
@@ -212,9 +213,8 @@ func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string
 	output, err := conn.GetDataCatalog(ctx, input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

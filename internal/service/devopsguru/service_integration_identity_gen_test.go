@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccDevOpsGuruServiceIntegration_IdentitySerial(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccDevOpsGuruServiceIntegration_Identity_Basic,
-		"ExistingResource":          testAccDevOpsGuruServiceIntegration_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccDevOpsGuruServiceIntegration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccDevOpsGuruServiceIntegration_Identity_basic,
+		"ExistingResource":          testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccDevOpsGuruServiceIntegration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
@@ -49,7 +49,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -57,7 +57,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -112,7 +112,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
@@ -225,7 +225,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
@@ -239,14 +239,14 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource(t *testing.T)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy: testAccCheckServiceIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckServiceIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -258,7 +258,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource(t *testing.T)
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -300,7 +300,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource(t *testing.T)
 	})
 }
 
-func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
@@ -314,7 +314,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_NoRefresh_NoC
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy: testAccCheckServiceIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckServiceIntegrationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -326,7 +326,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource_NoRefresh_NoC
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceIntegrationExists(ctx, resourceName),
+					testAccCheckServiceIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -100,6 +100,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the image recipe.
 * `arn` - Amazon Resource Name (ARN) of the image recipe.
 * `date_created` - Date the image recipe was created.
 * `owner` - Owner of the image recipe.

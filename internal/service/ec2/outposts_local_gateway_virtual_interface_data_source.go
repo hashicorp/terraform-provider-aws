@@ -31,43 +31,53 @@ func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"local_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_bgp_asn": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"local_gateway_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_gateway_virtual_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"peer_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_bgp_asn": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vlan": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"local_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"local_bgp_asn": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"local_gateway_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"local_gateway_virtual_interface_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"local_gateway_virtual_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"outpost_lag_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_bgp_asn": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vlan": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -105,6 +115,8 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	d.Set("local_address", localGatewayVirtualInterface.LocalAddress)
 	d.Set("local_bgp_asn", localGatewayVirtualInterface.LocalBgpAsn)
 	d.Set("local_gateway_id", localGatewayVirtualInterface.LocalGatewayId)
+	d.Set("local_gateway_virtual_interface_group_id", localGatewayVirtualInterface.LocalGatewayVirtualInterfaceGroupId)
+	d.Set("outpost_lag_id", localGatewayVirtualInterface.OutpostLagId)
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 	d.Set("vlan", localGatewayVirtualInterface.Vlan)
