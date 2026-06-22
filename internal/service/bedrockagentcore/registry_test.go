@@ -355,7 +355,7 @@ resource "aws_bedrockagentcore_registry" "test" {
 func testAccRegistryConfig_approvalConfiguration(rName string, autoApproval bool) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_registry" "test" {
-  name          = %[1]q
+  name = %[1]q
 
   approval_configuration {
     auto_approval = %[2]t
