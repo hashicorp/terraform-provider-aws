@@ -301,11 +301,21 @@ func (r *deliveryResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().LogsClient(ctx)
 
-	if !new.FieldDelimiter.Equal(old.FieldDelimiter) || !new.RecordFields.Equal(old.RecordFields) || !new.S3DeliveryConfiguration.Equal(old.S3DeliveryConfiguration) {
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := cloudwatchlogs.UpdateDeliveryConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
+		}
+
+		if new.S3DeliveryConfiguration.Equal(old.S3DeliveryConfiguration) {
+			input.S3DeliveryConfiguration = nil
 		}
 
 		defer deliveryMutexLock(&new)()
