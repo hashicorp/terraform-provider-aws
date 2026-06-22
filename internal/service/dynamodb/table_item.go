@@ -320,10 +320,10 @@ func tableItemCreateResourceID(tableName string, hashKeyValue string, rangeKeyVa
 // key and (optional) range key values from a fully-expanded item. Empty strings
 // are returned for missing or non-key-eligible attribute types.
 func tableItemKeyValues(attrs map[string]awstypes.AttributeValue, hashKey, rangeKey string) (string, string) {
-	hashKeyValue, _ := attributeValueToString(attrs[hashKey])
+	hashKeyValue := attributeValueToString(attrs[hashKey])
 	var rangeKeyValue string
 	if rangeKey != "" {
-		rangeKeyValue, _ = attributeValueToString(attrs[rangeKey])
+		rangeKeyValue = attributeValueToString(attrs[rangeKey])
 	}
 	return hashKeyValue, rangeKeyValue
 }
@@ -371,18 +371,18 @@ func expandTableItemQueryKey(attrs map[string]awstypes.AttributeValue, hashKey, 
 
 // attributeValueToString returns the canonical string form of a DynamoDB key
 // AttributeValue for use in identity attributes and resource IDs. Binary values
-// are encoded as standard base64. Returns false if the value is unset or of an
-// unsupported (non-key-eligible) type.
-func attributeValueToString(v awstypes.AttributeValue) (string, bool) {
+// are encoded as standard base64. Returns the empty string if the value is
+// unset or of an unsupported (non-key-eligible) type.
+func attributeValueToString(v awstypes.AttributeValue) string {
 	switch v := v.(type) {
 	case *awstypes.AttributeValueMemberB:
-		return inttypes.Base64EncodeOnce(v.Value), true
+		return inttypes.Base64EncodeOnce(v.Value)
 	case *awstypes.AttributeValueMemberN:
-		return v.Value, true
+		return v.Value
 	case *awstypes.AttributeValueMemberS:
-		return v.Value, true
+		return v.Value
 	default:
-		return "", false
+		return ""
 	}
 }
 
