@@ -78,7 +78,7 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
+- `secret_id` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
 

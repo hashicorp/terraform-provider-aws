@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -101,6 +102,22 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 
 var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{}
 
+// deliveryMutexLock acquires locks on both delivery source and destination to prevent concurrent modification conflicts.
+// Locks are acquired in a consistent order (source first, then destination) to prevent deadlocks.
+// Returns a deferrable function that unlocks both in reverse order (destination first, then source).
+func deliveryMutexLock(model *deliveryResourceModel) func() {
+	sourceKey := fmt.Sprintf("logs-delivery-source:%s", model.DeliverySourceName.ValueString())
+	destKey := fmt.Sprintf("logs-delivery-destination:%s", model.DeliveryDestinationARN.ValueString())
+
+	conns.GlobalMutexKV.Lock(sourceKey)
+	conns.GlobalMutexKV.Lock(destKey)
+
+	return func() {
+		conns.GlobalMutexKV.Unlock(destKey)
+		conns.GlobalMutexKV.Unlock(sourceKey)
+	}
+}
+
 // normalizeS3SuffixPath strips AWS-added prefixes from the API-returned suffix path.
 // AWS automatically prepends "AWSLogs/{account-id}/CloudFront/" for CloudFront sources.
 // This normalization ensures the state matches the user's configuration value.
@@ -128,6 +145,8 @@ func (r *deliveryResource) Create(ctx context.Context, request resource.CreateRe
 
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
+
+	defer deliveryMutexLock(&data)()
 
 	output, err := conn.CreateDelivery(ctx, &input)
 
@@ -282,12 +301,24 @@ func (r *deliveryResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().LogsClient(ctx)
 
-	if !new.FieldDelimiter.Equal(old.FieldDelimiter) || !new.RecordFields.Equal(old.RecordFields) || !new.S3DeliveryConfiguration.Equal(old.S3DeliveryConfiguration) {
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := cloudwatchlogs.UpdateDeliveryConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		if new.S3DeliveryConfiguration.Equal(old.S3DeliveryConfiguration) {
+			input.S3DeliveryConfiguration = nil
+		}
+
+		defer deliveryMutexLock(&new)()
 
 		_, err := conn.UpdateDeliveryConfiguration(ctx, &input)
 
@@ -309,6 +340,8 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	conn := r.Meta().LogsClient(ctx)
+
+	defer deliveryMutexLock(&data)()
 
 	_, err := conn.DeleteDelivery(ctx, &cloudwatchlogs.DeleteDeliveryInput{
 		Id: fwflex.StringFromFramework(ctx, data.ID),
