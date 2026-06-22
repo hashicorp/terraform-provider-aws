@@ -266,6 +266,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Regions = []string{meta.(*conns.AWSClient).Region(ctx)}
 	}
 
+	input.Accounts = []string{meta.(*conns.AWSClient).AccountID(ctx)}
 	if v, ok := d.GetOk(AttrAccounts); ok && v.(*schema.Set).Len() > 0 {
 		input.Accounts = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -278,8 +279,6 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 		if v, ok := d.GetOk("deployment_targets.0.organizational_unit_ids"); ok && len(v.(*schema.Set).List()) > 0 {
 			deployedByOU = "OU"
 		}
-	} else {
-		input.Accounts = []string{meta.(*conns.AWSClient).AccountID(ctx)}
 	}
 
 	callAs := d.Get("call_as").(string)
