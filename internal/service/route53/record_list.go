@@ -89,18 +89,14 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 				rd.Set("set_identifier", aws.ToString(item.SetIdentifier))
 			}
 
-			tflog.Info(ctx, "Reading Route 53 Record")
-			diags := resourceRecordRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
-					names.AttrID: recordID,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				diags := resourceRecordFlatten(rd, &item, item.Name)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = aws.ToString(item.Name)

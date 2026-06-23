@@ -407,6 +407,12 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
 	}
 
+	return resourceRecordFlatten(d, record, fqdn)
+}
+
+func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceRecordSet, fqdn *string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []any{map[string]any{
 			"evaluate_target_health": alias.EvaluateTargetHealth,
