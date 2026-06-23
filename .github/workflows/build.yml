@@ -18,6 +18,9 @@ on: [workflow_dispatch, push]
 env:
   PKG_NAME: "terraform-provider-aws"
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   # Detects the Go toolchain version to use for product builds.
   #

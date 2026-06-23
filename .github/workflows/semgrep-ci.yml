@@ -27,6 +27,9 @@ env:
   SEMGREP_TIMEOUT: 300
   SEMGREP_ARGS: --error --quiet
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   semgrep-validate:
     name: Validate Code Quality Rules

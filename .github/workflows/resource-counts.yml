@@ -6,9 +6,11 @@ on:
   workflow_dispatch: {}
   schedule:
     - cron: '0 9 * * WED'
+
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write       # required to push commits
+  pull-requests: write  # required to create or update the automation pull request
+
 jobs:
   coverage:
     runs-on: ubuntu-latest

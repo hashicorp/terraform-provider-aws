@@ -13,6 +13,9 @@ on:
       - .github/workflows/naming.yml
       - "**/*_test.go"
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   test_naming:
     name: test naming

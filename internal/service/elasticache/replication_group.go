@@ -101,6 +101,21 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					DiffSuppressFunc: func(_, old, _ string, d *schema.ResourceData) bool {
+						// For members of a global replication group, automatic_failover_enabled
+						// is controlled by the global replication group. Suppress diffs on
+						// existing members to avoid persistent plan churn and apply errors.
+						//
+						// Detect "create" via old=="" rather than d.IsNewResource() because
+						// IsNewResource is only set during Apply (the CRUD lifecycle) and is
+						// always false here, including during plan expansion when a previously
+						// unknown global_replication_group_id reference resolves.
+						if old == "" {
+							return false
+						}
+						v, ok := d.GetOk("global_replication_group_id")
+						return ok && v.(string) != ""
+					},
 				},
 				"cluster_enabled": {
 					Type:     schema.TypeBool,
@@ -950,8 +965,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("automatic_failover_enabled") {
-			input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-			requestUpdate = true
+			if _, isMember := d.GetOk("global_replication_group_id"); !isMember {
+				input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {

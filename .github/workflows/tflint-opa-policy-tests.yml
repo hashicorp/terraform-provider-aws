@@ -6,6 +6,9 @@ name: OPA Policy Tests
 on:
   workflow_call:
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   opa-tests:
     name: OPA Policy Tests

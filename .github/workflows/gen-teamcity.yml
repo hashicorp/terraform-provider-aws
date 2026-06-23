@@ -11,6 +11,9 @@ on:
     paths:
       - .teamcity/**
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   validate-teamcity-config:
     name: Validate TeamCity Configuration

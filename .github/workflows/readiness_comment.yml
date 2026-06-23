@@ -4,8 +4,8 @@
 name: Readiness Comment
 
 permissions:
-  contents: read
-  pull-requests: write
+  contents: read        # required for checkout
+  pull-requests: write  # required to comment on pull requests
 
 on:
   pull_request_target:
