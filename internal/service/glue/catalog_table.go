@@ -804,11 +804,15 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// AWS Glue rejects UpdateTable on a VIRTUAL_VIEW unless ViewUpdateAction is
-	// set; mirrors `aws glue update-table --view-update-action REPLACE --force`.
-	// Required for in-place updates that preserve Lake Formation grants on the
-	// view (especially in cross-account sharing).
-	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
+	// AWS Glue rejects UpdateTable on a multi-dialect view (one configured via
+	// the `view_definition` block) unless ViewUpdateAction is set; conversely,
+	// it rejects ViewUpdateAction on a legacy view (view_original_text /
+	// view_expanded_text only) with "View update action is only supported on
+	// multi-dialect views." Gate on TableInput.ViewDefinition to pick the right
+	// branch. Force=true mirrors `aws glue update-table ... --force` and is
+	// required to apply in-place updates that preserve Lake Formation grants on
+	// the view (especially in cross-account sharing).
+	if input.TableInput != nil && input.TableInput.ViewDefinition != nil {
 		input.ViewUpdateAction = awstypes.ViewUpdateActionReplace
 		input.Force = true
 	}
