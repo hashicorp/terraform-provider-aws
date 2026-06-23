@@ -34,4 +34,4 @@ TBD
 
 ### Waiter Resources
 
-TBD
+* `aws_acm_certificate_validation`
