@@ -37,13 +37,13 @@ resource "aws_pinpointsmsvoicev2_sender_id" "example" {
 
 The following arguments are required:
 
-* `sender_id` - (Required) The alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only letters, numbers, and dashes, and cannot be numeric-only.
-* `iso_country_code` - (Required) The two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
+* `sender_id` - (Required, Forces new resource) The alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only letters, numbers, and dashes, and cannot be numeric-only.
+* `iso_country_code` - (Required, Forces new resource) The two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 
 The following arguments are optional:
 
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When set to `true`, the sender ID cannot be deleted. Defaults to `false`.
-* `message_types` - (Optional) The type of message. Valid values are `TRANSACTIONAL` and `PROMOTIONAL`. Defaults to `["TRANSACTIONAL"]` if not specified.
+* `message_types` - (Optional, Forces new resource) The type of message. Valid values are `TRANSACTIONAL` and `PROMOTIONAL`. Defaults to `["TRANSACTIONAL"]` if not specified.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
