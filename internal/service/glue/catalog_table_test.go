@@ -349,6 +349,51 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 	})
 }
 
+// Reproduces a customer-reported failure: updating a VIRTUAL_VIEW's text in
+// place (while keeping table_type = "VIRTUAL_VIEW") fails because the provider
+// does not pass ViewUpdateAction to the Glue UpdateTable API. AWS responds with
+// "InvalidInputException: View update action must be one of: [ADD, REPLACE,
+// ADD_OR_REPLACE, DROP]". The AWS CLI succeeds in the same scenario by passing
+// `--view-update-action REPLACE --force`. Once the provider plumbs through
+// ViewUpdateAction (and Force) on UpdateTable, this test should be updated to
+// assert a successful in-place update instead of an expected error.
+//
+// The view_definition block (introduced in PR #45336 for cross-account /
+// Lake Formation views) is the path that actually triggers Glue's validation;
+// the legacy view_original_text / view_expanded_text top-level fields do not.
+func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_1", "view_expanded_text_1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_1"),
+				),
+			},
+			{
+				// Updating only the view text while keeping table_type = "VIRTUAL_VIEW"
+				// must currently fail because resourceCatalogTableUpdate does not set
+				// UpdateTableInput.ViewUpdateAction.
+				Config:      testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_2", "view_expanded_text_2"),
+				ExpectError: regexache.MustCompile(`View update action must be one of`),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -969,6 +1014,36 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 `, rName, desc)
+}
+
+func testAccCatalogTableConfig_viewDefinitionText(rName, viewOriginalText, viewExpandedText string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  storage_descriptor {
+    columns {
+      name = "my_column_1"
+      type = "int"
+    }
+  }
+
+  view_definition {
+    representations {
+      dialect            = "SPARK"
+      dialect_version    = "1.0"
+      view_original_text = %[2]q
+      view_expanded_text = %[3]q
+    }
+  }
+}
+`, rName, viewOriginalText, viewExpandedText)
 }
 
 func testAccCatalogTableConfig_fullReplacedValues(rName string) string {
