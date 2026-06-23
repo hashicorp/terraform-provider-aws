@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -76,7 +79,7 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -120,10 +123,11 @@ func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:         resource.ImportCommandWithID,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"batch_reads"},
 			},
 
 			// Step 3: Import block with Import ID
@@ -284,10 +288,10 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -316,7 +320,7 @@ func TestAccRoute53Record_underscored(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -343,7 +347,7 @@ func TestAccRoute53Record_fqdn(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 
 			// Ensure that changing the name to include a trailing "dot" results in
@@ -385,7 +389,7 @@ func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -412,7 +416,7 @@ func TestAccRoute53Record_Support_txt(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "zone_id"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "zone_id", "batch_reads"},
 			},
 		},
 	})
@@ -440,7 +444,7 @@ func TestAccRoute53Record_Support_spf(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -468,7 +472,7 @@ func TestAccRoute53Record_Support_caa(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -495,7 +499,7 @@ func TestAccRoute53Record_Support_ds(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -522,7 +526,7 @@ func TestAccRoute53Record_generatesSuffix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -558,7 +562,7 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -603,7 +607,7 @@ func TestAccRoute53Record_failover(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -632,7 +636,7 @@ func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -659,7 +663,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_simpleRoutingPolicy,
@@ -693,7 +697,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -721,7 +725,7 @@ func TestAccRoute53Record_Alias_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -753,7 +757,7 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -781,7 +785,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -810,7 +814,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 
 			{
@@ -871,7 +875,7 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_cidr(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-2"),
@@ -921,7 +925,7 @@ func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -950,7 +954,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -977,7 +981,7 @@ func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdSetIdentifier("test2"),
@@ -1013,7 +1017,7 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdTypeA(),
@@ -1051,7 +1055,7 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1084,7 +1088,7 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_typeChangePost,
@@ -1132,7 +1136,7 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_nameChangePost,
@@ -1174,7 +1178,7 @@ func TestAccRoute53Record_setIdentifierChangeBasicToWeighted(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1209,7 +1213,7 @@ func TestAccRoute53Record_SetIdentifierRename_geolocationContinent(t *testing.T)
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeolocationContinent("AN", "after"),
@@ -1242,7 +1246,7 @@ func TestAccRoute53Record_SetIdentifierRename_geolocationCountryDefault(t *testi
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("*", "after"),
@@ -1275,7 +1279,7 @@ func TestAccRoute53Record_SetIdentifierRename_geolocationCountrySpecified(t *tes
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("US", "after"),
@@ -1308,7 +1312,7 @@ func TestAccRoute53Record_SetIdentifierRename_geolocationCountrySubdivision(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountrySubdivision("US", "CA", "after"),
@@ -1341,7 +1345,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "after"),
@@ -1374,7 +1378,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "after"),
@@ -1407,7 +1411,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityCoordinates(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameGeoproximityCoordinates("49.22", "-74.01", "after"),
@@ -1440,7 +1444,7 @@ func TestAccRoute53Record_SetIdentifierRename_failover(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameFailover("after"),
@@ -1473,7 +1477,7 @@ func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "after"),
@@ -1506,7 +1510,7 @@ func TestAccRoute53Record_SetIdentifierRename_multiValueAnswer(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswer("after"),
@@ -1539,7 +1543,7 @@ func TestAccRoute53Record_SetIdentifierRename_weighted(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_setIdentifierRenameWeighted("after"),
@@ -1573,7 +1577,7 @@ func TestAccRoute53Record_Alias_change(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1610,7 +1614,7 @@ func TestAccRoute53Record_Alias_changeDualstack(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			// Cause a change, which will trigger a refresh
 			{
@@ -1645,7 +1649,7 @@ func TestAccRoute53Record_empty(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1673,7 +1677,7 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1701,7 +1705,7 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1741,7 +1745,7 @@ func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1771,7 +1775,7 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 			{
 				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 45),
@@ -1814,7 +1818,7 @@ func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
 			},
 		},
 	})
@@ -1840,9 +1844,10 @@ func TestAccRoute53Record_escapedSlash(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"batch_reads"},
 			},
 		},
 	})
@@ -1868,9 +1873,10 @@ func TestAccRoute53Record_escapedSpace(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"batch_reads"},
 			},
 		},
 	})
@@ -1898,9 +1904,278 @@ func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"batch_reads"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "batch_reads", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
+				),
+				// Verify no phantom diff after the initial creation read-back.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_multipleInZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r1, r2, r3 awstypes.ResourceRecordSet
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// All three records must be found via a single zone scan.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.a", &r1),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.b", &r2),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.c", &r3),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Update one record's TTL — only that resource should show a change; the
+			// other two must produce no diff, confirming stale cache entries are not
+			// returned after a write.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "60"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.a", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("aws_route53_record.b", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("aws_route53_record.c", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.wildcard"
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// The API returns "\052.zone." for wildcard names; verify the cache key
+			// normalization resolves that back to "*" so the record is found.
+			{
+				Config: testAccRecordConfig_batchReadsWildcard(zoneName.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*."+zoneName.String())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*."+zoneName.String())),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "batch_reads"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	var zoneID string
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+	// This test is to validate the documented lmitations once batching is
+	// enabled. Modifications outsite of terraform will not be detected if
+	// performed after the cache is populated and during the current terraform
+	// run.
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: apply the record, populating the zone cache. Capture the
+			// record set and zone ID so Step 2 can delete them directly.
+			{
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+					func(s *terraform.State) error {
+						rs := s.RootModule().Resources["aws_route53_zone.test"]
+						zoneID = tfroute53.CleanZoneID(rs.Primary.ID)
+						return nil
+					},
+				),
+			},
+			// Step 2: delete the record directly via the AWS API, bypassing
+			// resourceRecordDelete so the zone cache is NOT invalidated. Because
+			// the cache still holds the stale entry, the refresh reads it as
+			// present and the plan is empty — Terraform does not detect the
+			// out-of-band drift. This is a known limitation of batch_reads:
+			// changes made outside Terraform are invisible until the cache is
+			// cleared (e.g. by a provider restart).
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
+					_, err := conn.ChangeResourceRecordSets(ctx, &route53.ChangeResourceRecordSetsInput{
+						HostedZoneId: aws.String(zoneID),
+						ChangeBatch: &awstypes.ChangeBatch{
+							Changes: []awstypes.Change{
+								{
+									Action:            awstypes.ChangeActionDelete,
+									ResourceRecordSet: &v,
+								},
+							},
+						},
+					})
+					if err != nil {
+						t.Fatalf("deleting Route 53 record outside Terraform: %s", err)
+					}
+				},
+				Config:   testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				PlanOnly: true,
+				// Stale cache: the out-of-band deletion is not detected.
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_typeChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r1, r2 awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_batchReadsTypeChange(zoneName.String(), "CNAME", "www.terraform.io"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &r1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+				},
+			},
+			// Changing the type takes the delete+create code path and evicts the old
+			// cache key. Verify the new record is readable without a phantom diff.
+			{
+				Config: testAccRecordConfig_batchReadsTypeChange(zoneName.String(), "A", "127.0.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &r2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_cacheSharing(t *testing.T) {
+	ctx := acctest.Context(t)
+	zoneName := acctest.RandomDomain(t)
+
+	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
+
+	var cacheWarmMark apicall.Cursor
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: factories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: apply 3 batched records in the same zone, warming the zone cache.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+			},
+			// Step 2: re-plan the identical config. Terraform refreshes all 3 records;
+			// every read should be served from the in-process zone cache so no
+			// ListResourceRecordSets call should reach the AWS API.
+			{
+				PreConfig: func() { cacheWarmMark = rec.Mark() },
+				Config:    testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckAPICallNotMade(rec, &cacheWarmMark, "Route 53", "ListResourceRecordSets"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -3607,4 +3882,90 @@ resource "aws_route53_record" "test" {
   }
 }
 `, rName, zoneName))
+}
+
+func testAccRecordConfig_batchReads(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = %[2]q
+  type             = "A"
+  ttl              = "30"
+  records          = ["127.0.0.1"]
+  batch_reads = true
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_batchReadsMultiple(zoneName, ttlA string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "a" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = "a.%[1]s"
+  type             = "A"
+  ttl              = %[2]q
+  records          = ["127.0.0.1"]
+  batch_reads = true
+}
+
+resource "aws_route53_record" "b" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = "b.%[1]s"
+  type             = "A"
+  ttl              = "30"
+  records          = ["127.0.0.2"]
+  batch_reads = true
+}
+
+resource "aws_route53_record" "c" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = "c.%[1]s"
+  type             = "A"
+  ttl              = "30"
+  records          = ["127.0.0.3"]
+  batch_reads = true
+}
+`, zoneName, ttlA)
+}
+
+func testAccRecordConfig_batchReadsWildcard(zoneName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "wildcard" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = "*.%[1]s"
+  type             = "A"
+  ttl              = "30"
+  records          = ["127.0.0.1"]
+  batch_reads = true
+}
+`, zoneName)
+}
+
+func testAccRecordConfig_batchReadsTypeChange(zoneName, rrType, record string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id          = aws_route53_zone.test.zone_id
+  name             = "www.%[1]s"
+  type             = %[2]q
+  ttl              = "30"
+  records          = [%[3]q]
+  batch_reads = true
+}
+`, zoneName, rrType, record)
 }
