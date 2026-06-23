@@ -140,6 +140,18 @@ resource "aws_bedrockagent_knowledge_base" "example" {
         bedrock_embedding_model_configuration {
           dimensions          = 1024
           embedding_data_type = "FLOAT32"
+
+          audio {
+            segmentation_configuration {
+              fixed_length_duration = 60
+            }
+          }
+
+          video {
+            segmentation_configuration {
+              fixed_length_duration = 60
+            }
+          }
         }
       }
 
@@ -371,8 +383,28 @@ The `embedding_model_configuration` configuration block supports the following a
 
 The `bedrock_embedding_model_configuration` configuration block supports the following arguments:
 
+* `audio` - (Optional) Configuration for processing audio content in multimodal knowledge bases. See [`audio` block](#audio-block) for details.
 * `dimensions` - (Optional) Dimension details for the vector configuration used on the Bedrock embeddings model.
 * `embedding_data_type` - (Optional) Data type for the vectors when using a model to convert text into vector embeddings. The model must support the specified data type for vector embeddings.  Valid values are `FLOAT32` and `BINARY`.
+* `video` - (Optional) Configuration for processing video content in multimodal knowledge bases. See [`video` block](#video-block) for details.
+
+### `audio` block
+
+The `audio` configuration block supports the following arguments:
+
+* `segmentation_configuration` - (Required) Configuration for segmenting audio content during processing. See [`segmentation_configuration` block](#segmentation_configuration-block) for details.
+
+### `video` block
+
+The `video` configuration block supports the following arguments:
+
+* `segmentation_configuration` - (Required) Configuration for segmenting video content during processing. See [`segmentation_configuration` block](#segmentation_configuration-block) for details.
+
+### `segmentation_configuration` block
+
+The `segmentation_configuration` configuration block supports the following arguments:
+
+* `fixed_length_duration` - (Required) Duration in seconds for each audio or video segment.
 
 ### `supplemental_data_storage_configuration` block
 
