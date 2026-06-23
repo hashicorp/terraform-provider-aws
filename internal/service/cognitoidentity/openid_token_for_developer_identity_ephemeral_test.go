@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/go-uuid"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -21,14 +19,9 @@ import (
 func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	uuid, err := uuid.GenerateUUID()
-	developerProviderName := sdkacctest.RandString(10)
+	developerProviderName := acctest.RandString(t, 10)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
-	if err != nil {
-		t.Logf("error generating uuid: %s", err.Error())
-		t.Fail()
-	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -45,7 +38,7 @@ func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *tes
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName, uuid),
+				Config: testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("token"), knownvalue.NotNull()),
 				},
@@ -54,7 +47,7 @@ func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *tes
 	})
 }
 
-func testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName, uuid string) string {
+func testAccOpenIDTokenForDeveloperIdentityEphemeralConfig_basic(rName, developerProviderName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_cognito_identity_openid_token_for_developer_identity.test"),
 		testAccPoolConfig_developerProviderName(rName, developerProviderName),
@@ -65,8 +58,8 @@ ephemeral "aws_cognito_identity_openid_token_for_developer_identity" "test" {
   identity_pool_id = aws_cognito_identity_pool.test.id
 
   logins = {
-    %[2]q = "user123"
+    %[1]q = "user123"
   }
 }
-`, rName, developerProviderName, uuid))
+`, developerProviderName))
 }

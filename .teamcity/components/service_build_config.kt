@@ -1,3 +1,7 @@
+/*
+ * Copyright IBM Corp. 2014, 2026
+ */
+
 import jetbrains.buildServer.configs.kotlin.AbsoluteId
 import jetbrains.buildServer.configs.kotlin.BuildSteps
 import jetbrains.buildServer.configs.kotlin.BuildType

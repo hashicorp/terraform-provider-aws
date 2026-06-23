@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codecommit/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -160,7 +159,7 @@ func TestAccCodeCommitRepository_CreateAndUpdateDefault_branch(t *testing.T) {
 
 func TestAccCodeCommitRepository_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codecommit_repository.test"
 	var v1, v2, v3 types.RepositoryMetadata
 

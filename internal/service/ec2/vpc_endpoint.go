@@ -19,11 +19,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -47,7 +48,6 @@ const (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.VpcEndpoint")
 // @Testing(preIdentityVersion="v6.12.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
@@ -55,191 +55,208 @@ func resourceVPCEndpoint() *schema.Resource {
 		UpdateWithoutTimeout: resourceVPCEndpointUpdate,
 		DeleteWithoutTimeout: resourceVPCEndpointDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dns_entry": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDNSName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrHostedZoneID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dns_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dns_record_ip_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DnsRecordIpType](),
-						},
-						"private_dns_only_for_inbound_resolver_endpoint": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"private_dns_preference": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, false),
-						},
-						"private_dns_specified_domains": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MinItems: 1,
-							MaxItems: 10,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"auto_accept": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"cidr_blocks": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"dns_entry": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDNSName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrHostedZoneID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"prefix_list_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"requester_managed": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"resource_configuration_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrServiceName, "service_network_arn"},
-				ValidateFunc:  verify.ValidARN,
-			},
-			"route_table_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrServiceName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"resource_configuration_arn", "service_network_arn"},
-			},
-			"service_network_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrServiceName, "resource_configuration_arn"},
-				ValidateFunc:  verify.ValidARN,
-			},
-			"service_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subnet_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ipv6": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						// subnet_id in subnet_configuration must have a corresponding subnet in subnet_ids attribute
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Optional: true,
+				"dns_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					MaxItems:         1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_record_ip_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DnsRecordIpType](),
+							},
+							"private_dns_only_for_inbound_resolver_endpoint": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"private_dns_preference": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, false),
+							},
+							"private_dns_specified_domains": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MinItems: 1,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.VpcEndpointTypeGateway,
-				ValidateDiagFunc: enum.Validate[awstypes.VpcEndpointType](),
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"prefix_list_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"requester_managed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"resource_configuration_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrServiceName, "service_network_arn"},
+					ValidateFunc:  verify.ValidARN,
+				},
+				"route_table_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrServiceName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"resource_configuration_arn", "service_network_arn"},
+				},
+				"service_network_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrServiceName, "resource_configuration_arn"},
+					ValidateFunc:  verify.ValidARN,
+				},
+				"service_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subnet_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv4": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ipv6": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							// subnet_id in subnet_configuration must have a corresponding subnet in subnet_ids attribute
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_endpoint_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.VpcEndpointTypeGateway,
+					ValidateDiagFunc: enum.Validate[awstypes.VpcEndpointType](),
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
+
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() != "" && diff.HasChange("private_dns_enabled") {
+					if v := awstypes.VpcEndpointType(diff.Get("vpc_endpoint_type").(string)); v != awstypes.VpcEndpointTypeInterface {
+						if err := diff.ForceNew("private_dns_enabled"); err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
+			}),
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
@@ -256,7 +273,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
-		ClientToken:       aws.String(sdkid.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
@@ -363,95 +380,22 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
 	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
-
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(vpce.OwnerId)
-	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
-	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
+	if err := resourceVPCEndpointFlatten(ctx, awsClient, vpce, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening VPC Endpoint (%s): %s", d.Id(), err)
 	}
-	if vpce.DnsOptions != nil {
-		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
-		}
-	} else {
-		d.Set("dns_options", nil)
-	}
-	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
-	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, ownerID)
-	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-	d.Set("requester_managed", vpce.RequesterManaged)
-	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
-	d.Set("route_table_ids", vpce.RouteTableIds)
-	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set("service_network_arn", vpce.ServiceNetworkArn)
-	d.Set("service_region", vpce.ServiceRegion)
-	d.Set(names.AttrState, vpce.State)
-	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
-	// VPC endpoints don't have types in GovCloud, so set type to default if empty
-	if v := string(vpce.VpcEndpointType); v == "" {
-		d.Set("vpc_endpoint_type", awstypes.VpcEndpointTypeGateway)
-	} else {
-		d.Set("vpc_endpoint_type", v)
-	}
-	d.Set(names.AttrVPCID, vpce.VpcId)
-
-	if vpce.ServiceName != nil {
-		serviceName := aws.ToString(vpce.ServiceName)
-
-		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-			if retry.NotFound(err) {
-				d.Set("cidr_blocks", nil)
-			} else {
-				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
-			}
-		} else {
-			d.Set("cidr_blocks", pl.Cidrs)
-			d.Set("prefix_list_id", pl.PrefixListId)
-		}
-
-		d.Set(names.AttrServiceName, serviceName)
-	} else {
-		d.Set("cidr_blocks", nil)
-		d.Set(names.AttrServiceName, nil)
-	}
-
-	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
-	}
-
-	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_configuration: %s", err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
 
 	setTagsOut(ctx, vpce.Tags)
 
@@ -573,7 +517,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err = waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -854,4 +798,84 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []any {
 
 func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
 	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
+}
+
+func resourceVPCEndpointFlatten(ctx context.Context, awsClient *conns.AWSClient, vpce *awstypes.VpcEndpoint, d *schema.ResourceData) error {
+	conn := awsClient.EC2Client(ctx)
+	ownerID := aws.ToString(vpce.OwnerId)
+
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, awsClient, ownerID, d.Id()))
+	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
+		return fmt.Errorf("setting dns_entry: %w", err)
+	}
+	if vpce.DnsOptions != nil {
+		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+			return fmt.Errorf("setting dns_options: %w", err)
+		}
+	} else {
+		d.Set("dns_options", nil)
+	}
+	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
+	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
+	d.Set("requester_managed", vpce.RequesterManaged)
+	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
+	d.Set("route_table_ids", vpce.RouteTableIds)
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
+	d.Set("service_network_arn", vpce.ServiceNetworkArn)
+	d.Set("service_region", vpce.ServiceRegion)
+	d.Set(names.AttrState, vpce.State)
+	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
+
+	// VPC endpoints don't have types in GovCloud, so set type to default if empty
+	if v := string(vpce.VpcEndpointType); v == "" {
+		d.Set("vpc_endpoint_type", awstypes.VpcEndpointTypeGateway)
+	} else {
+		d.Set("vpc_endpoint_type", v)
+	}
+	d.Set(names.AttrVPCID, vpce.VpcId)
+
+	// Prefix List
+	if vpce.ServiceName != nil {
+		serviceName := aws.ToString(vpce.ServiceName)
+
+		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
+			if retry.NotFound(err) {
+				d.Set("cidr_blocks", nil)
+			} else {
+				return fmt.Errorf("reading EC2 Prefix List (%s): %w", serviceName, err)
+			}
+		} else {
+			d.Set("cidr_blocks", pl.Cidrs)
+			d.Set("prefix_list_id", pl.PrefixListId)
+		}
+
+		d.Set(names.AttrServiceName, serviceName)
+	} else {
+		d.Set("cidr_blocks", nil)
+		d.Set(names.AttrServiceName, nil)
+	}
+
+	// Subnet Configurations
+	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
+	if err != nil {
+		return fmt.Errorf("reading VPC Endpoint (%s) subnet configurations: %w", d.Id(), err)
+	}
+	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
+		return fmt.Errorf("setting subnet_configuration: %w", err)
+	}
+
+	// Policy
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
+	if err != nil {
+		return err
+	}
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+	if err != nil {
+		return err
+	}
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return nil
 }

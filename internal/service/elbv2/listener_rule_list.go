@@ -89,9 +89,9 @@ func (l *listenerRuleListResource) List(ctx context.Context, request list.ListRe
 			rd := l.ResourceData()
 			rd.SetId(arn)
 			rd.Set(names.AttrARN, arn)
-			setTagsOut(ctx, item.tags)
 
 			if request.IncludeResource {
+				setTagsOut(ctx, item.tags)
 				rd.Set("listener_arn", listenerARN)
 				if err := resourceListenerRuleFlatten(ctx, &item.rule, rd); err != nil {
 					tflog.Error(ctx, "Reading ELB Listener Rule", map[string]any{
@@ -108,7 +108,7 @@ func (l *listenerRuleListResource) List(ctx context.Context, request list.ListRe
 				result.DisplayName = aws.ToString(item.rule.RuleArn)
 			}
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

@@ -24,63 +24,65 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerInstanceTypeOfferingsRead,
 
-		Schema: map[string]*schema.Schema{
-			"broker_instance_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"broker_instance_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"engine_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"host_instance_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStorageType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported_deployment_modes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"supported_engine_versions": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							"engine_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"host_instance_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStorageType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"supported_deployment_modes": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"supported_engine_versions": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"engine_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.EngineType](),
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
-			},
+				"engine_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.EngineType](),
+				},
+				"host_instance_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
+				},
+			}
 		},
 	}
 }

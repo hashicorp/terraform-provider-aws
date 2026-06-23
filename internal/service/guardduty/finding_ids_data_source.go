@@ -29,7 +29,7 @@ func newFindingIDsDataSource(context.Context) (datasource.DataSourceWithConfigur
 }
 
 const (
-	DSNameFindingIds = "Finding Ids Data Source"
+	dsNameFindingIds = "Finding Ids Data Source"
 )
 
 type findingIDsDataSource struct {
@@ -67,7 +67,7 @@ func (d *findingIDsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	out, err := findFindingIds(ctx, conn, data.DetectorID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, DSNameFindingIds, data.DetectorID.String(), err),
+			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, dsNameFindingIds, data.DetectorID.String(), err),
 			err.Error(),
 		)
 		return

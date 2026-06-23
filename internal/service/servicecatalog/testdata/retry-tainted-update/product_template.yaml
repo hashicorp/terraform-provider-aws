@@ -25,7 +25,7 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-test-function'
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       Code:
         ZipFile: |
           // cfnresponse module inline

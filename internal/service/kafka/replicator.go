@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -30,6 +31,11 @@ import (
 
 // @SDKResource("aws_msk_replicator", name="Replicator")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.49.0")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeReplicatorOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceReplicator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicatorCreate,
@@ -37,70 +43,68 @@ func resourceReplicator() *schema.Resource {
 		UpdateWithoutTimeout: resourceReplicatorUpdate,
 		DeleteWithoutTimeout: resourceReplicatorDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"current_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"kafka_cluster": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amazon_msk_cluster": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"msk_cluster_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"current_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"kafka_cluster": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amazon_msk_cluster": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"msk_cluster_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						names.AttrVPCConfig: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"security_groups_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							names.AttrVPCConfig: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"security_groups_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									names.AttrSubnetIDs: {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										names.AttrSubnetIDs: {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
@@ -108,155 +112,261 @@ func resourceReplicator() *schema.Resource {
 						},
 					},
 				},
-			},
-			"replication_info_list": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"target_compression_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"target_kafka_cluster_alias": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_kafka_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"topic_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"copy_access_control_lists_for_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"copy_topic_configurations": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"detect_and_copy_new_topics": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"starting_position": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+				"log_delivery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"replicator_log_delivery": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCloudWatchLogs: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"log_group": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"topic_name_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+										"firehose": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delivery_stream": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"topics_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"s3": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrBucket: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													names.AttrPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
 										},
-									},
-									"topics_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"consumer_group_replication": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"consumer_groups_to_exclude": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"consumer_groups_to_replicate": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"detect_and_copy_new_consumer_groups": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"synchronise_consumer_group_offsets": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"replicator_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"service_execution_role_arn": {
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
-				Required:     true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"replication_info_list": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_kafka_cluster_alias": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"source_kafka_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"target_compression_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"target_kafka_cluster_alias": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_kafka_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"topic_replication": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"copy_access_control_lists_for_topics": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"copy_topic_configurations": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"detect_and_copy_new_topics": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"starting_position": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+													},
+												},
+											},
+										},
+										"topic_name_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+													},
+												},
+											},
+										},
+										"topics_to_exclude": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"topics_to_replicate": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"consumer_group_replication": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"consumer_groups_to_exclude": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"consumer_groups_to_replicate": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"detect_and_copy_new_consumer_groups": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"synchronise_consumer_group_offsets": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"replicator_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"service_execution_role_arn": {
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+					Required:     true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				var diags diag.Diagnostics
+				cloudwatchLogsBlock := "log_delivery.0.replicator_log_delivery.0.cloudwatch_logs.0"
+				firehoseLogBlock := "log_delivery.0.replicator_log_delivery.0.firehose.0"
+				s3LogBlock := "log_delivery.0.replicator_log_delivery.0.s3.0"
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, names.AttrEnabled)).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", cloudwatchLogsBlock, "log_group")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify log_group when CloudWatch Logs logging is disabled")
+					}
+				}
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", firehoseLogBlock, names.AttrEnabled)).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", firehoseLogBlock, "delivery_stream")); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify delivery_stream when Firehose logging is disabled")
+					}
+				}
+				if v, ok := d.Get(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrEnabled)).(bool); ok && !v {
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrBucket)); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify bucket when S3 logging is disabled")
+					}
+					if _, ok := d.GetOk(fmt.Sprintf("%s.%s", s3LogBlock, names.AttrPrefix)); ok {
+						diags = sdkdiag.AppendErrorf(diags, "cannot specify prefix when S3 logging is disabled")
+					}
+				}
+				if diags.HasError() {
+					return sdkdiag.DiagnosticsError(diags)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -265,7 +375,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	name := d.Get("replicator_name").(string)
-	input := &kafka.CreateReplicatorInput{
+	input := kafka.CreateReplicatorInput{
 		KafkaClusters:           expandKafkaClusters(d.Get("kafka_cluster").([]any)),
 		ReplicationInfoList:     expandReplicationInfos(d.Get("replication_info_list").([]any)),
 		ReplicatorName:          aws.String(name),
@@ -277,7 +387,11 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateReplicator(ctx, input)
+	if v, ok := d.GetOk("log_delivery"); ok {
+		input.LogDelivery = expandLogDelivery(v.([]any))
+	}
+
+	output, err := conn.CreateReplicator(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MSK Replicator (%s): %s", name, err)
@@ -309,23 +423,33 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading MSK Replicator (%s): %s", d.Id(), err)
 	}
 
-	sourceAlias := aws.ToString(output.ReplicationInfoList[0].SourceKafkaClusterAlias)
-	targetAlias := aws.ToString(output.ReplicationInfoList[0].TargetKafkaClusterAlias)
-	var sourceARN, targetARN *string
-
-	for _, cluster := range output.KafkaClusters {
-		if clusterAlias := aws.ToString(cluster.KafkaClusterAlias); clusterAlias == sourceAlias {
-			sourceARN = cluster.AmazonMskCluster.MskClusterArn
-		} else if clusterAlias == targetAlias {
-			targetARN = cluster.AmazonMskCluster.MskClusterArn
-		}
-	}
-
 	d.Set(names.AttrARN, output.ReplicatorArn)
 	d.Set("current_version", output.CurrentVersion)
 	d.Set(names.AttrDescription, output.ReplicatorDescription)
-	d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters))
-	d.Set("replication_info_list", flattenReplicationInfoDescriptions(output.ReplicationInfoList, sourceARN, targetARN))
+	if err := d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kafka_cluster: %s", err)
+	}
+	if err := d.Set("log_delivery", flattenLogDelivery(output.LogDelivery)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_delivery: %s", err)
+	}
+	if v := output.ReplicationInfoList; len(v) > 0 {
+		sourceAlias, targetAlias := aws.ToString(v[0].SourceKafkaClusterAlias), aws.ToString(v[0].TargetKafkaClusterAlias)
+		var sourceARN, targetARN *string
+
+		for _, cluster := range output.KafkaClusters {
+			if clusterAlias := aws.ToString(cluster.KafkaClusterAlias); clusterAlias == sourceAlias {
+				sourceARN = cluster.AmazonMskCluster.MskClusterArn
+			} else if clusterAlias == targetAlias {
+				targetARN = cluster.AmazonMskCluster.MskClusterArn
+			}
+		}
+
+		if err := d.Set("replication_info_list", flattenReplicationInfoDescriptions(v, sourceARN, targetARN)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting replication_info_list: %s", err)
+		}
+	} else {
+		d.Set("replication_info_list", nil)
+	}
 	d.Set("replicator_name", output.ReplicatorName)
 	d.Set("service_execution_role_arn", output.ServiceExecutionRoleArn)
 
@@ -340,11 +464,15 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &kafka.UpdateReplicationInfoInput{
+		input := kafka.UpdateReplicationInfoInput{
 			CurrentVersion:        aws.String(d.Get("current_version").(string)),
 			ReplicatorArn:         aws.String(d.Id()),
 			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
 			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
+		}
+
+		if d.HasChanges("log_delivery") {
+			input.LogDelivery = expandLogDelivery(d.Get("log_delivery").([]any))
 		}
 
 		if d.HasChanges("replication_info_list.0.consumer_group_replication") {
@@ -359,7 +487,7 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
-		_, err := conn.UpdateReplicationInfo(ctx, input)
+		_, err := conn.UpdateReplicationInfo(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Replicator (%s): %s", d.Id(), err)
@@ -378,9 +506,10 @@ func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	log.Printf("[INFO] Deleting MSK Replicator: %s", d.Id())
-	_, err := conn.DeleteReplicator(ctx, &kafka.DeleteReplicatorInput{
+	input := kafka.DeleteReplicatorInput{
 		ReplicatorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicator(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -474,10 +603,14 @@ func statusReplicator(conn *kafka.Client, arn string) retry.StateRefreshFunc {
 }
 
 func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeReplicatorOutput, error) {
-	input := &kafka.DescribeReplicatorInput{
+	input := kafka.DescribeReplicatorInput{
 		ReplicatorArn: aws.String(arn),
 	}
 
+	return findReplicator(ctx, conn, &input)
+}
+
+func findReplicator(ctx context.Context, conn *kafka.Client, input *kafka.DescribeReplicatorInput) (*kafka.DescribeReplicatorOutput, error) {
 	output, err := conn.DescribeReplicator(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -693,6 +826,94 @@ func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]any {
 	}
 
 	return tfMap
+}
+
+func flattenLogDelivery(apiObject *types.LogDelivery) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ReplicatorLogDelivery; v != nil {
+		tfMap["replicator_log_delivery"] = flattenReplicatorLogDelivery(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDelivery(apiObject *types.ReplicatorLogDelivery) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLogs; v != nil {
+		tfMap[names.AttrCloudWatchLogs] = flattenReplicatorLogDeliveryCloudWatchLogs(v)
+	}
+
+	if v := apiObject.Firehose; v != nil {
+		tfMap["firehose"] = flattenReplicatorLogDeliveryFirehose(v)
+	}
+
+	if v := apiObject.S3; v != nil {
+		tfMap["s3"] = flattenReplicatorLogDeliveryS3(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryCloudWatchLogs(apiObject *types.ReplicatorCloudWatchLogs) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.LogGroup; v != nil {
+		tfMap["log_group"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryFirehose(apiObject *types.ReplicatorFirehose) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.DeliveryStream; v != nil {
+		tfMap["delivery_stream"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicatorLogDeliveryS3(apiObject *types.ReplicatorS3) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap[names.AttrBucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }
 
 func expandConsumerGroupReplicationUpdate(tfMap map[string]any) *types.ConsumerGroupReplicationUpdate {
@@ -922,6 +1143,125 @@ func expandAmazonMSKCluster(tfMap map[string]any) *types.AmazonMskCluster { // n
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
 		apiObject.MskClusterArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLogDelivery(tfList []any) *types.LogDelivery {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.LogDelivery{}
+
+	if v, ok := tfMap["replicator_log_delivery"].([]any); ok {
+		apiObject.ReplicatorLogDelivery = expandReplicatorLogDelivery(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDelivery(tfList []any) *types.ReplicatorLogDelivery {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorLogDelivery{}
+
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok {
+		apiObject.CloudWatchLogs = expandReplicatorLogDeliveryCloudWatchLogs(v)
+	}
+
+	if v, ok := tfMap["firehose"].([]any); ok {
+		apiObject.Firehose = expandReplicatorLogDeliveryFirehose(v)
+	}
+
+	if v, ok := tfMap["s3"].([]any); ok {
+		apiObject.S3 = expandReplicatorLogDeliveryS3(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryCloudWatchLogs(tfList []any) *types.ReplicatorCloudWatchLogs {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorCloudWatchLogs{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		apiObject.LogGroup = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryFirehose(tfList []any) *types.ReplicatorFirehose {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorFirehose{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		apiObject.DeliveryStream = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicatorLogDeliveryS3(tfList []any) *types.ReplicatorS3 {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicatorS3{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
 	}
 
 	return apiObject

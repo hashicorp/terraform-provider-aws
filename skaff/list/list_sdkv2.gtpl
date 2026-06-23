@@ -31,7 +31,9 @@ type {{ template "ListResourceStructName" . }} struct {
 			
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			{{ if .IncludeComments -}}
 			// TIP: -- 6. Populate additional attributes needed for Resource Identity
+			{{- end }}
 			rd.Set(names.AttrName, name)
 
 			if request.IncludeResource {
@@ -48,7 +50,7 @@ type {{ template "ListResourceStructName" . }} struct {
 			{{- end }}
 			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

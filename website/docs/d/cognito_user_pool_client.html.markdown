@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
-* `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
+* `analytics_configuration` - (Optional) Configuration block for AWS End User Messaging analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `client_secret` - Client secret of the user pool client.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
@@ -56,11 +56,11 @@ This data source exports the following attributes in addition to the arguments a
 
 Either `application_arn` or `application_id` is required.
 
-* `application_arn` - (Optional) Application ARN for an Amazon Pinpoint application. Conflicts with `external_id` and `role_arn`.
-* `application_id` - (Optional) Application ID for an Amazon Pinpoint application.
+* `application_arn` - (Optional) Application ARN for an AWS End User Messaging application. Conflicts with `external_id` and `role_arn`.
+* `application_id` - (Optional) Application ID for an AWS End User Messaging application.
 * `external_id` - (Optional) ID for the Analytics Configuration. Conflicts with `application_arn`.
-* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
-* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to AWS End User Messaging analytics. Conflicts with `application_arn`.
+* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to AWS End User Messaging analytics.
 
 ### refresh_token_rotation
 

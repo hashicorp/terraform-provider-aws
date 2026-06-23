@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -60,320 +62,312 @@ func resourceBroker() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"broker_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidateBrokerName,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"broker_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: ValidateBrokerName,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"revision": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"data_replication_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.DataReplicationMode](),
-				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-					// Suppress differences when the configured data replication mode
-					// matches a non-empty, pending replication mode. This scenario
-					// can exist when the mode has been set, but the broker has not
-					// yet been rebooted.
-					if n != "" && n == d.Get("pending_data_replication_mode").(string) {
-						return true
-					}
-					return false
-				},
-			},
-			"data_replication_primary_broker_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true, // Can only be set on Create
-				ValidateFunc: verify.ValidARN,
-			},
-			"deployment_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.DeploymentModeSingleInstance,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.DeploymentMode](),
-			},
-			"encryption_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_aws_owned_key": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  true,
-						},
+				"data_replication_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.DataReplicationMode](),
+					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+						// Suppress differences when the configured data replication mode
+						// matches a non-empty, pending replication mode. This scenario
+						// can exist when the mode has been set, but the broker has not
+						// yet been rebooted.
+						if n != "" && n == d.Get("pending_data_replication_mode").(string) {
+							return true
+						}
+						return false
 					},
 				},
-			},
-			"engine_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEndpoints: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrIPAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"data_replication_primary_broker_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true, // Can only be set on Create
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"ldap_server_metadata": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hosts": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"role_base": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_search_matching": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_search_subtree": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"service_account_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"service_account_username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_base": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_role_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_search_matching": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_search_subtree": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
+				"deployment_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.DeploymentModeSingleInstance,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.DeploymentMode](),
 				},
-			},
-			"logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"audit": {
-							Type:             nullable.TypeNullableBool,
-							Optional:         true,
-							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
-						},
-						"general": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"maintenance_window_start_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"day_of_week": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[types.DayOfWeek](),
-						},
-						"time_of_day": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"time_zone": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"pending_data_replication_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Set:      resourceUserHash,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
-					// User list is not returned back after creation.
-					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
-						return true
-					}
-
-					return false
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 20,
-							Elem: &schema.Schema{
+				"encryption_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
 								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_aws_owned_key": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  true,
+							},
+						},
+					},
+				},
+				"engine_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"host_instance_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEndpoints: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrIPAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"ldap_server_metadata": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hosts": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"role_base": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_search_matching": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_search_subtree": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"service_account_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"service_account_username": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_base": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_role_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_search_matching": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_search_subtree": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"logs": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audit": {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
+							},
+							"general": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"maintenance_window_start_time": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"day_of_week": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[types.DayOfWeek](),
+							},
+							"time_of_day": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"time_zone": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"pending_data_replication_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Set:      resourceUserHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"groups": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 20,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(2, 100),
+								},
+							},
+							names.AttrPassword: {
+								Type:         schema.TypeString,
+								Required:     true,
+								Sensitive:    true,
+								ValidateFunc: ValidBrokerPassword,
+							},
+							"replication_user": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrUsername: {
+								Type:         schema.TypeString,
+								Required:     true,
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
 						},
-						names.AttrPassword: {
-							Type:         schema.TypeString,
-							Required:     true,
-							Sensitive:    true,
-							ValidateFunc: ValidBrokerPassword,
-						},
-						"replication_user": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrUsername: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(2, 100),
-						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -490,7 +484,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("engine_type", output.EngineType)
 	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
+	d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
@@ -522,14 +516,18 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
-	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
+	// AWS does not return user information for RabbitMQ brokers after creation.
+	// Skip setting user state to prevent non-idempotent behavior.
+	if !strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) || d.IsNewResource() {
+		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
+		}
 
-	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -1148,7 +1146,65 @@ func flattenConfiguration(config *types.Configurations) []any {
 	return []any{m}
 }
 
-func flattenBrokerInstances(instances []types.BrokerInstance) []any {
+// brokerEndpointOrder defines the canonical sort priority for known MQ broker endpoints,
+// keyed by "engine:scheme:port" (engine lowercased). The engine prefix scopes the key
+// to a single engine so ports shared across engines (e.g., 5671 for ActiveMQ amqp+ssl
+// and RabbitMQ amqps) cannot collide. Lower values sort earlier; entries not present
+// receive math.MaxInt priority and sort to the end of the list.
+//
+// In RabbitMQ 4.2 and later, the Prometheus metrics endpoint is placed after amqps so
+// that instances.0.endpoints.0 continues to point at the AMQP endpoint across versions.
+var brokerEndpointOrder = map[string]int{
+	"activemq:ssl:61617":       0, // ActiveMQ OpenWire
+	"activemq:amqp+ssl:5671":   1, // ActiveMQ AMQP Secure
+	"activemq:stomp+ssl:61614": 2, // ActiveMQ STOMP Secure
+	"activemq:mqtt+ssl:8883":   3, // ActiveMQ MQTT Secure
+	"activemq:wss:61619":       4, // ActiveMQ WebSocket Secure
+	"rabbitmq:amqps:5671":      0, // RabbitMQ AMQP Secure
+	"rabbitmq:https:16001":     1, // RabbitMQ Prometheus metrics (4.2+)
+}
+
+func brokerEndpointPriority(endpoint string, engineType types.EngineType) int {
+	scheme, rest, found := strings.Cut(endpoint, "://")
+	if !found {
+		return math.MaxInt
+	}
+	if idx := strings.IndexAny(rest, "/?#"); idx >= 0 {
+		rest = rest[:idx]
+	}
+	portIdx := strings.LastIndex(rest, ":")
+	if portIdx < 0 {
+		return math.MaxInt
+	}
+	key := strings.ToLower(string(engineType)) + ":" + strings.ToLower(scheme) + ":" + rest[portIdx+1:]
+	if p, ok := brokerEndpointOrder[key]; ok {
+		return p
+	}
+	return math.MaxInt
+}
+
+// sortBrokerInstanceEndpoints returns a copy of endpoints sorted in the canonical order
+// defined for the given engine type. Endpoints whose "engine:scheme:port" is not in
+// brokerEndpointOrder (including any endpoint when the engine type is unrecognized)
+// receive math.MaxInt priority and sort to the end while preserving their original
+// relative order.
+func sortBrokerInstanceEndpoints(endpoints []string, engineType types.EngineType) []string {
+	sorted := make([]string, len(endpoints))
+	copy(sorted, endpoints)
+	slices.SortStableFunc(sorted, func(a, b string) int {
+		pa, pb := brokerEndpointPriority(a, engineType), brokerEndpointPriority(b, engineType)
+		if pa < pb {
+			return -1
+		}
+		if pa > pb {
+			return 1
+		}
+		return 0
+	})
+	return sorted
+}
+
+func flattenBrokerInstances(instances []types.BrokerInstance, engineType types.EngineType) []any {
 	if len(instances) == 0 {
 		return []any{}
 	}
@@ -1159,7 +1215,7 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []any {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m[names.AttrEndpoints] = instance.Endpoints
+			m[names.AttrEndpoints] = sortBrokerInstanceEndpoints(instance.Endpoints, engineType)
 		}
 		if instance.IpAddress != nil {
 			m[names.AttrIPAddress] = aws.ToString(instance.IpAddress)

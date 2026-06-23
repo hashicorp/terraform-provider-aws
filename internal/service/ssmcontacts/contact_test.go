@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -187,6 +187,14 @@ func testAccContact_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmcontacts_contact.contact_one", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmcontacts_contact.contact_one", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -199,8 +207,8 @@ func testAccContact_updateDisplayName(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	oldDisplayName := sdkacctest.RandString(26)
-	newDisplayName := sdkacctest.RandString(26)
+	oldDisplayName := acctest.RandString(t, 26)
+	newDisplayName := acctest.RandString(t, 26)
 	resourceName := "aws_ssmcontacts_contact.contact_one"
 
 	acctest.Test(ctx, t, resource.TestCase{

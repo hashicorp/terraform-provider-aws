@@ -5,17 +5,21 @@ package cloudwatch
 
 // Exports for use in tests only.
 var (
+	ResourceAlarmMuteRule                 = newAlarmMuteRuleResource
 	ResourceCompositeAlarm                = resourceCompositeAlarm
+	ResourceContributorInsightRule        = newContributorInsightRuleResource
+	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
 	ResourceDashboard                     = resourceDashboard
 	ResourceMetricAlarm                   = resourceMetricAlarm
 	ResourceMetricStream                  = resourceMetricStream
-	ResourceContributorInsightRule        = newContributorInsightRuleResource
-	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
+	ResourceOtelEnrichment                = newOTelEnrichmentResource
 
+	FindAlarmMuteRuleByName                                    = findAlarmMuteRuleByName
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
+	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
+	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
 	FindDashboardByName                                        = findDashboardByName
 	FindMetricAlarmByName                                      = findMetricAlarmByName
 	FindMetricStreamByName                                     = findMetricStreamByName
-	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
-	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
+	FindOtelEnrichment                                         = findOTelEnrichment
 )

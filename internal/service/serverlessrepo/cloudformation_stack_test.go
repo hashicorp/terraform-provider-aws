@@ -99,6 +99,14 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_config.custom_jwt_authorizer.allowed_scopes` argument
+```

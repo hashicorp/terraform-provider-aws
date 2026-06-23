@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,7 +25,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	amazonAddress := "175.45.176.5/28"
 	customerAddress := "175.45.176.6/28"
 	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
@@ -82,7 +81,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	amazonAddress := "175.45.176.7/28"
 	customerAddress := "175.45.176.8/28"
 	bgpAsn := acctest.RandIntRange(t, 64512, 65534)

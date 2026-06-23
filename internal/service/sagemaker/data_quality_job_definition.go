@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -42,287 +42,94 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_quality_app_specification": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnvironment: {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validEnvironment,
-							Elem:         &schema.Schema{Type: schema.TypeString},
-						},
-						"image_uri": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validImage,
-						},
-						"post_analytics_processor_source_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							),
-						},
-						"record_preprocessor_source_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"data_quality_baseline_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"constraints_resource": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-								},
+				"data_quality_app_specification": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnvironment: {
+								Type:         schema.TypeMap,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validEnvironment,
+								Elem:         &schema.Schema{Type: schema.TypeString},
 							},
-						},
-						"statistics_resource": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-								},
+							"image_uri": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validImage,
+							},
+							"post_analytics_processor_source_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									validation.StringLenBetween(1, 512),
+								),
+							},
+							"record_preprocessor_source_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									validation.StringLenBetween(1, 512),
+								),
 							},
 						},
 					},
 				},
-			},
-			"data_quality_job_input": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_transform_input": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data_captured_destination_s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-									"dataset_format": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"csv": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrHeader: {
-																Type:     schema.TypeBool,
-																Optional: true,
-																ForceNew: true,
-															},
-														},
-													},
-												},
-												names.AttrJSON: {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"line": {
-																Type:     schema.TypeBool,
-																Optional: true,
-																ForceNew: true,
-															},
-														},
-													},
-												},
-											},
+				"data_quality_baseline_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"constraints_resource": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
+											),
 										},
 									},
-									"local_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/opt/ml/processing/input",
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
-										),
-									},
-									"s3_data_distribution_type": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
-									},
-									"s3_input_mode": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
-									},
 								},
 							},
-						},
-						"endpoint_input": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validName,
-									},
-									"local_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/opt/ml/processing/input",
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
-										),
-									},
-									"s3_data_distribution_type": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
-									},
-									"s3_input_mode": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"data_quality_job_output_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"monitoring_outputs": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_output": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"local_path": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "/opt/ml/processing/output",
-													ForceNew: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 1024),
-														validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
-													),
-												},
-												"s3_upload_mode": {
-													Type:             schema.TypeString,
-													ForceNew:         true,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
-												},
-												"s3_uri": {
-													Type:     schema.TypeString,
-													Required: true,
-													ForceNew: true,
-													ValidateFunc: validation.All(
-														validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-														validation.StringLenBetween(1, 512),
-													),
-												},
-											},
+							"statistics_resource": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
+											),
 										},
 									},
 								},
@@ -330,129 +137,324 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 						},
 					},
 				},
-			},
-			"job_resources": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrInstanceCount: {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+				"data_quality_job_input": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_transform_input": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data_captured_destination_s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												validation.StringLenBetween(1, 512),
+											),
+										},
+										"dataset_format": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"csv": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrHeader: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																	ForceNew: true,
+																},
+															},
+														},
+													},
+													names.AttrJSON: {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"line": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																	ForceNew: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"local_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/opt/ml/processing/input",
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											),
+										},
+										"s3_data_distribution_type": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+										},
+										"s3_input_mode": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+										},
 									},
-									names.AttrInstanceType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ProcessingInstanceType](),
-									},
-									"volume_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"volume_size_in_gb": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 512),
+								},
+							},
+							"endpoint_input": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"endpoint_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validName,
+										},
+										"local_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/opt/ml/processing/input",
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											),
+										},
+										"s3_data_distribution_type": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+										},
+										"s3_input_mode": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			"network_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_inter_container_traffic_encryption": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"enable_network_isolation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrVPCConfig: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrSecurityGroupIDs: {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 5,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrSubnets: {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 16,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"data_quality_job_output_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"monitoring_outputs": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_output": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"local_path": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Default:  "/opt/ml/processing/output",
+														ForceNew: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 1024),
+															validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+														),
+													},
+													"s3_upload_mode": {
+														Type:             schema.TypeString,
+														ForceNew:         true,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
+													},
+													"s3_uri": {
+														Type:     schema.TypeString,
+														Required: true,
+														ForceNew: true,
+														ValidateFunc: validation.All(
+															validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+															validation.StringLenBetween(1, 512),
+														),
+													},
+												},
+											},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"stopping_condition": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_runtime_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 3600),
+				"job_resources": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cluster_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrInstanceCount: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										names.AttrInstanceType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProcessingInstanceType](),
+										},
+										"volume_kms_key_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"volume_size_in_gb": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 512),
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				"network_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_inter_container_traffic_encryption": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"enable_network_isolation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrVPCConfig: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrSecurityGroupIDs: {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 5,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrSubnets: {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 16,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"stopping_condition": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_runtime_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 3600),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -465,7 +467,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = sdkid.UniqueId()
+		name = create.UniqueId(ctx)
 	}
 
 	var roleArn string

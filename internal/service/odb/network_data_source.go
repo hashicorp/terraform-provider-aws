@@ -96,6 +96,11 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
 			},
+			"ec2_placement_group_ids": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "A list of EC2 placement group IDs associated with the ODB network.",
+			},
 			"peered_cidrs": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
@@ -177,6 +182,7 @@ type odbNetworkDataSourceModel struct {
 	OdbNetworkId            types.String                                                                 `tfsdk:"id"`
 	PeeredCidrs             fwtypes.SetValueOf[types.String]                                             `tfsdk:"peered_cidrs"`
 	PercentProgress         types.Float64                                                                `tfsdk:"percent_progress"`
+	Ec2PlacementGroupIds    fwtypes.ListOfString                                                         `tfsdk:"ec2_placement_group_ids"`
 	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                  `tfsdk:"status"`
 	StatusReason            types.String                                                                 `tfsdk:"status_reason"`
 	CreatedAt               timetypes.RFC3339                                                            `tfsdk:"created_at"`
@@ -190,15 +196,16 @@ type odbNwkOciDnsForwardingConfigDataSourceModel struct {
 }
 
 type odbNetworkManagedServicesDataSourceModel struct {
-	ServiceNetworkArn        types.String                                                                     `tfsdk:"service_network_arn"`
-	ResourceGatewayArn       types.String                                                                     `tfsdk:"resource_gateway_arn"`
-	ManagedServicesIpv4Cidrs fwtypes.ListOfString                                                             `tfsdk:"managed_service_ipv4_cidrs"`
-	ServiceNetworkEndpoint   fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel] `tfsdk:"service_network_endpoint"`
-	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]  `tfsdk:"managed_s3_backup_access"`
-	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]          `tfsdk:"zero_tl_access"`
-	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]               `tfsdk:"s3_access"`
-	StsAccess                fwtypes.ListNestedObjectValueOf[stsAccessOdbNetworkDataSourceModel]              `tfsdk:"sts_access"`
-	KmsAccess                fwtypes.ListNestedObjectValueOf[kmsAccessOdbNetworkDataSourceModel]              `tfsdk:"kms_access"`
+	ServiceNetworkArn                 types.String                                                                                `tfsdk:"service_network_arn"`
+	ResourceGatewayArn                types.String                                                                                `tfsdk:"resource_gateway_arn"`
+	ManagedServicesIpv4Cidrs          fwtypes.ListOfString                                                                        `tfsdk:"managed_service_ipv4_cidrs"`
+	ServiceNetworkEndpoint            fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel]            `tfsdk:"service_network_endpoint"`
+	ManagedS3BackupAccess             fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]             `tfsdk:"managed_s3_backup_access"`
+	ZeroEtlAccess                     fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]                     `tfsdk:"zero_tl_access"`
+	S3Access                          fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]                          `tfsdk:"s3_access"`
+	StsAccess                         fwtypes.ListNestedObjectValueOf[stsAccessOdbNetworkDataSourceModel]                         `tfsdk:"sts_access"`
+	KmsAccess                         fwtypes.ListNestedObjectValueOf[kmsAccessOdbNetworkDataSourceModel]                         `tfsdk:"kms_access"`
+	CrossRegionS3RestoreSourcesAccess fwtypes.ListNestedObjectValueOf[crossRegionS3RestoreSourcesAccessOdbNetworkDataSourceModel] `tfsdk:"cross_region_s3_restore_sources_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkDataSourceModel struct {
@@ -235,4 +242,10 @@ type kmsAccessOdbNetworkDataSourceModel struct {
 	Ipv4Addresses     fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
 	DomainName        types.String                                       `tfsdk:"domain_name"`
 	KmsPolicyDocument types.String                                       `tfsdk:"kms_policy_document"`
+}
+
+type crossRegionS3RestoreSourcesAccessOdbNetworkDataSourceModel struct {
+	Ipv4Addresses fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	Region        types.String                                       `tfsdk:"region"`
+	Status        fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
 }

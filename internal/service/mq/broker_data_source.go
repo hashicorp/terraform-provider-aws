@@ -27,233 +27,235 @@ func dataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_strategy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"broker_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"broker_name"},
-			},
-			"broker_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"broker_id"},
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_strategy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"broker_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"broker_name"},
+				},
+				"broker_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"broker_id"},
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revision": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"deployment_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encryption_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"use_aws_owned_key": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"deployment_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encryption_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"use_aws_owned_key": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"engine_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEndpoints: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrIPAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"engine_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_instance_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEndpoints: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrIPAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"ldap_server_metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hosts": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"role_base": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role_search_matching": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role_search_subtree": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"service_account_password": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"service_account_username": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_base": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_role_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_search_matching": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_search_subtree": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"logs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"audit": {
-							Type:     nullable.TypeNullableBool,
-							Computed: true,
-						},
-						"general": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"ldap_server_metadata": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hosts": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"role_base": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"role_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"role_search_matching": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"role_search_subtree": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"service_account_password": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"service_account_username": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_base": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_role_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_search_matching": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_search_subtree": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"maintenance_window_start_time": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"day_of_week": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"time_of_day": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"time_zone": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"logs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audit": {
+								Type:     nullable.TypeNullableBool,
+								Computed: true,
+							},
+							"general": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_access": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"groups": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Computed: true,
-						},
-						"replication_user": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"maintenance_window_start_time": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"day_of_week": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"time_of_day": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"time_zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"user": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_access": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"groups": {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Computed: true,
+							},
+							"replication_user": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -298,7 +300,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("engine_type", output.EngineType)
 	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
+	d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType))
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set(names.AttrStorageType, output.StorageType)

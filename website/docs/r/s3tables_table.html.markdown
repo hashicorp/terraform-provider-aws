@@ -150,7 +150,7 @@ The `iceberg_snapshot_management` configuration block supports the following arg
 
 The `iceberg_snapshot_management.settings` object supports the following argument:
 
-* `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletiion.
+* `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletion.
   Must be at least `1`.
 * `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep.
   Must be at least `1`.

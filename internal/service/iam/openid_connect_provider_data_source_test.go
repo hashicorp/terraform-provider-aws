@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,7 +17,7 @@ import (
 
 func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -47,7 +46,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 
 func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 

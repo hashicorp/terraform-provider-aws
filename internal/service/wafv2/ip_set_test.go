@@ -11,8 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +23,7 @@ import (
 func TestAccWAFV2IPSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -131,7 +131,7 @@ func TestAccWAFV2IPSet_namePrefix(t *testing.T) {
 func TestAccWAFV2IPSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var r awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -147,6 +147,14 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -155,7 +163,7 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -192,7 +200,7 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 func TestAccWAFV2IPSet_minimal(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -226,8 +234,8 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
-	ipSetNewName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
+	ipSetNewName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -267,7 +275,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 func TestAccWAFV2IPSet_addresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -290,7 +298,7 @@ func TestAccWAFV2IPSet_addresses(t *testing.T) {
 func TestAccWAFV2IPSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -340,7 +348,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 func TestAccWAFV2IPSet_large(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

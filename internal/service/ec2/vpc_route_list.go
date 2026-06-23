@@ -107,22 +107,20 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 			rd.Set("route_table_id", routeTableID)
 			rd.Set(destinationKey, destination)
 
-			diags := resourceRouteRead(ctx, rd, awsClient)
-			if diags.HasError() || rd.Id() == "" {
+			diags := resourceRouteFlatten(rd, &route)
+			if diags.HasError() {
 				tflog.Error(ctx, "Reading route", map[string]any{
-					names.AttrID: destination,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+					"diags": sdkdiag.DiagnosticsString(diags),
 				})
 				continue
 			}
 
 			result.DisplayName = destination
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
-					names.AttrID: destination,
-					"diags":      result.Diagnostics,
+					"diags": result.Diagnostics,
 				})
 				continue
 			}

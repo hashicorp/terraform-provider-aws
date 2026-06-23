@@ -181,7 +181,7 @@ func TestExpandNaming(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandOptions(t *testing.T) {
@@ -254,7 +254,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFindFieldFuzzy_Combinations(t *testing.T) {
@@ -331,7 +331,7 @@ func TestFindFieldFuzzy_Combinations(t *testing.T) {
 			}
 			flexer := newAutoExpander(opts)
 
-			field, found := (&fuzzyFieldFinder{}).findField(ctx, fieldNameFrom, typeFrom, typeTo, flexer)
+			field, found := (&fuzzyFieldFinder{}).findField(ctx, fieldNameFrom, typeFrom, typeTo, flexer.Options)
 			if !found {
 				t.Fatalf("expected to find field, but found==false")
 			}
@@ -373,7 +373,7 @@ func TestExpandFieldNamePrefix(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenNaming(t *testing.T) {
@@ -499,7 +499,7 @@ func TestFlattenNaming(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenOptions(t *testing.T) {
@@ -585,5 +585,5 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }

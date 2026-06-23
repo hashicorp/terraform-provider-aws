@@ -155,6 +155,7 @@ func normalizeTestName(name string) string {
 func normalizeTestCaseName(name string) string {
 	// Clean case name: first replace '*' with "pointer " to handle cases like "*struct" -> "pointer_struct"
 	name = strings.ReplaceAll(name, "*", "pointer_")
+	name = strings.ReplaceAll(name, "[]", "slice_")
 	// Then replace spaces with underscores and convert to lowercase
 	name = strings.ReplaceAll(name, " ", "_")
 	name = strings.ToLower(name)

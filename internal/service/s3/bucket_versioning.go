@@ -13,7 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -42,43 +42,45 @@ func resourceBucketVersioning() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketVersioningUpdate,
 		DeleteWithoutTimeout: resourceBucketVersioningDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
-			"mfa": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"versioning_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mfa_delete": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.MFADelete](),
-						},
-						names.AttrStatus: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(bucketVersioningStatus_Values(), false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
+				},
+				"mfa": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"versioning_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"mfa_delete": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MFADelete](),
+							},
+							names.AttrStatus: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(bucketVersioningStatus_Values(), false),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -93,7 +95,7 @@ func resourceBucketVersioning() *schema.Resource {
 				oldStatusRaw, newStatusRaw := diff.GetChange("versioning_configuration.0.status")
 				oldStatus, newStatus := oldStatusRaw.(string), newStatusRaw.(string)
 
-				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(types.BucketVersioningStatusEnabled) || oldStatus == string(types.BucketVersioningStatusSuspended)) {
+				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(awstypes.BucketVersioningStatusEnabled) || oldStatus == string(awstypes.BucketVersioningStatusSuspended)) {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
@@ -198,11 +200,20 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting versioning_configuration: %s", err)
+
+	if err := resourceBucketVersioningFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceBucketVersioningFlatten(_ context.Context, bucketVersioning *s3.GetBucketVersioningOutput, d *schema.ResourceData) error {
+	if err := d.Set("versioning_configuration", flattenVersioning(bucketVersioning)); err != nil {
+		return fmt.Errorf("setting versioning_configuration: %w", err)
+	}
+
+	return nil
 }
 
 func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -259,10 +270,10 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 
 	input := s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucket),
-		VersioningConfiguration: &types.VersioningConfiguration{
+		VersioningConfiguration: &awstypes.VersioningConfiguration{
 			// Status must be provided thus to "remove" this resource,
 			// we suspend versioning
-			Status: types.BucketVersioningStatusSuspended,
+			Status: awstypes.BucketVersioningStatusSuspended,
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -289,7 +300,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration {
+func expandBucketVersioningConfiguration(l []any) *awstypes.VersioningConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -299,14 +310,14 @@ func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration
 		return nil
 	}
 
-	result := &types.VersioningConfiguration{}
+	result := &awstypes.VersioningConfiguration{}
 
 	if v, ok := tfMap["mfa_delete"].(string); ok && v != "" {
-		result.MFADelete = types.MFADelete(v)
+		result.MFADelete = awstypes.MFADelete(v)
 	}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.BucketVersioningStatus(v)
+		result.Status = awstypes.BucketVersioningStatus(v)
 	}
 
 	return result
@@ -317,8 +328,11 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 		return []any{}
 	}
 
-	m := map[string]any{
-		"mfa_delete": config.MFADelete,
+	m := make(map[string]any)
+	if config.MFADelete != "" {
+		m["mfa_delete"] = config.MFADelete
+	} else {
+		m["mfa_delete"] = bucketVersioningMFADeleteDisabled
 	}
 
 	if config.Status != "" {
@@ -399,9 +413,10 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket,
 }
 
 const (
-	bucketVersioningStatusDisabled = "Disabled"
+	bucketVersioningStatusDisabled    = "Disabled"
+	bucketVersioningMFADeleteDisabled = "Disabled"
 )
 
 func bucketVersioningStatus_Values() []string {
-	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), bucketVersioningStatusDisabled)
+	return tfslices.AppendUnique(enum.Values[awstypes.BucketVersioningStatus](), bucketVersioningStatusDisabled)
 }
