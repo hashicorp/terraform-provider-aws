@@ -184,17 +184,17 @@ The following arguments are optional:
 
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
-* `open_table_format_input` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input) below.
+* `open_table_format_input` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input-block) below.
 * `owner` - (Optional) Owner of the table.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
-* `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
-* `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
+* `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index-block) below.
+* `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retention` - (Optional) Retention time for this table.
-* `storage_descriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
+* `storage_descriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor-block) below.
 * `table_type` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
-* `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
-* `view_definition` - (Optional) Structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition) below.
+* `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table-block) below.
+* `view_definition` - (Optional) Structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition-block) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
 
@@ -203,24 +203,24 @@ The following arguments are optional:
 ~> **NOTE:** An `open_table_format_input` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
-* `iceberg_input` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input) below.
+* `iceberg_input` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input-block) below.
 
 ### `iceberg_input` Block
 
 ~> **NOTE:** An `iceberg_input` cannot be added to an existing `open_table_format_input`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
-* `iceberg_table_input` - (Optional) Configuration parameters, including table properties and metadata specifications. See [`iceberg_table_input`](#iceberg_table_input) below.
+* `iceberg_table_input` - (Optional) Configuration parameters, including table properties and metadata specifications. See [`iceberg_table_input`](#iceberg_table_input-block) below.
 * `metadata_operation` - (Required) Required metadata operation. Can only be set to CREATE.
 * `version` - (Optional) Table version for the Iceberg table. Defaults to 2.
 
 ### `iceberg_table_input` Block
 
 * `location` - (Required) S3 location where the Iceberg table data will be stored. Maximum length of 2056 characters.
-* `partition_spec` - (Optional) Partitioning specification that defines how the Iceberg table data will be organized and partitioned for optimal query performance. See [`partition_spec`](#partition_spec) below.
+* `partition_spec` - (Optional) Partitioning specification that defines how the Iceberg table data will be organized and partitioned for optimal query performance. See [`partition_spec`](#partition_spec-block) below.
 * `properties` - (Optional) Key-value pairs of additional table properties and configuration settings for the Iceberg table.
-* `schema` - (Required) Schema definition that specifies the structure, field types, and metadata for the Iceberg table. See [`schema`](#schema) below.
-* `sort_order` - (Optional) Sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`sort_order`](#sort_order) below.
+* `schema` - (Required) Schema definition that specifies the structure, field types, and metadata for the Iceberg table. See [`schema`](#schema-block) below.
+* `sort_order` - (Optional) Sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`sort_order`](#sort_order-block) below.
 
 ### `partition_spec` Block
 
@@ -283,17 +283,17 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 * `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucket_columns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
-* `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
+* `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns-block) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
 * `input_format` - (Optional) Input format: SequenceFileInputFormat (binary), or TextInputFormat, or a custom format.
 * `location` - (Optional) Physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name.
 * `number_of_buckets` - (Optional) Must be specified if the table contains any dimension columns.
 * `output_format` - (Optional) Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - (Optional) User-supplied properties in key-value form.
-* `schema_reference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema_reference) below.
-* `ser_de_info` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
-* `skewed_info` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
-* `sort_columns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
+* `schema_reference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema_reference-block) below.
+* `ser_de_info` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info-block) below.
+* `skewed_info` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info-block) below.
+* `sort_columns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns-block) below.
 * `stored_as_sub_directories` - (Optional) Whether the table data is stored in subdirectories.
 
 #### `columns` Block
@@ -305,7 +305,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 #### `schema_reference` Block
 
-* `schema_id` - (Optional) Configuration block that contains schema identity fields. Either this or the `schema_version_id` has to be provided. See [`schema_id`](#schema_id) below.
+* `schema_id` - (Optional) Configuration block that contains schema identity fields. Either this or the `schema_version_id` has to be provided. See [`schema_id`](#schema_id-block) below.
 * `schema_version_id` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schema_id` has to be provided.
 * `schema_version_number` - (Required) Version number of the schema.
 
@@ -347,7 +347,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
 * `last_refresh_type` - (Optional) Type of the materialized view's last refresh. Valid values: `Full`, `Incremental`.
 * `refresh_seconds` - (Optional) Auto refresh interval in seconds for the materialized view.
-* `representations` - (Optional) List of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations) below.
+* `representations` - (Optional) List of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations-block) below.
 * `sub_object_version_ids` - (Optional) List of the Apache Iceberg table versions referenced by the materialized view.
 * `sub_objects` - (Optional) List of base table ARNs that make up the view.
 * `view_version_id` - (Optional) ID value that identifies this view's version. For materialized views, the version ID is the Apache Iceberg table's snapshot ID.
