@@ -132,14 +132,6 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
-			// Verify import does not panic. Regression guard for #47593
-			// (identity/import spec was never registered for aws_default_vpc
-			// prior to this fix, causing a nil pointer dereference when the
-			// shared resourceVPCImport ran through importer.Import).
-			//
-			// existing_default_vpc is Computed-only and set only in
-			// resourceDefaultVPCCreate (not in Read), so it is always absent
-			// after import — standard ImportStateVerifyIgnore pattern.
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
