@@ -198,6 +198,7 @@ check "schema_docs" {
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
+    "`{Path}` Block",
     "`{Block}` Block",
     "{Block} Block",
     "{Block} block",
@@ -207,12 +208,15 @@ check "schema_docs" {
     "{Title} Arguments",
     "{Title} Argument Reference",
     "{Title} Attribute Reference",
+    "Nested Schema for `{Path}`",
+    "`{Path}`",
     "`{Block}`",
     "{Block}",
     "{Title}",
   ]
 
   prefer_block_heading_styles = [
+    "`{Path}` Block",
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
@@ -1441,7 +1445,6 @@ check "schema_docs" {
     "resource/aws_globalaccelerator_listener",
     "resource/aws_glue_catalog_database",
     "resource/aws_glue_catalog_table_optimizer",
-    "resource/aws_glue_catalog_table",
     "resource/aws_glue_catalog",
     "resource/aws_glue_classifier",
     "resource/aws_glue_connection",
