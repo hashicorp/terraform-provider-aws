@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
   permissions:
     pull-requests: read
+    copilot-requests: write
 
 network:
   allowed:
