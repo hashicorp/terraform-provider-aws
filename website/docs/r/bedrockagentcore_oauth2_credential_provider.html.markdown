@@ -81,7 +81,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
-* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values include `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, `SlackOauth2`, `AtlassianOauth2`, `LinkedinOauth2`, and a number of additional supported vendors (e.g. `OktaOauth2`, `Auth0Oauth2`, `CognitoOauth2`) configured via `included_oauth2_provider_config`. Refer to the AWS API for the full, current list.
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values include `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, `SlackOauth2`, `AtlassianOauth2`, `LinkedinOauth2`, and a number of additional supported vendors (e.g. `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`) configured via `included_oauth2_provider_config`. Refer to the AWS API for the full, current list. See the note under [`included_oauth2_provider_config`](#oauth2_provider_config) for vendors that are not yet supported.
 * `name` - (Required) Name of the OAuth2 credential provider.
 * `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
@@ -99,6 +99,8 @@ The `oauth2_provider_config` block must contain exactly one of the following pro
 * `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `included_oauth2_provider_config` - (Optional) Configuration for an included (vendor-supported) OAuth2 provider, used for the additional supported vendors. See [`predefined providers`](#predefined-providers) below.
+
+-> **Note:** `included_oauth2_provider_config` currently supports only vendors that have fixed, AWS-known OAuth2 endpoints (for example `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`), which require nothing beyond `client_id` and `client_secret`. Isolated-tenant vendors such as `OktaOauth2`, `PingOneOauth2`, and `OneLoginOauth2` require provider-specific endpoints (`issuer`, `authorization_endpoint`, `token_endpoint`) that are not yet exposed by this resource, and will fail at create time with a `Missing TokenEndpoint` error. Support for those fields is planned in a follow-up.
 * `linkedin_oauth2_provider_config` - (Optional) LinkedIn OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
