@@ -341,7 +341,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### `view_definition` Block
 
-~> **NOTE:** Changes to a `VIRTUAL_VIEW` table's `view_definition`, `view_original_text`, or `view_expanded_text` are applied in place via Glue's [`UpdateTable`](https://docs.aws.amazon.com/glue/latest/webapi/API_UpdateTable.html) API with `ViewUpdateAction = REPLACE`. The table identity is preserved across the update, which preserves any [Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-overview.html) grants attached to the view.
+~> **NOTE:** Changes to a multi-dialect view (one configured via the `view_definition` block) are applied in place via Glue's [`UpdateTable`](https://docs.aws.amazon.com/glue/latest/webapi/API_UpdateTable.html) API with `ViewUpdateAction = REPLACE`. The table identity is preserved across the update, which preserves any [Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-overview.html) grants attached to the view. Legacy views configured only via the top-level `view_original_text` / `view_expanded_text` arguments are updated without `ViewUpdateAction`, as required by the Glue API.
 
 * `definer` - (Optional) Definer of a view in SQL.
 * `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
