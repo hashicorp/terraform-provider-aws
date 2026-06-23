@@ -4,6 +4,8 @@ FEATURES:
 
 * **New Data Source:** `aws_s3_bucket_notification` ([#31512](https://github.com/hashicorp/terraform-provider-aws/issues/31512))
 * **New List Resource:** `aws_appautoscaling_target` ([#48449](https://github.com/hashicorp/terraform-provider-aws/issues/48449))
+* **New List Resource:** `aws_bedrockagentcore_registry` ([#48314](https://github.com/hashicorp/terraform-provider-aws/issues/48314))
+* **New Resource:** `aws_bedrockagentcore_registry` ([#48314](https://github.com/hashicorp/terraform-provider-aws/issues/48314))
 
 ENHANCEMENTS:
 
