@@ -72,6 +72,66 @@ func TestDaemonNameFromARN(t *testing.T) {
 	}
 }
 
+func TestDaemonCapacityProviderARNsEqual(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		a        []string
+		b        []string
+		expected bool
+	}{
+		{
+			name:     "same order",
+			a:        []string{"one", "two"},
+			b:        []string{"one", "two"},
+			expected: true,
+		},
+		{
+			name:     "different order",
+			a:        []string{"one", "two"},
+			b:        []string{"two", "one"},
+			expected: true,
+		},
+		{
+			name:     "missing",
+			a:        []string{"one", "two"},
+			b:        []string{"one"},
+			expected: false,
+		},
+		{
+			name:     "extra",
+			a:        []string{"one"},
+			b:        []string{"one", "two"},
+			expected: false,
+		},
+		{
+			name:     "empty",
+			a:        []string{},
+			b:        []string{},
+			expected: true,
+		},
+		{
+			name:     "nil and empty",
+			a:        nil,
+			b:        []string{},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfecs.DaemonCapacityProviderARNsEqual(tc.a, tc.b)
+
+			if got != tc.expected {
+				t.Errorf("got %t, expected %t", got, tc.expected)
+			}
+		})
+	}
+}
+
 func TestAccECSDaemon_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -106,6 +166,44 @@ func TestAccECSDaemon_basic(t *testing.T) {
 					"capacity_provider_arns",
 					"daemon_task_definition_arn",
 					"deployment_configuration",
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSDaemon_updateCapacityProviderARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "capacity_provider_arns.*", "aws_ecs_capacity_provider.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccDaemonConfig_updateCapacityProviderARNs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_arns.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "capacity_provider_arns.*", "aws_ecs_capacity_provider.test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "capacity_provider_arns.*", "aws_ecs_capacity_provider.test2", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "capacity_provider_arns.*", "aws_ecs_capacity_provider.test3", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
 				},
 			},
 		},
@@ -645,6 +743,57 @@ resource "aws_ecs_daemon" "test" {
   cluster_arn                = aws_ecs_cluster.test.arn
   daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
   capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
+}
+`, rName))
+}
+
+func testAccDaemonConfig_updateCapacityProviderARNs(rName string) string {
+	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test2" {
+  name    = "%[1]s-2"
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.infra.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = [aws_subnet.test[0].id]
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+
+resource "aws_ecs_capacity_provider" "test3" {
+  name    = "%[1]s-3"
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.infra.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = [aws_subnet.test[0].id]
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+
+resource "aws_ecs_daemon" "test" {
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
+  capacity_provider_arns = [
+    aws_ecs_capacity_provider.test.arn,
+    aws_ecs_capacity_provider.test2.arn,
+    aws_ecs_capacity_provider.test3.arn,
+  ]
 }
 `, rName))
 }

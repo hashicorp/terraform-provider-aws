@@ -6,6 +6,7 @@ package ecs
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -218,20 +219,16 @@ func (r *daemonResource) Create(ctx context.Context, request resource.CreateRequ
 	// Save ARN to state so Terraform can track the resource if the waiter times out.
 	response.State.SetAttribute(ctx, path.Root(names.AttrARN), output.DaemonArn)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), createTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) create", plan.DaemonArn.ValueString()), err.Error())
+	capacityProviderARNs, diags := daemonCapacityProviderARNsFromSet(ctx, plan.CapacityProviderArns)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	outputFind, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
-	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-		return
-	}
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	outputFind, err := waitDaemonActiveCurrentRevision(ctx, conn, plan.DaemonArn.ValueString(), plan.DaemonTaskDefinitionArn.ValueString(), capacityProviderARNs, createTimeout)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) create", plan.DaemonArn.ValueString()), err.Error())
 		return
 	}
 
@@ -303,6 +300,8 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
+	var output *awstypes.DaemonDetail
+
 	if diff.HasChanges() {
 		var input ecs.UpdateDaemonInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
@@ -316,17 +315,27 @@ func (r *daemonResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
+		capacityProviderARNs, diags := daemonCapacityProviderARNsFromSet(ctx, plan.CapacityProviderArns)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		if err := waitDaemonActive(ctx, conn, plan.DaemonArn.ValueString(), updateTimeout); err != nil {
+		output, err = waitDaemonActiveCurrentRevision(ctx, conn, plan.DaemonArn.ValueString(), plan.DaemonTaskDefinitionArn.ValueString(), capacityProviderARNs, updateTimeout)
+		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for ECS Daemon (%s) update", plan.DaemonArn.ValueString()), err.Error())
 			return
 		}
 	}
 
-	output, err := findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
-		return
+	if output == nil {
+		var err error
+		output, err = findDaemonByARN(ctx, conn, plan.DaemonArn.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon (%s)", plan.DaemonArn.ValueString()), err.Error())
+			return
+		}
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
@@ -387,6 +396,38 @@ func daemonNameFromARN(arnStr string) types.String {
 	return types.StringNull()
 }
 
+func daemonCapacityProviderARNsFromSet(ctx context.Context, set fwtypes.SetOfString) ([]string, diag.Diagnostics) {
+	var arns []string
+	diags := set.ElementsAs(ctx, &arns, false)
+
+	return arns, diags
+}
+
+func daemonRevisionDetailCapacityProviderARNs(revisionDetail awstypes.DaemonRevisionDetail) []string {
+	arns := make([]string, 0, len(revisionDetail.CapacityProviders))
+
+	for _, cp := range revisionDetail.CapacityProviders {
+		if cp.Arn != nil {
+			arns = append(arns, aws.ToString(cp.Arn))
+		}
+	}
+
+	return arns
+}
+
+func daemonCapacityProviderARNsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	a = slices.Clone(a)
+	b = slices.Clone(b)
+	slices.Sort(a)
+	slices.Sort(b)
+
+	return slices.Equal(a, b)
+}
+
 // flattenDaemonRevision populates task definition ARN and capacity
 // provider ARNs from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
 // set when the model's value is null (e.g., during import) to avoid overwriting
@@ -397,13 +438,7 @@ func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevisio
 	}
 
 	if len(revisionDetail.CapacityProviders) > 0 {
-		cpArns := make([]string, 0, len(revisionDetail.CapacityProviders))
-		for _, cp := range revisionDetail.CapacityProviders {
-			if cp.Arn != nil {
-				cpArns = append(cpArns, aws.ToString(cp.Arn))
-			}
-		}
-		model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueSetOfString(ctx, cpArns)
+		model.CapacityProviderArns = fwflex.FlattenFrameworkStringValueSetOfString(ctx, daemonRevisionDetailCapacityProviderARNs(revisionDetail))
 	}
 }
 
@@ -496,11 +531,75 @@ func findDaemonRevisionByARN(ctx context.Context, conn *ecs.Client, arn string) 
 
 	output, err := conn.DescribeDaemonRevisions(ctx, input)
 
+	if errs.IsA[*awstypes.DaemonNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output.DaemonRevisions)
+}
+
+func waitDaemonActiveCurrentRevision(ctx context.Context, conn *ecs.Client, arn, daemonTaskDefinitionARN string, capacityProviderARNs []string, timeout time.Duration) (*awstypes.DaemonDetail, error) {
+	var output *awstypes.DaemonDetail
+
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
+		daemon, err := findDaemonByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		output = daemon
+
+		if daemon.Status != awstypes.DaemonStatusActive {
+			return tfresource.RetryableError(fmt.Errorf("status is %s", daemon.Status))
+		}
+
+		if len(daemon.CurrentRevisions) == 0 || daemon.CurrentRevisions[0].Arn == nil {
+			return tfresource.RetryableError(fmt.Errorf("current revision is not available"))
+		}
+
+		revisionARN := aws.ToString(daemon.CurrentRevisions[0].Arn)
+		revision, err := findDaemonRevisionByARN(ctx, conn, revisionARN)
+
+		if retry.NotFound(err) {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		if got, want := aws.ToString(revision.DaemonTaskDefinitionArn), daemonTaskDefinitionARN; got != want {
+			return tfresource.RetryableError(fmt.Errorf("daemon task definition ARN is %s, want %s", got, want))
+		}
+
+		if got, want := daemonRevisionDetailCapacityProviderARNs(daemon.CurrentRevisions[0]), capacityProviderARNs; !daemonCapacityProviderARNsEqual(got, want) {
+			return tfresource.RetryableError(fmt.Errorf("capacity provider ARNs are %v, want %v", got, want))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
@@ -517,19 +616,6 @@ func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.St
 
 		return output, string(output.Status), nil
 	}
-}
-
-func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{},
-		Target:  enum.Slice(awstypes.DaemonStatusActive),
-		Refresh: statusDaemon(ctx, conn, arn),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
 
 func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
