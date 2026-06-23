@@ -73,13 +73,13 @@ func (l *layerVersionListResource) List(ctx context.Context, request list.ListRe
 			if request.IncludeResource {
 				layerName, versionNumber, err := layerVersionParseResourceID(id)
 				if err != nil {
-					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err.Error()})
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
 
 				output, err := findLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
 				if err != nil {
-					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": fmt.Sprintf("reading Lambda Layer Version (%s): %s", id, err)})
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
 
