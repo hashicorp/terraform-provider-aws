@@ -10,6 +10,8 @@ description: |-
 
 Deploys an Application CloudFormation Stack from the Serverless Application Repository.
 
+!> **Warning:** `NoEcho` parameters and state: CloudFormation masks the values of parameters declared with `NoEcho: true` in API responses, returning `****` instead of the configured value. Because the provider cannot read the actual value back from AWS, it persists the value from the Terraform configuration in state instead. This means `NoEcho` parameter values are stored in Terraform state in plaintext. Ensure your state backend is appropriately secured. To suppress per-value plan and `terraform show` output for a specific parameter, wrap its value with Terraform's [`sensitive()`](https://developer.hashicorp.com/terraform/language/functions/sensitive) function in your configuration, for example `parameters = { password = sensitive(var.password) }`. The sensitivity marker is honored per map element, so non-sensitive parameters remain visible.
+
 ## Example Usage
 
 ### Basic Usage
@@ -31,12 +33,6 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 ```
-
-### `NoEcho` parameters and state
-
-CloudFormation masks the values of parameters declared with `NoEcho: true` in API responses, returning `****` instead of the configured value. Because the provider cannot read the actual value back from AWS, it persists the value from the Terraform configuration in state instead. This means `NoEcho` parameter values are stored in Terraform state in plaintext. Ensure your state backend is appropriately secured.
-
-To suppress per-value plan and `terraform show` output for a specific parameter, wrap its value with Terraform's [`sensitive()`](https://developer.hashicorp.com/terraform/language/functions/sensitive) function in your configuration, for example `parameters = { password = sensitive(var.password) }`. The sensitivity marker is honored per map element, so non-sensitive parameters remain visible.
 
 ## Argument Reference
 
