@@ -2036,7 +2036,7 @@ func TestAccRoute53Record_BatchReads_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_BatchReads_disappears(t *testing.T) {
+func TestAccRoute53Record_BatchReads_outOfBandChangeIgnored(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	var zoneID string
@@ -2091,10 +2091,13 @@ func TestAccRoute53Record_BatchReads_disappears(t *testing.T) {
 						t.Fatalf("deleting Route 53 record outside Terraform: %s", err)
 					}
 				},
-				Config:   testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
-				PlanOnly: true,
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
 				// Stale cache: the out-of-band deletion is not detected.
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -3891,11 +3894,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "test" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = %[2]q
-  type             = "A"
-  ttl              = "30"
-  records          = ["127.0.0.1"]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = %[2]q
+  type        = "A"
+  ttl         = "30"
+  records     = ["127.0.0.1"]
   batch_reads = true
 }
 `, zoneName, recordName)
@@ -3908,29 +3911,29 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "a" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = "a.%[1]s"
-  type             = "A"
-  ttl              = %[2]q
-  records          = ["127.0.0.1"]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = "a.%[1]s"
+  type        = "A"
+  ttl         = %[2]q
+  records     = ["127.0.0.1"]
   batch_reads = true
 }
 
 resource "aws_route53_record" "b" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = "b.%[1]s"
-  type             = "A"
-  ttl              = "30"
-  records          = ["127.0.0.2"]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = "b.%[1]s"
+  type        = "A"
+  ttl         = "30"
+  records     = ["127.0.0.2"]
   batch_reads = true
 }
 
 resource "aws_route53_record" "c" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = "c.%[1]s"
-  type             = "A"
-  ttl              = "30"
-  records          = ["127.0.0.3"]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = "c.%[1]s"
+  type        = "A"
+  ttl         = "30"
+  records     = ["127.0.0.3"]
   batch_reads = true
 }
 `, zoneName, ttlA)
@@ -3943,11 +3946,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "wildcard" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = "*.%[1]s"
-  type             = "A"
-  ttl              = "30"
-  records          = ["127.0.0.1"]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = "*.%[1]s"
+  type        = "A"
+  ttl         = "30"
+  records     = ["127.0.0.1"]
   batch_reads = true
 }
 `, zoneName)
@@ -3960,11 +3963,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "test" {
-  zone_id          = aws_route53_zone.test.zone_id
-  name             = "www.%[1]s"
-  type             = %[2]q
-  ttl              = "30"
-  records          = [%[3]q]
+  zone_id     = aws_route53_zone.test.zone_id
+  name        = "www.%[1]s"
+  type        = %[2]q
+  ttl         = "30"
+  records     = [%[3]q]
   batch_reads = true
 }
 `, zoneName, rrType, record)
