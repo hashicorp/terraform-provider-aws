@@ -1888,14 +1888,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
 
     lambda_function_association {
-      event_type         = "viewer-response"
+      event_type          = "viewer-response"
       lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
     }
 
     lambda_function_association {
-      event_type         = "viewer-request"
+      event_type          = "viewer-request"
       lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
-      include_body       = true
+      include_body        = true
     }
   }
 
