@@ -254,7 +254,12 @@ func TestAccServerlessRepoCloudFormationStack_noChangeUpdate(t *testing.T) {
 	appARN := testAccCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
-	config := testAccCloudFormationStackConfig_basic(stackName, appARN)
+	// This config explicitly sets `passwordLength = "32"`, which matches the
+	// application's `passwordLength` default. Before the fix, Read pruned
+	// default-matching parameters from state, producing perpetual drift and
+	// failing the second apply with "No updates are to be performed".
+	// See: https://github.com/hashicorp/terraform-provider-aws/issues/16485
+	config := testAccCloudFormationStackConfig_defaultParameter(stackName, appARN)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -266,6 +271,7 @@ func TestAccServerlessRepoCloudFormationStack_noChangeUpdate(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, t, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "parameters.passwordLength", "32"),
 				),
 			},
 			{
@@ -389,6 +395,34 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
   parameters = {
     functionName = "func-%[1]s"
     endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+  }
+}
+`, stackName, appARN)
+}
+
+// testAccCloudFormationStackConfig_defaultParameter is identical to the basic
+// config but also explicitly sets `passwordLength` to its application-default
+// value of "32". This exercises the default-matching parameter pruning bug
+// described in https://github.com/hashicorp/terraform-provider-aws/issues/16485.
+func testAccCloudFormationStackConfig_defaultParameter(stackName, appARN string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
+  name           = %[1]q
+  application_id = %[2]q
+
+  capabilities = [
+    "CAPABILITY_IAM",
+    "CAPABILITY_RESOURCE_POLICY",
+  ]
+
+  parameters = {
+    functionName   = "func-%[1]s"
+    endpoint       = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+    passwordLength = "32"
   }
 }
 `, stackName, appARN)
