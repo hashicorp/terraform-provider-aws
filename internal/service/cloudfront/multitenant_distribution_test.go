@@ -509,23 +509,38 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"function_association": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
+								}),
+							}),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
-			},
-			{
-				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociation(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -558,18 +573,40 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"lambda_function_association": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"include_body":        knownvalue.Bool(true),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-request-`+acctest.ResourcePrefix+`-\d+:\d+`)),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"include_body":        knownvalue.Bool(false),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-response-`+acctest.ResourcePrefix+`-\d+:\d+`)),
+								}),
+							}),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
-			},
-			{
-				Config: testAccMultiTenantDistributionConfig_DefaultCacheBehavior_lambdaFunctionAssociation(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
