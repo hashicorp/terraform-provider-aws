@@ -716,9 +716,6 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	// This is needed for S3 origins using Origin Access Control (OAC)
 	fixOriginConfigs(distributionConfig.Origins)
 
-	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-	fixCacheBehaviors(&distributionConfig)
-
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
 	distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -832,6 +829,8 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 		new.WebACLID = flex.NullAsEmptyString(new.WebACLID)
 
+		// The CloudFront API requires stub values for a number of features that are not supported for Mutli-Tenant Distributions
+		// Reusing the current result and overlaying with configured attributes
 		distributionConfig := output.Distribution.DistributionConfig
 
 		// Expand the new configuration over the existing config
@@ -843,9 +842,6 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
 		fixOriginConfigs(distributionConfig.Origins)
-
-		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-		fixCacheBehaviors(distributionConfig)
 
 		// Ensure ConnectionMode remains tenant-only
 		distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -1275,38 +1271,6 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
 			origin.S3OriginConfig = &awstypes.S3OriginConfig{
 				OriginAccessIdentity: aws.String(""),
-			}
-		}
-	}
-}
-
-// fixCacheBehaviors ensures lambda function associations have IncludeBody set (even as false) when required by CloudFront.
-func fixCacheBehaviors(config *awstypes.DistributionConfig) {
-	if config == nil {
-		return
-	}
-
-	// Fix default cache behavior
-	if config.DefaultCacheBehavior != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
-		for i := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
-			assoc := &config.DefaultCacheBehavior.LambdaFunctionAssociations.Items[i]
-			if assoc.IncludeBody == nil {
-				assoc.IncludeBody = aws.Bool(false)
-			}
-		}
-	}
-
-	// Fix cache behaviors
-	if config.CacheBehaviors != nil {
-		for i := range config.CacheBehaviors.Items {
-			behavior := &config.CacheBehaviors.Items[i]
-			if behavior.LambdaFunctionAssociations != nil {
-				for j := range behavior.LambdaFunctionAssociations.Items {
-					assoc := &behavior.LambdaFunctionAssociations.Items[j]
-					if assoc.IncludeBody == nil {
-						assoc.IncludeBody = aws.Bool(false)
-					}
-				}
 			}
 		}
 	}
