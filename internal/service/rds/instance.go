@@ -2170,7 +2170,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			createIn := handler.createBlueGreenInput(d)
+			createIn := handler.createBlueGreenInput(ctx, d)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
