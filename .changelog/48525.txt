@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_record: Add `batch_reads` argument to reduce AWS API calls when managing many records in a zone, improving plan and apply speeds at scale.
+```
