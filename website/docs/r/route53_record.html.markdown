@@ -170,29 +170,29 @@ resource "aws_route53_zone" "example" {
 }
 
 resource "aws_route53_record" "a" {
-  zone_id          = aws_route53_zone.example.zone_id
-  name             = "a.example.com"
-  type             = "A"
-  ttl              = 300
-  records          = ["10.0.0.1"]
+  zone_id     = aws_route53_zone.example.zone_id
+  name        = "a.example.com"
+  type        = "A"
+  ttl         = 300
+  records     = ["10.0.0.1"]
   batch_reads = true
 }
 
 resource "aws_route53_record" "b" {
-  zone_id          = aws_route53_zone.example.zone_id
-  name             = "b.example.com"
-  type             = "A"
-  ttl              = 300
-  records          = ["10.0.0.2"]
+  zone_id     = aws_route53_zone.example.zone_id
+  name        = "b.example.com"
+  type        = "A"
+  ttl         = 300
+  records     = ["10.0.0.2"]
   batch_reads = true
 }
 
 resource "aws_route53_record" "c" {
-  zone_id          = aws_route53_zone.example.zone_id
-  name             = "c.example.com"
-  type             = "A"
-  ttl              = 300
-  records          = ["10.0.0.3"]
+  zone_id     = aws_route53_zone.example.zone_id
+  name        = "c.example.com"
+  type        = "A"
+  ttl         = 300
+  records     = ["10.0.0.3"]
   batch_reads = true
 }
 ```
