@@ -749,6 +749,138 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 	})
 }
 
+// Verifies update of other attributes when function assocaitations are configured
+func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_functionAssociation_updateComment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	defaultCacheBehaviorNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_CacheBehavior_functionAssociation_updateComment(rName, "original"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"function_association": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
+								}),
+							}),
+						}),
+					})),
+					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_CacheBehavior_functionAssociation_updateComment(rName, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Verifies update of other attributes when lambda function assocaitations are configured
+func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssociation_updateComment(t *testing.T) {
+	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
+	// if they're destroyed at all, requiring sweeping.
+	_ = acctest.SkipIfEnvVarNotSet(t, "CLOUDFRONT_LAMBDA_EDGE_TEST")
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	defaultCacheBehaviorNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_CacheBehavior_lambdaFunctionAssociation_updateComment(rName, "original"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"lambda_function_association": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"include_body":        knownvalue.Bool(true),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"include_body":        knownvalue.Bool(false),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
+								}),
+							}),
+						}),
+					})),
+					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_CacheBehavior_lambdaFunctionAssociation_updateComment(rName, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckMultiTenantDistributionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
@@ -1516,7 +1648,6 @@ EOT
 data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
 }
-
 `, rName, comment)
 }
 
@@ -1805,6 +1936,230 @@ resource "aws_lambda_function" "viewer_response" {
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "lambda.amazonaws.com",
+          "edgelambda.amazonaws.com"
+        ]
+      }
+    }]
+  })
+}
+
+data "aws_partition" "current" {}
+`, rName, comment)
+}
+
+func testAccMultiTenantDistributionConfig_CacheBehavior_functionAssociation_updateComment(rName, comment string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  comment = %[2]q
+  enabled = false
+
+  origin {
+    domain_name = "example.com"
+    id          = "example-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      ip_address_type        = "ipv4"
+      origin_read_timeout    = 30
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  cache_behavior {
+    path_pattern           = "/api/*"
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "https-only"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD", "OPTIONS"]
+      cached_methods = ["GET", "HEAD"]
+    }
+
+    function_association {
+      event_type   = "viewer-response"
+      function_arn = aws_cloudfront_function.viewer_response.arn
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.viewer_request.arn
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+resource "aws_cloudfront_function" "viewer_request" {
+  name    = "viewer-request-%[1]s"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOT
+function handler(event) {
+    var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        body: 'Example body generated by CloudFront function.'
+    };
+    return response;
+}
+EOT
+}
+
+resource "aws_cloudfront_function" "viewer_response" {
+  name    = "viewer-response-%[1]s"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOT
+function handler(event) {
+    var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        body: 'Example body generated by CloudFront function.'
+    };
+    return response;
+}
+EOT
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+`, rName, comment)
+}
+
+func testAccMultiTenantDistributionConfig_CacheBehavior_lambdaFunctionAssociation_updateComment(rName, comment string) string {
+	// CloudFront requires us-east-1
+	// lintignore:AWSAT003
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  comment = %[2]q
+  enabled = false
+
+  origin {
+    domain_name = "example.com"
+    id          = "example-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  cache_behavior {
+    path_pattern           = "/api/*"
+    target_origin_id       = "example-origin"
+    viewer_protocol_policy = "https-only"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD", "OPTIONS"]
+      cached_methods = ["GET", "HEAD"]
+    }
+
+    lambda_function_association {
+      event_type         = "viewer-response"
+      lambda_function_arn = aws_lambda_function.viewer_response.qualified_arn
+    }
+
+    lambda_function_association {
+      event_type         = "viewer-request"
+      lambda_function_arn = aws_lambda_function.viewer_request.qualified_arn
+      include_body       = true
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+resource "aws_lambda_function" "viewer_request" {
+  region        = "us-east-1"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "viewer-request-%[1]s"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+  publish       = true
+  skip_destroy  = true
+}
+
+resource "aws_lambda_function" "viewer_response" {
+  region        = "us-east-1"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "viewer-response-%[1]s"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+  publish       = true
+  skip_destroy  = true
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
 }
 
 resource "aws_iam_role" "lambda" {
