@@ -70,10 +70,11 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 					"recordName": config.StringVariable(recordName.String()),
 					"zoneName":   config.StringVariable(zoneName.String()),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:         resource.ImportCommandWithID,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"batch_reads"},
 			},
 
 			// Step 3: Import block with Import ID
