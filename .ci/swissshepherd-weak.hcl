@@ -969,6 +969,7 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_memory_strategy",
     "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
+    "resource/aws_bedrockagentcore_registry",
     "resource/aws_bedrockagentcore_token_vault_cmk",
     "resource/aws_bedrockagentcore_workload_identity",
     "resource/aws_billing_view",
