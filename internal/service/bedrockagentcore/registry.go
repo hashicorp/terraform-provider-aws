@@ -267,7 +267,7 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 
 		if _, err := waitRegistryUpdated(ctx, conn, registryID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RegistryID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 			return
 		}
 	}

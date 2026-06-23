@@ -23,6 +23,7 @@ var (
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
 	ResourcePolicyEngine             = newPolicyEngineResource
 	ResourceRegistry                 = newRegistryResource
+	ResourceRegistryRecord           = newRegistryRecordResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
@@ -43,6 +44,7 @@ var (
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
+	FindRegistryRecordByTwoPartKey       = findRegistryRecordByTwoPartKey
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
 
