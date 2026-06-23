@@ -38,6 +38,9 @@ import (
 
 // @FrameworkResource("aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetDomainOutput")
+// @Testing(preIdentityVersion="v6.47.0")
 func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
@@ -49,7 +52,7 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 
 type domainResource struct {
 	framework.ResourceWithModel[domainResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 

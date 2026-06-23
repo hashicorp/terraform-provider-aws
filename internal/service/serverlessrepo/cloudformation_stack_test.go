@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfserverlessrepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
@@ -98,6 +99,14 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

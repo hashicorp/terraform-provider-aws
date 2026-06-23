@@ -39,86 +39,88 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 			StateContext: resourceTrafficMirrorFilterRuleImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"destination_port_range": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"destination_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"destination_port_range": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
 						},
 					},
 				},
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"rule_action": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficMirrorRuleAction](),
-			},
-			"rule_number": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"source_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"source_port_range": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
+				names.AttrProtocol: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"rule_action": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficMirrorRuleAction](),
+				},
+				"rule_number": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"source_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"source_port_range": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
 						},
 					},
 				},
-			},
-			"traffic_direction": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficDirection](),
-			},
-			"traffic_mirror_filter_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"traffic_direction": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficDirection](),
+				},
+				"traffic_mirror_filter_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

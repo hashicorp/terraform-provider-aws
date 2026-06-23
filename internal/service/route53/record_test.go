@@ -247,6 +247,14 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -274,6 +282,14 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), "aws_route53_record.test.0"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

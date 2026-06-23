@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfswf "github.com/hashicorp/terraform-provider-aws/internal/service/swf"
@@ -85,6 +86,14 @@ func TestAccSWFDomain_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfswf.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_swf_domain.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_swf_domain.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

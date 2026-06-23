@@ -87,6 +87,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newAutomationRuleV2Resource,
+			TypeName: "aws_securityhub_automation_rule_v2",
+			Name:     "Automation Rule V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newConnectorV2Resource,
 			TypeName: "aws_securityhub_connector_v2",
 			Name:     "Connector V2",
@@ -119,6 +132,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAutomationRuleV2ResourceAsListResource,
+			TypeName: "aws_securityhub_automation_rule_v2",
+			Name:     "Automation Rule V2",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 		{
 			Factory:  newConnectorV2ResourceAsListResource,
 			TypeName: "aws_securityhub_connector_v2",

@@ -210,7 +210,7 @@ The following arguments are optional:
 * `heartbeat_schema` - (Optional) Sets the schema in which the heartbeat artifacts are created. Default value is `public`.
 * `map_boolean_as_boolean` - (Optional) You can use PostgreSQL endpoint settings to map a boolean as a boolean from your PostgreSQL source to a Amazon Redshift target. Default value is `false`.
 * `map_jsonb_as_clob` - Optional When true, DMS migrates JSONB values as CLOB.
-* `map_long_varchar_as` - Optional When true, DMS migrates LONG values as VARCHAR.
+* `map_long_varchar_as` - (Optional) Specifies how DMS maps LONG VARCHAR values. Valid values are `wstring`, `clob`, and `nclob`.
 * `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
 * `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test-decoding`.
 * `service_access_role_arn` - (Optional) Specifies the IAM role to use to authenticate the connection.
