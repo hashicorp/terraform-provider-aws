@@ -205,6 +205,53 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_CustomOrigin_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_CustomOrigin_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"custom_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"http_port":                knownvalue.Int32Exact(80),
+									"https_port":               knownvalue.Int32Exact(443),
+									names.AttrIPAddressType:    knownvalue.Null(),
+									"origin_keepalive_timeout": knownvalue.Int32Exact(tfcloudfront.DefaultOriginKeepaliveTimeout),
+									"origin_mtls_config":       knownvalue.ListSizeExact(0),
+									"origin_read_timeout":      knownvalue.Int32Exact(tfcloudfront.DefaultOriginReadTimeout),
+									"origin_protocol_policy":   tfknownvalue.StringExact(awstypes.OriginProtocolPolicyHttpsOnly),
+									"origin_ssl_protocols": knownvalue.SetExact([]knownvalue.Check{
+										tfknownvalue.StringExact(awstypes.SslProtocolTLSv12),
+									}),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_acl_id"), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -1081,6 +1128,64 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, rName, comment, defaultRootObject, compress)
+}
+
+func testAccMultiTenantDistributionConfig_CustomOrigin_basic() string {
+	return `
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+`
 }
 
 func testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath() string {

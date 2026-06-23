@@ -41,10 +41,11 @@ import (
 )
 
 const (
-	defaultConnectionAttempts     = 3
-	defaultConnectionTimeout      = 10
-	defaultOriginKeepaliveTimeout = 5
-	defaultOriginReadTimeout      = 30
+	defaultConnectionAttempts int32 = 3
+	defaultConnectionTimeout  int32 = 10
+
+	defaultOriginKeepaliveTimeout int32 = 5
+	defaultOriginReadTimeout      int32 = 30
 )
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
