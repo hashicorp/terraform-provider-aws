@@ -28,9 +28,11 @@ As there is no corresponding remote resource, there is nothing to List or Import
 
 ## Excluded Resource Types
 
+As new excluded resource types are identified, they should be added to this list.
+
 ### Exclusive Resources
 
-TBD
+* `aws_iam_policy_attachment`
 
 ### Waiter Resources
 
