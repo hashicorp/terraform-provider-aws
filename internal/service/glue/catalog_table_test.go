@@ -349,18 +349,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 	})
 }
 
-// Reproduces a customer-reported failure: updating a VIRTUAL_VIEW's text in
-// place (while keeping table_type = "VIRTUAL_VIEW") fails because the provider
-// does not pass ViewUpdateAction to the Glue UpdateTable API. AWS responds with
-// "InvalidInputException: View update action must be one of: [ADD, REPLACE,
-// ADD_OR_REPLACE, DROP]". The AWS CLI succeeds in the same scenario by passing
-// `--view-update-action REPLACE --force`. Once the provider plumbs through
-// ViewUpdateAction (and Force) on UpdateTable, this test should be updated to
-// assert a successful in-place update instead of an expected error.
-//
-// The view_definition block (introduced in PR #45336 for cross-account /
-// Lake Formation views) is the path that actually triggers Glue's validation;
-// the legacy view_original_text / view_expanded_text top-level fields do not.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/48534
 func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -382,13 +371,28 @@ func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Updating only the view text while keeping table_type = "VIRTUAL_VIEW"
-				// must currently fail because resourceCatalogTableUpdate does not set
-				// UpdateTableInput.ViewUpdateAction.
-				Config:      testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_2", "view_expanded_text_2"),
-				ExpectError: regexache.MustCompile(`View update action must be one of`),
+				// must succeed in place — resourceCatalogTableUpdate sets
+				// UpdateTableInput.ViewUpdateAction = REPLACE on the view path.
+				Config: testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_2", "view_expanded_text_2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
