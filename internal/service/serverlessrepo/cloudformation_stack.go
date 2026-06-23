@@ -69,7 +69,8 @@ func ResourceCloudFormationStack() *schema.Resource {
 				},
 				"capabilities": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
+					Computed: true,
 					Elem: &schema.Schema{
 						Type:             schema.TypeString,
 						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
