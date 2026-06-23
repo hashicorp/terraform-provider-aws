@@ -83,7 +83,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 
 			// Set identity attributes
 			rd.Set("zone_id", query.ZoneID.ValueString())
-			rd.Set(names.AttrName, aws.ToString(item.Name))
+			rd.Set(names.AttrName, strings.TrimSuffix(aws.ToString(item.Name), "."))
 			rd.Set(names.AttrType, string(item.Type))
 			if item.SetIdentifier != nil {
 				rd.Set("set_identifier", aws.ToString(item.SetIdentifier))
