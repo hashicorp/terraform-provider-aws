@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -37,6 +38,12 @@ import (
 
 const (
 	senderIDResourceIDSeparator = ","
+
+	// A sender ID re-requested immediately after being released returns a
+	// ValidationException with Reason="SENDER_ID_REQUIRES_REGISTRATION" until the
+	// release propagates. This is the window Create retries over, e.g. when a change
+	// to an immutable attribute forces a destroy-then-create on the same sender ID.
+	senderIDRegistrationPropagationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_sender_id", name="Sender ID")
@@ -128,7 +135,6 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	input := &pinpointsmsvoicev2.RequestSenderIdInput{
 		SenderId:       data.SenderID.ValueStringPointer(),
 		IsoCountryCode: data.ISOCountryCode.ValueStringPointer(),
-		ClientToken:    aws.String(sdkid.UniqueId()),
 		Tags:           getTagsIn(ctx),
 	}
 
@@ -147,13 +153,21 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 		}
 	}
 
-	output, err := conn.RequestSenderId(ctx, input)
+	// A fresh ClientToken is generated on each attempt: AWS pins the result of a
+	// request to its ClientToken, so reusing one token would replay the cached
+	// SENDER_ID_REQUIRES_REGISTRATION failure instead of re-evaluating the request.
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, senderIDRegistrationPropagationTimeout, func(ctx context.Context) (any, error) {
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		return conn.RequestSenderId(ctx, input)
+	}, "ValidationException", "SENDER_ID_REQUIRES_REGISTRATION")
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("requesting End User Messaging SMS Sender ID (%s)", data.SenderID.ValueString()), err.Error())
 
 		return
 	}
+
+	output := outputRaw.(*pinpointsmsvoicev2.RequestSenderIdOutput)
 
 	// Use API-returned values (AWS may uppercase sender_id).
 	data.SenderID = fwtypes.CaseInsensitiveStringValue(aws.ToString(output.SenderId))

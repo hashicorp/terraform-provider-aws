@@ -192,6 +192,52 @@ func TestAccPinpointSMSVoiceV2SenderID_tags(t *testing.T) {
 	})
 }
 
+func TestAccPinpointSMSVoiceV2SenderID_messageTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var senderID awstypes.SenderIdInformation
+	senderIDName := "TfMsgType"
+	isoCountryCode := "GB"
+	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSenderIDDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSenderIDConfig_messageTypes(senderIDName, isoCountryCode, `["TRANSACTIONAL"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSenderIDExists(ctx, t, resourceName, &senderID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_types"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("TRANSACTIONAL"),
+					})),
+				},
+			},
+			{
+				// Changing message_types forces replacement (destroy then create). Re-requesting
+				// the same sender ID immediately after release returns a ValidationException with
+				// SENDER_ID_REQUIRES_REGISTRATION until the release propagates, so Create must retry.
+				Config: testAccSenderIDConfig_messageTypes(senderIDName, isoCountryCode, `["PROMOTIONAL", "TRANSACTIONAL"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSenderIDExists(ctx, t, resourceName, &senderID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_types"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("PROMOTIONAL"),
+						knownvalue.StringExact("TRANSACTIONAL"),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckSenderIDDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
@@ -268,6 +314,16 @@ resource "aws_pinpointsmsvoicev2_sender_id" "test" {
   iso_country_code = %[2]q
 }
 `, senderID, isoCountryCode)
+}
+
+func testAccSenderIDConfig_messageTypes(senderID, isoCountryCode, messageTypes string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_sender_id" "test" {
+  sender_id        = %[1]q
+  iso_country_code = %[2]q
+  message_types    = %[3]s
+}
+`, senderID, isoCountryCode, messageTypes)
 }
 
 func testAccSenderIDConfig_deletionProtection(senderID, isoCountryCode string, deletionProtection bool) string {
