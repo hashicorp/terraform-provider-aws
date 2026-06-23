@@ -200,14 +200,14 @@ The following arguments are optional:
 
 ### `open_table_format_input` Block
 
-~> **NOTE:** A `open_table_format_input` cannot be added to an existing `glue_catalog_table`.
+~> **NOTE:** An `open_table_format_input` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
 * `iceberg_input` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input) below.
 
 ### `iceberg_input` Block
 
-~> **NOTE:** A `iceberg_input` cannot be added to an existing `open_table_format_input`.
+~> **NOTE:** An `iceberg_input` cannot be added to an existing `open_table_format_input`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
 * `iceberg_table_input` - (Optional) Configuration parameters, including table properties and metadata specifications. See [`iceberg_table_input`](#iceberg_table_input) below.
@@ -366,7 +366,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Table.
-* `id` - Catalog ID, Database name and of the name table.
+* `id` - Catalog ID, database name, and table name, separated by colons (`:`).
 * `partition_index[*].index_status` - Status of the partition index.
 
 ## Import
