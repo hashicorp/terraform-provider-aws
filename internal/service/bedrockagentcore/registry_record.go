@@ -12,9 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -29,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,15 +45,14 @@ import (
 // @IdentityAttribute("record_id")
 // @ImportIDHandler(registryRecordImportID)
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="record_id")
 // @Testing(preCheck="testAccPreCheckRegistries")
+// @Testing(importStateIdFunc="testAccRegistryRecordImportStateIDFunc")
 func newRegistryRecordResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &registryRecordResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -81,18 +84,100 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"record_arn": framework.ARNAttributeComputedOnly(),
 			"record_id":  framework.IDAttribute(),
+			"record_version": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+				},
+			},
 			"registry_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordStatus](),
+				Computed:   true,
+			},
+			"synchronization_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SynchronizationType](),
+				Optional:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
+			"descriptors": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[descriptorsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.AtLeastOneOf(path.MatchRoot("descriptors"), path.MatchRoot("synchronization_configuration")),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("a2a"),
+							path.MatchRelative().AtName("agent_skills"),
+							path.MatchRelative().AtName("custom"),
+							path.MatchRelative().AtName("mcp"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"a2a": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[a2aDescriptorModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{},
+							},
+						},
+						"agent_skills": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[agentSkillsDescriptorModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{},
+							},
+						},
+						"custom": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[customDescriptorModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"inline_content": schema.StringAttribute{
+										CustomType: jsontypes.NormalizedType{},
+										Required:   true,
+									},
+								},
+							},
+						},
+						"mcp": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[mcpDescriptorModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{},
+							},
+						},
+					},
+				},
+			},
+			"synchronization_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[synchronizationConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
-				Delete: true,
 			}),
 		},
 	}
@@ -123,8 +208,8 @@ func (r *registryRecordResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	recordARN, registryID := aws.ToString(out.RecordArn), fwflex.StringValueFromFramework(ctx, plan.RegistryID)
-	created, err := waitRegistryRecordCreated(ctx, conn, recordARN, registryID, r.CreateTimeout(ctx, plan.Timeouts))
+	registryID, recordARN := fwflex.StringValueFromFramework(ctx, plan.RegistryID), aws.ToString(out.RecordArn)
+	created, err := waitRegistryRecordCreated(ctx, conn, registryID, recordARN, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, recordARN)
 		return
@@ -230,11 +315,6 @@ func (r *registryRecordResource) Delete(ctx context.Context, req resource.Delete
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, recordID)
 		return
 	}
-
-	if _, err := waitRegistryRecordDeleted(ctx, conn, registryID, recordID, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, recordID)
-		return
-	}
 }
 
 func (r *registryRecordResource) flatten(ctx context.Context, registryRecord *bedrockagentcorecontrol.GetRegistryRecordOutput, data *registryRecordResourceModel) diag.Diagnostics {
@@ -291,7 +371,7 @@ func statusRegistryRecord(conn *bedrockagentcorecontrol.Client, registryID, reco
 func waitRegistryRecordCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, registryID, recordID string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryRecordOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RegistryRecordStatusCreating),
-		Target:                    enum.Slice(awstypes.RegistryRecordStatusApproved),
+		Target:                    enum.Slice(awstypes.RegistryRecordStatusDraft, awstypes.RegistryRecordStatusApproved),
 		Refresh:                   statusRegistryRecord(conn, registryID, recordID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -309,27 +389,10 @@ func waitRegistryRecordCreated(ctx context.Context, conn *bedrockagentcorecontro
 func waitRegistryRecordUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, registryID, recordID string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryRecordOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RegistryRecordStatusUpdating),
-		Target:                    enum.Slice(awstypes.RegistryRecordStatusApproved),
+		Target:                    enum.Slice(awstypes.RegistryRecordStatusDraft, awstypes.RegistryRecordStatusApproved),
 		Refresh:                   statusRegistryRecord(conn, registryID, recordID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetRegistryRecordOutput); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitRegistryRecordDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, registryID, recordID string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryRecordOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"DELETING"},
-		Target:  []string{},
-		Refresh: statusRegistryRecord(conn, registryID, recordID),
-		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -367,11 +430,39 @@ func (registryRecordImportID) Parse(id string) (string, map[string]any, error) {
 
 type registryRecordResourceModel struct {
 	framework.WithRegionModel
-	Description    types.String                                `tfsdk:"description"`
-	DescriptorType fwtypes.StringEnum[awstypes.DescriptorType] `tfsdk:"descriptor_type"`
-	Name           types.String                                `tfsdk:"name"`
-	RecordARN      types.String                                `tfsdk:"record_arn"`
-	RecordID       types.String                                `tfsdk:"record_id"`
-	RegistryID     types.String                                `tfsdk:"registry_id"`
-	Timeouts       timeouts.Value                              `tfsdk:"timeouts"`
+	Description                  types.String                                                       `tfsdk:"description"`
+	DescriptorType               fwtypes.StringEnum[awstypes.DescriptorType]                        `tfsdk:"descriptor_type"`
+	Descriptors                  fwtypes.ListNestedObjectValueOf[descriptorsModel]                  `tfsdk:"descriptors"`
+	Name                         types.String                                                       `tfsdk:"name"`
+	RecordARN                    types.String                                                       `tfsdk:"record_arn"`
+	RecordID                     types.String                                                       `tfsdk:"record_id"`
+	RecordVersion                types.String                                                       `tfsdk:"record_version"`
+	RegistryID                   types.String                                                       `tfsdk:"registry_id"`
+	Status                       fwtypes.StringEnum[awstypes.RegistryRecordStatus]                  `tfsdk:"status"`
+	SynchronizationConfiguration fwtypes.ListNestedObjectValueOf[synchronizationConfigurationModel] `tfsdk:"synchronization_configuration"`
+	SynchronizationType          fwtypes.StringEnum[awstypes.SynchronizationType]                   `tfsdk:"synchronization_type"`
+	Timeouts                     timeouts.Value                                                     `tfsdk:"timeouts"`
+}
+
+type descriptorsModel struct {
+	A2A         fwtypes.ListNestedObjectValueOf[a2aDescriptorModel]         `tfsdk:"a2a"`
+	AgentSkills fwtypes.ListNestedObjectValueOf[agentSkillsDescriptorModel] `tfsdk:"agent_skills"`
+	Custom      fwtypes.ListNestedObjectValueOf[customDescriptorModel]      `tfsdk:"custom"`
+	MCP         fwtypes.ListNestedObjectValueOf[mcpDescriptorModel]         `tfsdk:"mcp"`
+}
+
+type a2aDescriptorModel struct {
+}
+
+type agentSkillsDescriptorModel struct {
+}
+
+type customDescriptorModel struct {
+	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
+}
+
+type mcpDescriptorModel struct {
+}
+
+type synchronizationConfigurationModel struct {
 }

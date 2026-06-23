@@ -8,6 +8,12 @@ resource "aws_bedrockagentcore_registry_record" "test" {
   registry_id = aws_bedrockagentcore_registry.test.registry_id
 
   descriptor_type = "CUSTOM"
+
+  descriptors {
+    custom {
+      inline_content = "{}"
+    }
+  }
 }
 
 resource "aws_bedrockagentcore_registry" "test" {
