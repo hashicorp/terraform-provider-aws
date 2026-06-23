@@ -6,6 +6,7 @@ package bedrockagentcore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -128,7 +129,31 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{},
+								Blocks: map[string]schema.Block{
+									"agent_card": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[agentCardDefinitionModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"inline_content": schema.StringAttribute{
+													CustomType: jsontypes.NormalizedType{},
+													Required:   true,
+												},
+												"schema_version": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 255),
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 						"agent_skills": schema.ListNestedBlock{
@@ -137,7 +162,47 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{},
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("skill_definition"),
+										path.MatchRelative().AtName("skill_md"),
+									),
+								},
+								Blocks: map[string]schema.Block{
+									"skill_definition": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[skillDefinitionModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"inline_content": schema.StringAttribute{
+													CustomType: jsontypes.NormalizedType{},
+													Required:   true,
+												},
+												"schema_version": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 255),
+													},
+												},
+											},
+										},
+									},
+									"skill_md": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[skillMdDefinitionModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"inline_content": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 						"custom": schema.ListNestedBlock{
@@ -160,7 +225,52 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{},
+								Blocks: map[string]schema.Block{
+									"server": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[serverDefinitionModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"inline_content": schema.StringAttribute{
+													CustomType: jsontypes.NormalizedType{},
+													Required:   true,
+												},
+												"schema_version": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 255),
+													},
+												},
+											},
+										},
+									},
+									"tools": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[toolsDefinitionModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"inline_content": schema.StringAttribute{
+													CustomType: jsontypes.NormalizedType{},
+													Required:   true,
+												},
+												"schema_version": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 255),
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -317,6 +427,57 @@ func (r *registryRecordResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
+func (r *registryRecordResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data registryRecordResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.Descriptors.IsUnknown() {
+		descriptors, diags := data.Descriptors.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		switch descriptorType := data.DescriptorType.ValueEnum(); descriptorType {
+		case awstypes.DescriptorTypeA2a:
+			if descriptors == nil || descriptors.A2A.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("descriptors"),
+					"Missing Configuration",
+					fmt.Sprintf("descriptors.a2a is required when descriptor_type is %q", descriptorType),
+				)
+			}
+		case awstypes.DescriptorTypeAgentSkills:
+			if descriptors == nil || descriptors.AgentSkills.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("descriptors"),
+					"Missing Configuration",
+					fmt.Sprintf("descriptors.agent_skills is required when descriptor_type is %q", descriptorType),
+				)
+			}
+		case awstypes.DescriptorTypeCustom:
+			if descriptors == nil || descriptors.Custom.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("descriptors"),
+					"Missing Configuration",
+					fmt.Sprintf("descriptors.custom is required when descriptor_type is %q", descriptorType),
+				)
+			}
+		case awstypes.DescriptorTypeMcp:
+			if descriptors == nil || descriptors.MCP.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("descriptors"),
+					"Missing Configuration",
+					fmt.Sprintf("descriptors.mcp is required when descriptor_type is %q", descriptorType),
+				)
+			}
+		}
+	}
+}
+
 func (r *registryRecordResource) flatten(ctx context.Context, registryRecord *bedrockagentcorecontrol.GetRegistryRecordOutput, data *registryRecordResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, registryRecord, data)...)
@@ -452,9 +613,26 @@ type descriptorsModel struct {
 }
 
 type a2aDescriptorModel struct {
+	AgentCard fwtypes.ListNestedObjectValueOf[agentCardDefinitionModel] `tfsdk:"agent_card"`
+}
+
+type agentCardDefinitionModel struct {
+	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
+	SchemaVersion types.String         `tfsdk:"schema_version"`
 }
 
 type agentSkillsDescriptorModel struct {
+	SkillDefinition fwtypes.ListNestedObjectValueOf[skillDefinitionModel]   `tfsdk:"skill_definition"`
+	SkillMd         fwtypes.ListNestedObjectValueOf[skillMdDefinitionModel] `tfsdk:"skill_md"`
+}
+
+type skillDefinitionModel struct {
+	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
+	SchemaVersion types.String         `tfsdk:"schema_version"`
+}
+
+type skillMdDefinitionModel struct {
+	InlineContent types.String `tfsdk:"inline_content"`
 }
 
 type customDescriptorModel struct {
@@ -462,6 +640,18 @@ type customDescriptorModel struct {
 }
 
 type mcpDescriptorModel struct {
+	Server fwtypes.ListNestedObjectValueOf[serverDefinitionModel] `tfsdk:"server"`
+	Tools  fwtypes.ListNestedObjectValueOf[toolsDefinitionModel]  `tfsdk:"tools"`
+}
+
+type serverDefinitionModel struct {
+	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
+	SchemaVersion types.String         `tfsdk:"schema_version"`
+}
+
+type toolsDefinitionModel struct {
+	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
+	SchemaVersion types.String         `tfsdk:"schema_version"`
 }
 
 type synchronizationConfigurationModel struct {
