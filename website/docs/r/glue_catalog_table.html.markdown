@@ -186,7 +186,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the table.
 * `open_table_format_input` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input-block) below.
 * `owner` - (Optional) Owner of the table.
-* `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
+* `parameters` - (Optional) Properties associated with this table, as a map of key-value pairs.
 * `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index-block) below.
 * `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
