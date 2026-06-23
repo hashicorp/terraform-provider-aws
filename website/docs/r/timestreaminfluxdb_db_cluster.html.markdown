@@ -207,9 +207,9 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 }
 ```
 
-## Cluster Type Requirements
+### Cluster Type Requirements
 
-### InfluxDB V2 Clusters (default)
+#### InfluxDB V2 Clusters (default)
 
 The following arguments are **required** for InfluxDB V2 clusters:
 
@@ -222,7 +222,7 @@ The following arguments are **required** for InfluxDB V2 clusters:
 
 The `deployment_type` argument defaults to `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters when not specified.
 
-### InfluxDB V3 Clusters (when using V3 parameter groups)
+#### InfluxDB V3 Clusters (when using V3 parameter groups)
 
 The following arguments are **forbidden** for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group):
 
@@ -260,8 +260,6 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
-
-### Nested Fields
 
 #### `log_delivery_configuration`
 

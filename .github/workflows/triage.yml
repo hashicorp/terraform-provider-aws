@@ -4,9 +4,9 @@
 name: Auto Triage
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  contents: read        # required for checkout
+  issues: write         # required to apply labels to issues
+  pull-requests: write  # required to apply labels to pull requests
 
 on:
   pull_request_target:

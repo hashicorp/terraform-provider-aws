@@ -189,6 +189,26 @@ func dataSourceCluster() *schema.Resource {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
+										"spread_level": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"etcd_instance_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"etcd_placement": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"spread_level": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},

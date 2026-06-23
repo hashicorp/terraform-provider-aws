@@ -22,19 +22,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_log_stream", name="Log Stream")
+// @SDKResource("aws_cloudwatch_log_stream", name="Stream")
+// @IdentityAttribute("log_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("streamImportID")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogStream")
+// @Testing(importStateIdFunc=testAccStreamImportStateIDFunc)
+// @Testing(importStateIdAttribute="name")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
 		ReadWithoutTimeout:   resourceStreamRead,
 		DeleteWithoutTimeout: resourceStreamDelete,
-
-		Importer: &schema.ResourceImporter{
-			State: resourceStreamImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -63,12 +67,12 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.CreateLogStreamInput{
+	input := cloudwatchlogs.CreateLogStreamInput{
 		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(name),
 	}
 
-	_, err := conn.CreateLogStream(ctx, input)
+	_, err := conn.CreateLogStream(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Log Stream (%s): %s", name, err)
@@ -114,10 +118,11 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
-	_, err := conn.DeleteLogStream(ctx, &cloudwatchlogs.DeleteLogStreamInput{
+	input := cloudwatchlogs.DeleteLogStreamInput{
 		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLogStream(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -128,21 +133,6 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
-}
-
-func resourceStreamImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), ":")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'log-group-name:log-stream-name'", d.Id())
-	}
-
-	logGroupName := parts[0]
-	logStreamName := parts[1]
-
-	d.SetId(logStreamName)
-	d.Set(names.AttrLogGroupName, logGroupName)
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
@@ -195,4 +185,40 @@ func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 	}
 
 	return output, nil
+}
+
+const streamImportIDSeparator = ":"
+
+func streamParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, streamImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <log-group-name>%[2]s<log-stream-name>", id, streamImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = streamImportID{}
+)
+
+type streamImportID struct{}
+
+func (streamImportID) Parse(id string) (string, map[string]any, error) {
+	logGroupName, logStreamName, err := streamParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrLogGroupName: logGroupName,
+		names.AttrName:         logStreamName,
+	}
+
+	return logStreamName, result, nil
+}
+
+func (streamImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }
