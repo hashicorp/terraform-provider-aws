@@ -3,12 +3,12 @@ subcategory: "Serverless Application Repository"
 layout: "aws"
 page_title: "AWS: aws_serverlessapplicationrepository_cloudformation_stack"
 description: |-
-  Deploys an Application CloudFormation Stack from the Serverless Application Repository.
+  Manages an Application CloudFormation Stack from the Serverless Application Repository.
 ---
 
 # Resource: aws_serverlessapplicationrepository_cloudformation_stack
 
-Deploys an Application CloudFormation Stack from the Serverless Application Repository.
+Manages an Application CloudFormation Stack from the Serverless Application Repository.
 
 !> **Warning:** `NoEcho` parameters and state: CloudFormation masks the values of parameters declared with `NoEcho: true` in API responses, returning `****` instead of the configured value. Because the provider cannot read the actual value back from AWS, it persists the value from the Terraform configuration in state instead. This means `NoEcho` parameter values are stored in Terraform state in plaintext. Ensure your state backend is appropriately secured. To suppress per-value plan and `terraform show` output for a specific parameter, wrap its value with Terraform's [`sensitive()`](https://developer.hashicorp.com/terraform/language/functions/sensitive) function in your configuration, for example `parameters = { password = sensitive(var.password) }`. The sensitivity marker is honored per map element, so non-sensitive parameters remain visible.
 
@@ -41,7 +41,7 @@ This resource supports the following arguments:
 * `application_id` - (Required) ARN of the application from the Serverless Application Repository.
 * `capabilities` - (Optional) List of capabilities. Valid values are `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_RESOURCE_POLICY`, or `CAPABILITY_AUTO_EXPAND`. If the application contains IAM resources, IAM resources with custom names, resource-based policies, or nested applications, the corresponding capability must be specified. If omitted, the value applied by AWS is tracked in state.
 * `name` - (Required) Name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo-`
-* `parameters` - (Optional) Map of Parameter structures that specify input parameters for the stack. `NoEcho` parameter values are persisted in state in plaintext; see the [`NoEcho` parameters and state](#noecho-parameters-and-state) section above.
+* `parameters` - (Optional) Map of Parameter structures that specify input parameters for the stack. _`NoEcho` parameter values are persisted in state in plaintext; see warning above._
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `semantic_version` - (Optional) Version of the application to deploy. If not supplied, deploys the latest version.
 * `tags` - (Optional) Map of tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
