@@ -349,7 +349,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/48534
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/48534
 func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
