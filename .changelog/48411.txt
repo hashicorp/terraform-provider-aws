@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack: Fix destroy succeeding and removing the resource from state when `DeleteStack` actually fails because termination protection is enabled — the `ValidationError` from CloudFormation is no longer swallowed as a successful delete; only the `"does not exist"` shape is treated as already-deleted
+```
