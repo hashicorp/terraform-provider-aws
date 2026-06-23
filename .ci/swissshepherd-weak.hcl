@@ -2034,7 +2034,6 @@ check "schema_docs" {
     "resource/aws_securitylake_data_lake",
     "resource/aws_securitylake_subscriber_notification",
     "resource/aws_securitylake_subscriber",
-    "resource/aws_serverlessapplicationrepository_cloudformation_stack",
     "resource/aws_service_discovery_http_namespace",
     "resource/aws_service_discovery_instance",
     "resource/aws_service_discovery_private_dns_namespace",
