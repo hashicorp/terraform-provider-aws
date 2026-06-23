@@ -457,6 +457,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"custom_origin_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customOriginConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"http_port": schema.Int32Attribute{
@@ -508,6 +511,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"origin_shield": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[originShieldModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrEnabled: schema.BoolAttribute{
@@ -522,6 +528,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 
 						"vpc_origin_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"origin_keepalive_timeout": schema.Int32Attribute{
