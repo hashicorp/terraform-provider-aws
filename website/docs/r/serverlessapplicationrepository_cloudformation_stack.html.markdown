@@ -36,6 +36,8 @@ data "aws_region" "current" {}
 
 CloudFormation masks the values of parameters declared with `NoEcho: true` in API responses, returning `****` instead of the configured value. Because the provider cannot read the actual value back from AWS, it persists the value from the Terraform configuration in state instead. This means `NoEcho` parameter values are stored in Terraform state in plaintext. Ensure your state backend is appropriately secured.
 
+To suppress per-value plan and `terraform show` output for a specific parameter, wrap its value with Terraform's [`sensitive()`](https://developer.hashicorp.com/terraform/language/functions/sensitive) function in your configuration, for example `parameters = { password = sensitive(var.password) }`. The sensitivity marker is honored per map element, so non-sensitive parameters remain visible.
+
 ## Argument Reference
 
 This resource supports the following arguments:
