@@ -48,6 +48,7 @@ import (
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="6.4.0")
+// @Testing(importIgnore="batch_reads")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
