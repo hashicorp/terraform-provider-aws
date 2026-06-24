@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_iam_user: Fix `InvalidAction` errors during deletion in non-commercial partitions (e.g., ISO) where some access key cleanup operations are not supported
+resource/aws_iam_user: Handle `InvalidAction` errors in partitions where access key cleanup operations are not supported
 ```
