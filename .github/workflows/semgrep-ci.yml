@@ -60,7 +60,7 @@ jobs:
   semgrep:
     name: Code Quality Scan (make semgrep-code-quality)
     needs: [semgrep-test]
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-large
     container:
       image: "semgrep/semgrep:1.154.0"
     steps:
