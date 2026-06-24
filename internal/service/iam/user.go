@@ -233,9 +233,6 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get(names.AttrForceDestroy).(bool) {
-		// Some credential types (e.g. SSH public keys) are not available in all
-		// partitions (e.g. ISO). List/Delete actions return errors such as
-		// InvalidAction. There's nothing to clean up, so treat it as a no-op.
 		partition := meta.(*conns.AWSClient).Partition(ctx)
 
 		for _, v := range []struct {
@@ -256,6 +253,9 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 				if errs.IsA[*awstypes.NoSuchEntityException](err) {
 					continue
 				}
+				// Some credential types (e.g. SSH public keys) are not available in all
+				// partitions (e.g. ISO) so List/Delete actions return errors such as
+				// InvalidAction. There's nothing to clean up, so treat it as a no-op.
 				if errs.IsUnsupportedOperationInPartitionError(partition, err) {
 					continue
 				}
