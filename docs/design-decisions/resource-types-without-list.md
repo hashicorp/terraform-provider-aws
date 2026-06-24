@@ -1,4 +1,6 @@
 # When Not to Support `List` on a Resource Type
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
 ## Background
 
