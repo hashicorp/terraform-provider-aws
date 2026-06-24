@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -534,10 +533,10 @@ const (
 )
 
 func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Target:  []string{gatewayServiceStatusActive},
-		Refresh: statusExpressGatewayService(ctx, conn, ARN),
+		Refresh: statusExpressGatewayService(conn, ARN),
 		Timeout: timeout,
 	}
 
@@ -550,10 +549,10 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 }
 
 func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining, gatewayServiceStatusPending},
 		Target:  []string{gatewayServiceStatusActive, gatewayServiceStatusStable},
-		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, operationTime),
+		Refresh: statusExpressGatewayServiceWaitForStable(conn, gatewayServiceARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -566,10 +565,10 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 }
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
 		Target:     []string{gatewayServiceStatusInactive},
-		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
+		Refresh:    statusExpressGatewayServiceForDeletion(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
@@ -582,8 +581,8 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 	return nil, smarterr.NewError(err)
 }
 
-func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayService(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -597,8 +596,8 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 	}
 }
 
-func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayServiceForDeletion(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
 			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
@@ -645,16 +644,14 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	out, err := conn.DescribeExpressGatewayService(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
@@ -691,11 +688,11 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	return err
 }
 
-func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) sdkretry.StateRefreshFunc {
+func statusExpressGatewayServiceWaitForStable(conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) retry.StateRefreshFunc {
 	var deploymentArn *string
 
-	return func() (any, string, error) {
-		outputRaw, serviceStatus, err := statusExpressGatewayService(ctx, conn, gatewayServiceARN)()
+	return func(ctx context.Context) (any, string, error) {
+		outputRaw, serviceStatus, err := statusExpressGatewayService(conn, gatewayServiceARN)(ctx)
 		if err != nil {
 			return nil, "", err
 		}
