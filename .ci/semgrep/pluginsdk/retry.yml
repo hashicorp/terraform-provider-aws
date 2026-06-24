@@ -45,7 +45,7 @@ rules:
     message: "The internal retry.StateRefreshFunc accepts a context argument"
     severity: WARNING
     patterns:
-      - pattern-inside: "func $F(...) retry.StateRefreshFunc{ ... }"
+      - pattern-inside: "func $F(...) retry.StateRefreshFunc { ... }"
       - pattern: |
           return func() (any, string, error) {
             $...BODY
@@ -84,7 +84,7 @@ rules:
 
   - id: internal-retry-statechangeconf-refresh-remove-context
     languages: [go]
-    message: "The internal retry.StateRefreshConf.Refresh function no longer needs a context argument"
+    message: "The internal retry.StateChangeConf.Refresh function no longer needs a context argument"
     severity: WARNING
     patterns:
       - pattern-inside: "retry.StateChangeConf{ ... }"
@@ -105,12 +105,12 @@ rules:
     message: "The internal retry.NotFoundError struct drops the LastRequest argument"
     severity: WARNING
     pattern: |
-        retry.NotFoundError {
+        retry.NotFoundError{
           $...ARGS,
           LastRequest: ...,
         }
     fix: |
-      retry.NotFoundError {
+      retry.NotFoundError{
         $...ARGS,
       }
     paths:
