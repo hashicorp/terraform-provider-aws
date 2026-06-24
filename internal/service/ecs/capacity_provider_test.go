@@ -191,6 +191,43 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 	})
 }
 
+func TestAccECSCapacityProvider_replaceWhenAssociated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	cpName1 := fmt.Sprintf("%s-1", rName)
+	cpName2 := fmt.Sprintf("%s-2", rName)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, cpName1),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, cpName2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSCapacityProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
@@ -691,6 +728,31 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name = %[2]q
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster_capacity_providers" "test" {
+  cluster_name       = aws_ecs_cluster.test.name
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
+
+  lifecycle {
+    replace_triggered_by = [aws_ecs_capacity_provider.test]
+  }
+}
+`, rName, cpName))
 }
 
 func testAccCapacityProviderConfig_tags1(rName, tag1Key, tag1Value string) string {
