@@ -282,6 +282,70 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_model_litellm(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_litellmModel(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "model.0.litellm_model_config.0.api_base", "https://api.example.com/v1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_skill_git(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_skillGit(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "skill.0.git.0.url", "https://github.com/example/skill.git"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -804,6 +868,54 @@ resource "aws_bedrockagentcore_harness" "test" {
       model_id    = "anthropic.claude-sonnet-4-20250514"
       temperature = 0.7
       top_p       = 0.9
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName))
+}
+
+func testAccHarnessConfig_litellmModel(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    litellm_model_config {
+      model_id    = "anthropic/claude-sonnet-4-20250514"
+      api_base    = "https://api.example.com/v1"
+      temperature = 0.7
+      top_p       = 0.9
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName))
+}
+
+func testAccHarnessConfig_skillGit(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  skill {
+    git {
+      url  = "https://github.com/example/skill.git"
+      path = "skills"
     }
   }
 

@@ -244,6 +244,9 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"require_service_s3_endpoint": schema.BoolAttribute{
+										Optional: true,
+									},
 									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
@@ -327,7 +330,60 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 							},
 						},
 						Blocks: map[string]schema.Block{
+							"allowed_workload_configuration": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[allowedWorkloadConfigurationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"workload_identities": schema.ListAttribute{
+											CustomType: fwtypes.ListOfStringType,
+											Optional:   true,
+											Validators: []validator.List{
+												listvalidator.SizeBetween(1, 10),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"hosting_environment": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[hostingEnvironmentModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeBetween(1, 10),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													names.AttrARN: schema.StringAttribute{
+														CustomType: fwtypes.ARNType,
+														Required:   true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"private_endpoint_overrides": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(5),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDomain: schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 253),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"private_endpoint": privateEndpointSchema(ctx),
+									},
+								},
+							},
 							"custom_claim": schema.SetNestedBlock{
+
 								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
@@ -397,6 +453,71 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 										},
 									},
 								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.ExactlyOneOf(
+							path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
+							path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
+						),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"endpoint_ip_address_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+								Required:   true,
+							},
+							"routing_domain": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+								},
+							},
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								Validators: []validator.Set{
+									setvalidator.SizeAtMost(5),
+								},
+							},
+							names.AttrSubnetIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Required:   true,
+							},
+							names.AttrTags: tftags.TagsAttribute(),
+							"vpc_identifier": schema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"self_managed_lattice_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"resource_configuration_identifier": schema.StringAttribute{
+								Required: true,
 							},
 						},
 					},
@@ -1086,12 +1207,32 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes                fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	AllowedWorkloadConfiguration fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
+	CustomClaim                  fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	DiscoveryURL                 types.String                                                        `tfsdk:"discovery_url"`
+	PrivateEndpointOverrides     fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
 }
+
+type allowedWorkloadConfigurationModel struct {
+	HostingEnvironment fwtypes.ListNestedObjectValueOf[hostingEnvironmentModel] `tfsdk:"hosting_environment"`
+	WorkloadIdentities fwtypes.ListOfString                                     `tfsdk:"workload_identities"`
+}
+
+type hostingEnvironmentModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type privateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
+}
+
+// privateEndpointModel, managedVPCResourceModel, and selfManagedLatticeResourceModel
+// (and their Expand/Flatten implementations) are defined in gateway_target.go and
+// shared here via privateEndpointSchema.
 
 type customJWTAuthorizerCustomClaimModel struct {
 	InboundTokenClaimName      types.String                                                                        `tfsdk:"inbound_token_claim_name"`
@@ -1157,8 +1298,9 @@ type networkConfigurationModel struct {
 }
 
 type vpcConfigModel struct {
-	SecurityGroups fwtypes.SetOfString `tfsdk:"security_groups"`
-	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
+	RequireServiceS3Endpoint types.Bool          `tfsdk:"require_service_s3_endpoint"`
+	SecurityGroups           fwtypes.SetOfString `tfsdk:"security_groups"`
+	Subnets                  fwtypes.SetOfString `tfsdk:"subnets"`
 }
 
 type protocolConfigurationModel struct {
