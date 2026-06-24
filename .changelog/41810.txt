@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set: Fix `region_order` in `operation_preferences` block not being correctly passed to AWS API
+```
+
+```release-note:bug
+resource/aws_cloudformation_stack_instances: Fix `region_order` in `operation_preferences` block not being correctly passed to AWS API
+```
+
+```release-note:bug
+resource/aws_cloudformation_stack_set_instances: Fix `region_order` in `operation_preferences` block not being correctly passed to AWS API
+```
