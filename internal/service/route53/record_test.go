@@ -6,6 +6,8 @@ package route53_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -1911,14 +1913,13 @@ func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	zoneName := acctest.RandomDomain(t)
 	recordName := zoneName.RandomSubdomain(t)
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -1950,12 +1951,11 @@ func TestAccRoute53Record_BatchReads_basic(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_multipleInZone(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	var r1, r2, r3 awstypes.ResourceRecordSet
 	zoneName := acctest.RandomDomain(t)
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -1996,13 +1996,12 @@ func TestAccRoute53Record_BatchReads_multipleInZone(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_wildcard(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.wildcard"
 	zoneName := acctest.RandomDomain(t)
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -2036,7 +2035,6 @@ func TestAccRoute53Record_BatchReads_wildcard(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_outOfBandChangeIgnored(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	var v awstypes.ResourceRecordSet
 	var zoneID string
 	resourceName := "aws_route53_record.test"
@@ -2046,8 +2044,8 @@ func TestAccRoute53Record_BatchReads_outOfBandChangeIgnored(t *testing.T) {
 	// enabled. Modifications outsite of terraform will not be detected if
 	// performed after the cache is populated and during the current terraform
 	// run.
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -2104,13 +2102,12 @@ func TestAccRoute53Record_BatchReads_outOfBandChangeIgnored(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_typeChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	var r1, r2 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	zoneName := acctest.RandomDomain(t)
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -2149,15 +2146,14 @@ func TestAccRoute53Record_BatchReads_typeChange(t *testing.T) {
 
 func TestAccRoute53Record_BatchReads_cacheSharing(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Setenv("TF_AWS_ROUTE53_RECORD_BATCH_READS", "true")
 	zoneName := acctest.RandomDomain(t)
 
 	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
 
 	var cacheWarmMark apicall.Cursor
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: factories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
@@ -2183,6 +2179,12 @@ func TestAccRoute53Record_BatchReads_cacheSharing(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckBatchReads(t *testing.T) {
+	if v, _ := strconv.ParseBool(os.Getenv("TF_AWS_ROUTE53_RECORD_BATCH_READS")); !v {
+		t.Skip("Environment variable TF_AWS_ROUTE53_RECORD_BATCH_READS is not set to a true value")
+	}
 }
 
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
@@ -3895,11 +3897,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "test" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = %[2]q
-  type        = "A"
-  ttl         = "30"
-  records     = ["127.0.0.1"]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
 }
 `, zoneName, recordName)
 }
@@ -3911,27 +3913,27 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "a" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = "a.%[1]s"
-  type        = "A"
-  ttl         = %[2]q
-  records     = ["127.0.0.1"]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "a.%[1]s"
+  type    = "A"
+  ttl     = %[2]q
+  records = ["127.0.0.1"]
 }
 
 resource "aws_route53_record" "b" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = "b.%[1]s"
-  type        = "A"
-  ttl         = "30"
-  records     = ["127.0.0.2"]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "b.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.2"]
 }
 
 resource "aws_route53_record" "c" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = "c.%[1]s"
-  type        = "A"
-  ttl         = "30"
-  records     = ["127.0.0.3"]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "c.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.3"]
 }
 `, zoneName, ttlA)
 }
@@ -3943,11 +3945,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "wildcard" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = "*.%[1]s"
-  type        = "A"
-  ttl         = "30"
-  records     = ["127.0.0.1"]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "*.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
 }
 `, zoneName)
 }
@@ -3959,11 +3961,11 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_record" "test" {
-  zone_id     = aws_route53_zone.test.zone_id
-  name        = "www.%[1]s"
-  type        = %[2]q
-  ttl         = "30"
-  records     = [%[3]q]
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "www.%[1]s"
+  type    = %[2]q
+  ttl     = "30"
+  records = [%[3]q]
 }
 `, zoneName, rrType, record)
 }
