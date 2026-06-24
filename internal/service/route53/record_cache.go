@@ -5,6 +5,8 @@ package route53
 
 import (
 	"context"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -13,6 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
+
+// batchReadsEnabled reports whether TF_AWS_ROUTE53_RECORD_BATCH_READS is set to
+// a true value ("1", "true", "t", etc.). When enabled, reads are served from the
+// zone-level cache and cache evictions are performed on write operations.
+func batchReadsEnabled() bool {
+	v, _ := strconv.ParseBool(os.Getenv("TF_AWS_ROUTE53_RECORD_BATCH_READS"))
+	return v
+}
 
 // zoneRecordCache holds all cached ResourceRecordSets for a single hosted zone,
 // keyed by the Terraform-style resource ID.

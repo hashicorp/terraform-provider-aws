@@ -48,7 +48,6 @@ import (
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="6.4.0")
-// @Testing(importIgnore="batch_reads")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -93,11 +92,6 @@ func resourceRecord() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Computed: true,
-				},
-				"batch_reads": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
 				},
 				"cidr_routing_policy": {
 					Type:     schema.TypeList,
@@ -395,7 +389,9 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+	if batchReadsEnabled() {
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+	}
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
@@ -408,7 +404,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var record *awstypes.ResourceRecordSet
 	var fqdn *string
 	var err error
-	if d.Get("batch_reads").(bool) {
+	if batchReadsEnabled() {
 		record, fqdn, err = readRecordFromCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	} else {
 		record, fqdn, err = findResourceRecordSetByFourPartKey(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
@@ -705,8 +701,10 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(createRecordImportID(d))
 
-	oldSetID, _ := d.GetChange("set_identifier")
-	evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string)))
+	if batchReadsEnabled() {
+		oldSetID, _ := d.GetChange("set_identifier")
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string)))
+	}
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
@@ -766,7 +764,9 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+	if batchReadsEnabled() {
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+	}
 
 	return diags
 }

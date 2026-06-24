@@ -162,44 +162,13 @@ resource "aws_route53_record" "example" {
 
 AWS Route 53 enforces a [5 requests-per-second rate limit](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html#limits-api-requests) on all AWS Route 53 APIs for an AWS account. Plans that manage many records in the same AWS account trigger throttling and cause slow plan and apply times because each record issues its own API calls during read/write operations.
 
-Setting `batch_reads = true` on all records in a zone causes the provider to fetch the entire zone and its records once and cache the results in memory for the duration of the plan or apply, regardless of how many records are managed.
+Setting the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to `true` causes the provider to fetch all records for hosted zones referrenced by `aws_route53_records` once and cache the results in memory for the duration of the plan or apply, regardless of how many records are managed. No per-resource configuration is required.
 
-```terraform
-resource "aws_route53_zone" "example" {
-  name = "example.com"
-}
-
-resource "aws_route53_record" "a" {
-  zone_id     = aws_route53_zone.example.zone_id
-  name        = "a.example.com"
-  type        = "A"
-  ttl         = 300
-  records     = ["10.0.0.1"]
-  batch_reads = true
-}
-
-resource "aws_route53_record" "b" {
-  zone_id     = aws_route53_zone.example.zone_id
-  name        = "b.example.com"
-  type        = "A"
-  ttl         = 300
-  records     = ["10.0.0.2"]
-  batch_reads = true
-}
-
-resource "aws_route53_record" "c" {
-  zone_id     = aws_route53_zone.example.zone_id
-  name        = "c.example.com"
-  type        = "A"
-  ttl         = 300
-  records     = ["10.0.0.3"]
-  batch_reads = true
-}
+```console
+% TF_AWS_ROUTE53_RECORD_BATCH_READS=true terraform plan
 ```
 
-~> **Note:** All records in a zone must set `batch_reads = true` to share the zone-level cache. Records that leave the argument at its default of `false` continue to issue individual API calls and do not benefit from the cache.
-
-~> **Warning:** When `batch_reads = true`, the provider caches the full zone state at the start of the run and serves all subsequent reads from that cache.  The caching layer ensures removal of cache for any records that are updated during terarform apply operations; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected for the duration of that plan or apply. To pick up out-of-band changes, run `terraform refresh` or a new `terraform plan` to start with a fresh cache.
+~> **Warning:** When `TF_AWS_ROUTE53_RECORD_BATCH_READS` is set, the provider caches the full zone state at the start of the run and serves all subsequent reads from that cache. The caching layer ensures removal of cache entries for any records that are updated during Terraform apply operations; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected for the duration of that plan or apply. To pick up out-of-band changes, run `terraform refresh` or a new `terraform plan` to start with a fresh cache.
 
 ## Argument Reference
 
@@ -222,7 +191,6 @@ This resource supports the following arguments:
 * `multivalue_answer_routing_policy` - (Optional) Set to `true` to indicate a multivalue answer routing policy. Conflicts with any other routing policy.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. [Documented below](#weighted-routing-policy).
 * `allow_overwrite` - (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not affect the ability to update the record in Terraform and does not prevent other resources within Terraform or manual Route 53 changes outside Terraform from overwriting this record. `false` by default. This configuration is not recommended for most environments.
-* `batch_reads` - (Optional) When `true`, the provider fetches all records for the hosted zone using batched API calls and caches the results in memory for the duration of the plan or apply. Subsequent reads for other `aws_route53_records` with `batch_reads` in the same zone are served from the cache without additional API calls, reducing throttling triggered by the AWS Route53 API. Defaults to `false`. See [Batched reads for zones with many records](#batched-reads-for-zones-with-many-records) for usage guidance. This argument is not stored in the AWS API and must be re-specified after [`import`](#import).
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 
@@ -292,8 +260,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
-
-~> **Note:** `batch_reads` has no representation in the AWS API and not populated during import. Set it explicitly in the resource configuration after importing if you want batched reads.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
