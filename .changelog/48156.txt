@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_ecs_capacity_provider: Fix destroy timing out for 20 minutes when capacity provider is still associated with a cluster by immediately returning the error from the API
+resource/aws_ecs_capacity_provider: Return the underlying error immediately instead of timing out after 20 minutes when deleting a capacity provider that is still associated with a cluster
 ```
