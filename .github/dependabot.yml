@@ -8,9 +8,7 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      - dependency-name: "github/gh-aw-actions/setup" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
-      - dependency-name: "github/gh-aw-actions/setup-cli" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
-
+      - dependency-name: "github/gh-aw-actions/*" # Managed by "gh aw compile".
   - package-ecosystem: "gomod"
     directories:
       - "/"

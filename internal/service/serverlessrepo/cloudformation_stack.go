@@ -69,7 +69,8 @@ func ResourceCloudFormationStack() *schema.Resource {
 				},
 				"capabilities": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
+					Computed: true,
 					Elem: &schema.Schema{
 						Type:             schema.TypeString,
 						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
@@ -190,7 +191,8 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 
 	version := getApplicationOutput.Version
 
-	if err = d.Set(names.AttrParameters, flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
+	configuredParams := d.Get(names.AttrParameters).(map[string]any)
+	if err = d.Set(names.AttrParameters, flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions, configuredParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set parameters: %s", err)
 	}
 
@@ -201,13 +203,24 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenNonDefaultCloudFormationParameters(cfParams []cloudformationtypes.Parameter, rawParameterDefinitions []awstypes.ParameterDefinition) map[string]any {
+func flattenNonDefaultCloudFormationParameters(cfParams []cloudformationtypes.Parameter, rawParameterDefinitions []awstypes.ParameterDefinition, configuredParams map[string]any) map[string]any {
 	parameterDefinitions := flattenParameterDefinitions(rawParameterDefinitions)
 	params := make(map[string]any, len(cfParams))
 	for _, p := range cfParams {
 		key := aws.ToString(p.ParameterKey)
 		value := aws.ToString(p.ParameterValue)
-		if value != aws.ToString(parameterDefinitions[key].DefaultValue) {
+
+		_, isConfigured := configuredParams[key]
+		def := parameterDefinitions[key]
+
+		if aws.ToBool(def.NoEcho) {
+			if isConfigured {
+				params[key] = configuredParams[key]
+			}
+			continue
+		}
+
+		if isConfigured || value != aws.ToString(def.DefaultValue) {
 			params[key] = value
 		}
 	}
