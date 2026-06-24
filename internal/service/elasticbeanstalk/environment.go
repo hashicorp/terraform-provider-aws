@@ -22,7 +22,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -608,17 +607,14 @@ func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 	}
 
 	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.EnvironmentId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -702,8 +698,8 @@ func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elast
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -719,10 +715,10 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id st
 }
 
 func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusLaunching, awstypes.EnvironmentStatusUpdating),
 		Target:       enum.Slice(awstypes.EnvironmentStatusReady),
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -739,10 +735,10 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
 		Target:       []string{},
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
