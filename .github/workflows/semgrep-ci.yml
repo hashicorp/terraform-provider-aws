@@ -57,8 +57,21 @@ jobs:
           semgrep --quiet --test .ci/semgrep/
           semgrep --quiet --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
-  semgrep:
-    name: Code Quality Scan (make semgrep-code-quality)
+  semgrep_constants:
+    name: Code Quality Scan (Constants)
+    needs: [semgrep-test]
+    runs-on: custom-ubuntu-22.04-large
+    container:
+      image: "semgrep/semgrep:1.168.0"
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - run: |
+          semgrep $SEMGREP_ARGS \
+          --config .ci/.semgrep-constants.yml \
+          --config .ci/.semgrep-test-constants.yml
+
+  semgrep_rules:
+    name: Code Quality Scan (Rules)
     needs: [semgrep-test]
     runs-on: custom-ubuntu-22.04-large
     container:
@@ -68,8 +81,6 @@ jobs:
       - run: |
           semgrep $SEMGREP_ARGS \
           --config .ci/.semgrep.yml \
-          --config .ci/.semgrep-constants.yml \
-          --config .ci/.semgrep-test-constants.yml \
           --config .ci/semgrep/ \
           --config 'r/dgryski.semgrep-go.anon-struct-args' \
           --config 'r/dgryski.semgrep-go.badnilguard' \
