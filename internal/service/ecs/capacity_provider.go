@@ -8,7 +8,6 @@ package ecs
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -762,7 +761,7 @@ func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc
 		}
 
 		if output.UpdateStatus == awstypes.CapacityProviderUpdateStatusDeleteFailed {
-			return output, string(output.Status), fmt.Errorf("capacity provider delete failed: %s", aws.ToString(output.UpdateStatusReason))
+			return output, string(output.Status), errors.New(aws.ToString(output.UpdateStatusReason))
 		}
 
 		return output, string(output.Status), nil
