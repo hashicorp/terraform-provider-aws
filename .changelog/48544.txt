@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_capacity_provider: Fix resource recreation caused by `ResourceInUseException` errors on delete when the capacity provider is still associated with a cluster due to eventual consistency
+```
