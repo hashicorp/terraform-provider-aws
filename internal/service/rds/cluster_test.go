@@ -4656,9 +4656,9 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_storageTypeNonAurora(rName, sType string) string {
-	iopsLine := "iops = 1000\n"
-	if sType == "gp3" {
-		iopsLine = ""
+	var iopsConfig string
+	if sType != "gp3" {
+		iopsConfig = `  iops = 1000`
 	}
 
 	return acctest.ConfigCompose(
@@ -4672,21 +4672,23 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iops              = true
   supports_clusters          = true
 }
-
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
-  cluster_identifier        = %[3]q
+  cluster_identifier        = %[1]q
   db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name      = aws_db_subnet_group.test.name
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
-  storage_type              = %[4]q
+  storage_type              = %[2]q
   allocated_storage         = 100
-  %[5]smaster_password           = "mustbeeightcharaters"
+  master_password           = "mustbeeightcharaters"
   master_username           = "test"
   skip_final_snapshot       = true
+%[3]s
 }
-`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, sType, iopsLine))
+`, rName, sType, iopsConfig))
 }
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
