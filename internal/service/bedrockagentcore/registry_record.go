@@ -34,7 +34,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+
+	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -103,17 +104,19 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordStatus](),
 				Computed:   true,
 			},
-			"synchronization_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.SynchronizationType](),
-				Optional:   true,
-			},
+			// "synchronization_type": schema.StringAttribute{
+			// 	CustomType: fwtypes.StringEnumType[awstypes.SynchronizationType](),
+			// 	Optional:   true,
+			// },
 		},
 		Blocks: map[string]schema.Block{
 			"descriptors": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[descriptorsModel](ctx),
 				Validators: []validator.List{
+					// listvalidator.AtLeastOneOf(path.MatchRoot("descriptors"), path.MatchRoot("synchronization_configuration")),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
-					listvalidator.AtLeastOneOf(path.MatchRoot("descriptors"), path.MatchRoot("synchronization_configuration")),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Validators: []validator.Object{
@@ -278,92 +281,94 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 					},
 				},
 			},
-			"synchronization_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[synchronizationConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					listvalidator.AlsoRequires(path.MatchRoot("synchronization_type")),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"from_url": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[fromURLSynchronizationConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"url": schema.StringAttribute{
-										Required: true,
-									},
+			/*
+				"synchronization_configuration": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[synchronizationConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.AlsoRequires(path.MatchRoot("synchronization_type")),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"from_url": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[fromURLSynchronizationConfigurationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
 								},
-								Blocks: map[string]schema.Block{
-									"credential_provider_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordCredentialProviderConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"url": schema.StringAttribute{
+											Required: true,
 										},
-										NestedObject: schema.NestedBlockObject{
-											Validators: []validator.Object{
-												tfobjectvalidator.ExactlyOneOfChildren(
-													path.MatchRelative().AtName("iam"),
-													path.MatchRelative().AtName("oauth"),
-												),
+									},
+									Blocks: map[string]schema.Block{
+										"credential_provider_configuration": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordCredentialProviderConfigurationModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
 											},
-											Attributes: map[string]schema.Attribute{
-												"credential_provider_type": schema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordCredentialProviderType](),
-													Required:   true,
+											NestedObject: schema.NestedBlockObject{
+												Validators: []validator.Object{
+													tfobjectvalidator.ExactlyOneOfChildren(
+														path.MatchRelative().AtName("iam"),
+														path.MatchRelative().AtName("oauth"),
+													),
 												},
-											},
-											Blocks: map[string]schema.Block{
-												"iam": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordIAMCredentialProviderModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
+												Attributes: map[string]schema.Attribute{
+													"credential_provider_type": schema.StringAttribute{
+														CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordCredentialProviderType](),
+														Required:   true,
 													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"region": schema.StringAttribute{
-																Optional: true,
-																Validators: []validator.String{
-																	fwvalidators.AWSRegion(),
+												},
+												Blocks: map[string]schema.Block{
+													"iam": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordIAMCredentialProviderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtMost(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																"region": schema.StringAttribute{
+																	Optional: true,
+																	Validators: []validator.String{
+																		fwvalidators.AWSRegion(),
+																	},
 																},
-															},
-															"role_arn": schema.StringAttribute{
-																CustomType: fwtypes.ARNType,
-																Optional:   true,
-															},
-															"service": schema.StringAttribute{
-																Optional: true,
+																"role_arn": schema.StringAttribute{
+																	CustomType: fwtypes.ARNType,
+																	Optional:   true,
+																},
+																"service": schema.StringAttribute{
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"oauth": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordOAuthCredentialProviderModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"custom_parameters": schema.MapAttribute{
-																CustomType:  fwtypes.MapOfStringType,
-																ElementType: types.StringType,
-																Optional:    true,
-															},
-															"grant_type": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordOAuthGrantType](),
-																Optional:   true,
-															},
-															"provider_arn": schema.StringAttribute{
-																CustomType: fwtypes.ARNType,
-																Required:   true,
-															},
-															"scopes": schema.SetAttribute{
-																CustomType:  fwtypes.SetOfStringType,
-																ElementType: types.StringType,
-																Optional:    true,
+													"oauth": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[registryRecordOAuthCredentialProviderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtMost(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																"custom_parameters": schema.MapAttribute{
+																	CustomType:  fwtypes.MapOfStringType,
+																	ElementType: types.StringType,
+																	Optional:    true,
+																},
+																"grant_type": schema.StringAttribute{
+																	CustomType: fwtypes.StringEnumType[awstypes.RegistryRecordOAuthGrantType](),
+																	Optional:   true,
+																},
+																"provider_arn": schema.StringAttribute{
+																	CustomType: fwtypes.ARNType,
+																	Required:   true,
+																},
+																"scopes": schema.SetAttribute{
+																	CustomType:  fwtypes.SetOfStringType,
+																	ElementType: types.StringType,
+																	Optional:    true,
+																},
 															},
 														},
 													},
@@ -376,7 +381,7 @@ func (r *registryRecordResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 				},
-			},
+			*/
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -578,24 +583,26 @@ func (r *registryRecordResource) ValidateConfig(ctx context.Context, req resourc
 		}
 	}
 
-	if !data.SynchronizationConfiguration.IsUnknown() {
-		synchronizationConfiguration, diags := data.SynchronizationConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	/*
+		if !data.SynchronizationConfiguration.IsUnknown() {
+			synchronizationConfiguration, diags := data.SynchronizationConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		switch synchronizationType := data.SynchronizationType.ValueEnum(); synchronizationType {
-		case awstypes.SynchronizationTypeUrl:
-			if synchronizationConfiguration != nil && synchronizationConfiguration.FromURL.IsNull() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("synchronization_configuration"),
-					"Missing Configuration",
-					fmt.Sprintf("synchronization_configuration.from_url is required when synchronization_type is %q", synchronizationType),
-				)
+			switch synchronizationType := data.SynchronizationType.ValueEnum(); synchronizationType {
+			case awstypes.SynchronizationTypeUrl:
+				if synchronizationConfiguration != nil && synchronizationConfiguration.FromURL.IsNull() {
+					resp.Diagnostics.AddAttributeError(
+						path.Root("synchronization_configuration"),
+						"Missing Configuration",
+						fmt.Sprintf("synchronization_configuration.from_url is required when synchronization_type is %q", synchronizationType),
+					)
+				}
 			}
 		}
-	}
+	*/
 }
 
 func (r *registryRecordResource) flatten(ctx context.Context, registryRecord *bedrockagentcorecontrol.GetRegistryRecordOutput, data *registryRecordResourceModel) diag.Diagnostics {
@@ -711,18 +718,18 @@ func (registryRecordImportID) Parse(id string) (string, map[string]any, error) {
 
 type registryRecordResourceModel struct {
 	framework.WithRegionModel
-	Description                  types.String                                                       `tfsdk:"description"`
-	DescriptorType               fwtypes.StringEnum[awstypes.DescriptorType]                        `tfsdk:"descriptor_type"`
-	Descriptors                  fwtypes.ListNestedObjectValueOf[descriptorsModel]                  `tfsdk:"descriptors"`
-	Name                         types.String                                                       `tfsdk:"name"`
-	RecordARN                    types.String                                                       `tfsdk:"record_arn"`
-	RecordID                     types.String                                                       `tfsdk:"record_id"`
-	RecordVersion                types.String                                                       `tfsdk:"record_version"`
-	RegistryID                   types.String                                                       `tfsdk:"registry_id"`
-	Status                       fwtypes.StringEnum[awstypes.RegistryRecordStatus]                  `tfsdk:"status"`
-	SynchronizationConfiguration fwtypes.ListNestedObjectValueOf[synchronizationConfigurationModel] `tfsdk:"synchronization_configuration"`
-	SynchronizationType          fwtypes.StringEnum[awstypes.SynchronizationType]                   `tfsdk:"synchronization_type"`
-	Timeouts                     timeouts.Value                                                     `tfsdk:"timeouts"`
+	Description    types.String                                      `tfsdk:"description"`
+	DescriptorType fwtypes.StringEnum[awstypes.DescriptorType]       `tfsdk:"descriptor_type"`
+	Descriptors    fwtypes.ListNestedObjectValueOf[descriptorsModel] `tfsdk:"descriptors"`
+	Name           types.String                                      `tfsdk:"name"`
+	RecordARN      types.String                                      `tfsdk:"record_arn"`
+	RecordID       types.String                                      `tfsdk:"record_id"`
+	RecordVersion  types.String                                      `tfsdk:"record_version"`
+	RegistryID     types.String                                      `tfsdk:"registry_id"`
+	Status         fwtypes.StringEnum[awstypes.RegistryRecordStatus] `tfsdk:"status"`
+	// SynchronizationConfiguration fwtypes.ListNestedObjectValueOf[synchronizationConfigurationModel] `tfsdk:"synchronization_configuration"`
+	// SynchronizationType          fwtypes.StringEnum[awstypes.SynchronizationType]                   `tfsdk:"synchronization_type"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 type descriptorsModel struct {
@@ -774,6 +781,7 @@ type toolsDefinitionModel struct {
 	SchemaVersion types.String         `tfsdk:"schema_version"`
 }
 
+/*
 type synchronizationConfigurationModel struct {
 	FromURL fwtypes.ListNestedObjectValueOf[fromURLSynchronizationConfigurationModel] `tfsdk:"from_url"`
 }
@@ -858,3 +866,4 @@ type registryRecordOAuthCredentialProviderModel struct {
 	ProviderARN      fwtypes.ARN                                               `tfsdk:"provider_arn"`
 	Scopes           fwtypes.SetOfString                                       `tfsdk:"scopes"`
 }
+*/

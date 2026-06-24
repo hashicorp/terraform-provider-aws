@@ -27,6 +27,10 @@ func testAccRegistryRecordImportStateIDFunc(resourceName string) resource.Import
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "registry_id", "record_id")
 }
 
+var (
+	checkRegistryRecordARN = tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}/record/[a-zA-Z0-9]{12}`))
+)
+
 func TestAccBedrockAgentCoreRegistryRecord_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -56,7 +60,7 @@ func TestAccBedrockAgentCoreRegistryRecord_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}/record/[a-zA-Z0-9]{12}`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_arn"), checkRegistryRecordARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_id"), knownvalue.NotNull()),
 				},
 			},
