@@ -57,8 +57,8 @@ jobs:
           semgrep --quiet --test .ci/semgrep/
           semgrep --quiet --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
-  semgrep_constants:
-    name: Code Quality Scan (Constants)
+  constants:
+    name: Constants Check (make semgrep-constants)
     needs: [semgrep-test]
     runs-on: custom-ubuntu-22.04-large
     container:
@@ -70,8 +70,8 @@ jobs:
           --config .ci/.semgrep-constants.yml \
           --config .ci/.semgrep-test-constants.yml
 
-  semgrep_rules:
-    name: Code Quality Scan (Rules)
+  semgrep:
+    name: Code Quality Scan (make semgrep-code-quality)
     needs: [semgrep-test]
     runs-on: custom-ubuntu-22.04-large
     container:

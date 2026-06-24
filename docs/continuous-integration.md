@@ -537,6 +537,28 @@ You can limit the scan to a service package by using the `PKG` environment varia
 PKG=rds make semgrep-code-quality
 ```
 
+#### Constants Check
+
+This scan flags string literals in service code that should use a constant from the `names` package (for example, `"arn"` should be `names.AttrARN`). The rules are generated from `names/data/names_data.hcl` and similar sources, so they grow as the codebase evolves.
+
+Use the `semgrep-constants` target to run the same check CI runs:
+
+```console
+make semgrep-constants
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```console
+PKG=rds make semgrep-constants
+```
+
+To apply the recommended fixes automatically, use `semgrep-fix-constants`:
+
+```console
+make semgrep-fix-constants
+```
+
 #### Naming Scan Caps/AWS/EC2
 
 Idiomatic Go uses [_mixed caps_](naming.md#mixed-caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code.
