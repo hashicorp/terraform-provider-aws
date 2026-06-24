@@ -31,7 +31,7 @@ jobs:
       - name: Trigger Copilot to add changelog
         if: steps.community_check.outputs.maintainer == 'true'
         env:
-          GH_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo "${{ github.repository }}" \
