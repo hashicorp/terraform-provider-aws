@@ -588,6 +588,48 @@ func TestAccS3TablesTable_metadata(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_writeOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table s3tables.GetTableOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_writeOrder(tableName, nsName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.0.field.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.0.field.0.direction", "asc"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.0.field.0.null_order", "nulls-first"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.0.field.0.source_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.write_order.0.field.0.transform", "identity"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"metadata"},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
@@ -814,6 +856,42 @@ resource "aws_s3tables_table" "test" {
           name     = "created_at"
           type     = "timestamp"
           required = true
+        }
+      }
+    }
+  }
+}
+`, tableName))
+}
+
+func testAccTableConfig_writeOrder(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name = "name"
+          type = "string"
+        }
+      }
+
+      write_order {
+        field {
+          direction  = "asc"
+          null_order = "nulls-first"
+          source_id  = 1
+          transform  = "identity"
         }
       }
     }
