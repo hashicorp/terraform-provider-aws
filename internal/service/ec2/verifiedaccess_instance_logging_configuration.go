@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -139,19 +139,13 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Get("verifiedaccess_instance_id").(string)
-
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
-	}
-
-	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+	input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
-		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+		ClientToken:              aws.String(create.UUID(ctx)),
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
 
-	output, err := conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+	output, err := conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, &input)
 
 	if err != nil || output == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
@@ -186,7 +180,6 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	} else {
 		d.Set("access_logs", nil)
 	}
-
 	d.Set("verifiedaccess_instance_id", vaiID)
 
 	return diags
@@ -199,18 +192,13 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 	vaiID := d.Id()
 
 	if d.HasChange("access_logs") {
-		uuid, err := uuid.GenerateUUID()
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
-		}
-
-		input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+		input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
-			ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+			ClientToken:              aws.String(create.UUID(ctx)),
 			VerifiedAccessInstanceId: aws.String(vaiID),
 		}
 
-		_, err = conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+		_, err := conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
@@ -244,19 +232,14 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 		LogVersion: aws.String(defaultVerifiedAccessLogVersion),
 	}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Verified Access Instance Logging Configuration %s): %s", vaiID, err)
-	}
-
 	log.Printf("[INFO] Deleting Verified Access Instance Logging Configuration: %s", vaiID)
-	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
+	input := ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
 		AccessLogs:               resetObject,
-		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+		ClientToken:              aws.String(create.UUID(ctx)),
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
 
-	_, err = conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
+	_, err := conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
 		return diags

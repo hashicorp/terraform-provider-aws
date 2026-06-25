@@ -317,6 +317,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 		_, err = waitMemoryStrategyCreated(ctx, conn, memoryID, fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID), createTimeout)
 		if err != nil {
+			// Taint the resource.
 			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
 			return

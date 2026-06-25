@@ -18,6 +18,9 @@ on: [workflow_dispatch, push]
 env:
   PKG_NAME: "terraform-provider-aws"
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   # Detects the Go toolchain version to use for product builds.
   #
@@ -124,7 +127,7 @@ jobs:
       fail-fast: true
       matrix:
         goos: [freebsd, windows, linux, darwin, openbsd]
-        goarch: ["386", "amd64", "arm", "arm64"]
+        goarch: ["386", "amd64", "arm", "arm64", "s390x"]
         exclude:
           - goos: freebsd
             goarch: arm64
@@ -138,6 +141,14 @@ jobs:
             goarch: arm
           - goos: openbsd
             goarch: arm64
+          - goos: openbsd
+            goarch: s390x
+          - goos: darwin
+            goarch: s390x
+          - goos: freebsd
+            goarch: s390x
+          - goos: windows
+            goarch: s390x
 
     name: Go ${{ needs.get-go-version.outputs.go-version }} ${{ matrix.goos }} ${{ matrix.goarch }} build
     steps:

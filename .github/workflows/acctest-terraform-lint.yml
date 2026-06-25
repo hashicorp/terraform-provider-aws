@@ -11,6 +11,7 @@ on:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
       - .ci/.tflint.hcl
+      - .ci/opa-policies/**
       - .ci/tools/go.mod
       - go.sum
       - 'internal/service/**/*.tf'
@@ -21,7 +22,13 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
@@ -41,6 +48,7 @@ jobs:
 
   tflint:
     name: Validate Acceptance Test Terraform
+    needs: tflint-opa-policy-tests
     runs-on: ubuntu-latest
 
     steps:
@@ -70,3 +78,5 @@ jobs:
           # tflint always resolves config flies relative to the working directory when using --recursive
           TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
           tflint --config  "${TFLINT_CONFIG}" --chdir=./internal/service --recursive
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

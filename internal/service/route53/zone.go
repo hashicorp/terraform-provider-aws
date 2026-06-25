@@ -49,81 +49,83 @@ func resourceZone() *schema.Resource {
 		UpdateWithoutTimeout: resourceZoneUpdate,
 		DeleteWithoutTimeout: resourceZoneDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"delegation_set_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"vpc"},
-				ValidateFunc:  validation.StringLenBetween(0, 32),
-			},
-			"enable_accelerated_recovery": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				// AWS Provider 3.0.0 - trailing period removed from name
-				// returned from API, no longer requiring custom DiffSuppressFunc;
-				// instead a StateFunc allows input to be provided
-				// with or without the trailing period
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				StateFunc:    normalizeDomainName,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"name_servers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"primary_name_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				MinItems:      1,
-				ConflictsWith: []string{"delegation_set_id"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVPCID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"vpc_region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "Managed by Terraform",
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"delegation_set_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"vpc"},
+					ValidateFunc:  validation.StringLenBetween(0, 32),
+				},
+				"enable_accelerated_recovery": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					// AWS Provider 3.0.0 - trailing period removed from name
+					// returned from API, no longer requiring custom DiffSuppressFunc;
+					// instead a StateFunc allows input to be provided
+					// with or without the trailing period
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					StateFunc:    normalizeDomainName,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"name_servers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"primary_name_server": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					MinItems:      1,
+					ConflictsWith: []string{"delegation_set_id"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVPCID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"vpc_region": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrVPCID),
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrVPCID),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

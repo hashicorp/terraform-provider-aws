@@ -4,9 +4,9 @@
 name: Comment Automations
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  contents: read        # required for checkout
+  issues: write         # required to remove labels and post comments on issues
+  pull-requests: write  # required to remove labels and post comments on pull requests
 
 on:
   issue_comment:

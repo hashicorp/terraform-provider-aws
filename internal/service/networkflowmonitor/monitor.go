@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	set "github.com/hashicorp/go-set/v3"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -130,6 +130,7 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
+	monitorName := fwflex.StringValueFromFramework(ctx, data.MonitorName)
 	var input networkflowmonitor.CreateMonitorInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -137,21 +138,19 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	uuid, _ := uuid.GenerateUUID()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateMonitor(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Network Flow Monitor Monitor", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating Network Flow Monitor Monitor (%s)", monitorName), err.Error())
 		return
 	}
 
 	// Set values for unknowns.
 	data.MonitorARN = fwflex.StringToFramework(ctx, output.MonitorArn)
 
-	monitorName := fwflex.StringValueFromFramework(ctx, data.MonitorName)
 	if _, err := waitMonitorCreated(ctx, conn, monitorName, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Monitor (%s) create", monitorName), err.Error())
 		return
@@ -245,6 +244,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 
 		monitorName := fwflex.StringValueFromFramework(ctx, new.MonitorName)
 		input := networkflowmonitor.UpdateMonitorInput{
+			ClientToken:             aws.String(create.UUID(ctx)),
 			LocalResourcesToAdd:     nsLocalResource.Difference(osLocalResource).Slice(),
 			LocalResourcesToRemove:  osLocalResource.Difference(nsLocalResource).Slice(),
 			MonitorName:             aws.String(monitorName),

@@ -10,6 +10,7 @@ on:
     paths:
       - .github/workflows/examples.yml
       - .ci/.tflint.hcl
+      - .ci/opa-policies/**
       - .ci/tools/go.mod
       - examples/**
       - go.mod
@@ -23,8 +24,15 @@ on:
 env:
   AWS_DEFAULT_REGION: us-west-2
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   tflint:
+    needs: tflint-opa-policy-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -54,6 +62,8 @@ jobs:
           TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
           tflint --config="${TFLINT_CONFIG}" --chdir=./examples --recursive \
             --disable-rule=terraform_typed_variables
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies
 
   validate-terraform:
     runs-on: custom-ubuntu-22.04-large
