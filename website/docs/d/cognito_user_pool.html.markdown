@@ -93,7 +93,7 @@ This data source exports the following attributes in addition to the arguments a
 ### key configuration
 
 * `key_type` - Type of encryption key for the user pool.
-* `kms_key_arn` - ARN of the KMS key used to encrypt the user pool.
+* `kms_key_arn` - ARN of the KMS key used when `key_type` is `CUSTOMER_MANAGED_KEY`.
 
 ### lambda config
 
