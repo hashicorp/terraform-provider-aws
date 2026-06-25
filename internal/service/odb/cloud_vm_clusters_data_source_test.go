@@ -40,13 +40,24 @@ func TestAccODBListVmClustersDataSource_basic(t *testing.T) {
 			{
 				Config: vmcListTest.basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-
-					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						vmcListTest.count(ctx, dataSourceName, &output)
-						resource.TestCheckResourceAttr(dataSourceName, "cloud_autonomous_vm_clusters.#", strconv.Itoa(len(output.CloudVmClusters)))
-						return nil
+					func(s *terraform.State) error {
+						if err := vmcListTest.count(ctx, dataSourceName, &output)(s); err != nil {
+							return err
+						}
+						expectedCount := strconv.Itoa(len(output.CloudVmClusters))
+						return resource.TestCheckResourceAttr(dataSourceName, "cloud_vm_clusters.#", expectedCount)(s)
 					},
-					),
+					func(s *terraform.State) error {
+						// fields validation. At least 1 vmc must exist.
+						return resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.id"),
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.arn"),
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.display_name"),
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.ocid"),
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.cloud_exadata_infrastructure_id"),
+							resource.TestCheckResourceAttrSet(dataSourceName, "cloud_vm_clusters.0.odb_network_id"),
+						)(s)
+					},
 				),
 			},
 		},

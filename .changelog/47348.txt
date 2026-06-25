@@ -1,0 +1,3 @@
+```release-note:bug
+data_source/CloudVmClustersList: Fix for correctly returning the ids of AWS ODB VMC listing.
+```
