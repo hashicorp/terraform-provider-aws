@@ -290,6 +290,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
 		},
 		{
+			Factory:  newRegistryRecordResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_registry_record",
+			Name:     "Registry Record",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("registry_id", true),
+				inttypes.StringIdentityAttribute("record_id", true),
+			}),
+		},
+		{
 			Factory:  newResourcePolicyResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_resource_policy",
 			Name:     "Resource Policy",
