@@ -106,6 +106,14 @@ fi
 # Default (orchestrator) mode: read filenames from stdin and fan out.
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
 
-# xargs -P exits 123 if any worker exits non-zero (1-125), so the workflow
-# step still fails when any file has lint errors.
-xargs -P "${JOBS}" -n 1 -I {} "$0" --process-file "{}"
+# xargs flags:
+#   -r / --no-run-if-empty: don't invoke the worker on empty stdin.
+#   -P JOBS: run up to JOBS workers in parallel.
+#   -I {}:   substitute {} with each filename (one per invocation).
+# We re-invoke this same script in --process-file mode for each filename;
+# ${BASH_SOURCE[0]} is used (rather than $0) so the fan-out still works when
+# the script is invoked as `bash validate-terraform.sh ...`.
+#
+# xargs exits 123 if any worker exits non-zero (1-125), so the workflow step
+# still fails when any file has lint errors.
+xargs -r -P "${JOBS}" -I {} "${BASH_SOURCE[0]}" --process-file {}
