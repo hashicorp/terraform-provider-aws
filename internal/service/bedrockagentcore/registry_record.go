@@ -484,15 +484,22 @@ func (r *registryRecordResource) Update(ctx context.Context, req resource.Update
 	if diff.HasChanges() {
 		registryID, recordID := fwflex.StringValueFromFramework(ctx, plan.RegistryID), fwflex.StringValueFromFramework(ctx, plan.RecordID)
 		var input bedrockagentcorecontrol.UpdateRegistryRecordInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("Description")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("Description"), fwflex.WithIgnoredFieldNamesAppend("Descriptors")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		// Additional fields.
 		input.Description = updatedDescription(ctx, plan.Description, state.Description)
-		if plan.Descriptors.IsNull() {
-			input.Descriptors = &awstypes.UpdatedDescriptors{}
+		if !plan.Descriptors.Equal(state.Descriptors) {
+			if plan.Descriptors.IsNull() {
+				input.Descriptors = &awstypes.UpdatedDescriptors{}
+			} else {
+				smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan.Descriptors, &input.Descriptors))
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
 		}
 
 		_, err := conn.UpdateRegistryRecord(ctx, &input)
@@ -669,13 +676,14 @@ func statusRegistryRecord(conn *bedrockagentcorecontrol.Client, registryID, reco
 	}
 }
 
+// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-record-lifecycle.html.
+
 func waitRegistryRecordCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, registryID, recordID string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryRecordOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.RegistryRecordStatusCreating),
-		Target:                    enum.Slice(awstypes.RegistryRecordStatusDraft, awstypes.RegistryRecordStatusApproved),
-		Refresh:                   statusRegistryRecord(conn, registryID, recordID),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.RegistryRecordStatusCreating),
+		Target:  enum.Slice(awstypes.RegistryRecordStatusDraft),
+		Refresh: statusRegistryRecord(conn, registryID, recordID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -690,7 +698,7 @@ func waitRegistryRecordCreated(ctx context.Context, conn *bedrockagentcorecontro
 func waitRegistryRecordUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, registryID, recordID string, timeout time.Duration) (*bedrockagentcorecontrol.GetRegistryRecordOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RegistryRecordStatusUpdating),
-		Target:                    enum.Slice(awstypes.RegistryRecordStatusDraft, awstypes.RegistryRecordStatusApproved),
+		Target:                    enum.Slice(awstypes.RegistryRecordStatusDraft, awstypes.RegistryRecordStatusPendingApproval, awstypes.RegistryRecordStatusApproved, awstypes.RegistryRecordStatusRejected),
 		Refresh:                   statusRegistryRecord(conn, registryID, recordID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
