@@ -7,8 +7,8 @@ import (
 	"reflect"
 )
 
-// CanElem returns whether the value can be dereferenced with Elem().
-func CanElem(v reflect.Value) bool {
+// ValueCanElem returns whether the value can be dereferenced with Elem().
+func ValueCanElem(v reflect.Value) bool {
 	k := v.Kind()
 	return k == reflect.Pointer || k == reflect.Interface
 }

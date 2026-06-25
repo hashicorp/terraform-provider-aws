@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCanElem(t *testing.T) {
+func TestValueCanElem(t *testing.T) {
 	t.Parallel()
 
 	// Kind() == Interface: take the addressable element of a *interface{}.
@@ -39,7 +39,7 @@ func TestCanElem(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := CanElem(tc.v); got != tc.want {
+			if got := ValueCanElem(tc.v); got != tc.want {
 				t.Errorf("CanElem(kind=%s) = %v, want %v", tc.v.Kind(), got, tc.want)
 			}
 		})
