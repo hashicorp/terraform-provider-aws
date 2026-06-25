@@ -474,9 +474,9 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 			IdToken:      awstypes.TimeUnitsTypeHours,
 			RefreshToken: awstypes.TimeUnitsTypeDays,
 		}
-		input.AccessTokenValidity = aws.Int32(1)  // 1 hour — Cognito default
-		input.IdTokenValidity = aws.Int32(1)       // 1 hour — Cognito default
-		input.RefreshTokenValidity = 30            // 30 days — Cognito default
+		input.AccessTokenValidity = aws.Int32(1) // 1 hour — Cognito default
+		input.IdTokenValidity = aws.Int32(1)     // 1 hour — Cognito default
+		input.RefreshTokenValidity = 30          // 30 days — Cognito default
 	}
 
 	const (
