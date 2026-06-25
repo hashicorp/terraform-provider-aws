@@ -53,6 +53,18 @@ process_one_file() {
     local filename=$1
     local exit_code=0
     local block_number=0
+    local blocks
+
+    # Materialize the block stream first. Process substitution (done < <(...))
+    # would run terrafmt|jq in a separate process whose exit status is invisible
+    # to the outer shell, so a terrafmt or jq failure would be silently treated
+    # as "zero blocks". Capturing the pipe output here ensures pipefail + set -e
+    # propagate the failure to xargs and on to the workflow step.
+    blocks=$(${TERRAFMT_CMD} blocks --fmtcompat --json "${filename}" | jq --compact-output '.blocks[]?')
+
+    # Files with no embedded HCL produce an empty stream; skip them so we don't
+    # feed jq an empty block below.
+    [[ -z "${blocks}" ]] && return 0
 
     while IFS= read -r block ; do
         ((block_number+=1))
@@ -92,7 +104,7 @@ process_one_file() {
         fi
 
         rm -rf "${td}"
-    done < <( ${TERRAFMT_CMD} blocks --fmtcompat --json "${filename}" | jq --compact-output '.blocks[]?' )
+    done <<< "${blocks}"
 
     return "${exit_code}"
 }
