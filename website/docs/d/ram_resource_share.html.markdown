@@ -19,7 +19,7 @@ data "aws_ram_resource_share" "example" {
 }
 ```
 
-## Search by filters
+### Search by filters
 
 ```terraform
 data "aws_ram_resource_share" "tag_filter" {

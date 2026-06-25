@@ -2,7 +2,8 @@
 extends: default
 
 ignore: |
-  vendor/
+  .github/workflows/agentics-maintenance.yml
+  .github/workflows/*.lock.yml
 
 rules:
   comments:

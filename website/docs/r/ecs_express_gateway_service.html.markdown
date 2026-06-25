@@ -27,7 +27,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 }
 ```
 
-## Service Updates and Deletion
+### Service Updates and Deletion
 
 ### Updates
 

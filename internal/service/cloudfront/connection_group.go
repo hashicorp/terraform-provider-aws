@@ -33,6 +33,7 @@ import (
 
 // @FrameworkResource("aws_cloudfront_connection_group", name="Connection Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newConnectionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionGroupResource{}
 

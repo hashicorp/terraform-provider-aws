@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,6 +32,11 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_query_definition", name="Query Definition")
+// @IdentityAttribute("query_definition_id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.QueryDefinition")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importStateIdAttribute="arn")
 func resourceQueryDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryDefinitionPut,
@@ -41,34 +48,40 @@ func resourceQueryDefinition() *schema.Resource {
 			StateContext: resourceQueryDefinitionImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
-				),
-			},
-			"log_group_names": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						validLogGroupName,
-						verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_group_names": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							validLogGroupName,
+							verify.ValidARN,
+						),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
 					),
 				},
-			},
-			"query_definition_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"query_string": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"query_definition_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"query_string": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -78,7 +91,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutQueryDefinitionInput{
+	input := cloudwatchlogs.PutQueryDefinitionInput{
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query_string").(string)),
 	}
@@ -91,7 +104,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 		input.QueryDefinitionId = aws.String(d.Id())
 	}
 
-	output, err := conn.PutQueryDefinition(ctx, input)
+	output, err := conn.PutQueryDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Query Definition (%s): %s", name, err)
@@ -106,7 +119,8 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.LogsClient(ctx)
 
 	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
@@ -120,6 +134,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, queryDefinitionARN(ctx, c, d.Id()))
 	d.Set("log_group_names", result.LogGroupNames)
 	d.Set(names.AttrName, result.Name)
 	d.Set("query_definition_id", result.QueryDefinitionId)
@@ -133,9 +148,10 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
-	_, err := conn.DeleteQueryDefinition(ctx, &cloudwatchlogs.DeleteQueryDefinitionInput{
+	input := cloudwatchlogs.DeleteQueryDefinitionInput{
 		QueryDefinitionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteQueryDefinition(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -149,28 +165,35 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
+	}
+
+	if !arn.IsARN(d.Id()) {
+		return []*schema.ResourceData{d}, nil
+	}
+
+	errUnexpectedFormat := fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch Logs query definition ARN", d.Id())
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
+		return nil, errUnexpectedFormat
 	}
 
 	if arn.Service != "logs" {
-		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
+		return nil, errUnexpectedFormat
 	}
 
-	matcher := regexache.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
-	matches := matcher.FindStringSubmatch(arn.Resource)
-	if len(matches) != 2 {
-		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
+	if queryDefinitionID, ok := strings.CutPrefix(arn.Resource, "query-definition:"); ok {
+		d.SetId(queryDefinitionID)
+	} else {
+		return nil, errUnexpectedFormat
 	}
-
-	d.SetId(matches[1])
 
 	return []*schema.ResourceData{d}, nil
 }
 
 func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*awstypes.QueryDefinition, error) {
-	input := cloudwatchlogs.DescribeQueryDefinitionsInput{}
+	var input cloudwatchlogs.DescribeQueryDefinitionsInput
 	if name != "" {
 		input.QueryDefinitionNamePrefix = aws.String(name)
 	}
@@ -216,4 +239,8 @@ func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 	}
 
 	return output, nil
+}
+
+func queryDefinitionARN(ctx context.Context, c *conns.AWSClient, queryDefinitionID string) string {
+	return c.RegionalARN(ctx, "logs", "query-definition:"+queryDefinitionID)
 }

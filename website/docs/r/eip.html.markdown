@@ -121,7 +121,7 @@ This resource supports the following arguments:
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both.
 Including both will **not** return an error from the AWS API, but will have undefined behavior.
-See the relevant [AssociateAddress API Call][1] for more information.
+See the relevant [AssociateAddress API Call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html) for more information.
 
 ~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error, however, only `address` will be used if both options are defined as the API only requires one of the two.
 
@@ -193,5 +193,3 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 ```console
 % terraform import aws_eip.example eipalloc-00a10e96
 ```
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html

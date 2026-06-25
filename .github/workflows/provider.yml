@@ -39,12 +39,15 @@ env:
   AWS_DEFAULT_REGION: us-west-2
   TERRAFORM_VERSION: "1.8.3"
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   go_mod_download:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
@@ -63,7 +66,7 @@ jobs:
     needs: [go_mod_download]
     runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
@@ -95,12 +98,6 @@ jobs:
 
       - name: go build
         run: make go-build
-
-      - name: Upload provider binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: terraform-plugin-dir
-          path: terraform-plugin-dir/
 
       # Aggressively clean cache before saving to prevent extraction failures
       # Large caches (>5GB) can fail silently during tar extraction
@@ -137,7 +134,7 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
@@ -175,7 +172,7 @@ jobs:
     name: terraform fmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
@@ -198,7 +195,7 @@ jobs:
     env:
       GOMAXPROCS: 8
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
@@ -266,7 +263,7 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
@@ -299,7 +296,7 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
@@ -354,77 +351,10 @@ jobs:
           [ $count -eq 0 ] || \
             (echo; echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
-  terraform_providers_schema:
-    name: terraform providers schema
-    needs: [go_build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        continue-on-error: true
-        id: cache-terraform-providers-schema
-        timeout-minutes: 2
-        with:
-          path: terraform-providers-schema
-          key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6.0.0
-        with:
-          name: terraform-plugin-dir
-          path: terraform-plugin-dir
-      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        name: Make provider binary executable
-        run: chmod +x terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/*/terraform-provider-aws
-      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        name: terraform init
-        run: |
-          # We need a file to initialize the provider
-          echo 'data "aws_partition" "example" {}' > example.tf
-          terraform init -plugin-dir terraform-plugin-dir
-      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        name: terraform providers schema
-        run: |
-          mkdir terraform-providers-schema
-          terraform providers schema -json > terraform-providers-schema/schema.json
-
-  tfproviderdocs:
-    needs: [terraform_providers_schema]
-    runs-on: custom-ubuntu-22.04-large
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
-        with:
-          go-version-file: go.mod
-      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/tools && go install github.com/YakDriver/tfproviderdocs
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        timeout-minutes: 2
-        with:
-          path: terraform-providers-schema
-          key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - name: tfproviderdocs check
-        run: |
-          terraform -v
-          make tfproviderdocs
-
   cache-info:
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
@@ -459,7 +389,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "."
@@ -468,7 +398,7 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod

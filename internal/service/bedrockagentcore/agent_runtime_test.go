@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomAgentRuntimeName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -745,6 +749,24 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolMcp),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "AGUI"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolAgui),
 						}),
 					})),
 				},

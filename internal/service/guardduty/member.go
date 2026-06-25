@@ -39,41 +39,43 @@ func resourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"disable_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"invitation_message": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"disable_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"invitation_message": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"invite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"relationship_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

@@ -30,24 +30,26 @@ func resourceAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"elb": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
-			"lb_target_group_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_group_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"elb": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+				"lb_target_group_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+			}
 		},
 	}
 }

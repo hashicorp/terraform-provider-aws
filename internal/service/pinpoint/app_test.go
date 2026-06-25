@@ -12,6 +12,7 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -44,35 +45,19 @@ func TestAccPinpointApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"lambda_function_name": knownvalue.StringExact(""),
-							names.AttrMode:         knownvalue.StringExact(""),
-							"web_url":              knownvalue.StringExact(""),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"daily":               knownvalue.Int64Exact(0),
-							"maximum_duration":    knownvalue.Int64Exact(0),
-							"messages_per_second": knownvalue.Int64Exact(0),
-							"total":               knownvalue.Int64Exact(0),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"end":   knownvalue.StringExact(""),
-							"start": knownvalue.StringExact(""),
-						}),
-					})),
+					// Settings blocks are not configured, so they are not populated in state.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"campaign_hook", "limits", "quiet_time"},
 			},
 		},
 	})
@@ -97,6 +82,58 @@ func TestAccPinpointApp_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccPinpointApp_noSettingsNoImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application awstypes.ApplicationResponse
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pinpoint_app.test"
+
+	// Recording provider factories let us assert that the gated settings
+	// API calls are not made when the user's config does not include any of
+	// the deprecated settings blocks. GetApp is asserted as a positive
+	// control to confirm the recorder is wired up.
+	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: factories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "mobiletargeting", "apps/{id}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrApplicationID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					acctest.CheckAPICallMade(rec, nil, "Pinpoint", "GetApp"),                       // only use nil for cursor if there's only 1 step
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "GetApplicationSettings"),    // only use nil for cursor if there's only 1 step
+					acctest.CheckAPICallNotMade(rec, nil, "Pinpoint", "UpdateApplicationSettings"), // only use nil for cursor if there's only 1 step
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// Settings blocks are not configured, so they are not populated in state.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -169,9 +206,10 @@ func TestAccPinpointApp_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"campaign_hook", "limits", "quiet_time"},
 			},
 			{
 				Config: testAccAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -411,6 +449,48 @@ func TestAccPinpointApp_quietTimeEmpty(t *testing.T) {
 	})
 }
 
+// TestAccPinpointApp_settingsAdded verifies that adding settings blocks to an
+// existing app (that was created without them) correctly calls the settings API
+// and populates state.
+func TestAccPinpointApp_settingsAdded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application awstypes.ApplicationResponse
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pinpoint_app.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create without any settings blocks.
+				Config: testAccAppConfig_basic(rName),
+				Check:  testAccCheckAppExists(ctx, t, resourceName, &application),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				// Add limits — settings API should be called.
+				Config: testAccAppConfig_limits(rName),
+				Check:  testAccCheckAppExists(ctx, t, resourceName, &application),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"daily":               knownvalue.Int64Exact(3),
+							"maximum_duration":    knownvalue.Int64Exact(600),
+							"messages_per_second": knownvalue.Int64Exact(1),
+							"total":               knownvalue.Int64Exact(100),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccPreCheckApp(ctx context.Context, t *testing.T) {
 	t.Helper()
 	acctest.PreCheckPinpointApp(ctx, t)
@@ -435,7 +515,7 @@ func testAccCheckAppDestroy(ctx context.Context, t *testing.T) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint App %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging App %s still exists", rs.Primary.ID)
 		}
 
 		return nil

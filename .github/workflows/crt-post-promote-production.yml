@@ -10,7 +10,7 @@ on:
       - crt-post-promote-production::*
 
 permissions:
-  actions: write
+  actions: write # required to dispatch workflows
 
 jobs:
   start-registry-check:

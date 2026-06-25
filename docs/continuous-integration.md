@@ -158,6 +158,16 @@ To run `tflint` only against embedded configurations, use the `testacc-tflint-em
 make testacc-tflint-embedded
 ```
 
+### CHANGELOG Misspell / misspell
+
+Use the `changelog-misspell` target to spellcheck the CHANGELOG:
+
+```console
+make changelog-misspell
+```
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
 ### Copyright Checks / headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
@@ -272,6 +282,9 @@ Use the `golangci-lint2`, `golangci-lint3`, `golangci-lint4`, or `golangci-lint5
 
 ```console
 make golangci-lint2
+make golangci-lint3
+make golangci-lint4
+make golangci-lint5
 ```
 
 **Tip:** Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
@@ -284,13 +297,43 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
+### Makefile and Documentation Alignment
+
+This check validates that the `GNUmakefile`, its `.PHONY` list, the [Makefile Cheat Sheet](makefile-cheat-sheet.md), and this Continuous Integration document stay in sync. It is implemented by the [`makelign`](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/makelign) tool.
+
+It catches issues such as a target rule that was added without being included in `.PHONY`, a `.PHONY` entry that no longer matches any rule (often a typo), and cheat-sheet rows that reference targets that were renamed or removed.
+
+Use the `makefile-lint` target to run the check:
+
+```console
+make makefile-lint
+```
+
 ### Modern Go Check
 
 This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
 
+Use the `modern-check` target to run the check:
+
+```console
+make modern-check
+```
+
+Use the `modern-fix` target to automatically apply fixes:
+
+```console
+make modern-fix
+```
+
 ### PR Target Check
 
 This check ensures that the `pull_request_target` event is only used in approved workflows. Unlike `pull_request`, which runs workflows against the pull request’s changes, `pull_request_target` runs against the base branch. This can cause issues to go undetected if the workflow is intended to validate the pull request itself. Restricting its use helps ensure that CI checks reflect the actual content of proposed changes.
+
+Use the `pr-target-check` target to run the check:
+
+```console
+make pr-target-check
+```
 
 ### Provider Checks
 
@@ -400,24 +443,38 @@ make go-misspell
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
-#### terraform providers schema
+#### Swiss Shepherd
 
-This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check. In the `make` file, this is done as part of the `tfproviderdocs` target test.
+Swiss Shepherd checks provider documentation for quality and consistency against the provider's schema.
 
-#### tfproviderdocs
+The provider keeps two Swiss Shepherd configurations side by side under `.ci/`:
 
-**NOTE:** To run this test, you need Terraform installed locally. On macOS, you can use Homebrew to install Terraform:
+- `.ci/swissshepherd-weak.hcl` is the working configuration. It carries the AWS-specific type definitions and bylines plus per-resource exceptions (`ignore_*` lists) so a run against today's documentation is clean. The `swissshepherd` and `swissshepherd-refresh` targets, and CI, all use this file. New work should not grow these exception lists; fixing the underlying documentation is the goal.
+- `.ci/swissshepherd-full.hcl` carries the same type definitions but omits the per-resource exceptions, so a run reports every finding the linter can produce. The `swissshepherd-count` target uses this file. The resulting count gives a sense of how much documentation work remains before every rule can run unconditionally.
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
+Use the `swissshepherd` target to run the standard checks:
 
 ```console
-brew install terraform
+make swissshepherd
 ```
 
-This test builds the provider binary, loads the provider with Terraform, generates the provider schema, and then uses the tfproviderdocs tool to ensure the provider (via the schema) and documentation are consistent with each other.
-
-Use the `tfproviderdocs` target to run this test:
+Use the `swissshepherd-count` target to count all findings:
 
 ```console
-make tfproviderdocs
+make swissshepherd-count
+```
+
+Use the `swissshepherd-refresh` target to run checks and refresh the cached provider schema. This takes a few minutes, but only needs to be run when:
+
+- You do not yet have a cached JSON schema locally.
+- The provider's schema has changed (for example, after pulling new commits or merging `origin/main`).
+
+If a local Swiss Shepherd run reports errors that don't seem right, the cached schema is most likely stale; refreshing it usually resolves the issue. CI always builds a fresh schema, so this only affects local runs.
+
+```console
+make swissshepherd-refresh
 ```
 
 #### Sweeper Functions Not Linked
@@ -480,6 +537,28 @@ You can limit the scan to a service package by using the `PKG` environment varia
 PKG=rds make semgrep-code-quality
 ```
 
+#### Constants Check
+
+This scan flags string literals in service code that should use a constant from the `names` package (for example, `"arn"` should be `names.AttrARN`). The rules are generated from `names/data/names_data.hcl` and similar sources, so they grow as the codebase evolves.
+
+Use the `semgrep-constants` target to run the same check CI runs:
+
+```console
+make semgrep-constants
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```console
+PKG=rds make semgrep-constants
+```
+
+To apply the recommended fixes automatically, use `semgrep-fix-constants`:
+
+```console
+make semgrep-fix-constants
+```
+
 #### Naming Scan Caps/AWS/EC2
 
 Idiomatic Go uses [_mixed caps_](naming.md#mixed-caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code.
@@ -534,6 +613,28 @@ Use the `skaff-check-compile` target to test building Skaff:
 
 ```console
 make skaff-check-compile
+```
+
+### Swiss Shepherd Checks
+
+Swiss Shepherd checks provider documentation for quality and consistency.
+
+Use the `swissshepherd` target to run the standard checks:
+
+```console
+make swissshepherd
+```
+
+Use the `swissshepherd-count` target to count all findings:
+
+```console
+make swissshepherd-count
+```
+
+Use the `swissshepherd-refresh` target to run checks and refresh cached schemas:
+
+```console
+make swissshepherd-refresh
 ```
 
 ### Website Checks

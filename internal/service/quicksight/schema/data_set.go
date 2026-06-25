@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +39,8 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 									ValidateFunc: validation.StringLenBetween(1, 128),
 								},
 							},
-							"country_code": stringEnumSchema[awstypes.GeoSpatialCountryCode](attrRequired),
-							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 64),
+							"country_code": sdkschema.StringEnumSchema[awstypes.GeoSpatialCountryCode](sdkschema.AttrRequired),
+							names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
 						},
 					},
 				},
@@ -66,8 +67,8 @@ func DataSetColumnGroupsSchemaDataSourceSchema() *schema.Schema {
 									Type: schema.TypeString,
 								},
 							},
-							"country_code": stringEnumDataSourceSchema[awstypes.GeoSpatialCountryCode](),
-							names.AttrName: stringComputedOnly(),
+							"country_code": sdkschema.StringEnumDataSourceSchema[awstypes.GeoSpatialCountryCode](),
+							names.AttrName: sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -175,7 +176,7 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrDescription: stringLenBetweenSchema(attrOptional, 0, 500),
+				names.AttrDescription: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 0, 500),
 			},
 		},
 	}
@@ -187,13 +188,13 @@ func DataSetFieldFoldersSchemaDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_folders_id": stringComputedOnly(),
+				"field_folders_id": sdkschema.StringComputedOnly(),
 				"columns": {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrDescription: stringComputedOnly(),
+				names.AttrDescription: sdkschema.StringComputedOnly(),
 			},
 		},
 	}
@@ -207,7 +208,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 		MaxItems: 64,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrAlias: stringLenBetweenSchema(attrRequired, 1, 64),
+				names.AttrAlias: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
 				"data_transforms": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -223,9 +224,9 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringLenBetweenSchema(attrRequired, 1, 128),
-										names.AttrFormat:  stringLenBetweenSchema(attrOptionalComputed, 0, 32),
-										"new_column_type": stringEnumSchema[awstypes.ColumnDataType](attrRequired),
+										"column_name":     sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										names.AttrFormat:  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, 0, 32),
+										"new_column_type": sdkschema.StringEnumSchema[awstypes.ColumnDataType](sdkschema.AttrRequired),
 									},
 								},
 							},
@@ -243,9 +244,9 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 											MaxItems: 128,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column_id":          stringLenBetweenSchema(attrRequired, 1, 64),
-													"column_name":        stringLenBetweenSchema(attrRequired, 1, 128),
-													names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
+													"column_id":          sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
+													"column_name":        sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+													names.AttrExpression: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 4096),
 												},
 											},
 										},
@@ -259,7 +260,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition_expression": stringLenBetweenSchema(attrRequired, 1, 4096),
+										"condition_expression": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 4096),
 									},
 								},
 							},
@@ -287,8 +288,8 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringLenBetweenSchema(attrRequired, 1, 128),
-										"new_column_name": stringLenBetweenSchema(attrRequired, 1, 128),
+										"column_name":     sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										"new_column_name": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 									},
 								},
 							},
@@ -299,7 +300,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringLenBetweenSchema(attrRequired, 1, 128),
+										"column_name": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 										names.AttrTags: {
 											Type:     schema.TypeList,
 											Required: true,
@@ -314,11 +315,11 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"text": stringLenBetweenSchema(attrOptionalComputed, 0, 500),
+																"text": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, 0, 500),
 															},
 														},
 													},
-													"column_geographic_role": stringEnumSchema[awstypes.GeoSpatialDataRole](attrOptionalComputed),
+													"column_geographic_role": sdkschema.StringEnumSchema[awstypes.GeoSpatialDataRole](sdkschema.AttrOptionalComputed),
 												},
 											},
 										},
@@ -332,11 +333,11 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringLenBetweenSchema(attrRequired, 1, 128),
+										"column_name": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 										"tag_names": {
 											Type:     schema.TypeList,
 											Required: true,
-											Elem:     stringEnumSchema[awstypes.ColumnTagName](attrElem),
+											Elem:     sdkschema.StringEnumSchema[awstypes.ColumnTagName](sdkschema.AttrElem),
 										},
 									},
 								},
@@ -367,15 +368,15 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"left_join_key_properties":  dataSetJoinKeyPropertiesSchema(),
-										"left_operand":              stringLenBetweenSchema(attrRequired, 1, 64),
-										"on_clause":                 stringLenBetweenSchema(attrRequired, 1, 512),
+										"left_operand":              sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
+										"on_clause":                 sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 										"right_join_key_properties": dataSetJoinKeyPropertiesSchema(),
-										"right_operand":             stringLenBetweenSchema(attrRequired, 1, 64),
-										names.AttrType:              stringEnumSchema[awstypes.JoinType](attrRequired),
+										"right_operand":             sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
+										names.AttrType:              sdkschema.StringEnumSchema[awstypes.JoinType](sdkschema.AttrRequired),
 									},
 								},
 							},
-							"physical_table_id": stringLenBetweenSchema(attrOptionalComputed, 1, 64),
+							"physical_table_id": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, 1, 64),
 						},
 					},
 				},
@@ -390,7 +391,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrAlias: stringComputedOnly(),
+				names.AttrAlias: sdkschema.StringComputedOnly(),
 				"data_transforms": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -401,9 +402,9 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringComputedOnly(),
-										names.AttrFormat:  stringComputedOnly(),
-										"new_column_type": stringEnumDataSourceSchema[awstypes.ColumnDataType](),
+										"column_name":     sdkschema.StringComputedOnly(),
+										names.AttrFormat:  sdkschema.StringComputedOnly(),
+										"new_column_type": sdkschema.StringEnumDataSourceSchema[awstypes.ColumnDataType](),
 									},
 								},
 							},
@@ -417,9 +418,9 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column_id":          stringComputedOnly(),
-													"column_name":        stringComputedOnly(),
-													names.AttrExpression: stringComputedOnly(),
+													"column_id":          sdkschema.StringComputedOnly(),
+													"column_name":        sdkschema.StringComputedOnly(),
+													names.AttrExpression: sdkschema.StringComputedOnly(),
 												},
 											},
 										},
@@ -431,7 +432,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"condition_expression": stringComputedOnly(),
+										"condition_expression": sdkschema.StringComputedOnly(),
 									},
 								},
 							},
@@ -453,8 +454,8 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name":     stringComputedOnly(),
-										"new_column_name": stringComputedOnly(),
+										"column_name":     sdkschema.StringComputedOnly(),
+										"new_column_name": sdkschema.StringComputedOnly(),
 									},
 								},
 							},
@@ -463,7 +464,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringComputedOnly(),
+										"column_name": sdkschema.StringComputedOnly(),
 										names.AttrTags: {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -474,11 +475,11 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"text": stringComputedOnly(),
+																"text": sdkschema.StringComputedOnly(),
 															},
 														},
 													},
-													"column_geographic_role": stringEnumDataSourceSchema[awstypes.GeoSpatialDataRole](),
+													"column_geographic_role": sdkschema.StringEnumDataSourceSchema[awstypes.GeoSpatialDataRole](),
 												},
 											},
 										},
@@ -490,7 +491,7 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column_name": stringComputedOnly(),
+										"column_name": sdkschema.StringComputedOnly(),
 										"tag_names": {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -504,28 +505,28 @@ func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
 						},
 					},
 				},
-				"logical_table_map_id": stringComputedOnly(),
+				"logical_table_map_id": sdkschema.StringComputedOnly(),
 				names.AttrSource: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_set_arn": stringComputedOnly(),
+							"data_set_arn": sdkschema.StringComputedOnly(),
 							"join_instruction": {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"left_join_key_properties":  dataSetJoinKeyPropertiesDataSourceSchema(),
-										"left_operand":              stringComputedOnly(),
-										"on_clause":                 stringComputedOnly(),
+										"left_operand":              sdkschema.StringComputedOnly(),
+										"on_clause":                 sdkschema.StringComputedOnly(),
 										"right_join_key_properties": dataSetJoinKeyPropertiesDataSourceSchema(),
-										"right_operand":             stringComputedOnly(),
-										names.AttrType:              stringEnumDataSourceSchema[awstypes.JoinType](),
+										"right_operand":             sdkschema.StringComputedOnly(),
+										names.AttrType:              sdkschema.StringEnumDataSourceSchema[awstypes.JoinType](),
 									},
 								},
 							},
-							"physical_table_id": stringComputedOnly(),
+							"physical_table_id": sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -570,9 +571,9 @@ func DataSetOutputColumnsSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrDescription: stringComputedOnly(),
-				names.AttrName:        stringComputedOnly(),
-				names.AttrType:        stringComputedOnly(),
+				names.AttrDescription: sdkschema.StringComputedOnly(),
+				names.AttrName:        sdkschema.StringComputedOnly(),
+				names.AttrType:        sdkschema.StringComputedOnly(),
 			},
 		},
 	}
@@ -598,14 +599,14 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringLenBetweenSchema(attrRequired, 1, 128),
-										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](attrRequired),
+										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
 							},
-							"data_source_arn": arnStringSchema(attrRequired),
-							names.AttrName:    stringLenBetweenSchema(attrRequired, 1, 64),
-							"sql_query":       stringLenBetweenSchema(attrRequired, 1, 65536),
+							"data_source_arn": sdkschema.ARNStringSchema(sdkschema.AttrRequired),
+							names.AttrName:    sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 64),
+							"sql_query":       sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 65536),
 						},
 					},
 				},
@@ -619,8 +620,8 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"catalog":         stringLenBetweenSchema(attrOptional, 0, 256),
-							"data_source_arn": arnStringSchema(attrRequired),
+							"catalog":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 0, 256),
+							"data_source_arn": sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Required: true,
@@ -628,12 +629,12 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringLenBetweenSchema(attrRequired, 1, 128),
-										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](attrRequired),
+										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
 							},
-							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 256),
+							names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 256),
 							names.AttrSchema: {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -648,7 +649,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_source_arn": arnStringSchema(attrRequired),
+							"data_source_arn": sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Required: true,
@@ -656,8 +657,8 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 								MaxItems: 2048,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringLenBetweenSchema(attrRequired, 1, 128),
-										names.AttrType: stringEnumSchema[awstypes.InputColumnDataType](attrRequired),
+										names.AttrName: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+										names.AttrType: sdkschema.StringEnumSchema[awstypes.InputColumnDataType](sdkschema.AttrRequired),
 									},
 								},
 							},
@@ -672,15 +673,15 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 											Computed: true,
 											Optional: true,
 										},
-										"delimiter":      stringLenBetweenSchema(attrOptionalComputed, 1, 1),
-										names.AttrFormat: stringEnumSchema[awstypes.FileFormat](attrOptionalComputed),
+										"delimiter":      sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, 1, 1),
+										names.AttrFormat: sdkschema.StringEnumSchema[awstypes.FileFormat](sdkschema.AttrOptionalComputed),
 										"start_from_row": {
 											Type:         schema.TypeInt,
 											Computed:     true,
 											Optional:     true,
 											ValidateFunc: validation.IntAtLeast(1),
 										},
-										"text_qualifier": stringEnumSchema[awstypes.TextQualifier](attrOptionalComputed),
+										"text_qualifier": sdkschema.StringEnumSchema[awstypes.TextQualifier](sdkschema.AttrOptionalComputed),
 									},
 								},
 							},
@@ -708,37 +709,37 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringComputedOnly(),
-										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+										names.AttrName: sdkschema.StringComputedOnly(),
+										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
 							},
-							"data_source_arn": arnStringDataSourceSchema(),
-							names.AttrName:    stringComputedOnly(),
-							"sql_query":       stringComputedOnly(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
+							names.AttrName:    sdkschema.StringComputedOnly(),
+							"sql_query":       sdkschema.StringComputedOnly(),
 						},
 					},
 				},
-				"physical_table_map_id": stringComputedOnly(),
+				"physical_table_map_id": sdkschema.StringComputedOnly(),
 				"relational_table": {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"catalog":         stringComputedOnly(),
-							"data_source_arn": arnStringDataSourceSchema(),
+							"catalog":         sdkschema.StringComputedOnly(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringComputedOnly(),
-										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+										names.AttrName: sdkschema.StringComputedOnly(),
+										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
 							},
-							names.AttrName:   stringComputedOnly(),
-							names.AttrSchema: stringComputedOnly(),
+							names.AttrName:   sdkschema.StringComputedOnly(),
+							names.AttrSchema: sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -747,14 +748,14 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"data_source_arn": arnStringDataSourceSchema(),
+							"data_source_arn": sdkschema.ARNStringDataSourceSchema(),
 							"input_columns": {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrName: stringComputedOnly(),
-										names.AttrType: stringEnumDataSourceSchema[awstypes.InputColumnDataType](),
+										names.AttrName: sdkschema.StringComputedOnly(),
+										names.AttrType: sdkschema.StringEnumDataSourceSchema[awstypes.InputColumnDataType](),
 									},
 								},
 							},
@@ -764,10 +765,10 @@ func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"contains_header": boolComputedOnly(),
-										"delimiter":       stringComputedOnly(),
-										names.AttrFormat:  stringEnumDataSourceSchema[awstypes.FileFormat](),
+										"delimiter":       sdkschema.StringComputedOnly(),
+										names.AttrFormat:  sdkschema.StringEnumDataSourceSchema[awstypes.FileFormat](),
 										"start_from_row":  intComputedOnly(),
-										"text_qualifier":  stringEnumDataSourceSchema[awstypes.TextQualifier](),
+										"text_qualifier":  sdkschema.StringEnumDataSourceSchema[awstypes.TextQualifier](),
 									},
 								},
 							},
@@ -786,11 +787,11 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN:       arnStringSchema(attrRequired),
-				"format_version":    stringEnumSchema[awstypes.RowLevelPermissionFormatVersion](attrOptional),
-				names.AttrNamespace: stringLenBetweenSchema(attrOptional, 0, 64),
-				"permission_policy": stringEnumSchema[awstypes.RowLevelPermissionPolicy](attrRequired),
-				names.AttrStatus:    stringEnumSchema[awstypes.Status](attrOptional),
+				names.AttrARN:       sdkschema.ARNStringSchema(sdkschema.AttrRequired),
+				"format_version":    sdkschema.StringEnumSchema[awstypes.RowLevelPermissionFormatVersion](sdkschema.AttrOptional),
+				names.AttrNamespace: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 0, 64),
+				"permission_policy": sdkschema.StringEnumSchema[awstypes.RowLevelPermissionPolicy](sdkschema.AttrRequired),
+				names.AttrStatus:    sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -802,11 +803,11 @@ func DataSetRowLevelPermissionDataSetSchemaDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN:       arnStringDataSourceSchema(),
-				"format_version":    stringEnumDataSourceSchema[awstypes.RowLevelPermissionFormatVersion](),
-				names.AttrNamespace: stringComputedOnly(),
-				"permission_policy": stringEnumDataSourceSchema[awstypes.RowLevelPermissionPolicy](),
-				names.AttrStatus:    stringEnumDataSourceSchema[awstypes.Status](),
+				names.AttrARN:       sdkschema.ARNStringDataSourceSchema(),
+				"format_version":    sdkschema.StringEnumDataSourceSchema[awstypes.RowLevelPermissionFormatVersion](),
+				names.AttrNamespace: sdkschema.StringComputedOnly(),
+				"permission_policy": sdkschema.StringEnumDataSourceSchema[awstypes.RowLevelPermissionPolicy](),
+				names.AttrStatus:    sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 			},
 		},
 	}
@@ -819,7 +820,7 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
+				names.AttrStatus: sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 				"tag_rules": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -832,9 +833,9 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
-							"match_all_value":           stringLenBetweenSchema(attrOptional, 1, 256),
-							"tag_key":                   stringLenBetweenSchema(attrRequired, 1, 128),
-							"tag_multi_value_delimiter": stringLenBetweenSchema(attrOptional, 1, 10),
+							"match_all_value":           sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 256),
+							"tag_key":                   sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
+							"tag_multi_value_delimiter": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 10),
 						},
 					},
 				},
@@ -849,16 +850,16 @@ func DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema() *schema.S
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrStatus: stringEnumDataSourceSchema[awstypes.Status](),
+				names.AttrStatus: sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 				"tag_rules": {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_name":               stringComputedOnly(),
-							"match_all_value":           stringComputedOnly(),
-							"tag_key":                   stringComputedOnly(),
-							"tag_multi_value_delimiter": stringComputedOnly(),
+							"column_name":               sdkschema.StringComputedOnly(),
+							"match_all_value":           sdkschema.StringComputedOnly(),
+							"tag_key":                   sdkschema.StringComputedOnly(),
+							"tag_multi_value_delimiter": sdkschema.StringComputedOnly(),
 						},
 					},
 				},
@@ -900,7 +901,7 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
-													"size_unit": stringEnumSchema[awstypes.LookbackWindowSizeUnit](attrRequired),
+													"size_unit": sdkschema.StringEnumSchema[awstypes.LookbackWindowSizeUnit](sdkschema.AttrRequired),
 												},
 											},
 										},

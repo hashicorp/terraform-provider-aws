@@ -29,7 +29,7 @@ import (
 )
 
 // @SDKResource("aws_detective_member", name="Member")
-func ResourceMember() *schema.Resource {
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
@@ -39,71 +39,71 @@ func ResourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"administrator_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disable_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"disabled_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email_address": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"graph_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"invited_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMessage: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_usage_in_bytes": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"administrator_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disable_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"disabled_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"email_address": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"graph_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"invited_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMessage: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_usage_in_bytes": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	accountID := d.Get(names.AttrAccountID).(string)
-	graphARN := d.Get("graph_arn").(string)
+	graphARN, accountID := d.Get("graph_arn").(string), d.Get(names.AttrAccountID).(string)
 	id := memberCreateResourceID(graphARN, accountID)
-	input := &detective.CreateMembersInput{
+	input := detective.CreateMembersInput{
 		Accounts: []awstypes.Account{{
 			AccountId:    aws.String(accountID),
 			EmailAddress: aws.String(d.Get("email_address").(string)),
@@ -120,7 +120,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.InternalServerException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
-		return conn.CreateMembers(ctx, input)
+		return conn.CreateMembers(ctx, &input)
 	})
 
 	if err != nil {
@@ -138,15 +138,14 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	graphARN, accountID, err := MemberParseResourceID(d.Id())
+	graphARN, accountID, err := memberParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	member, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
+	member, err := findMemberByTwoPartKey(ctx, conn, graphARN, accountID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Detective Member (%s) not found, removing from state", d.Id())
@@ -173,10 +172,9 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	graphARN, accountID, err := MemberParseResourceID(d.Id())
+	graphARN, accountID, err := memberParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -208,7 +206,7 @@ func memberCreateResourceID(graphARN, accountID string) string {
 	return id
 }
 
-func MemberParseResourceID(id string) (string, string, error) {
+func memberParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, memberResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
@@ -218,12 +216,12 @@ func MemberParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected graph_arn%[2]saccount_id", id, memberResourceIDSeparator)
 }
 
-func FindMemberByGraphByTwoPartKey(ctx context.Context, conn *detective.Client, graphARN, accountID string) (*awstypes.MemberDetail, error) {
-	input := &detective.ListMembersInput{
+func findMemberByTwoPartKey(ctx context.Context, conn *detective.Client, graphARN, accountID string) (*awstypes.MemberDetail, error) {
+	input := detective.ListMembersInput{
 		GraphArn: aws.String(graphARN),
 	}
 
-	return findMember(ctx, conn, input, func(v awstypes.MemberDetail) bool {
+	return findMember(ctx, conn, &input, func(v awstypes.MemberDetail) bool {
 		return aws.ToString(v.AccountId) == accountID
 	})
 }
@@ -242,7 +240,6 @@ func findMembers(ctx context.Context, conn *detective.Client, input *detective.L
 	var output []awstypes.MemberDetail
 
 	pages := detective.NewListMembersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -268,7 +265,7 @@ func findMembers(ctx context.Context, conn *detective.Client, input *detective.L
 
 func statusMember(conn *detective.Client, graphARN, adminAccountID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, adminAccountID)
+		output, err := findMemberByTwoPartKey(ctx, conn, graphARN, adminAccountID)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
