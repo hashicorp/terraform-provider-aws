@@ -771,6 +771,8 @@ func (m descriptorsModel) ExpandTo(ctx context.Context, targetType reflect.Type)
 		return m.expandToDescriptors(ctx)
 	case reflect.TypeFor[awstypes.UpdatedDescriptors]():
 		return m.expandToUpdatedDescriptors(ctx)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("descriptorsModel ExpandTo: %q", targetType))
 	}
 	return nil, diags
 }
@@ -896,33 +898,6 @@ func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awsty
 	return awstypes.UpdatedDescriptors{OptionalValue: &r}, diags
 }
 
-// func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (*awstypes.UpdatedDescriptors, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	apiObject := awstypes.UpdatedDescriptorsUnion{
-// 		A2a:         &awstypes.UpdatedA2aDescriptor{},
-// 		AgentSkills: &awstypes.UpdatedAgentSkillsDescriptor{},
-// 		Custom:      &awstypes.UpdatedCustomDescriptor{},
-// 		Mcp:         &awstypes.UpdatedMcpDescriptor{},
-// 	}
-// 	switch {
-// 	case !m.A2A.IsNull():
-// 		var r awstypes.A2aDescriptor
-// 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.A2A, &r))
-// 		if diags.HasError() {
-// 			return nil, diags
-// 		}
-// 		apiObject.A2a.OptionalValue = &r
-// 	case !m.AgentSkills.IsNull():
-// 		var r awstypes.AgentSkillsDescriptor
-// 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.AgentSkills, &r))
-// 		if diags.HasError() {
-// 			return nil, diags
-// 		}
-// 		apiObject.AgentSkills.OptionalValue = &r
-// 	}
-// 	return &awstypes.UpdatedDescriptors{OptionalValue: &apiObject}, diags
-// }
-
 type a2aDescriptorModel struct {
 	AgentCard fwtypes.ListNestedObjectValueOf[agentCardDefinitionModel] `tfsdk:"agent_card"`
 }
@@ -935,6 +910,90 @@ type agentCardDefinitionModel struct {
 type agentSkillsDescriptorModel struct {
 	SkillDefinition fwtypes.ListNestedObjectValueOf[skillDefinitionModel]   `tfsdk:"skill_definition"`
 	SkillMd         fwtypes.ListNestedObjectValueOf[skillMdDefinitionModel] `tfsdk:"skill_md"`
+}
+
+var (
+	_ fwflex.TypedExpander = agentSkillsDescriptorModel{}
+)
+
+func (m agentSkillsDescriptorModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.AgentSkillsDescriptor]():
+		return m.expandToAgentSkillsDescriptor(ctx)
+	case reflect.TypeFor[awstypes.UpdatedAgentSkillsDescriptorFields]():
+		return m.expandToUpdatedAgentSkillsDescriptorFields(ctx)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("agentSkillsDescriptorModel ExpandTo: %q", targetType))
+	}
+	return nil, diags
+}
+
+func (m agentSkillsDescriptorModel) expandToAgentSkillsDescriptor(ctx context.Context) (awstypes.AgentSkillsDescriptor, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.AgentSkillsDescriptor
+	if !m.SkillDefinition.IsNull() {
+		data, d := m.SkillDefinition.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.AgentSkillsDescriptor](), diags
+		}
+		var v awstypes.SkillDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.AgentSkillsDescriptor](), diags
+		}
+		r.SkillDefinition = &v
+	}
+	if !m.SkillMd.IsNull() {
+		data, d := m.SkillMd.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.AgentSkillsDescriptor](), diags
+		}
+		var v awstypes.SkillMdDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.AgentSkillsDescriptor](), diags
+		}
+		r.SkillMd = &v
+	}
+	return r, diags
+}
+
+func (m agentSkillsDescriptorModel) expandToUpdatedAgentSkillsDescriptorFields(ctx context.Context) (awstypes.UpdatedAgentSkillsDescriptorFields, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	r := awstypes.UpdatedAgentSkillsDescriptorFields{
+		SkillDefinition: &awstypes.UpdatedSkillDefinition{},
+		SkillMd:         &awstypes.UpdatedSkillMdDefinition{},
+	}
+	if !m.SkillDefinition.IsNull() {
+		data, d := m.SkillDefinition.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedAgentSkillsDescriptorFields](), diags
+		}
+		var v awstypes.SkillDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedAgentSkillsDescriptorFields](), diags
+		}
+		r.SkillDefinition.OptionalValue = &v
+	}
+	if !m.SkillMd.IsNull() {
+		data, d := m.SkillMd.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedAgentSkillsDescriptorFields](), diags
+		}
+		var v awstypes.SkillMdDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedAgentSkillsDescriptorFields](), diags
+		}
+		r.SkillMd.OptionalValue = &v
+	}
+	return r, diags
 }
 
 type skillDefinitionModel struct {
