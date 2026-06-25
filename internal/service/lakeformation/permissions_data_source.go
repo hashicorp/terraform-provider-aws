@@ -133,6 +133,25 @@ func DataSourcePermissions() *schema.Resource {
 						},
 					},
 				},
+				"lf_tag_expression": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
 				"lf_tag_policy": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -342,6 +361,14 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	} else {
 		d.Set("lf_tag", nil)
+	}
+
+	if permissions[0].Resource.LFTagExpression != nil {
+		if err := d.Set("lf_tag_expression", []any{flattenLFTagExpressionResource(permissions[0].Resource.LFTagExpression)}); err != nil { // nosemgrep:ci.data-source-with-resource-read
+			return sdkdiag.AppendErrorf(diags, "setting LF-tag expression: %s", err)
+		}
+	} else {
+		d.Set("lf_tag_expression", nil)
 	}
 
 	if permissions[0].Resource.LFTagPolicy != nil {
