@@ -26,5 +26,5 @@ list "aws_bedrockagentcore_registry_record" "example" {
 
 This list resource supports the following arguments:
 
-* `registry_id` - (Required) Registry ID.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `registry_id` - (Required) Registry ID.
