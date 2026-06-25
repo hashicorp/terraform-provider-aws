@@ -4,7 +4,19 @@
 resource "aws_bedrockagentcore_registry_record" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
+  name            = "${var.rName}-${count.index}"
+  registry_id     = aws_bedrockagentcore_registry.test.registry_id
+  descriptor_type = "CUSTOM"
+
+  descriptors {
+    custom {
+      inline_content = "{}"
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_registry" "test" {
+  name = "${var.rName}-registry"
 }
 
 variable "rName" {

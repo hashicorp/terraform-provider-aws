@@ -3,4 +3,8 @@
 
 list "aws_bedrockagentcore_registry_record" "test" {
   provider = aws
+
+  config {
+    registry_id = aws_bedrockagentcore_registry.test.registry_id
+  }
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,8 +40,7 @@ func (l *registryRecordListResource) ListResourceConfigSchema(ctx context.Contex
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"registry_id": listschema.StringAttribute{
-				Required:    true,
-				Description: "Registry ID.",
+				Required: true,
 			},
 		},
 	}
@@ -74,10 +74,9 @@ func (l *registryRecordListResource) List(ctx context.Context, request list.List
 				return
 			}
 
-			arn := aws.ToString(item.RecordArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.RecordArn))
 
-			output, err := findRegistryRecordByTwoPartKey(ctx, conn, registryID, arn)
+			output, err := findRegistryRecordByTwoPartKey(ctx, conn, registryID, aws.ToString(item.RecordId))
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -87,9 +86,11 @@ func (l *registryRecordListResource) List(ctx context.Context, request list.List
 			result := request.NewListResult(ctx)
 
 			var data registryRecordResourceModel
+			// bedrockagentcorecontrol.GetRegistryRecordOutput holds registry ARN, but not registry ID.
+			data.RegistryID = fwflex.StringValueToFramework(ctx, registryID)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, output, &data)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}

@@ -4,9 +4,19 @@
 resource "aws_bedrockagentcore_registry_record" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
+  name            = "${var.rName}-${count.index}"
+  registry_id     = aws_bedrockagentcore_registry.test.registry_id
+  descriptor_type = "CUSTOM"
 
-  tags = var.resource_tags
+  descriptors {
+    custom {
+      inline_content = "{}"
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_registry" "test" {
+  name = "${var.rName}-registry"
 }
 
 variable "rName" {
@@ -18,11 +28,5 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
-  nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
   nullable    = false
 }

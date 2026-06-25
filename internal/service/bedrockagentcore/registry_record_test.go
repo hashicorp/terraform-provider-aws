@@ -29,7 +29,8 @@ func testAccRegistryRecordImportStateIDFunc(resourceName string) resource.Import
 }
 
 var (
-	checkRegistryRecordARN = tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}/record/[a-zA-Z0-9]{12}`))
+	checkRegistryRecordARN                = tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}/record/[a-zA-Z0-9]{12}`))
+	checkRegistryRecordARNAlternateRegion = tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock-agentcore", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}/record/[a-zA-Z0-9]{12}`))
 )
 
 func TestAccBedrockAgentCoreRegistryRecord_basic(t *testing.T) {

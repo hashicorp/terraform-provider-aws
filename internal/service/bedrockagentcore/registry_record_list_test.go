@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,11 +24,9 @@ import (
 
 func TestAccBedrockAgentCoreRegistryRecord_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_bedrockagentcore_registry_record.test[0]"
 	resourceName2 := "aws_bedrockagentcore_registry_record.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -49,10 +48,10 @@ func TestAccBedrockAgentCoreRegistryRecord_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("bedrock-agentcore", "registryrecord:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("record_arn"), checkRegistryRecordARN),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("bedrock-agentcore", "registryrecord:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("record_arn"), checkRegistryRecordARN),
 				},
 			},
 
@@ -80,10 +79,8 @@ func TestAccBedrockAgentCoreRegistryRecord_List_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreRegistryRecord_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_bedrockagentcore_registry_record.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -101,13 +98,10 @@ func TestAccBedrockAgentCoreRegistryRecord_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("bedrock-agentcore", "registryrecord:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("record_arn"), checkRegistryRecordARN),
 				},
 			},
 
@@ -118,25 +112,18 @@ func TestAccBedrockAgentCoreRegistryRecord_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_registry_record.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrockagentcore_registry_record.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_registry_record.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("bedrock-agentcore", "registryrecord:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("descriptor_type"), tfknownvalue.StringExact(awstypes.DescriptorTypeCustom)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("record_arn"), checkRegistryRecordARN),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("record_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("record_version"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusDraft)),
 					}),
 				},
 			},
@@ -146,11 +133,9 @@ func TestAccBedrockAgentCoreRegistryRecord_List_includeResource(t *testing.T) {
 
 func TestAccBedrockAgentCoreRegistryRecord_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_bedrockagentcore_registry_record.test[0]"
 	resourceName2 := "aws_bedrockagentcore_registry_record.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -176,10 +161,10 @@ func TestAccBedrockAgentCoreRegistryRecord_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("bedrock-agentcore", "registryrecord:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("record_arn"), checkRegistryRecordARNAlternateRegion),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("bedrock-agentcore", "registryrecord:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("record_arn"), checkRegistryRecordARNAlternateRegion),
 				},
 			},
 

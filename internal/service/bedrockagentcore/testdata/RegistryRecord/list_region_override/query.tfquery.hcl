@@ -5,6 +5,7 @@ list "aws_bedrockagentcore_registry_record" "test" {
   provider = aws
 
   config {
-    region = var.region
+    region      = var.region
+    registry_id = aws_bedrockagentcore_registry.test.registry_id
   }
 }
