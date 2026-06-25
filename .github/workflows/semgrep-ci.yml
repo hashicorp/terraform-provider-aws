@@ -13,6 +13,8 @@ on:
       - internal/**
       - .semgrep*yml
       - .ci/semgrep*
+      - .ci/semgrep/**
+      - .ci/.semgrep*
       - .github/workflows/semgrep-ci.yml
 
 ## NOTE: !!!
@@ -35,7 +37,7 @@ jobs:
     name: Validate Code Quality Rules
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: &semgrep_image "semgrep/semgrep:1.168.0"
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
@@ -50,26 +52,37 @@ jobs:
     needs: [semgrep-validate]
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
           semgrep --quiet --test .ci/semgrep/
           semgrep --quiet --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
+  constants:
+    name: Constants Check (make semgrep-constants)
+    needs: [semgrep-test]
+    runs-on: custom-ubuntu-22.04-large
+    container:
+      image: *semgrep_image
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - run: |
+          semgrep $SEMGREP_ARGS \
+          --config .ci/.semgrep-constants.yml \
+          --config .ci/.semgrep-test-constants.yml
+
   semgrep:
     name: Code Quality Scan (make semgrep-code-quality)
     needs: [semgrep-test]
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-large
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
           semgrep $SEMGREP_ARGS \
           --config .ci/.semgrep.yml \
-          --config .ci/.semgrep-constants.yml \
-          --config .ci/.semgrep-test-constants.yml \
           --config .ci/semgrep/ \
           --config 'r/dgryski.semgrep-go.anon-struct-args' \
           --config 'r/dgryski.semgrep-go.badnilguard' \
@@ -95,7 +108,7 @@ jobs:
     name: Naming Scan Caps/AWS/EC2 (make semgrep-naming-cae)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -106,7 +119,7 @@ jobs:
     name: Test Configs Scan (make semgrep-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -117,7 +130,7 @@ jobs:
     name: Service Name Scan A-C (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -128,7 +141,7 @@ jobs:
     name: Service Name Scan C-I (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -139,7 +152,7 @@ jobs:
     name: Service Name Scan I-Q (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -150,7 +163,7 @@ jobs:
     name: Service Name Scan Q-Z (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
