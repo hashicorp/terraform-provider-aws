@@ -724,7 +724,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk("endpoint_access_mode"); ok && types.EndpointAccessMode(v.(string)) != output.EndpointAccessMode {
+	if v, ok := d.GetOk("endpoint_access_mode"); ok && resourceRestAPIAttrConfigured(d, "endpoint_access_mode") && types.EndpointAccessMode(v.(string)) != output.EndpointAccessMode {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/endpointAccessMode"),
@@ -797,7 +797,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	// Only re-apply policy after OpenAPI import when policy was configured
 	// explicitly. For Optional+Computed policy, GetOk can be true for a
 	// value that was read from the prior API state.
-	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIPolicyConfigured(d) {
+	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIAttrConfigured(d, names.AttrPolicy) {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 
@@ -809,7 +809,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		}
 	}
 
-	if v, ok := d.GetOk("security_policy"); ok && types.SecurityPolicy(v.(string)) != output.SecurityPolicy {
+	if v, ok := d.GetOk("security_policy"); ok && resourceRestAPIAttrConfigured(d, "security_policy") && types.SecurityPolicy(v.(string)) != output.SecurityPolicy {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/securityPolicy"),
@@ -820,13 +820,13 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	return operations
 }
 
-func resourceRestAPIPolicyConfigured(d *schema.ResourceData) bool {
+func resourceRestAPIAttrConfigured(d *schema.ResourceData, attr string) bool {
 	rawConfig := d.GetRawConfig()
-	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() || !rawConfig.Type().HasAttribute(names.AttrPolicy) {
+	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() || !rawConfig.Type().HasAttribute(attr) {
 		return false
 	}
 
-	return !rawConfig.GetAttr(names.AttrPolicy).IsNull()
+	return !rawConfig.GetAttr(attr).IsNull()
 }
 
 // escapeJSONPointer escapes string per RFC 6901
