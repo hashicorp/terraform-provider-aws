@@ -172,8 +172,8 @@ import {
   id = "arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id"
 }
 ```
-#### CloudWatch Observability Admin S3 Table Integrations ARN
-With aws cli get ARN of existing integration. It is not show in aws console.
+To retrieve the integration ARN (it is not shown in the AWS console), use the AWS CLI:
+
 ```console
 $ aws observabilityadmin list-s3-table-integrations
 {
