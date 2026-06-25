@@ -1647,7 +1647,6 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 }
 
 type harnessManagedMemoryConfigurationModel struct {
-	ARN                 fwtypes.ARN                                                         `tfsdk:"arn"`
 	EncryptionKeyARN    fwtypes.ARN                                                         `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration types.Int32                                                         `tfsdk:"event_expiry_duration"`
 	Strategies          fwtypes.ListOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
