@@ -21,11 +21,11 @@ import (
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @SingletonIdentity
 // @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessIdentityUpgradeV0")
-// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 // Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")
 func resourceSerialConsoleAccess() *schema.Resource {
