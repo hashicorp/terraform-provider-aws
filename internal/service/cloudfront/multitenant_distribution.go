@@ -95,8 +95,13 @@ type multiTenantDistributionResource struct {
 func (r *multiTenantDistributionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
-			names.AttrDomainName:               schema.StringAttribute{Computed: true},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"etag":                             schema.StringAttribute{Computed: true},
 			names.AttrID:                       framework.IDAttribute(),
 			"in_progress_invalidation_batches": schema.Int32Attribute{Computed: true},
@@ -114,6 +119,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			"connection_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ConnectionMode](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrComment: schema.StringAttribute{
 				Required: true,
@@ -128,6 +136,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				Optional:   true,
 				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.HttpVersion](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -699,6 +710,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							Optional:   true,
 							Computed:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.SSLSupportMethod](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 				},
