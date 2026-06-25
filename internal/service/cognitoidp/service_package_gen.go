@@ -73,6 +73,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "User Pool Client",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUserPoolReplicaResource,
+			TypeName: "aws_cognito_user_pool_replica",
+			Name:     "User Pool Replica",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "user_pool_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrUserPoolID, true),
+				inttypes.StringIdentityAttribute("region_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      userPoolReplicaImportID{},
+			},
+		},
 	}
 }
 
