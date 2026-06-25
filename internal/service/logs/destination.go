@@ -30,7 +30,9 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
+// @Testing(preIdentityVersion="v6.51.0")
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -38,36 +40,34 @@ func resourceDestination() *schema.Resource {
 		UpdateWithoutTimeout: resourceDestinationUpdate,
 		DeleteWithoutTimeout: resourceDestinationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringLenBetween(1, 512),
-					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringLenBetween(1, 512),
+						validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -81,21 +81,21 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutDestinationInput{
+	input := cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
 		RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 		TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutDestination(ctx, input)
+	output, err := tfresource.RetryWhenIsA[*cloudwatchlogs.PutDestinationOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (*cloudwatchlogs.PutDestinationOutput, error) {
+		return conn.PutDestination(ctx, &input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Destination (%s): %s", name, err)
 	}
 
-	destination := outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination
+	destination := output.Destination
 	d.SetId(aws.ToString(destination.DestinationName))
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
@@ -136,14 +136,14 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cloudwatchlogs.PutDestinationInput{
+		input := cloudwatchlogs.PutDestinationInput{
 			DestinationName: aws.String(d.Id()),
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
 		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutDestination(ctx, input)
+			return conn.PutDestination(ctx, &input)
 		})
 
 		if err != nil {
@@ -159,9 +159,10 @@ func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
-	_, err := conn.DeleteDestination(ctx, &cloudwatchlogs.DeleteDestinationInput{
+	input := cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

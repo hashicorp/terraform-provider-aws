@@ -60,7 +60,6 @@ The `associated_access_policy` block has the following attributes.
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `20m`)
-* `update` - (Default `20m`)
 * `delete` - (Default `40m`)
 
 ## Import

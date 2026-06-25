@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_acm_certificate: Correctly updates `subject_alternative_names` for Imported certificates
+```
+
+```release-note:enhacement
+resource/aws_acm_certificate: `pending_renewal` is always `false` for Imported certificates
+```

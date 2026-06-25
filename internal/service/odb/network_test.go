@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +31,7 @@ type oracleDBNetworkResourceTest struct {
 }
 
 var oracleDBNetworkResourceTestEntity = oracleDBNetworkResourceTest{
-	displayNamePrefix: "Ofake-tf-ora-net",
+	displayNamePrefix: "tf-ora-net",
 }
 
 // Basic test with bare minimum input
@@ -104,6 +106,53 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 						"cross_region_s3_restore_sources_access.*",
 						endpoints.UsWest2RegionID,
 					),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkResource_ec2PlacementGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
+	var network odbtypes.OdbNetwork
+	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	resourceName := "aws_odb_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: oracleDBNetworkResourceTestEntity.basicNetworkFroEC2PlacementGroup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network),
+					resource.TestCheckResourceAttrWith(resourceName, "ec2_placement_group_ids.#", func(value string) error {
+						count, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("parsing ec2_placement_group_ids count: %w", err)
+						}
+						if count <= 0 {
+							return fmt.Errorf("expected ec2_placement_group_ids to be non-empty, got %d", count)
+						}
+						return nil
+					}),
 				),
 			},
 			{
@@ -309,6 +358,14 @@ func TestAccODBNetworkResource_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.OracleDBNetwork, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -524,6 +581,25 @@ resource "aws_odb_network" "test" {
   kms_access                             = "DISABLED"
   cross_region_s3_restore_sources_access = []
   delete_associated_resources            = true
+}
+
+`, rName)
+	return networkRes
+}
+
+func (oracleDBNetworkResourceTest) basicNetworkFroEC2PlacementGroup(rName string) string {
+	networkRes := fmt.Sprintf(`
+
+resource "aws_odb_network" "test" {
+  display_name                = %[1]q
+  availability_zone_id        = "aps2-az3"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "DISABLED"
+  zero_etl_access             = "DISABLED"
+  sts_access                  = "DISABLED"
+  kms_access                  = "DISABLED"
+  delete_associated_resources = true
 }
 
 

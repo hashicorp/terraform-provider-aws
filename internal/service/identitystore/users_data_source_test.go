@@ -14,7 +14,7 @@ import (
 
 func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_identitystore_users.test"
 	userResourceName := "aws_identitystore_user.test"

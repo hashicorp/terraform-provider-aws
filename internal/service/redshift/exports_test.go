@@ -42,6 +42,7 @@ var (
 	FindHSMConfigurationByID                      = findHSMConfigurationByID
 	FindIntegrationByARN                          = findIntegrationByARN
 	FindLoggingStatusByID                         = findLoggingStatusByID
+	FindNamespaceRegistrationByID                 = findNamespaceRegistrationByID
 	FindParameterGroupByName                      = findParameterGroupByName
 	FindPartnerByFourPartKey                      = findPartnerByFourPartKey
 	FindRedshiftIDCApplicationByARN               = findRedshiftIDCApplicationByARN // nosemgrep:ci.redshift-in-var-name

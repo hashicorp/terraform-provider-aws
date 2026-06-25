@@ -51,7 +51,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -68,7 +68,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -85,7 +85,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -101,7 +101,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds4ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -117,7 +117,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
-					resource.TestCheckResourceAttrPair(ds5ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -133,7 +133,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds6ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 				),
 			},
 		},

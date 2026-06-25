@@ -95,19 +95,21 @@ type listAPIModel struct {
 
 func listAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApisInput) iter.Seq2[awstypes.Api, error] {
 	return func(yield func(awstypes.Api, error) bool) {
+		var stopped bool
 		err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 			for _, item := range page.Items {
 				if !yield(item, nil) {
+					stopped = true
 					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Api{}, fmt.Errorf("listing API Gateway V2 API resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Api](), fmt.Errorf("listing API Gateway V2 APIs: %w", err))
 		}
 	}
 }
