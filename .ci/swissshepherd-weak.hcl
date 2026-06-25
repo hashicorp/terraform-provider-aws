@@ -198,6 +198,7 @@ check "schema_docs" {
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
+    "`{Path}` Block",
     "`{Block}` Block",
     "{Block} Block",
     "{Block} block",
@@ -207,12 +208,15 @@ check "schema_docs" {
     "{Title} Arguments",
     "{Title} Argument Reference",
     "{Title} Attribute Reference",
+    "Nested Schema for `{Path}`",
+    "`{Path}`",
     "`{Block}`",
     "{Block}",
     "{Title}",
   ]
 
   prefer_block_heading_styles = [
+    "`{Path}` Block",
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
@@ -345,7 +349,6 @@ check "schema_docs" {
     "data_source/aws_dx_gateway",
     "data_source/aws_dx_location",
     "data_source/aws_dx_router_configuration",
-    "data_source/aws_dynamodb_table_item",
     "data_source/aws_dynamodb_table",
     "data_source/aws_dynamodb_tables",
     "data_source/aws_ebs_default_kms_key",
@@ -969,6 +972,7 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_memory_strategy",
     "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
+    "resource/aws_bedrockagentcore_registry",
     "resource/aws_bedrockagentcore_token_vault_cmk",
     "resource/aws_bedrockagentcore_workload_identity",
     "resource/aws_billing_view",
@@ -1263,7 +1267,6 @@ check "schema_docs" {
     "resource/aws_dynamodb_kinesis_streaming_destination",
     "resource/aws_dynamodb_resource_policy",
     "resource/aws_dynamodb_table_export",
-    "resource/aws_dynamodb_table_item",
     "resource/aws_dynamodb_table_replica",
     "resource/aws_dynamodb_table",
     "resource/aws_dynamodb_tag",
@@ -1442,7 +1445,6 @@ check "schema_docs" {
     "resource/aws_globalaccelerator_listener",
     "resource/aws_glue_catalog_database",
     "resource/aws_glue_catalog_table_optimizer",
-    "resource/aws_glue_catalog_table",
     "resource/aws_glue_catalog",
     "resource/aws_glue_classifier",
     "resource/aws_glue_connection",
@@ -1590,7 +1592,6 @@ check "schema_docs" {
     "resource/aws_lakeformation_identity_center_configuration",
     "resource/aws_lakeformation_lf_tag_expression",
     "resource/aws_lakeformation_lf_tag",
-    "resource/aws_lakeformation_opt_in",
     "resource/aws_lakeformation_permissions",
     "resource/aws_lakeformation_resource_lf_tag",
     "resource/aws_lakeformation_resource_lf_tags",
@@ -2036,7 +2037,6 @@ check "schema_docs" {
     "resource/aws_securitylake_data_lake",
     "resource/aws_securitylake_subscriber_notification",
     "resource/aws_securitylake_subscriber",
-    "resource/aws_serverlessapplicationrepository_cloudformation_stack",
     "resource/aws_service_discovery_http_namespace",
     "resource/aws_service_discovery_instance",
     "resource/aws_service_discovery_private_dns_namespace",

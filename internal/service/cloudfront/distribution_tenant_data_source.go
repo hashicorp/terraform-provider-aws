@@ -29,6 +29,7 @@ import (
 
 // @FrameworkDataSource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDistributionTenantDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &distributionTenantDataSource{}
 	return d, nil
@@ -142,12 +143,6 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 	}
 
 	// Flatten the distribution tenant data into the model
-	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// Use AutoFlex to flatten the response
 	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
 	if response.Diagnostics.HasError() {
 		return

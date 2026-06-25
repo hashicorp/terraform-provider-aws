@@ -9,6 +9,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write # required for `mkdocs-deploy-gh-pages` to push generated docs
+
 jobs:
   build:
     name: Deploy docs

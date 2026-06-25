@@ -165,6 +165,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_dynamodb_table_item",
 			Name:     "Table Item",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("hash_key_value", true),
+				inttypes.StringIdentityAttribute("range_key_value", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      tableItemImportID{},
+			},
 		},
 		{
 			Factory:  resourceTableReplica,
@@ -195,6 +206,19 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newTableItemResourceAsListResource,
+			TypeName: "aws_dynamodb_table_item",
+			Name:     "Table Item",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("hash_key_value", true),
+				inttypes.StringIdentityAttribute("range_key_value", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
 		},
 	})
 }

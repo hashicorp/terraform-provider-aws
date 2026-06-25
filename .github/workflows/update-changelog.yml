@@ -11,6 +11,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write      # required to create a branch and push changes
+  pull-requests: write # required to create a pull request
+
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
