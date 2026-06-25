@@ -126,6 +126,17 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T
 				// api_key_secret_config is input-only; the API does not echo it back on read.
 				ImportStateVerifyIgnore: []string{"api_key_secret_config"},
 			},
+			{
+				// Re-apply the same config to ensure the Optional+Computed
+				// api_key_secret_source and input-only api_key_secret_config block
+				// do not produce a perpetual diff.
+				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
 		},
 	})
 }
