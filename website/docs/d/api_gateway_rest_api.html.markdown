@@ -42,6 +42,7 @@ This data source exports the following attributes in addition to the arguments a
 * `minimum_compression_size` - Minimum response size to compress for the REST API.
 * `policy` - JSON formatted policy document that controls access to the API Gateway.
 * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
+* `security_policy` - TLS version + cipher suite for the REST API's default execute-api endpoint.
 * `tags` - Key-value map of resource tags.
 
 ### `endpoint_configuration` Block

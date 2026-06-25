@@ -92,6 +92,10 @@ func dataSourceRestAPI() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"security_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -129,6 +133,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
 	d.Set(names.AttrPolicy, match.Policy)
+	d.Set("security_policy", match.SecurityPolicy)
 
 	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
