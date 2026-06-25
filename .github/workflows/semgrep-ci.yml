@@ -35,7 +35,7 @@ jobs:
     name: Validate Code Quality Rules
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: &semgrep_image "semgrep/semgrep:1.168.0"
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
@@ -50,7 +50,7 @@ jobs:
     needs: [semgrep-validate]
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
@@ -62,7 +62,7 @@ jobs:
     needs: [semgrep-test]
     runs-on: custom-ubuntu-22.04-large
     container:
-      image: "semgrep/semgrep:1.168.0"
+      image: *semgrep_image
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
@@ -75,7 +75,7 @@ jobs:
     needs: [semgrep-test]
     runs-on: custom-ubuntu-22.04-large
     container:
-      image: "semgrep/semgrep:1.168.0"
+      image: *semgrep_image
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
@@ -106,7 +106,7 @@ jobs:
     name: Naming Scan Caps/AWS/EC2 (make semgrep-naming-cae)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -117,7 +117,7 @@ jobs:
     name: Test Configs Scan (make semgrep-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -128,7 +128,7 @@ jobs:
     name: Service Name Scan A-C (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -139,7 +139,7 @@ jobs:
     name: Service Name Scan C-I (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -150,7 +150,7 @@ jobs:
     name: Service Name Scan I-Q (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -161,7 +161,7 @@ jobs:
     name: Service Name Scan Q-Z (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
-      image: "semgrep/semgrep:1.154.0"
+      image: *semgrep_image
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
