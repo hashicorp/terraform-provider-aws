@@ -3060,56 +3060,56 @@ resource "aws_route53_record" "sample" {
 
 const testAccRecordConfig_typeChangeAllowOverwritePre = `
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
+  name = "domain.test"
 }
 
 resource "aws_route53_record" "managed" {
-	allow_overwrite = true
-	zone_id         = aws_route53_zone.main.zone_id
-	name            = "sample"
-	type            = "TXT"
-	ttl             = 30
-	records         = ["phase1-txt"]
+  allow_overwrite = true
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "sample"
+  type            = "TXT"
+  ttl             = 30
+  records         = ["phase1-txt"]
 
-	set_identifier = "primary"
-	weighted_routing_policy {
-		weight = 1
-	}
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
 }
 `
 
 const testAccRecordConfig_typeChangeAllowOverwritePost = `
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
+  name = "domain.test"
 }
 
 resource "aws_route53_record" "conflict" {
-	zone_id = aws_route53_zone.main.zone_id
-	name    = "sample"
-	type    = "A"
-	ttl     = 30
-	records = ["192.0.2.10"]
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "sample"
+  type    = "A"
+  ttl     = 30
+  records = ["192.0.2.10"]
 
-	set_identifier = "primary"
-	weighted_routing_policy {
-		weight = 1
-	}
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
 }
 
 resource "aws_route53_record" "managed" {
-	depends_on = [aws_route53_record.conflict]
+  depends_on = [aws_route53_record.conflict]
 
-	allow_overwrite = true
-	zone_id         = aws_route53_zone.main.zone_id
-	name            = "sample"
-	type            = "A"
-	ttl             = 30
-	records         = ["192.0.2.10"]
+  allow_overwrite = true
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "sample"
+  type            = "A"
+  ttl             = 30
+  records         = ["192.0.2.10"]
 
-	set_identifier = "primary"
-	weighted_routing_policy {
-		weight = 1
-	}
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
 }
 `
 
