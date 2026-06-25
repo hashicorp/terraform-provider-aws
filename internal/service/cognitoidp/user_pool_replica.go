@@ -311,7 +311,11 @@ func waitUserPoolReplicaCreated(ctx context.Context, conn *cognitoidentityprovid
 
 func waitUserPoolReplicaStatus(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, regionName string, status awstypes.UpdateReplicaStatusType, timeout time.Duration) (*awstypes.UserPoolReplicaType, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ReplicaStatusTypeCreating)},
+		Pending: []string{
+			string(awstypes.ReplicaStatusTypeCreating),
+			string(awstypes.ReplicaStatusTypeActive),
+			string(awstypes.ReplicaStatusTypeInactive),
+		},
 		Target:  []string{string(status)},
 		Refresh: statusUserPoolReplica(conn, userPoolID, regionName),
 		Timeout: timeout,
