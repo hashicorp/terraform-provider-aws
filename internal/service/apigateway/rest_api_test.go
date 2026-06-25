@@ -248,15 +248,16 @@ func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicyTls12)),
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509), string(types.EndpointAccessModeBasic)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeBasic)),
 				),
 			},
 			{
@@ -2203,13 +2204,18 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
-func testAccRestAPIConfig_securityPolicy(rName string, securityPolicy string) string {
+func testAccRestAPIConfig_securityPolicy(rName, securityPolicy, endpointAccessMode string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name            = %[1]q
-  security_policy = %[2]q
+  name                 = %[1]q
+  security_policy      = %[2]q
+  endpoint_access_mode = %[3]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
-`, rName, securityPolicy)
+`, rName, securityPolicy, endpointAccessMode)
 }
 
 func testAccRestAPIConfig_keySource(rName string, apiKeySource string) string {

@@ -50,6 +50,10 @@ func dataSourceRestAPI() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"endpoint_access_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"endpoint_configuration": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -123,6 +127,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 	d.Set(names.AttrDescription, match.Description)
+	d.Set("endpoint_access_mode", match.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}

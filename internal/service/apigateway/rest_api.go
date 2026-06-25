@@ -98,6 +98,11 @@ func resourceRestAPI() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"endpoint_access_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.EndpointAccessMode](),
+				},
 				"endpoint_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -219,6 +224,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
+	if v, ok := d.GetOk("endpoint_access_mode"); ok {
+		input.EndpointAccessMode = types.EndpointAccessMode(v.(string))
+	}
+
 	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -331,6 +340,7 @@ func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.R
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
+	d.Set("endpoint_access_mode", api.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
@@ -440,6 +450,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				Op:    types.OpReplace,
 				Path:  aws.String("/disableExecuteApiEndpoint"),
 				Value: aws.String(value),
+			})
+		}
+
+		if d.HasChange("endpoint_access_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/endpointAccessMode"),
+				Value: aws.String(d.Get("endpoint_access_mode").(string)),
 			})
 		}
 
@@ -703,6 +721,14 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 			Op:    types.OpReplace,
 			Path:  aws.String("/disableExecuteApiEndpoint"),
 			Value: aws.String(strconv.FormatBool(v.(bool))),
+		})
+	}
+
+	if v, ok := d.GetOk("endpoint_access_mode"); ok && types.EndpointAccessMode(v.(string)) != output.EndpointAccessMode {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/endpointAccessMode"),
+			Value: aws.String(v.(string)),
 		})
 	}
 
