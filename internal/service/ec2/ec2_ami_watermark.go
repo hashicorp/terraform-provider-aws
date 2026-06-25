@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,20 +15,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ami_watermark", name="AMI Watermark")
+// @IdentityAttribute("image_id", testNotNull=true)
+// @IdentityAttribute("watermark_key")
+// @ImportIDHandler("amiWatermarkImportID", setIDAttribute=true)
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(importStateIdAttributes="image_id;watermark_key", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importIgnore="watermark_name")
+// @Testing(plannableImportAction="Replace")
 func newAMIWatermarkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &amiWatermarkResource{}, nil
 }
@@ -35,6 +45,7 @@ func newAMIWatermarkResource(_ context.Context) (resource.ResourceWithConfigure,
 type amiWatermarkResource struct {
 	framework.ResourceWithModel[amiWatermarkResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *amiWatermarkResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -152,17 +163,33 @@ func (r *amiWatermarkResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *amiWatermarkResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	const amiWatermarkIDParts = 2
-	parts, err := intflex.ExpandResourceId(req.ID, amiWatermarkIDParts, false)
+var (
+	_ inttypes.ImportIDParser          = amiWatermarkImportID{}
+	_ inttypes.FrameworkImportIDCreator = amiWatermarkImportID{}
+)
+
+type amiWatermarkImportID struct{}
+
+func (amiWatermarkImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var watermarkKey types.String
+	state.GetAttribute(ctx, path.Root("watermark_key"), &watermarkKey)
+	return fwflex.StringValueFromFramework(ctx, watermarkKey)
+}
+
+func (amiWatermarkImportID) Parse(id string) (string, map[string]any, error) {
+	const partCount = 2
+	parts, err := intflex.ExpandResourceId(id, partCount, false)
 	if err != nil {
-		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-		return
+		return "", nil, fmt.Errorf("id %q should be in the format <image-id>%s<watermark-key>", id, intflex.ResourceIdSeparator)
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("image_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("watermark_key"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	watermarkKey := parts[1]
+	result := map[string]any{
+		"image_id":      parts[0],
+		"watermark_key": watermarkKey,
+	}
+
+	return watermarkKey, result, nil
 }
 
 type amiWatermarkResourceModel struct {
