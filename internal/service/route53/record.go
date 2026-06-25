@@ -652,6 +652,11 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		oldRec.SetIdentifier = aws.String(v.(string))
 	}
 
+	newRecAction := awstypes.ChangeActionCreate
+	if d.Get("allow_overwrite").(bool) {
+		newRecAction = awstypes.ChangeActionUpsert
+	}
+
 	// Delete the old and create the new records in a single batch.
 	input := &route53.ChangeResourceRecordSetsInput{
 		ChangeBatch: &awstypes.ChangeBatch{
@@ -661,7 +666,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 					ResourceRecordSet: oldRec,
 				},
 				{
-					Action:            awstypes.ChangeActionCreate,
+					Action:            newRecAction,
 					ResourceRecordSet: expandResourceRecordSet(d, aws.ToString(zoneRecord.HostedZone.Name)),
 				},
 			},
