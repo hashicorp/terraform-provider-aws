@@ -10,8 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -35,6 +37,9 @@ type serviceUpdateActionsDataSource struct {
 func (d *serviceUpdateActionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"cache_cluster_id": schema.StringAttribute{
+				Optional: true,
+			},
 			"replication_group_id": schema.StringAttribute{
 				Optional: true,
 			},
@@ -57,6 +62,7 @@ func (d *serviceUpdateActionsDataSource) Read(ctx context.Context, req datasourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.CacheClusterIds = flex.StringSliceValueFromFramework(ctx, data.CacheClusterID)
 	input.ReplicationGroupIds = flex.StringSliceValueFromFramework(ctx, data.ReplicationGroupID)
 
 	updateActions, err := findServiceUpdateActions(ctx, conn, &input)
@@ -82,8 +88,18 @@ func (d *serviceUpdateActionsDataSource) Read(ctx context.Context, req datasourc
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
+func (d *serviceUpdateActionsDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.Conflicting(
+			path.MatchRoot("cache_cluster_id"),
+			path.MatchRoot("replication_group_id"),
+		),
+	}
+}
+
 type serviceUpdateActionsDataSourceModel struct {
 	framework.WithRegionModel
+	CacheClusterID     types.String                                       `tfsdk:"cache_cluster_id" autoflex:"-"`
 	ReplicationGroupID types.String                                       `tfsdk:"replication_group_id" autoflex:"-"`
 	UpdateActions      fwtypes.ListNestedObjectValueOf[updateActionModel] `tfsdk:"update_actions" autoflex:"-"`
 }
