@@ -26,13 +26,13 @@ import (
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
 // @SingletonIdentity
 // @IdentityVersion(1, sdkV2IdentityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
-// @V60SDKv2Fix
 // @NoImport
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 // Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")
 func resourceImageBlockPublicAccess() *schema.Resource {
