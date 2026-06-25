@@ -164,11 +164,29 @@ resource "aws_lakeformation_permissions" "test" {
 }
 ```
 
+### Grant Permissions For An LF-Tag Expression
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_permissions" "example" {
+  principal = aws_iam_role.example.arn
+
+  permissions                   = ["DESCRIBE"]
+  permissions_with_grant_option = ["DESCRIBE"]
+
+  lf_tag_expression {
+    catalog_id = data.aws_caller_identity.current.account_id
+    name       = aws_lakeformation_lf_tag_expression.example.name
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `permissions` - (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `permissions` - (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_CATALOG`, `CREATE_DATABASE`, `CREATE_LF_TAG`, `CREATE_LF_TAG_EXPRESSION`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `GRANT_WITH_LF_TAG_EXPRESSION`, `INSERT`, `SELECT`, and `SUPER_USER`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `principal` - (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, Federated Users, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 
 ~> **NOTE:** We highly recommend that the `principal` _NOT_ be a Lake Formation administrator (granted using `aws_lakeformation_data_lake_settings`). The entity (e.g., IAM role) running Terraform will most likely need to be a Lake Formation administrator. As such, the entity will have implicit permissions and does not need permissions granted through this resource.
@@ -180,6 +198,7 @@ One of the following is required:
 * `data_location` - (Optional) Configuration block for a data location resource. Detailed below.
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
+* `lf_tag_expression` - (Optional) Configuration block for an LF-Tag expression resource. Detailed below.
 * `lf_tag_policy` - (Optional) Configuration block for an LF-tag policy resource. Detailed below.
 * `table` - (Optional) Configuration block for a table resource. Detailed below.
 * `table_with_columns` - (Optional) Configuration block for a table with columns resource. Detailed below.
@@ -223,6 +242,16 @@ The following arguments are required:
 
 * `key` - (Required) The key-name for the tag.
 * `values` - (Required) A list of possible values an attribute can take.
+
+The following argument is optional:
+
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### lf_tag_expression
+
+The following argument is required:
+
+* `name` - (Required) Name of the LF-Tag expression.
 
 The following argument is optional:
 
