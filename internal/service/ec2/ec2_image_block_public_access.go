@@ -119,6 +119,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 var imageBlockPublicAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
 	Version: 0,
 	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrAccountID] = meta.(*conns.AWSClient).AccountID(ctx)
 		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
 		return rawState, nil
 	},
