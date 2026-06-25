@@ -39,6 +39,7 @@ rules:
         - "/internal/service/ssoadmin/trusted_token_issuer.go"
         - "/internal/service/verifiedpermissions/schema.go"
         - "/internal/service/bedrockagentcore/gateway_target.go"
+        - "/internal/service/amp/scraper_logging_configuration.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
       - metavariable-comparison:
