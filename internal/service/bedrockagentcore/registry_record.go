@@ -1014,6 +1014,90 @@ type mcpDescriptorModel struct {
 	Tools  fwtypes.ListNestedObjectValueOf[toolsDefinitionModel]  `tfsdk:"tools"`
 }
 
+var (
+	_ fwflex.TypedExpander = mcpDescriptorModel{}
+)
+
+func (m mcpDescriptorModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.McpDescriptor]():
+		return m.expandToMcpDescriptor(ctx)
+	case reflect.TypeFor[awstypes.UpdatedMcpDescriptorFields]():
+		return m.expandToUpdatedMcpDescriptorFields(ctx)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("mcpDescriptorModel ExpandTo: %q", targetType))
+	}
+	return nil, diags
+}
+
+func (m mcpDescriptorModel) expandToMcpDescriptor(ctx context.Context) (awstypes.McpDescriptor, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.McpDescriptor
+	if !m.Server.IsNull() {
+		data, d := m.Server.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.McpDescriptor](), diags
+		}
+		var v awstypes.ServerDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.McpDescriptor](), diags
+		}
+		r.Server = &v
+	}
+	if !m.Tools.IsNull() {
+		data, d := m.Tools.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.McpDescriptor](), diags
+		}
+		var v awstypes.ToolsDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.McpDescriptor](), diags
+		}
+		r.Tools = &v
+	}
+	return r, diags
+}
+
+func (m mcpDescriptorModel) expandToUpdatedMcpDescriptorFields(ctx context.Context) (awstypes.UpdatedMcpDescriptorFields, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	r := awstypes.UpdatedMcpDescriptorFields{
+		Server: &awstypes.UpdatedServerDefinition{},
+		Tools:  &awstypes.UpdatedToolsDefinition{},
+	}
+	if !m.Server.IsNull() {
+		data, d := m.Server.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedMcpDescriptorFields](), diags
+		}
+		var v awstypes.ServerDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedMcpDescriptorFields](), diags
+		}
+		r.Server.OptionalValue = &v
+	}
+	if !m.Tools.IsNull() {
+		data, d := m.Tools.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedMcpDescriptorFields](), diags
+		}
+		var v awstypes.ToolsDefinition
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedMcpDescriptorFields](), diags
+		}
+		r.Tools.OptionalValue = &v
+	}
+	return r, diags
+}
+
 type serverDefinitionModel struct {
 	InlineContent jsontypes.Normalized `tfsdk:"inline_content"`
 	SchemaVersion types.String         `tfsdk:"schema_version"`
