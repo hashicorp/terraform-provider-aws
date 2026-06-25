@@ -568,7 +568,7 @@ func flattenTime(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isN
 	}
 
 	// Only dereference if the value is a pointer or interface
-	if vFrom.Kind() == reflect.Pointer || vFrom.Kind() == reflect.Interface {
+	if tfreflect.CanElem(vFrom) {
 		if !vFrom.Elem().CanInterface() {
 			diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
 			return diags
