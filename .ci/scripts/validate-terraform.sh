@@ -111,6 +111,10 @@ process_one_file() {
 
 # Single-file mode.
 if [[ "${1:-}" == "--process-file" ]]; then
+    if [[ -z "${2:-}" ]]; then
+        echo "Usage: ${BASH_SOURCE[0]} --process-file <path>" >&2
+        exit 64
+    fi
     process_one_file "$2"
     exit $?
 fi
