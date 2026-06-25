@@ -4755,6 +4755,22 @@ func findImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, a
 	return nil, &retry.NotFoundError{}
 }
 
+func findImageWatermark(ctx context.Context, conn *ec2.Client, imageID, watermarkKey string) (*awstypes.ImageWatermark, error) {
+	image, err := findImageByID(ctx, conn, imageID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range image.ImageWatermarks {
+		if aws.ToString(v.WatermarkKey) == watermarkKey {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func findSerialConsoleAccessStatus(ctx context.Context, conn *ec2.Client) (*ec2.GetSerialConsoleAccessStatusOutput, error) {
 	var input ec2.GetSerialConsoleAccessStatusInput
 	output, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
