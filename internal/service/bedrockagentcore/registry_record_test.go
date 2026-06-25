@@ -450,6 +450,93 @@ func TestAccBedrockAgentCoreRegistryRecord_mcp(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreRegistryRecord_descriptorType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1, rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix), acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_registry_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckRegistries(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryRecordExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("descriptor_type"), tfknownvalue.StringExact(awstypes.DescriptorTypeCustom)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/agent_skills/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryRecordExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("descriptor_type"), tfknownvalue.StringExact(awstypes.DescriptorTypeAgentSkills)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/mcp/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryRecordExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("descriptor_type"), tfknownvalue.StringExact(awstypes.DescriptorTypeMcp)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/a2a/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryRecordExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("descriptor_type"), tfknownvalue.StringExact(awstypes.DescriptorTypeA2a)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRegistryRecordDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
