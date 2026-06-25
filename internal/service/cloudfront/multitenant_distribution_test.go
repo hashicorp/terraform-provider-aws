@@ -85,7 +85,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 							"viewer_protocol_policy":      knownvalue.StringExact("redirect-to-https"),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"connection_attempts": knownvalue.Int32Exact(tfcloudfront.DefaultConnectionAttempts),
 							"connection_timeout":  knownvalue.Int32Exact(tfcloudfront.DefaultConnectionTimeout),
@@ -250,7 +250,7 @@ func TestAccCloudFrontMultiTenantDistribution_CustomOrigin_basic(t *testing.T) {
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"custom_origin_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
