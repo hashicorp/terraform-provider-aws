@@ -35,6 +35,7 @@ func TestAccSESV2EmailIdentityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.last_key_generation_timestamp", dataSourceName, "dkim_signing_attributes.0.last_key_generation_timestamp"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.next_signing_key_length", dataSourceName, "dkim_signing_attributes.0.next_signing_key_length"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", dataSourceName, "dkim_signing_attributes.0.signing_attributes_origin"),
+					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.signing_hosted_zone", dataSourceName, "dkim_signing_attributes.0.signing_hosted_zone"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.status", dataSourceName, "dkim_signing_attributes.0.status"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.tokens.#", dataSourceName, "dkim_signing_attributes.0.tokens.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_type", dataSourceName, "identity_type"),
