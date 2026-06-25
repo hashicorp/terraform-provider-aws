@@ -57,6 +57,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -100,6 +101,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -133,6 +135,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -165,6 +168,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -197,6 +201,39 @@ func ResourcePermissions() *schema.Resource {
 						},
 					},
 				},
+				"lf_tag_expression": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					ExactlyOneOf: []string{
+						"catalog_resource",
+						"data_location",
+						names.AttrDatabase,
+						"lf_tag",
+						"lf_tag_expression",
+						"lf_tag_policy",
+						"table",
+						"table_with_columns",
+						"data_cells_filter",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
 				"lf_tag_policy": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -208,6 +245,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -291,6 +329,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -343,6 +382,7 @@ func ResourcePermissions() *schema.Resource {
 						"data_location",
 						names.AttrDatabase,
 						"lf_tag",
+						"lf_tag_expression",
 						"lf_tag_policy",
 						"table",
 						"table_with_columns",
@@ -567,6 +607,14 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("lf_tag", nil)
 	}
 
+	if permissions[0].Resource.LFTagExpression != nil {
+		if err := d.Set("lf_tag_expression", []any{flattenLFTagExpressionResource(permissions[0].Resource.LFTagExpression)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting LF-tag expression: %s", err)
+		}
+	} else {
+		d.Set("lf_tag_expression", nil)
+	}
+
 	if permissions[0].Resource.LFTagPolicy != nil {
 		if err := d.Set("lf_tag_policy", []any{flattenLFTagPolicyResource(permissions[0].Resource.LFTagPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
@@ -737,6 +785,9 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterLFTagPermissions(principalIdentifier)
 	}
+	if v, ok := d.GetOk("lf_tag_expression"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterLFTagExpressionPermissions(principalIdentifier)
+	}
 	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterLFTagPolicyPermissions(principalIdentifier)
 	}
@@ -821,6 +872,10 @@ func expandResource(d *schema.ResourceData) *awstypes.Resource {
 	} else if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		resource = &awstypes.Resource{
 			LFTag: ExpandLFTagKeyResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk("lf_tag_expression"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			LFTagExpression: ExpandLFTagExpressionResource(v.([]any)[0].(map[string]any)),
 		}
 	} else if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		resource = &awstypes.Resource{
@@ -936,6 +991,42 @@ func ExpandDatabaseResource(tfMap map[string]any) *awstypes.DatabaseResource {
 }
 
 func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func ExpandLFTagExpressionResource(tfMap map[string]any) *awstypes.LFTagExpressionResource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LFTagExpressionResource{}
+
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenLFTagExpressionResource(apiObject *awstypes.LFTagExpressionResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
