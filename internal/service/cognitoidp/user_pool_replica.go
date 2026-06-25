@@ -37,6 +37,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolReplicaType")
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(identityTest=false)
 func newUserPoolReplicaResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolReplicaResource{}
 
