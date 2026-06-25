@@ -780,6 +780,10 @@ func statusCapacityProviderUpdate(conn *ecs.Client, arn string) retry.StateRefre
 			return nil, "", err
 		}
 
+		if output.UpdateStatus == awstypes.CapacityProviderUpdateStatusUpdateFailed {
+			return output, string(output.UpdateStatus), errors.New(aws.ToString(output.UpdateStatusReason))
+		}
+
 		return output, string(output.UpdateStatus), nil
 	}
 }
@@ -795,8 +799,6 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
-
 		return output, err
 	}
 
