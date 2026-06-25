@@ -428,7 +428,7 @@ func (r *registryRecordResource) Create(ctx context.Context, req resource.Create
 	}
 
 	// Set values for unknowns.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, created, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, created, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -501,8 +501,15 @@ func (r *registryRecordResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		if _, err := waitRegistryRecordUpdated(ctx, conn, registryID, recordID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		updated, err := waitRegistryRecordUpdated(ctx, conn, registryID, recordID, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, recordID)
+			return
+		}
+
+		// Set values for unknowns.
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, updated, &plan))
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -832,12 +839,12 @@ func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awsty
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		var v awstypes.UpdatedA2aDescriptor
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		var v awstypes.A2aDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		r.A2a = &v
+		r.A2a.OptionalValue = &v
 	}
 	if !m.AgentSkills.IsNull() {
 		data, d := m.AgentSkills.ToPtr(ctx)
@@ -845,12 +852,12 @@ func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awsty
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		var v awstypes.UpdatedAgentSkillsDescriptor
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		var v awstypes.UpdatedAgentSkillsDescriptorFields
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		r.AgentSkills = &v
+		r.AgentSkills.OptionalValue = &v
 	}
 	if !m.Custom.IsNull() {
 		data, d := m.Custom.ToPtr(ctx)
@@ -858,12 +865,12 @@ func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awsty
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		var v awstypes.UpdatedCustomDescriptor
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		var v awstypes.CustomDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		r.Custom = &v
+		r.Custom.OptionalValue = &v
 	}
 	if !m.MCP.IsNull() {
 		data, d := m.MCP.ToPtr(ctx)
@@ -871,12 +878,12 @@ func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awsty
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		var v awstypes.UpdatedMcpDescriptor
+		var v awstypes.UpdatedMcpDescriptorFields
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
 		if diags.HasError() {
 			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
 		}
-		r.Mcp = &v
+		r.Mcp.OptionalValue = &v
 	}
 	return awstypes.UpdatedDescriptors{OptionalValue: &r}, diags
 }
