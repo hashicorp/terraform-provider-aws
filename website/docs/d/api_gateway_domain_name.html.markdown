@@ -48,5 +48,5 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `endpoint_configuration`
 
-* `ip_address_type` - IP address types that can invoke an API (RestApi).
+* `ip_address_type` - IP address types that can invoke a DomainName.
 * `types` - List of endpoint types.
