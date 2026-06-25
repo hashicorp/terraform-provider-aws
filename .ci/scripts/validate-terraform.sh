@@ -123,13 +123,15 @@ fi
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
 
 # xargs flags:
-#   -r / --no-run-if-empty: don't invoke the worker on empty stdin.
 #   -P JOBS: run up to JOBS workers in parallel.
 #   -I {}:   substitute {} with each filename (one per invocation).
 # We re-invoke this same script in --process-file mode for each filename;
 # ${BASH_SOURCE[0]} is used (rather than $0) so the fan-out still works when
 # the script is invoked as `bash validate-terraform.sh ...`.
 #
+# Both GNU xargs (findutils 4.5.2+, 2009) and BSD xargs default to not running
+# the worker when stdin is empty, so no -r/--no-run-if-empty flag is needed.
+#
 # xargs exits 123 if any worker exits non-zero (1-125), so the workflow step
 # still fails when any file has lint errors.
-xargs -r -P "${JOBS}" -I {} "${BASH_SOURCE[0]}" --process-file {}
+xargs -P "${JOBS}" -I {} "${BASH_SOURCE[0]}" --process-file {}
