@@ -3343,3 +3343,94 @@ resource "aws_cognito_user_pool" "test" {
 }
 `, rName, userPoolTier)
 }
+
+func TestAccCognitoIDPUserPool_keyConfiguration_awsOwned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_keyConfigurationAWSOwned(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "key_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_configuration.0.key_type", "AWS_OWNED_KEY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccUserPoolConfig_keyConfigurationAWSOwned(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  key_configuration {
+    key_type = "AWS_OWNED_KEY"
+  }
+}
+`, rName)
+}
+
+func TestAccCognitoIDPUserPool_keyConfiguration_customerManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_keyConfigurationCustomerManaged(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "key_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_configuration.0.key_type", "CUSTOMER_MANAGED_KEY"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_configuration.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccUserPoolConfig_keyConfigurationCustomerManaged(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  multi_region            = true
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  key_configuration {
+    key_type    = "CUSTOMER_MANAGED_KEY"
+    kms_key_arn = aws_kms_key.test.arn
+  }
+}
+`, rName)
+}
