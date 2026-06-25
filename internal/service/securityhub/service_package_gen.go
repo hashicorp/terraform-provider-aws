@@ -217,7 +217,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Insight",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -303,7 +303,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_securityhub_insight",
 			Name:     "Insight",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newStandardsControlResourceAsListResource,
