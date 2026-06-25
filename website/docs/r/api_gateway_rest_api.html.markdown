@@ -160,13 +160,13 @@ resource "aws_api_gateway_stage" "example" {
 }
 ```
 
-### Enhanced Security Policy
+### Security Policy
 
 ```terraform
 resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 
-  security_policy = "SecurityPolicy_TLS13_1_3_2025_09"
+  security_policy = "TLS_1_2"
 
   endpoint_configuration {
     types = ["REGIONAL"]

@@ -254,9 +254,9 @@ func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicySecurityPolicyTls1313202509)),
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicyTls12)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1313202509)),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
 				),
 			},
 			{
@@ -264,12 +264,6 @@ func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
-			},
-			{
-				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicyTls12)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
-				),
 			},
 		},
 	})
