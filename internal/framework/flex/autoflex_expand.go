@@ -1576,7 +1576,7 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 		return diags
 	}
 
-	if targetType.Kind() == reflect.Struct {
+	if targetType.Kind() == reflect.Struct && tfreflect.ValueCanElem(expandedVal) {
 		expandedVal = expandedVal.Elem()
 	}
 	expandedType := expandedVal.Type()
@@ -1620,7 +1620,7 @@ func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, t
 		return diags
 	}
 
-	if targetType.Kind() == reflect.Struct {
+	if targetType.Kind() == reflect.Struct && tfreflect.ValueCanElem(expandedVal) {
 		expandedVal = expandedVal.Elem()
 	}
 	expandedType := expandedVal.Type()
