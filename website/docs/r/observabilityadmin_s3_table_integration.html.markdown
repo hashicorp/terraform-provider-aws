@@ -138,7 +138,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_observabilityadmin_s3_table_integration.example
   identity = {
-    "arn" = "arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id"
+    "arn" = "arn:aws:observabilityadmin:us-east-1:123456789012:s3tableintegration/example-id"
   }
 }
 
@@ -158,12 +158,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_observabilityadmin_s3_table_integration.example
-  id = "arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id"
+  id = "arn:aws:observabilityadmin:us-east-1:123456789012:s3tableintegration/example-id"
 }
 ```
 
 Using `terraform import`, import CloudWatch Observability Admin S3 Table Integrations using the `arn`. For example:
 
 ```console
-% terraform import aws_observabilityadmin_s3_table_integration.example arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id
+% terraform import aws_observabilityadmin_s3_table_integration.example arn:aws:observabilityadmin:us-east-1:123456789012:s3tableintegration/example-id
 ```
