@@ -27,6 +27,6 @@ variable "rName" {
 }
 
 variable "description" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
