@@ -211,12 +211,8 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		if !plan.Description.Equal(state.Description) {
-			input.Description = &awstypes.UpdatedDescription{}
-			if !plan.Description.IsNull() {
-				input.Description.OptionalValue = plan.Description.ValueStringPointer()
-			}
-		}
+		// Additional fields.
+		input.Description = updatedDescription(ctx, plan.Description, state.Description)
 
 		_, err := conn.UpdatePolicyEngine(ctx, &input)
 		if err != nil {
@@ -368,4 +364,17 @@ type policyEngineResourceModel struct {
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+}
+
+func updatedDescription(ctx context.Context, plan, state types.String) *awstypes.UpdatedDescription {
+	if plan.Equal(state) {
+		return nil
+	}
+
+	apiObject := &awstypes.UpdatedDescription{}
+	if !plan.IsNull() {
+		apiObject.OptionalValue = fwflex.StringFromFramework(ctx, plan)
+	}
+
+	return apiObject
 }

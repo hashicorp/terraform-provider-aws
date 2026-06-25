@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -484,9 +485,15 @@ func (r *registryRecordResource) Update(ctx context.Context, req resource.Update
 	if diff.HasChanges() {
 		registryID, recordID := fwflex.StringValueFromFramework(ctx, plan.RegistryID), fwflex.StringValueFromFramework(ctx, plan.RecordID)
 		var input bedrockagentcorecontrol.UpdateRegistryRecordInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("Description")))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		// Additional fields.
+		input.Description = updatedDescription(ctx, plan.Description, state.Description)
+		if plan.Descriptors.IsNull() {
+			input.Descriptors = &awstypes.UpdatedDescriptors{}
 		}
 
 		_, err := conn.UpdateRegistryRecord(ctx, &input)
@@ -739,6 +746,169 @@ type descriptorsModel struct {
 	MCP         fwtypes.ListNestedObjectValueOf[mcpDescriptorModel]         `tfsdk:"mcp"`
 }
 
+var (
+	_ fwflex.TypedExpander = descriptorsModel{}
+)
+
+func (m descriptorsModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.Descriptors]():
+		return m.expandToDescriptors(ctx)
+	case reflect.TypeFor[awstypes.UpdatedDescriptors]():
+		return m.expandToUpdatedDescriptors(ctx)
+	}
+	return nil, diags
+}
+
+func (m descriptorsModel) expandToDescriptors(ctx context.Context) (awstypes.Descriptors, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.Descriptors
+	if !m.A2A.IsNull() {
+		data, d := m.A2A.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		var v awstypes.A2aDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		r.A2a = &v
+	}
+	if !m.AgentSkills.IsNull() {
+		data, d := m.AgentSkills.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		var v awstypes.AgentSkillsDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		r.AgentSkills = &v
+	}
+	if !m.Custom.IsNull() {
+		data, d := m.Custom.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		var v awstypes.CustomDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		r.Custom = &v
+	}
+	if !m.MCP.IsNull() {
+		data, d := m.MCP.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		var v awstypes.McpDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.Descriptors](), diags
+		}
+		r.Mcp = &v
+	}
+	return r, diags
+}
+
+func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (awstypes.UpdatedDescriptors, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	r := awstypes.UpdatedDescriptorsUnion{
+		A2a:         &awstypes.UpdatedA2aDescriptor{},
+		AgentSkills: &awstypes.UpdatedAgentSkillsDescriptor{},
+		Custom:      &awstypes.UpdatedCustomDescriptor{},
+		Mcp:         &awstypes.UpdatedMcpDescriptor{},
+	}
+	if !m.A2A.IsNull() {
+		data, d := m.A2A.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		var v awstypes.UpdatedA2aDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		r.A2a = &v
+	}
+	if !m.AgentSkills.IsNull() {
+		data, d := m.AgentSkills.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		var v awstypes.UpdatedAgentSkillsDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		r.AgentSkills = &v
+	}
+	if !m.Custom.IsNull() {
+		data, d := m.Custom.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		var v awstypes.UpdatedCustomDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v.OptionalValue))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		r.Custom = &v
+	}
+	if !m.MCP.IsNull() {
+		data, d := m.MCP.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		var v awstypes.UpdatedMcpDescriptor
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &v))
+		if diags.HasError() {
+			return inttypes.Zero[awstypes.UpdatedDescriptors](), diags
+		}
+		r.Mcp = &v
+	}
+	return awstypes.UpdatedDescriptors{OptionalValue: &r}, diags
+}
+
+// func (m descriptorsModel) expandToUpdatedDescriptors(ctx context.Context) (*awstypes.UpdatedDescriptors, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	apiObject := awstypes.UpdatedDescriptorsUnion{
+// 		A2a:         &awstypes.UpdatedA2aDescriptor{},
+// 		AgentSkills: &awstypes.UpdatedAgentSkillsDescriptor{},
+// 		Custom:      &awstypes.UpdatedCustomDescriptor{},
+// 		Mcp:         &awstypes.UpdatedMcpDescriptor{},
+// 	}
+// 	switch {
+// 	case !m.A2A.IsNull():
+// 		var r awstypes.A2aDescriptor
+// 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.A2A, &r))
+// 		if diags.HasError() {
+// 			return nil, diags
+// 		}
+// 		apiObject.A2a.OptionalValue = &r
+// 	case !m.AgentSkills.IsNull():
+// 		var r awstypes.AgentSkillsDescriptor
+// 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.AgentSkills, &r))
+// 		if diags.HasError() {
+// 			return nil, diags
+// 		}
+// 		apiObject.AgentSkills.OptionalValue = &r
+// 	}
+// 	return &awstypes.UpdatedDescriptors{OptionalValue: &apiObject}, diags
+// }
+
 type a2aDescriptorModel struct {
 	AgentCard fwtypes.ListNestedObjectValueOf[agentCardDefinitionModel] `tfsdk:"agent_card"`
 }
@@ -824,7 +994,7 @@ func (m *registryRecordCredentialProviderModel) Flatten(ctx context.Context, v a
 		}
 		m.OAuth = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("model configuration flatten: %T", v))
+		diags.AddError("Unsupported Type", fmt.Sprintf("model registryRecordCredentialProvider flatten: %T", v))
 	}
 	return diags
 }

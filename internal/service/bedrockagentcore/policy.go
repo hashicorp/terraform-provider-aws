@@ -235,12 +235,8 @@ func (r *policyResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		if !plan.Description.Equal(state.Description) {
-			input.Description = &awstypes.UpdatedDescription{}
-			if !plan.Description.IsNull() {
-				input.Description.OptionalValue = plan.Description.ValueStringPointer()
-			}
-		}
+		// Additional fields.
+		input.Description = updatedDescription(ctx, plan.Description, state.Description)
 
 		_, err := conn.UpdatePolicy(ctx, &input)
 		if err != nil {

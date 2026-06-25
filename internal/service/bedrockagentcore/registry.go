@@ -229,15 +229,8 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 			}
 		}
 
-		if !plan.Description.Equal(state.Description) {
-			if plan.Description.IsNull() {
-				input.Description = &awstypes.UpdatedDescription{}
-			} else {
-				input.Description = &awstypes.UpdatedDescription{
-					OptionalValue: fwflex.StringFromFramework(ctx, plan.Description),
-				}
-			}
-		}
+		// Additional fields.
+		input.Description = updatedDescription(ctx, plan.Description, state.Description)
 
 		if !plan.Name.Equal(state.Name) {
 			input.Name = plan.Name.ValueStringPointer()
