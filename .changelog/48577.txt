@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lightsail_key_pair: Mark `private_key` as sensitive
+```
