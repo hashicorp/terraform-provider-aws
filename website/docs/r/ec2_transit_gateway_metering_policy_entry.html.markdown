@@ -56,6 +56,13 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_metering_policy_entry` using the composite identifier `{transit_gateway_metering_policy_id},{policy_rule_number}`. For example:

@@ -11,11 +11,14 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -30,13 +33,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,10 +81,8 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 			},
 			"current_deployment": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -248,6 +249,9 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Set a state value to trigger replacement on error
+	resp.State.SetAttribute(ctx, path.Root("service_arn"), out.Service.ServiceArn)
+
 	serviceARN := aws.ToString(out.Service.ServiceArn)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	var waitOut *awstypes.ECSExpressGatewayService
@@ -277,6 +281,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	if len(waitOut.ActiveConfigurations) > 0 {
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+		planNetworkConfiguration := plan.NetworkConfiguration
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
@@ -284,7 +289,9 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		}
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
+		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
+	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
 	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
@@ -302,6 +309,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	conn := r.Meta().ECSClient(ctx)
+	ec2Conn := r.Meta().EC2Client(ctx)
 
 	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
@@ -333,9 +341,12 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 			return
 		}
 
+		filterManagedSecurityGroups(ctx, ec2Conn, &state.NetworkConfiguration)
+
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
 	}
+	normalizeIngressPathEndpoints(ctx, &state.IngressPaths)
 
 	// Set Optional+Computed attributes from API response
 	if out.Cluster != nil {
@@ -376,8 +387,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 	conn := r.Meta().ECSClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("active_configurations"), fwflex.WithIgnoredField("current_deployment"),
-		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTags),
-		fwflex.WithIgnoredField(names.AttrTagsAll))
+		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTagsAll))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -440,6 +450,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 	if len(waitOut.ActiveConfigurations) > 0 {
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+		planNetworkConfiguration := plan.NetworkConfiguration
 
 		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
@@ -448,7 +459,9 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
+		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
+	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
 	// Set Optional+Computed attributes from API response
 	if waitOut.Cluster != nil {
@@ -487,12 +500,12 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 	_, err := conn.DeleteExpressGatewayService(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 			// Service was already deleted/inactive/draining - deletion is already in progress or complete
 			return
-		} else {
-			// Real error occurred
+		} else if !errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			// Real error occurred.
+			// If service is in DRAINING status, fall-through to wait for it to become INACTIVE
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
@@ -520,10 +533,10 @@ const (
 )
 
 func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Target:  []string{gatewayServiceStatusActive},
-		Refresh: statusExpressGatewayService(ctx, conn, ARN),
+		Refresh: statusExpressGatewayService(conn, ARN),
 		Timeout: timeout,
 	}
 
@@ -536,10 +549,10 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 }
 
 func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining, gatewayServiceStatusPending},
 		Target:  []string{gatewayServiceStatusActive, gatewayServiceStatusStable},
-		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, operationTime),
+		Refresh: statusExpressGatewayServiceWaitForStable(conn, gatewayServiceARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -552,10 +565,10 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 }
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:    []string{gatewayServiceStatusActive},
-		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
-		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
+		Target:     []string{gatewayServiceStatusInactive},
+		Refresh:    statusExpressGatewayServiceForDeletion(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
@@ -568,8 +581,8 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 	return nil, smarterr.NewError(err)
 }
 
-func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayService(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -583,19 +596,12 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 	}
 }
 
-func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayServiceForDeletion(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
-				mockService := &awstypes.ECSExpressGatewayService{
-					ServiceArn: aws.String(gatewayServiceARN),
-					Status: &awstypes.ExpressGatewayServiceStatus{
-						StatusCode: awstypes.ExpressGatewayServiceStatusCodeInactive,
-					},
-				}
-				return mockService, gatewayServiceStatusInactive, nil
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
+				return nil, "", nil
 			}
 			return nil, "", smarterr.NewError(err)
 		}
@@ -638,16 +644,14 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	out, err := conn.DescribeExpressGatewayService(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
@@ -671,8 +675,11 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 		clusterName = "default"
 	}
 
-	_, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName.ValueString(), clusterName)
+	svc, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName.ValueString(), clusterName)
 	if err == nil {
+		if aws.ToString(svc.Status) == serviceStatusInactive {
+			return nil
+		}
 		return fmt.Errorf("Express Gateway Service %s already exists in cluster %s", serviceName.ValueString(), clusterName)
 	}
 	if retry.NotFound(err) {
@@ -681,11 +688,11 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	return err
 }
 
-func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) sdkretry.StateRefreshFunc {
+func statusExpressGatewayServiceWaitForStable(conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) retry.StateRefreshFunc {
 	var deploymentArn *string
 
-	return func() (any, string, error) {
-		outputRaw, serviceStatus, err := statusExpressGatewayService(ctx, conn, gatewayServiceARN)()
+	return func(ctx context.Context) (any, string, error) {
+		outputRaw, serviceStatus, err := statusExpressGatewayService(conn, gatewayServiceARN)(ctx)
 		if err != nil {
 			return nil, "", err
 		}
@@ -868,6 +875,119 @@ func restoreContainerOrderingIfUnchanged(
 	*primaryContainer = updated
 }
 
+func restorePlanNetworkConfigurationSecurityGroups(
+	ctx context.Context,
+	networkConfiguration *fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+	planNetworkConfiguration fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+) {
+	planConfig, diags := planNetworkConfiguration.ToPtr(ctx)
+	if diags.HasError() || planConfig == nil || planConfig.SecurityGroups.IsUnknown() {
+		return
+	}
+
+	currentConfig, diags := networkConfiguration.ToPtr(ctx)
+	if diags.HasError() || currentConfig == nil {
+		return
+	}
+
+	currentConfig.SecurityGroups = planConfig.SecurityGroups
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentConfig)
+	if diags.HasError() {
+		return
+	}
+
+	*networkConfiguration = updated
+}
+
+func filterManagedSecurityGroups(
+	ctx context.Context,
+	conn *ec2.Client,
+	networkConfiguration *fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel],
+) {
+	currentConfig, diags := networkConfiguration.ToPtr(ctx)
+	if diags.HasError() || currentConfig == nil || currentConfig.SecurityGroups.IsNull() || currentConfig.SecurityGroups.IsUnknown() {
+		return
+	}
+
+	securityGroups := fwflex.ExpandFrameworkStringValueSet(ctx, currentConfig.SecurityGroups)
+	if len(securityGroups) == 0 {
+		return
+	}
+
+	groups, err := tfec2.FindSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		GroupIds: securityGroups,
+	})
+	if err != nil {
+		return
+	}
+
+	filteredGroupIDs := make([]string, 0, len(groups))
+	for _, group := range groups {
+		if !hasManagedTag(group.Tags) {
+			filteredGroupIDs = append(filteredGroupIDs, aws.ToString(group.GroupId))
+		}
+	}
+
+	slices.Sort(filteredGroupIDs)
+	currentConfig.SecurityGroups = fwflex.FlattenFrameworkStringValueSetOfString(ctx, filteredGroupIDs)
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentConfig)
+	if diags.HasError() {
+		return
+	}
+
+	*networkConfiguration = updated
+}
+
+func hasManagedTag(tags []ec2types.Tag) bool {
+	for _, tag := range tags {
+		if aws.ToString(tag.Key) == "AmazonECSManaged" && aws.ToString(tag.Value) == "true" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func normalizeIngressPathEndpoints(ctx context.Context, ingressPaths *fwtypes.ListNestedObjectValueOf[ingressPathSummaryModel]) {
+	paths, diags := ingressPaths.ToSlice(ctx)
+	if diags.HasError() || len(paths) == 0 {
+		return
+	}
+
+	updatedPaths := make([]*ingressPathSummaryModel, 0, len(paths))
+	changed := false
+
+	for _, ingressPath := range paths {
+		if ingressPath == nil || ingressPath.Endpoint.IsNull() || ingressPath.Endpoint.IsUnknown() {
+			updatedPaths = append(updatedPaths, ingressPath)
+			continue
+		}
+
+		endpoint := ingressPath.Endpoint.ValueString()
+		if strings.HasPrefix(endpoint, "https://") || endpoint == "" {
+			updatedPaths = append(updatedPaths, ingressPath)
+			continue
+		}
+
+		ingressPath.Endpoint = types.StringValue("https://" + endpoint)
+		updatedPaths = append(updatedPaths, ingressPath)
+		changed = true
+	}
+
+	if !changed {
+		return
+	}
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, updatedPaths, nil)
+	if diags.HasError() {
+		return
+	}
+
+	*ingressPaths = updated
+}
+
 // envListsEquivalent returns true if two environment variable lists contain the same
 // set of name/value pairs, regardless of ordering.
 func envListsEquivalent(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[keyValuePairModel]) bool {
@@ -950,14 +1070,7 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
@@ -974,17 +1087,29 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
-				return true, err
-			}
-			return false, err
-		},
+		expressGatewayRetryable,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return outputRaw.(*ecs.UpdateExpressGatewayServiceOutput), nil
+}
+
+func expressGatewayRetryable(err error) (bool, error) {
+	if errs.Contains(err, "is not authorized to perform") || // This message can occur with at least AccessDeniedException, ClientException, and InvalidParameterException
+		errs.Contains(err, "AWS was not able to validate the provided access credentials") || // This message can occur with at least ClientException and InvalidParameterException
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "The security token included in the request is invalid") {
+		return true, err
+	}
+	return false, err
+}
+
+// newListExpressGatewayServicesPaginator returns a new paginator for ListServices that only returns Customer-managed Services.
+func newListExpressGatewayServicesPaginator(conn *ecs.Client, input *ecs.ListServicesInput) *ecs.ListServicesPaginator {
+	return ecs.NewListServicesPaginator(conn, &ecs.ListServicesInput{
+		Cluster:                input.Cluster,
+		LaunchType:             input.LaunchType,
+		ResourceManagementType: awstypes.ResourceManagementTypeEcs,
+	})
 }

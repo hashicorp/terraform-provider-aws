@@ -40,7 +40,7 @@ type resourceListResource struct {
 func (l *resourceListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"rest_api_id": listschema.StringAttribute{
+			attrRestAPIID: listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the associated REST API.",
 			},
@@ -62,7 +62,7 @@ func (l *resourceListResource) List(ctx context.Context, request list.ListReques
 	restAPIID := query.RestAPIID.ValueString()
 
 	tflog.Info(ctx, "Listing API Gateway Resources", map[string]any{
-		logging.ResourceAttributeKey("rest_api_id"): restAPIID,
+		logging.ResourceAttributeKey(attrRestAPIID): restAPIID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -93,7 +93,7 @@ func (l *resourceListResource) List(ctx context.Context, request list.ListReques
 				result := request.NewListResult(ctx)
 				rd := l.ResourceData()
 				rd.SetId(resourceID)
-				rd.Set("rest_api_id", restAPIID)
+				rd.Set(attrRestAPIID, restAPIID)
 
 				if request.IncludeResource {
 					output, err := findResourceByTwoPartKey(ctx, conn, resourceID, restAPIID)

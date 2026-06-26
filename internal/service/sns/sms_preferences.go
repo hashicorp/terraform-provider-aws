@@ -8,6 +8,7 @@ package sns
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -133,7 +134,7 @@ func resourceSMSPreferences() *schema.Resource {
 		UpdateWithoutTimeout: resourceSMSPreferencesSet,
 		DeleteWithoutTimeout: resourceSMSPreferencesDelete,
 
-		Schema: smsPreferencesSchema,
+		Schema: maps.Clone(smsPreferencesSchema),
 	}
 }
 

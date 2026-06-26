@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance_automated_backups_replication: Fix `InvalidDBInstanceState: Cannot create a snapshot because the database instance ... is not currently in the available state` errors on delete
+```

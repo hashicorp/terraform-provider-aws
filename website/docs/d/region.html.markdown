@@ -36,5 +36,5 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Region's name (e.g. `us-east-1`).
+* `id` - (**Deprecated**) Region's name (e.g. `us-east-1`).
 * `description` - Region's description in this format: "Location (Region name)".

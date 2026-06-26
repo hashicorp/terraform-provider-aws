@@ -24,95 +24,97 @@ func dataSourceResolverFirewallRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"firewall_rule_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"firewall_rules": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"block_override_dns_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"block_override_domain": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"block_override_ttl": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"block_response": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"confidence_threshold": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrCreationTime: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creator_request_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"dns_threat_protection": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"firewall_domain_list_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"firewall_domain_redirection_action": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"firewall_rule_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"firewall_threat_protection_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"modification_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPriority: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"q_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"firewall_rule_group_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"firewall_rules": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"block_override_dns_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"block_override_domain": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"block_override_ttl": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"block_response": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"confidence_threshold": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrCreationTime: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"creator_request_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"dns_threat_protection": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"firewall_domain_list_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"firewall_domain_redirection_action": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"firewall_rule_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"firewall_threat_protection_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"modification_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPriority: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"q_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

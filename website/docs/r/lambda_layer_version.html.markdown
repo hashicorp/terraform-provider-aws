@@ -23,7 +23,7 @@ resource "aws_lambda_layer_version" "example" {
   filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
 
-  compatible_runtimes = ["nodejs20.x"]
+  compatible_runtimes = ["nodejs24.x"]
 }
 ```
 
@@ -36,7 +36,7 @@ resource "aws_lambda_layer_version" "example" {
 
   layer_name = "lambda_layer_name"
 
-  compatible_runtimes      = ["nodejs20.x", "python3.12"]
+  compatible_runtimes      = ["nodejs24.x", "python3.12"]
   compatible_architectures = ["x86_64", "arm64"]
 }
 ```
@@ -52,8 +52,8 @@ resource "aws_lambda_layer_version" "example" {
   source_code_hash = filebase64sha256("lambda_layer_payload.zip")
 
   compatible_runtimes = [
-    "nodejs18.x",
-    "nodejs20.x",
+    "nodejs22.x",
+    "nodejs24.x",
     "python3.11",
     "python3.12"
   ]
@@ -61,8 +61,6 @@ resource "aws_lambda_layer_version" "example" {
   compatible_architectures = ["x86_64", "arm64"]
 }
 ```
-
-## Specifying the Deployment Package
 
 AWS Lambda Layers expect source code to be provided as a deployment package whose structure varies depending on which `compatible_runtimes` this layer specifies. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleRuntimes) for the valid values of `compatible_runtimes`.
 

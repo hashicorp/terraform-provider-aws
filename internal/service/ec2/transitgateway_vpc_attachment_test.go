@@ -93,6 +93,14 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T, semaphore tfsyn
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -42,17 +42,14 @@ This data source supports the following arguments:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter check available value on [official documentation][1]
+* `name` - (Required) Name of the filter check available value on [official documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html)
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment][2] data source, searching by identifier.
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html
-[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_attachment
+* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_attachment) data source, searching by identifier.
 
 ## Timeouts
 
