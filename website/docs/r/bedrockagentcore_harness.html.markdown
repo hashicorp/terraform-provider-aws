@@ -150,6 +150,7 @@ The `model` block supports exactly one of the following:
 * `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config`](#bedrock_model_config) below.
 * `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config`](#openai_model_config) below.
 * `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config`](#gemini_model_config) below.
+* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config`](#litellm_model_config) below.
 
 ### `bedrock_model_config` Block
 
@@ -174,6 +175,15 @@ The `model` block supports exactly one of the following:
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
 * `top_k` - (Optional) Top-k sampling parameter.
+
+### `litellm_model_config` Block
+
+* `model_id` - (Required) LiteLLM model ID.
+* `api_base` - (Optional) Base URL of the LiteLLM-compatible API endpoint.
+* `api_key_arn` - (Optional) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
+* `top_p` - (Optional) Top-p sampling parameter. Must be between 0 and 1.
 
 ### `system_prompt` Block
 
@@ -236,7 +246,31 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-* `path` - (Required) Path to the skill.
+Each `skill` block specifies exactly one of the following sources:
+
+* `path` - (Optional) Filesystem path to the skill definition.
+* `s3` - (Optional) S3 source for the skill. See [`s3`](#s3) below.
+* `git` - (Optional) Git repository source for the skill. See [`git`](#git) below.
+* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills`](#aws_skills) below.
+
+### `s3` Block
+
+* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
+
+### `git` Block
+
+* `url` - (Required) HTTPS URL of the git repository.
+* `path` - (Optional) Subdirectory within the repository containing the skill.
+* `auth` - (Optional) Authentication configuration for private repositories. See [`auth`](#auth) below.
+
+### `auth` Block
+
+* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
+* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
+
+### `aws_skills` Block
+
+* `paths` - (Optional) List of glob patterns to filter allowed skills (e.g., `["core-skills/*"]`).
 
 ### `truncation` Block
 
