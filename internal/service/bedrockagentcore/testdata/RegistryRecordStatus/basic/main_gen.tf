@@ -19,9 +19,15 @@ resource "aws_bedrockagentcore_registry_record_status" "test" {
 
 action "aws_bedrockagentcore_submit_registry_record_for_approval" "test" {
   config {
+    # Works around issue with "region" template and terrafmt.
+    region = data.aws_region.current.region
+
     registry_id = aws_bedrockagentcore_registry_record.test.registry_id
     record_id   = aws_bedrockagentcore_registry_record.test.record_id
   }
+}
+
+data "aws_region" "current" {
 }
 
 resource "aws_bedrockagentcore_registry_record" "test" {
