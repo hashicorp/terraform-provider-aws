@@ -42,7 +42,6 @@ func TestAccBedrockAgentCoreRegistryRecordStatus_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusApproved),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -57,28 +56,12 @@ func TestAccBedrockAgentCoreRegistryRecordStatus_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusApproved),
 				},
 				ImportStateIdFunc:                    testAccRegistryRecordStatusImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "record_id",
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusDeprecated),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusDeprecated)),
-				},
 			},
 		},
 	})
@@ -117,6 +100,55 @@ func TestAccBedrockAgentCoreRegistryRecordStatus_Disappears_registryRecord(t *te
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreRegistryRecordStatus_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_registry_record_status.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckRegistries(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusRejected),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusRejected)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusDeprecated),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusDeprecated)),
 				},
 			},
 		},
