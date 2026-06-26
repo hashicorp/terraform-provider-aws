@@ -79,3 +79,67 @@ func TestAccBedrockAgentCoreSubmitRegistryRecordForApprovalAction_basic(t *testi
 		},
 	})
 }
+
+func TestAccBedrockAgentCoreSubmitRegistryRecordForApprovalAction_autoApproval(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1, rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix), acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_registry_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckRegistries(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/submit_registry_record_for_approval_action/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName1),
+					"auto_approval": config.BoolVariable(true),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusDraft)),
+				},
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.RegistryRecordStatusApproved)),
+				),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecord/submit_registry_record_for_approval_action/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+					"auto_approval": config.BoolVariable(true),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.RegistryRecordStatusDraft)),
+				},
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.RegistryRecordStatusApproved)),
+				),
+			},
+		},
+	})
+}

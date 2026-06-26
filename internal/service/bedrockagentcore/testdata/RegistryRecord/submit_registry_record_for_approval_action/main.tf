@@ -30,10 +30,20 @@ resource "aws_bedrockagentcore_registry_record" "test" {
 
 resource "aws_bedrockagentcore_registry" "test" {
   name = "${var.rName}-registry"
+
+  approval_configuration {
+    auto_approval = var.auto_approval
+  }
 }
 
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "auto_approval" {
+  type     = bool
+  nullable = false
+  default  = false
 }
