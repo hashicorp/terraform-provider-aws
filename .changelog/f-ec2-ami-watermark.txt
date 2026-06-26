@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_ami_watermark
+aws_ami_watermark (#48649)
 ```
 
 ```release-note:enhancement
