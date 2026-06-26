@@ -167,17 +167,38 @@ Optional:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_neptunegraph_graph.example
+  identity = {
+    id = "g-1234567890"
+  }
+}
+
+resource "aws_neptunegraph_graph" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `id` (String) The graph identifier.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptunegraph_graph` using the graph identifier. For example:
 
 ```terraform
 import {
   to = aws_neptunegraph_graph.example
-  id = "graph_id"
+  id = "g-1234567890"
 }
 ```
 
 Using `terraform import`, import `aws_neptunegraph_graph` using the graph identifier. For example:
 
 ```console
-% terraform import aws_neptunegraph_graph.example "graph_id"
+% terraform import aws_neptunegraph_graph.example "g-1234567890"
 ```
