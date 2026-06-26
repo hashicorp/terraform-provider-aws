@@ -750,7 +750,7 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	return output, nil
 }
 
-func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCapacityProviderDelete(conn *ecs.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
@@ -760,6 +760,10 @@ func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc
 
 		if err != nil {
 			return nil, "", err
+		}
+
+		if output.UpdateStatus == awstypes.CapacityProviderUpdateStatusDeleteFailed {
+			return output, string(output.Status), errors.New(aws.ToString(output.UpdateStatusReason))
 		}
 
 		return output, string(output.Status), nil
@@ -778,6 +782,10 @@ func statusCapacityProviderUpdate(conn *ecs.Client, arn string) retry.StateRefre
 			return nil, "", err
 		}
 
+		if output.UpdateStatus == awstypes.CapacityProviderUpdateStatusUpdateFailed {
+			return output, string(output.UpdateStatus), errors.New(aws.ToString(output.UpdateStatusReason))
+		}
+
 		return output, string(output.UpdateStatus), nil
 	}
 }
@@ -793,8 +801,6 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
-
 		return output, err
 	}
 
@@ -805,7 +811,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn stri
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive, awstypes.CapacityProviderStatusDeprovisioning),
 		Target:  []string{},
-		Refresh: statusCapacityProvider(conn, arn),
+		Refresh: statusCapacityProviderDelete(conn, arn),
 		Timeout: timeout,
 	}
 
