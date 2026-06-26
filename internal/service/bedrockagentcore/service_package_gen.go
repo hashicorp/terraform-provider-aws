@@ -216,6 +216,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newRegistryRecordStatusResource,
+			TypeName: "aws_bedrockagentcore_registry_record_status",
+			Name:     "Registry Record Status",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("registry_id", true),
+				inttypes.StringIdentityAttribute("record_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      registryRecordStatusImportID{},
+			},
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_bedrockagentcore_resource_policy",
 			Name:     "Resource Policy",

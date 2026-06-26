@@ -9,3 +9,7 @@ aws_bedrockagentcore_registry_record
 ```release-note:new-action
 aws_bedrockagentcore_submit_registry_record_for_approval
 ```
+
+```release-note:new-resource
+aws_bedrockagentcore_registry_record_status
+```
