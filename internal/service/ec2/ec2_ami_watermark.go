@@ -34,7 +34,7 @@ import (
 // @IdentityAttribute("image_id", testNotNull=true)
 // @IdentityAttribute("watermark_key")
 // @ImportIDHandler("amiWatermarkImportID", setIDAttribute=true)
-// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="image_id;watermark_key", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(importIgnore="watermark_name")
 // @Testing(plannableImportAction="Replace")

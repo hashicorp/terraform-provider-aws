@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -214,122 +213,6 @@ func TestAccEC2AMIWatermark_Identity_regionOverride(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-// Resource Identity was added after v6.39.0
-func TestAccEC2AMIWatermark_Identity_ExistingResource_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_ami_watermark.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckAMIWatermarkDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			// Step 1: Create pre-Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/AMIWatermark/basic_v6.39.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAMIWatermarkExists(ctx, t, resourceName),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-
-			// Step 2: Current version
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/AMIWatermark/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"image_id":          knownvalue.NotNull(),
-						"watermark_key":     knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("watermark_key")),
-				},
-			},
-		},
-	})
-}
-
-// Resource Identity was added after v6.39.0
-func TestAccEC2AMIWatermark_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_ami_watermark.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckAMIWatermarkDestroy(ctx, t),
-		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
-			Plan: resource.PlanOptions{
-				NoRefresh: true,
-			},
-		},
-		Steps: []resource.TestStep{
-			// Step 1: Create pre-Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/AMIWatermark/basic_v6.39.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAMIWatermarkExists(ctx, t, resourceName),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-
-			// Step 2: Current version
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/AMIWatermark/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
 			},
 		},
 	})
