@@ -119,6 +119,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenant_config` - (Required) Tenant configuration that contains parameter definitions for multi-tenant distributions. See [Tenant Config](#tenant-config) below.
 * `viewer_certificate` - (Required) SSL configuration for this distribution. See [Viewer Certificate](#viewer-certificate) below.
+* `wait_for_deployment` - (Optional) If enabled, the resource will wait for the distribution status to change from `InProgress` to `Deployed`. Setting this to `false` will skip the process. Default: `true`.
 * `web_acl_id` - (Optional) Unique identifier that specifies the AWS WAF v2 web ACL to associate with this distribution.
 
 ### Cache Behavior

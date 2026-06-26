@@ -36,6 +36,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 
@@ -47,7 +48,61 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_waitForDeployment(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_waitForDeployment(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					testAccCheckDistributionStatusInProgress(&distribution),
+					testAccCheckDistributionWaitForDeployment(ctx, t, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"etag",
+					names.AttrStatus,
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_waitForDeployment(true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					testAccCheckDistributionStatusInProgress(&distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_waitForDeployment(false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					testAccCheckDistributionStatusDeployed(&distribution),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -156,7 +211,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 		},
 	})
@@ -187,7 +242,7 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 		},
 	})
@@ -222,7 +277,7 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 		},
 	})
@@ -251,7 +306,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 			{
 				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey1: acctest.CtValue1Updated, acctest.CtKey2: acctest.CtValue2}),
@@ -394,7 +449,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 		},
 	})
@@ -436,7 +491,7 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
+				ImportStateVerifyIgnore: []string{"etag", "wait_for_deployment"},
 			},
 		},
 	})
@@ -585,6 +640,61 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `
+}
+
+func testAccMultiTenantDistributionConfig_waitForDeployment(enabled, waitForDeployment bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  comment             = "Test multi-tenant distribution"
+  enabled             = %[1]t
+  wait_for_deployment = %[2]t
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`, enabled, waitForDeployment)
 }
 
 func testAccMultiTenantDistributionConfig_comprehensive(rName, comment, defaultRootObject string, compress bool) string {
