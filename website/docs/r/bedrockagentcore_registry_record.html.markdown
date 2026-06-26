@@ -63,7 +63,7 @@ The following arguments are required:
 * `descriptor_type` - (Required) Descriptor type of the registry record. Valid values: `MCP`, `A2A`, `CUSTOM`, `AGENT_SKILLS`.
 * `descriptors` - (Required) Descriptor-type-specific configuration containing the resource schema and metadata. See [`descriptors` Block](#descriptors-block) below.
 * `name` - (Required) Name of the registry record.
-* `registry_id` - (Required, Forces new resource) ID or ARN of the registry in which to create the record.
+* `registry_id` - (Required, Forces new resource) ID of the registry in which to create the record.
 
 The following arguments are optional:
 

@@ -22,6 +22,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newSubmitRegistryRecordForApprovalAction,
+			TypeName: "aws_bedrockagentcore_submit_registry_record_for_approval",
+			Name:     "Submit Registry Record For Approval",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
