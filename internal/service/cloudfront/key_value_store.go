@@ -29,11 +29,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
@@ -81,6 +83,8 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 					),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -103,6 +107,12 @@ func (r *keyValueStoreResource) Create(ctx context.Context, request resource.Cre
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	name := aws.ToString(input.Name)
@@ -312,5 +322,7 @@ type keyValueStoreResourceModel struct {
 	ID               types.String      `tfsdk:"id"`
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
+	Tags             tftags.Map        `tfsdk:"tags"`
+	TagsAll          tftags.Map        `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
 }
