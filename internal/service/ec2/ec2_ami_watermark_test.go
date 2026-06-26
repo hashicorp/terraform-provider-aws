@@ -158,4 +158,3 @@ resource "aws_ami_watermark" "test" {
 }
 `, rName))
 }
-

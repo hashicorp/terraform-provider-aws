@@ -23,8 +23,8 @@ resource "aws_ami_watermark" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_id` - (Required, Forces new resource) ID of the AMI.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `watermark_name` - (Required, Forces new resource) Name for the watermark. Combined with the caller's account ID to form the `watermark_key` (`accountId:watermarkName`). Must be 3-128 characters and may contain alphanumeric characters, parentheses `()`, square brackets `[]`, spaces, periods `.`, slashes `/`, dashes `-`, single quotes `'`, at-signs `@`, or underscores `_`.
 
 ## Attribute Reference
