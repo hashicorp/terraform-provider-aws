@@ -43,6 +43,10 @@ The following arguments are required:
 * `status` - (Required) Target status for the registry record. Valid values: `APPROVED`, `REJECTED`, `DEPRECATED`.
 * `status_reason` - (Required) Reason for any status change, such as why the record was approved or rejected.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
