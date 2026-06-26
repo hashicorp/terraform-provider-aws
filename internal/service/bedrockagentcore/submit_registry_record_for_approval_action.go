@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +47,7 @@ func (a *submitRegistryRecordForApprovalAction) Schema(ctx context.Context, req 
 
 func (a *submitRegistryRecordForApprovalAction) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
 	var config submitRegistryRecordForApprovalActionModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
 	if resp.Diagnostics.HasError() {
 		return
 	}
