@@ -17,6 +17,7 @@ resource "aws_bedrockagentcore_registry_record_status" "test" {
 
 action "aws_bedrockagentcore_submit_registry_record_for_approval" "test" {
   config {
+{{- template "region" }}
     registry_id = aws_bedrockagentcore_registry_record.test.registry_id
     record_id   = aws_bedrockagentcore_registry_record.test.record_id
   }

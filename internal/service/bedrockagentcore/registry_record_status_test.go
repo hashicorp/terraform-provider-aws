@@ -100,6 +100,7 @@ func TestAccBedrockAgentCoreRegistryRecordStatus_Disappears_registryRecord(t *te
 		CheckDestroy:             testAccCheckRegistryRecordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/RegistryRecordStatus/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"status":        tfconfig.StringVariable(awstypes.RegistryRecordStatusApproved),
