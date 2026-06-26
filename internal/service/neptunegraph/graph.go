@@ -482,7 +482,7 @@ func (r *graphResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithIgnoredFieldNames([]string{"ImportTask"}))...)
 	if response.Diagnostics.HasError() {
 		return
 	}

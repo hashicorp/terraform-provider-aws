@@ -981,11 +981,11 @@ resource "aws_neptune_cluster" "test" {
 }
 
 resource "aws_neptune_cluster_instance" "test" {
-  identifier                 = %[1]q
-  cluster_identifier         = aws_neptune_cluster.test.id
-  instance_class             = "db.t4g.medium"
-  apply_immediately          = true
-  publicly_accessible        = true
+  identifier          = %[1]q
+  cluster_identifier  = aws_neptune_cluster.test.id
+  instance_class      = "db.t4g.medium"
+  apply_immediately   = true
+  publicly_accessible = true
 }
 
 resource "time_sleep" "neptune_ready" {
@@ -1038,13 +1038,13 @@ resource "null_resource" "bulk_load" {
 }
 
 resource "aws_iam_role" "graph_import" {
-  name               = "%[1]s-graph"
+  name = "%[1]s-graph"
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           Service = [
             "neptune-graph.amazonaws.com",
@@ -1057,18 +1057,18 @@ resource "aws_iam_role" "graph_import" {
 }
 
 resource "aws_iam_role_policy" "graph_import" {
-  role   = aws_iam_role.graph_import.id
+  role = aws_iam_role.graph_import.id
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-          Effect   = "Allow",
-          Action   = "iam:PassRole"
-          Resource = aws_iam_role.graph_import.arn
+        Effect   = "Allow",
+        Action   = "iam:PassRole"
+        Resource = aws_iam_role.graph_import.arn
       },
       {
-        Effect  = "Allow"
-        Action  = [
+        Effect = "Allow"
+        Action = [
           "s3:GetObject*",
           "s3:ListBucket",
           "s3:PutObject*",
@@ -1081,8 +1081,8 @@ resource "aws_iam_role_policy" "graph_import" {
         ]
       },
       {
-        Effect  = "Allow"
-        Action  = [
+        Effect = "Allow"
+        Action = [
           "kms:ListGrants",
           "kms:CreateGrant",
           "kms:RevokeGrant",
@@ -1095,21 +1095,21 @@ resource "aws_iam_role_policy" "graph_import" {
         Resource = aws_kms_key.test.arn
       },
       {
-        Effect  = "Allow"
-        Action  = [
+        Effect = "Allow"
+        Action = [
           "rds:DescribeDBClusters",
           "rds:StartExportTask"
         ]
         Resource = aws_neptune_cluster.test.arn
       },
       {
-        Effect  = "Allow"
-        Action  = [
+        Effect = "Allow"
+        Action = [
           "rds:DescribeExportTasks",
           "rds:CancelExportTask"
         ]
         Resource = "*"
-      }    
+      }
     ]
   })
 }
@@ -1124,38 +1124,38 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
-        Action    = "kms:*"
-        Resource  = "*"
+        Action   = "kms:*"
+        Resource = "*"
       },
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "neptune-graph.amazonaws.com"
         }
-        Action    = [
+        Action = [
           "kms:Decrypt",
           "kms:DescribeKey",
           "kms:CreateGrant"
         ]
-        Resource  = "*"
+        Resource = "*"
       },
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "s3.amazonaws.com"
         }
-        Action    = [
+        Action = [
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource  = "*"
+        Resource = "*"
       }
     ]
   })
