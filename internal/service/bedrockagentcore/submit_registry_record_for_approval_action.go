@@ -5,7 +5,6 @@ package bedrockagentcore
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -69,8 +68,7 @@ func (a *submitRegistryRecordForApprovalAction) Invoke(ctx context.Context, req 
 	}
 	output, err := conn.SubmitRegistryRecordForApproval(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("submitting Bedrock AgentCore Registry Record (%s) for approval", recordID), err.Error())
-
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, recordID)
 		return
 	}
 
