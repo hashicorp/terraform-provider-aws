@@ -17,7 +17,7 @@ import (
 func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -52,7 +52,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 

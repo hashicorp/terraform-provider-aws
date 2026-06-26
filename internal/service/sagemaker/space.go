@@ -43,376 +43,378 @@ func resourceSpace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"space_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"home_efs_file_system_uid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ownership_settings": {
-				Type:         schema.TypeList,
-				RequiredWith: []string{"space_sharing_settings"},
-				Optional:     true,
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"owner_user_profile_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"space_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"home_efs_file_system_uid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ownership_settings": {
+					Type:         schema.TypeList,
+					RequiredWith: []string{"space_sharing_settings"},
+					Optional:     true,
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"owner_user_profile_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"space_display_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"space_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"app_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AppType](),
-						},
-						"code_editor_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"app_lifecycle_management": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"idle_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle_timeout_in_minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntBetween(60, 525600),
+				"space_display_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"space_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"app_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+							},
+							"code_editor_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"app_lifecycle_management": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"idle_timeout_in_minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(60, 525600),
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"custom_file_system": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"efs_file_system": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFileSystemID: {
-													Type:     schema.TypeString,
-													Required: true,
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"jupyter_lab_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"app_lifecycle_management": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"idle_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle_timeout_in_minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntBetween(60, 525600),
+							"custom_file_system": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"efs_file_system": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFileSystemID: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"jupyter_lab_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"app_lifecycle_management": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"idle_timeout_in_minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(60, 525600),
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"code_repository": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_url": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
+										"code_repository": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_url": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
 												},
 											},
 										},
-									},
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"jupyter_server_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"code_repository": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_url": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
-										},
-									},
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"lifecycle_config_arns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-									},
-								},
-							},
-						},
-						"kernel_gateway_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"lifecycle_config_arns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-									},
-									"custom_image": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 200,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"app_image_config_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_version_number": {
-													Type:     schema.TypeInt,
-													Optional: true,
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"space_storage_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ebs_storage_settings": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ebs_volume_size_in_gb": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(5, 16384),
+							"jupyter_server_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"code_repository": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_url": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
+												},
+											},
+										},
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+										"lifecycle_config_arns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
+										},
+									},
+								},
+							},
+							"kernel_gateway_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+										"lifecycle_config_arns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
+										},
+										"custom_image": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 200,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"app_image_config_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_version_number": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"space_storage_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ebs_storage_settings": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ebs_volume_size_in_gb": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(5, 16384),
+													},
 												},
 											},
 										},
@@ -422,28 +424,28 @@ func resourceSpace() *schema.Resource {
 						},
 					},
 				},
-			},
-			"space_sharing_settings": {
-				Type:         schema.TypeList,
-				RequiredWith: []string{"ownership_settings"},
-				Optional:     true,
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sharing_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SharingType](),
+				"space_sharing_settings": {
+					Type:         schema.TypeList,
+					RequiredWith: []string{"ownership_settings"},
+					Optional:     true,
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sharing_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SharingType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

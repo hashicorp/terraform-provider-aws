@@ -35,59 +35,61 @@ func resourceManagedScalingPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"compute_limits": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_capacity_units": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"maximum_core_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						"maximum_ondemand_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						"minimum_capacity_units": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"unit_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ComputeLimitsUnitType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"compute_limits": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_capacity_units": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"maximum_core_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							"maximum_ondemand_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							"minimum_capacity_units": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"unit_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ComputeLimitsUnitType](),
+							},
 						},
 					},
 				},
-			},
-			"scaling_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ScalingStrategy](),
-			},
-			"utilization_performance_index": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
-			},
+				"scaling_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ScalingStrategy](),
+				},
+				"utilization_performance_index": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+				},
+			}
 		},
 	}
 }

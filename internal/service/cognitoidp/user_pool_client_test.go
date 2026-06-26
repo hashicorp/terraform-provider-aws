@@ -948,6 +948,14 @@ func TestAccCognitoIDPUserPoolClient_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolClient, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -972,6 +980,14 @@ func TestAccCognitoIDPUserPoolClient_Disappears_userPool(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1237,6 +1253,8 @@ func TestAccCognitoIDPUserPoolClient_supportedIdentityProviders_utf8(t *testing.
 	resourceName := "aws_cognito_user_pool_client.test"
 	identityProvider := strings.Repeat("あ", 32)
 
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
@@ -1244,7 +1262,7 @@ func TestAccCognitoIDPUserPoolClient_supportedIdentityProviders_utf8(t *testing.
 		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider),
+				Config: testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider, idpEntityId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, t, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", identityProvider),
@@ -1936,9 +1954,9 @@ resource "aws_cognito_user_pool_client" "test" {
 `, rName))
 }
 
-func testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider string) string {
+func testAccUserPoolClientConfig_supportedIdentityProviders_utf8(rName, identityProvider, idpEntityId string) string {
 	return acctest.ConfigCompose(
-		testAccIdentityProviderConfig_saml(identityProvider, rName, acctest.CtTrue),
+		testAccIdentityProviderConfig_saml(identityProvider, rName, idpEntityId, acctest.CtTrue),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q

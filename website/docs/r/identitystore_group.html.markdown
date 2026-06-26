@@ -47,14 +47,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The identifier issued to this resource by an external identity provider.
 * `issuer` - The issuer for an external identifier.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Identity Store Group using the combination `identity_store_id/group_id`. For example:

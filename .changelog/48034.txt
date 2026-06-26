@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_pinpointsmsvoicev2_event_destination
+```
+
+```release-note:new-list-resource
+aws_pinpointsmsvoicev2_event_destination
+```

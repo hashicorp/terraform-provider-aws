@@ -43,7 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -89,7 +89,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }
@@ -123,7 +123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("alarm_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("alarm_name", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -150,7 +150,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity("alarm_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("alarm_name", true)),
 		},
 	})
 }

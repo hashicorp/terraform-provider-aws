@@ -1048,8 +1048,8 @@ func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"rewrite": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"regex":   knownvalue.StringExact("^mywebsite-(.+).com$"),
-											"replace": knownvalue.StringExact("internal.dev.$1.myweb.com"),
+											"regex":   knownvalue.StringExact("^mywebsite-(.+)\\.test$"),
+											"replace": knownvalue.StringExact("internal.dev.$1.myweb.test"),
 										}),
 									}),
 								}),
@@ -1738,8 +1738,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+)\\.test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }

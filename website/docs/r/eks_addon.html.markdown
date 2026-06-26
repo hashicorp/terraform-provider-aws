@@ -19,7 +19,7 @@ resource "aws_eks_addon" "example" {
 }
 ```
 
-## Example Update add-on usage with resolve_conflicts_on_update and PRESERVE
+### Example Update add-on usage with resolve_conflicts_on_update and PRESERVE
 
 `resolve_conflicts_on_update` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
 
@@ -32,7 +32,7 @@ resource "aws_eks_addon" "example" {
 }
 ```
 
-## Example add-on usage with custom configuration_values
+### Example add-on usage with custom configuration_values
 
 Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
 
@@ -130,15 +130,15 @@ This resource supports the following arguments:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addon_version` - (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
-* `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Documentation.
-* `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Documentation.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `configuration_values` - (Optional) Custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
+* `namespace_config` - (Optional) Namespace configuration for the add-on. See [`namespace_config`](#namespace-config) below for details.
 * `pod_identity_association` - (Optional) Configuration block with EKS Pod Identity association settings. See [`pod_identity_association`](#pod-identity-association) below for details.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Documentation.
+* `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Documentation.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
   existing IAM role to bind to the add-on's service account. The role must be
   assigned the IAM permissions required by the add-on. If you don't specify
@@ -150,6 +150,11 @@ The following arguments are optional:
   provider created for your cluster. For more information, [see Enabling IAM roles
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### namespace_config
+
+* `namespace` - (Required) Name of the Kubernetes namespace to install the add-on in. Once you install an add-on in a specific namespace, you must remove and re-create the add-on to change its namespace. For more details see the [Custom namespace for add-ons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html#custom-namespace).
 
 ### pod_identity_association
 

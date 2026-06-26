@@ -6,11 +6,11 @@ variable "workflow_labels" {
     # Stop the search. Keep these alphabetized.
 
     "authentication" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
     "autoflex" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to AutoFlex."
     },
     "aws-compatible-service" = {
@@ -18,35 +18,35 @@ variable "workflow_labels" {
       description = "Issues related to compatibility with AWS-compatible services."
     },
     "aws-sdk-go-migration" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."
     },
     "beta-feedback" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Issues providing feedback on beta releases."
     },
     "breaking-change" = {
-      color       = "ec585d", # color:boundary
+      color       = "e05959", # color:boundary
       description = "Introduces a breaking change in current functionality; usually deferred to the next major release."
     },
     "bug" = {
-      color       = "ec585d", # color:boundary
+      color       = "e05959", # color:boundary
       description = "Addresses a defect in current functionality."
     },
     "client-connections" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to the AWS Client and service connections."
     },
     "crash" = {
-      color       = "ec585d", # color:boundary
+      color       = "e05959", # color:boundary
       description = "Results from or addresses a Terraform crash or kernel panic."
     },
     "create" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to generating names, hashcodes, etc."
     },
     "dependencies" = {
-      color       = "1c7ada", # color:vagrant
+      color       = "3266e9", # color:vagrant
       description = "Used to indicate dependency changes."
     },
     "documentation" = {
@@ -54,47 +54,47 @@ variable "workflow_labels" {
       description = "Introduces or discusses updates to documentation."
     },
     "enhancement" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Requests to existing resources that expand the functionality or scope."
     },
     "engineering-initiative" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Maintainer driven proposals to improve operation, or development experience of the provider."
     },
     "eventual-consistency" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to eventual consistency issues."
     },
     "examples" = {
-      color       = "63d0ff", # color:packer
+      color       = "4ba5e9", # color:packer
       description = "Introduces or discusses updates to examples."
     },
     "external-maintainer" = {
-      color       = "63d0ff", # color:packer
+      color       = "4ba5e9", # color:packer
       description = "Contribution from a trusted external contributor."
     },
     "flex" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to FLatteners and EXpanders."
     },
     "fips" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to the Federal Information Processing Standard (FIPS)."
     },
     "function" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to provider functions."
     },
     "generators" = {
-      color       = "60dea9", # color:nomad
+      color       = "5bc792", # color:nomad
       description = "Relates to code generators."
     },
     "good first issue" = {
-      color       = "63d0ff", # color:packer
+      color       = "4ba5e9", # color:packer
       description = "Call to action for new contributors looking for a place to start. Smaller or straightforward issues."
     },
     "resource-import" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to issues importing resources."
     },
     "linter" = {
@@ -102,7 +102,7 @@ variable "workflow_labels" {
       description = "Pertains to changes to or issues with the various linters."
     },
     "list-resource" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to list resource."
     },
     "localstack" = {
@@ -110,7 +110,7 @@ variable "workflow_labels" {
       description = "LocalStack-specific issues and PRs."
     },
     "needs-triage" = {
-      color       = "dc477d", # color:consul
+      color       = "ce4775", # color:consul
       description = "Waiting for first response or review from a maintainer."
     },
     "new-action" = {
@@ -154,7 +154,7 @@ variable "workflow_labels" {
       description = "Includes pre-Service Packages aspects."
     },
     "prerelease-tf-testing" = {
-      color       = "60dea9", # color:nomad
+      color       = "5bc792", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
     },
     "prioritized" = {
@@ -166,7 +166,7 @@ variable "workflow_labels" {
       description = "Proposes new design or functionality."
     },
     "provider" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to the provider itself, rather than any interaction with AWS.",
     },
     "question" = {
@@ -174,7 +174,7 @@ variable "workflow_labels" {
       description = "A question about existing functionality; most questions are re-routed to discuss.hashicorp.com."
     },
     "regression" = {
-      color       = "ec585d", # color:boundary
+      color       = "e05959", # color:boundary
       description = "Pertains to a degraded workflow resulting from an upstream patch or internal enhancement."
     },
     "repository" = {
@@ -182,7 +182,7 @@ variable "workflow_labels" {
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
     "resource-identity" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to resource identity."
     },
     "size/XS" = {
@@ -210,7 +210,7 @@ variable "workflow_labels" {
       description = "Managed by automation to categorize the size of a PR."
     },
     "skaff" = {
-      color       = "63d0ff", # color:packer
+      color       = "4ba5e9", # color:packer
       description = "Issues and pull requested related to the skaff tool"
     }
     "stale" = {
@@ -222,7 +222,7 @@ variable "workflow_labels" {
       description = "Pertains to changes to or issues with the sweeper."
     },
     "tags" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to resource tagging."
     },
     "technical-debt" = {
@@ -230,27 +230,27 @@ variable "workflow_labels" {
       description = "Addresses areas of the codebase that need refactoring or redesign."
     },
     "terraform-plugin-migration" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Issues that are related to the providers migration to Terraform Plugin Framework."
     },
     "tests" = {
-      color       = "60dea9", # color:nomad
+      color       = "5bc792", # color:nomad
       description = "PRs: expanded test coverage. Issues: expanded coverage, enhancements to test infrastructure."
     },
     "timeouts" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to timeout increases."
     },
     "upstream" = {
-      color       = "1c7ada", # color:vagrant
+      color       = "3266e9", # color:vagrant
       description = "Addresses functionality related to the cloud provider."
     },
     "upstream-terraform" = {
-      color       = "1c7ada", # color:vagrant
+      color       = "3266e9", # color:vagrant
       description = "Addresses functionality related to the Terraform core binary."
     },
     "verify" = {
-      color       = "844fba", # color:terraform (main)
+      color       = "7345b6", # color:terraform (main)
       description = "Pertains to the verify package (i.e., provider-level validating, diff suppression, etc.)"
     },
     "waiting-response" = {

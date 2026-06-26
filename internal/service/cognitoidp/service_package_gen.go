@@ -50,7 +50,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cognito_log_delivery_configuration",
 			Name:     "Log Delivery Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrUserPoolID),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrUserPoolID, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

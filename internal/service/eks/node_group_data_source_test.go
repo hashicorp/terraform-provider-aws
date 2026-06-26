@@ -18,7 +18,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_node_group.test"
 	resourceName := "aws_eks_node_group.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

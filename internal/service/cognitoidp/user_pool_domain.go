@@ -39,53 +39,55 @@ func resourceUserPoolDomain() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAWSAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"cloudfront_distribution": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_distribution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_distribution_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			"managed_login_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntInSlice([]int{1, 2}),
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAWSAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"cloudfront_distribution": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_distribution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_distribution_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				"managed_login_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntInSlice([]int{1, 2}),
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta any) bool {

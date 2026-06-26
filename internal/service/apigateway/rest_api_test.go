@@ -88,6 +88,14 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1472,6 +1480,13 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
+				),
+			},
+			{
+				Config: testAccRestAPIConfig_policySetByBody(rName, "Deny"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Deny"`)),
 				),
 			},
 			{

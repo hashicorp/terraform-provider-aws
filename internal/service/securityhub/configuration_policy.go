@@ -30,6 +30,13 @@ import (
 )
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
+// @IdentityAttribute("id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// Alternate account not working
+// @Testing(identityTest=false)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyCreate,
@@ -37,139 +44,137 @@ func resourceConfigurationPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceConfigurationPolicyUpdate,
 		DeleteWithoutTimeout: resourceConfigurationPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			customParameterResource := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bool": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeBool,
-									},
-								},
-							},
-						},
-						"double": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeFloat,
-									},
-								},
-							},
-						},
-						"enum": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"enum_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"bool": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeBool,
 										},
 									},
 								},
 							},
-						},
-						"int": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required:     true,
-										Type:         schema.TypeInt,
-										ValidateFunc: validation.IntAtMost(math.MaxInt32),
+							"double": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeFloat,
+										},
 									},
 								},
 							},
-						},
-						"int_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
+							"enum": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"enum_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"int": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required:     true,
 											Type:         schema.TypeInt,
 											ValidateFunc: validation.IntAtMost(math.MaxInt32),
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"string": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"string_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							"int_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type:         schema.TypeInt,
+												ValidateFunc: validation.IntAtMost(math.MaxInt32),
+											},
 										},
 									},
 								},
 							},
-						},
-						"value_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
-						},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"string": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"string_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"value_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
+							},
+						}
 					},
 				}
 			}
@@ -272,7 +277,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &securityhub.CreateConfigurationPolicyInput{
+	input := securityhub.CreateConfigurationPolicyInput{
 		Name: aws.String(name),
 	}
 
@@ -288,7 +293,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateConfigurationPolicy(ctx, input)
+	output, err := conn.CreateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", name, err)
@@ -329,7 +334,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.UpdateConfigurationPolicyInput{
+	input := securityhub.UpdateConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -346,7 +351,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateConfigurationPolicy(ctx, input)
+	_, err := conn.UpdateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
@@ -360,9 +365,10 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Configuration Policy: %s", d.Id())
-	_, err := conn.DeleteConfigurationPolicy(ctx, &securityhub.DeleteConfigurationPolicyInput{
+	input := securityhub.DeleteConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationPolicy(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
 		return diags
@@ -376,11 +382,11 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyOutput, error) {
-	input := &securityhub.GetConfigurationPolicyInput{
+	input := securityhub.GetConfigurationPolicyInput{
 		Identifier: aws.String(id),
 	}
 
-	return findConfigurationPolicy(ctx, conn, input)
+	return findConfigurationPolicy(ctx, conn, &input)
 }
 
 func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {

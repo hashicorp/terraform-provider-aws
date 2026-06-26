@@ -69,783 +69,74 @@ func resourceGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_zone_identifier"},
-			},
-			"availability_zone_distribution": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_distribution_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"capacity_rebalance": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"capacity_reservation_specification": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_reservation_preference": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
-						},
-						"capacity_reservation_target": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_reservation_ids": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
-									},
-									"capacity_reservation_resource_group_arns": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
-									},
-								},
-							},
-						},
-					},
+				names.AttrAvailabilityZones: {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"vpc_zone_identifier"},
 				},
-			},
-			"context": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_cooldown": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"default_instance_warmup": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"desired_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"desired_capacity_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[desiredCapacityType](),
-			},
-			"enabled_metrics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrForceDelete: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"force_delete_warm_pool": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"health_check_grace_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-			"health_check_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ignore_failed_scaling_activities": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"initial_lifecycle_hook": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_result": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
-						},
-						"heartbeat_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(30, 7200),
-						},
-						"lifecycle_transition": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
-									`no spaces or special characters except "-", "_", and "/"`),
-							),
-						},
-						"notification_metadata": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"notification_target_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"instance_maintenance_policy": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_healthy_percentage": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ValidateFunc: validation.Any(
-								validation.IntBetween(100, 200),
-								validation.IntBetween(-1, -1),
-							),
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return old == "" && new == "-1"
-							},
-						},
-						"min_healthy_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(-1, 100),
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return old == "" && new == "-1"
-							},
-						},
-					},
-				},
-			},
-			"instance_refresh": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"preferences": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarm_specification": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"alarms": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-											},
-										},
-									},
-									"auto_rollback": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"checkpoint_delay": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"checkpoint_percentages": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeInt,
-										},
-									},
-									"instance_warmup": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"max_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntBetween(100, 200),
-									},
-									"min_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      90,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
-									"scale_in_protected_instances": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.ScaleInProtectedInstancesIgnore,
-										ValidateDiagFunc: enum.Validate[awstypes.ScaleInProtectedInstances](),
-									},
-									"skip_matching": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"standby_instances": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.StandbyInstancesIgnore,
-										ValidateDiagFunc: enum.Validate[awstypes.StandbyInstances](),
-									},
-								},
-							},
-						},
-						"strategy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
-						},
-						names.AttrTriggers: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				"availability_zone_distribution": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_distribution_strategy": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
+								Optional:         true,
+								Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+								ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
 							},
 						},
 					},
 				},
-			},
-			"launch_configuration": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			names.AttrLaunchTemplate: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  verify.ValidLaunchTemplateID,
-							ConflictsWith: []string{"launch_template.0.name"},
-						},
-						names.AttrName: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  verify.ValidLaunchTemplateName,
-							ConflictsWith: []string{"launch_template.0.id"},
-						},
-						names.AttrVersion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-					},
+				"capacity_rebalance": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			"load_balancers": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"traffic_source"},
-			},
-			"max_instance_lifetime": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"max_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"metrics_granularity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  defaultEnabledMetricsGranularity,
-			},
-			"min_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"min_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"mixed_instances_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instances_distribution": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Computed: true,
-							// Ideally we'd want to detect drift detection,
-							// but a DiffSuppressFunc here does not behave nicely
-							// for detecting missing configuration blocks
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									// These fields are returned from calls to the API
-									// even if not provided at input time and can be omitted in requests;
-									// thus, to prevent non-empty plans, we set these
-									// to Computed and remove Defaults
-									"on_demand_allocation_strategy": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"on_demand_base_capacity": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"on_demand_percentage_above_base_capacity": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
-									"spot_allocation_strategy": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"spot_instance_pools": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"spot_max_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"capacity_reservation_specification": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_reservation_preference": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 							},
-						},
-						names.AttrLaunchTemplate: {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"launch_template_specification": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"launch_template_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												names.AttrVersion: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
+							"capacity_reservation_target": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_reservation_ids": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
 											},
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
 										},
-									},
-									"override": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"instance_requirements": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accelerator_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"accelerator_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
-																},
-															},
-															"accelerator_names": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
-																},
-															},
-															"accelerator_total_memory_mib": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"accelerator_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
-																},
-															},
-															"allowed_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																MaxItems: 400,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"bare_metal": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
-															},
-															"baseline_ebs_bandwidth_mbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"burstable_performance": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
-															},
-															"cpu_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
-																},
-															},
-															"excluded_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																MaxItems: 400,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"instance_generations": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
-																},
-															},
-															"local_storage": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
-															},
-															"local_storage_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
-																},
-															},
-															"max_spot_price_as_percentage_of_optimal_on_demand_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"memory_gib_per_vcpu": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"memory_mib": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"network_bandwidth_gbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"network_interface_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"on_demand_max_price_percentage_over_lowest_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"require_hibernate_support": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"spot_max_price_percentage_over_lowest_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"total_local_storage_gb": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"vcpu_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												names.AttrInstanceType: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"launch_template_specification": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"launch_template_id": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"launch_template_name": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															names.AttrVersion: {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"weighted_capacity": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
-												},
+										"capacity_reservation_resource_group_arns": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
 											},
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
 										},
 									},
 								},
@@ -853,161 +144,872 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{names.AttrNamePrefix},
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
-				ConflictsWith: []string{names.AttrName},
-			},
-			"placement_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"predicted_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"protect_from_scale_in": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"service_linked_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"suspended_processes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"propagate_at_launch": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+				"context": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_cooldown": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"default_instance_warmup": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"desired_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"desired_capacity_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[desiredCapacityType](),
+				},
+				"enabled_metrics": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"force_delete_warm_pool": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"health_check_grace_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  300,
+				},
+				"health_check_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ignore_failed_scaling_activities": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"initial_lifecycle_hook": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_result": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
+							},
+							"heartbeat_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(30, 7200),
+							},
+							"lifecycle_transition": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 255),
+									validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+										`no spaces or special characters except "-", "_", and "/"`),
+								),
+							},
+							"notification_metadata": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"notification_target_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"target_group_arns": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"traffic_source"},
-			},
-			"termination_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"traffic_source": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIdentifier: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
+				"instance_maintenance_policy": {
+					Type:             schema.TypeList,
+					MaxItems:         1,
+					Optional:         true,
+					DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_healthy_percentage": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ValidateFunc: validation.Any(
+									validation.IntBetween(100, 200),
+									validation.IntBetween(-1, -1),
+								),
+								// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return old == "" && new == "-1"
+								},
+							},
+							"min_healthy_percentage": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(-1, 100),
+								// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return old == "" && new == "-1"
+								},
+							},
 						},
 					},
 				},
-				ConflictsWith: []string{"load_balancers", "target_group_arns"},
-			},
-			"vpc_zone_identifier": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrAvailabilityZones},
-			},
-			"wait_for_capacity_timeout": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "10m",
-				ValidateFunc: verify.ValidDuration,
-			},
-			"wait_for_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"warm_pool": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_reuse_policy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"reuse_on_scale_in": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+				"instance_refresh": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"preferences": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarm_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"alarms": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+										},
+										"auto_rollback": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"checkpoint_delay": {
+											Type:         nullable.TypeNullableInt,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+										},
+										"checkpoint_percentages": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeInt,
+											},
+										},
+										"instance_warmup": {
+											Type:         nullable.TypeNullableInt,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+										},
+										"max_healthy_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntBetween(100, 200),
+										},
+										"min_healthy_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      90,
+											ValidateFunc: validation.IntBetween(0, 100),
+										},
+										"scale_in_protected_instances": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.ScaleInProtectedInstancesIgnore,
+											ValidateDiagFunc: enum.Validate[awstypes.ScaleInProtectedInstances](),
+										},
+										"skip_matching": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"standby_instances": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.StandbyInstancesIgnore,
+											ValidateDiagFunc: enum.Validate[awstypes.StandbyInstances](),
+										},
+									},
+								},
+							},
+							"strategy": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
+							},
+							names.AttrTriggers: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
+								},
+							},
+						},
+					},
+				},
+				"launch_configuration": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				names.AttrLaunchTemplate: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  verify.ValidLaunchTemplateID,
+								ConflictsWith: []string{"launch_template.0.name"},
+							},
+							names.AttrName: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  verify.ValidLaunchTemplateName,
+								ConflictsWith: []string{"launch_template.0.id"},
+							},
+							names.AttrVersion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
+					},
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				"load_balancers": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"traffic_source"},
+				},
+				"max_instance_lifetime": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"max_size": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"metrics_granularity": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  defaultEnabledMetricsGranularity,
+				},
+				"min_elb_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"min_size": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"mixed_instances_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instances_distribution": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Computed: true,
+								// Ideally we'd want to detect drift detection,
+								// but a DiffSuppressFunc here does not behave nicely
+								// for detecting missing configuration blocks
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										// These fields are returned from calls to the API
+										// even if not provided at input time and can be omitted in requests;
+										// thus, to prevent non-empty plans, we set these
+										// to Computed and remove Defaults
+										"on_demand_allocation_strategy": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"on_demand_base_capacity": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"on_demand_percentage_above_base_capacity": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(0, 100),
+										},
+										"spot_allocation_strategy": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"spot_instance_pools": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"spot_max_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrLaunchTemplate: {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"launch_template_specification": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"launch_template_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"launch_template_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													names.AttrVersion: {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"override": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"instance_requirements": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accelerator_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"accelerator_manufacturers": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
+																	},
+																},
+																"accelerator_names": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
+																	},
+																},
+																"accelerator_total_memory_mib": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"accelerator_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
+																	},
+																},
+																"allowed_instance_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	MaxItems: 400,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"bare_metal": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
+																},
+																"baseline_ebs_bandwidth_mbps": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"burstable_performance": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
+																},
+																"cpu_manufacturers": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
+																	},
+																},
+																"excluded_instance_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	MaxItems: 400,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"instance_generations": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
+																	},
+																},
+																"local_storage": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
+																},
+																"local_storage_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
+																	},
+																},
+																"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"memory_gib_per_vcpu": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"memory_mib": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"network_bandwidth_gbps": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"network_interface_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"on_demand_max_price_percentage_over_lowest_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"require_hibernate_support": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"spot_max_price_percentage_over_lowest_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"total_local_storage_gb": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"vcpu_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+													names.AttrInstanceType: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"launch_template_specification": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"launch_template_id": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+																"launch_template_name": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+																names.AttrVersion: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"weighted_capacity": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
+													},
+												},
+											},
+										},
 									},
 								},
 							},
 						},
-						"max_group_prepared_capacity": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      defaultWarmPoolMaxGroupPreparedCapacity,
-							ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
-						},
-						"min_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"pool_state": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.WarmPoolStateStopped,
-							ValidateDiagFunc: enum.Validate[awstypes.WarmPoolState](),
+					},
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255),
+					ConflictsWith: []string{names.AttrNamePrefix},
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+					ConflictsWith: []string{names.AttrName},
+				},
+				"placement_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"predicted_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"protect_from_scale_in": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"service_linked_role_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"suspended_processes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"tag": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"propagate_at_launch": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"warm_pool_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"target_group_arns": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"traffic_source"},
+				},
+				"termination_policies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"traffic_source": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+						},
+					},
+					ConflictsWith: []string{"load_balancers", "target_group_arns"},
+				},
+				"vpc_zone_identifier": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{names.AttrAvailabilityZones},
+				},
+				"wait_for_capacity_timeout": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "10m",
+					ValidateFunc: verify.ValidDuration,
+				},
+				"wait_for_elb_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"warm_pool": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_reuse_policy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"reuse_on_scale_in": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+									},
+								},
+							},
+							"max_group_prepared_capacity": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      defaultWarmPoolMaxGroupPreparedCapacity,
+								ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
+							},
+							"min_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"pool_state": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.WarmPoolStateStopped,
+								ValidateDiagFunc: enum.Validate[awstypes.WarmPoolState](),
+							},
+						},
+					},
+				},
+				"warm_pool_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

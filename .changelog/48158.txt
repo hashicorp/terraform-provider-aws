@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_delivery: Add mutex lock around create, update, and delete operations to prevent `ConflictException` errors
+```

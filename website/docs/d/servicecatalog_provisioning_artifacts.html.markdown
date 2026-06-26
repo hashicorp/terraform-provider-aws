@@ -46,3 +46,9 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - The identifier of the provisioning artifact.
 * `name` - The name of the provisioning artifact.
 * `type` - The type of provisioning artifact.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `10m`)

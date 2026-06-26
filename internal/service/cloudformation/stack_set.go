@@ -51,176 +51,178 @@ func resourceStackSet() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"administration_role_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"auto_deployment"},
-				ValidateFunc:  verify.ValidARN,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_deployment": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				ConflictsWith: []string{
-					"administration_role_arn",
-					"execution_role_name",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"administration_role_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"auto_deployment"},
+					ValidateFunc:  verify.ValidARN,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"depends_on_stack_sets": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_deployment": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					ConflictsWith: []string{
+						"administration_role_arn",
+						"execution_role_name",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"depends_on_stack_sets": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
 							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"retain_stacks_on_account_removal": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"retain_stacks_on_account_removal": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"call_as": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CallAsSelf,
-				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
-			},
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"call_as": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					Optional:         true,
+					Default:          awstypes.CallAsSelf,
+					ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"execution_role_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"auto_deployment"},
-			},
-			"managed_execution": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"operation_preferences": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_tolerance_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(0),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"execution_role_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"auto_deployment"},
+				},
+				"managed_execution": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
-						"failure_tolerance_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(0, 100),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
-						},
-						"max_concurrent_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(1),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
-						},
-						"max_concurrent_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(1, 100),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
-						},
-						"region_concurrency_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
-						},
-						"region_order": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"operation_preferences": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_tolerance_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(0),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+							},
+							"failure_tolerance_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(0, 100),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+							},
+							"max_concurrent_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+							},
+							"max_concurrent_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(1, 100),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+							},
+							"region_concurrency_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
+							},
+							"region_order": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"permission_model": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PermissionModelsSelfManaged,
-				ValidateDiagFunc: enum.Validate[awstypes.PermissionModels](),
-			},
-			"stack_set_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_body": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ConflictsWith:         []string{"template_url"},
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          verify.ValidStringIsJSONOrYAML,
-			},
-			"template_url": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"template_body"},
-			},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"permission_model": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PermissionModelsSelfManaged,
+					ValidateDiagFunc: enum.Validate[awstypes.PermissionModels](),
+				},
+				"stack_set_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_body": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					ConflictsWith:         []string{"template_url"},
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          verify.ValidStringIsJSONOrYAML,
+				},
+				"template_url": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"template_body"},
+				},
+			}
 		},
 	}
 }

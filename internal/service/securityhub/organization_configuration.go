@@ -42,33 +42,35 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(180 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"auto_enable_standards": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
-			},
-			"organization_configuration": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"auto_enable_standards": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
+				},
+				"organization_configuration": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Computed:    true,
+					DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
+					MaxItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

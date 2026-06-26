@@ -114,6 +114,14 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

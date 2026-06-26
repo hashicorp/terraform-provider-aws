@@ -42,56 +42,58 @@ func resourceServiceAction() *schema.Resource {
 			Delete: schema.DefaultTimeout(ServiceActionDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"assume_role": { // ServiceActionDefinitionKeyAssumeRole
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrName: { // ServiceActionDefinitionKeyName
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrParameters: { // ServiceActionDefinitionKeyParameters
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateFunc:     validation.StringIsJSON,
-							DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ServiceActionDefinitionTypeSsmAutomation,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ServiceActionDefinitionType](),
-						},
-						names.AttrVersion: { // ServiceActionDefinitionKeyVersion
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"assume_role": { // ServiceActionDefinitionKeyAssumeRole
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: { // ServiceActionDefinitionKeyName
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrParameters: { // ServiceActionDefinitionKeyParameters
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateFunc:     validation.StringIsJSON,
+								DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ServiceActionDefinitionTypeSsmAutomation,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ServiceActionDefinitionType](),
+							},
+							names.AttrVersion: { // ServiceActionDefinitionKeyVersion
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
