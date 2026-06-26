@@ -188,6 +188,11 @@ resource "aws_neptunegraph_graph" "example" {
 
 - `id` (String) The graph identifier.
 
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) AWS Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptunegraph_graph` using the graph identifier. For example:
 
 ```terraform
