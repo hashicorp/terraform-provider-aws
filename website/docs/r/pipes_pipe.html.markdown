@@ -386,6 +386,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
+* `timestream_parameters` - (Optional) The parameters for using a Timestream for LiveAnalytics table as a target. Detailed below.
 
 #### target_parameters.batch_job_parameters Configuration Block
 
@@ -569,6 +570,40 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 #### target_parameters.step_function_state_machine_parameters Configuration Block
 
 * `invocation_type` - (Optional) Specify whether to invoke the function synchronously or asynchronously. Valid Values: REQUEST_RESPONSE, FIRE_AND_FORGET.
+
+#### target_parameters.timestream_parameters Configuration Block
+
+* `dimension_mapping` - (Required) Map source data to dimensions in the target Timestream for LiveAnalytics table. Detailed below.
+* `time_value` - (Required) Dynamic path to the source data field that represents the time value for your data.
+* `version_value` - (Required) 64 bit version value or source data field that represents the version value for your data.
+* `epoch_time_unit` - (Optional) The granularity of the time units used. Default is `MILLISECONDS`. Required if `time_field_type` is specified as `EPOCH`. Valid Values: `MILLISECONDS`, `SECONDS`, `MICROSECONDS`, `NANOSECONDS`.
+* `multi_measure_mapping` - (Optional) Maps multiple measures from the source event to the same record in the specified Timestream for LiveAnalytics table. Detailed below.
+* `single_measure_mapping` - (Optional) Mappings of single source data fields to individual records in the specified Timestream for LiveAnalytics table. Detailed below.
+* `time_field_type` - (Optional) The type of time value used. The default is `EPOCH`. Valid Values: `EPOCH`, `TIMESTAMP_FORMAT`.
+* `timestamp_format` - (Optional) How to format the timestamps. For example, `yyyy-MM-dd'T'HH:mm:ss'Z'`. Required if `time_field_type` is specified as `TIMESTAMP_FORMAT`.
+
+##### target_parameters.timestream_parameters.dimension_mapping Configuration Block
+
+* `dimension_name` - (Required) The metadata attributes of the time series.
+* `dimension_value` - (Required) Dynamic path to the dimension value in the source event.
+* `dimension_value_type` - (Required) The data type of the dimension for the time-series data. Valid Values: `VARCHAR`.
+
+##### target_parameters.timestream_parameters.multi_measure_mapping Configuration Block
+
+* `multi_measure_name` - (Required) The name of the multiple measurements per record (multi-measure).
+* `multi_measure_attribute_mapping` - (Required) Mappings that represent multiple source event fields mapped to measures in the same Timestream for LiveAnalytics record. Detailed below.
+
+###### target_parameters.timestream_parameters.multi_measure_mapping.multi_measure_attribute_mapping Configuration Block
+
+* `measure_value` - (Required) Dynamic path to the measurement attribute in the source event.
+* `measure_value_type` - (Required) Data type of the measurement attribute in the source event. Valid Values: `DOUBLE`, `BIGINT`, `VARCHAR`, `BOOLEAN`, `TIMESTAMP`, `MULTI`.
+* `multi_measure_attribute_name` - (Required) Target measure name to be used.
+
+##### target_parameters.timestream_parameters.single_measure_mapping Configuration Block
+
+* `measure_name` - (Required) Target measure name for the measurement attribute in the Timestream table.
+* `measure_value` - (Required) Dynamic path of the source field to map to the measure in the record.
+* `measure_value_type` - (Required) Data type of the source field. Valid Values: `DOUBLE`, `BIGINT`, `VARCHAR`, `BOOLEAN`, `TIMESTAMP`, `MULTI`.
 
 ## Attribute Reference
 
