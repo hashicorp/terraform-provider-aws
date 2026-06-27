@@ -126,6 +126,51 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 	})
 }
 
+func TestAccAMPWorkspaceConfiguration_timeWindowAndQueryOffset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WorkspaceConfigurationDescription
+	resourceName := "aws_prometheus_workspace_configuration.test"
+	workspaceResourceName := "aws_prometheus_workspace.test"
+	timeWindow := 120
+	queryOffset := 300
+	timeWindowUpdated := 300
+	queryOffsetUpdated := 600
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindow, queryOffset),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "out_of_order_time_window_in_seconds", strconv.Itoa(timeWindow)),
+					resource.TestCheckResourceAttr(resourceName, "rule_query_offset_in_seconds", strconv.Itoa(queryOffset)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
+			},
+			{
+				Config: testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindowUpdated, queryOffsetUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "out_of_order_time_window_in_seconds", strconv.Itoa(timeWindowUpdated)),
+					resource.TestCheckResourceAttr(resourceName, "rule_query_offset_in_seconds", strconv.Itoa(queryOffsetUpdated)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWorkspaceConfigurationExists(ctx context.Context, t *testing.T, n string, v *awstypes.WorkspaceConfigurationDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -212,4 +257,16 @@ resource "aws_prometheus_workspace_configuration" "test" {
   }
 }
 `
+}
+
+func testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindow, queryOffset int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_workspace_configuration" "test" {
+  workspace_id                          = aws_prometheus_workspace.test.id
+  out_of_order_time_window_in_seconds   = %[1]d
+  rule_query_offset_in_seconds          = %[2]d
+}
+`, timeWindow, queryOffset)
 }
