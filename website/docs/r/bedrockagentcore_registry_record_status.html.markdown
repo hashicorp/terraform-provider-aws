@@ -78,8 +78,8 @@ resource "aws_bedrockagentcore_registry_record_status" "example" {
 
 #### Optional
 
-* `account_id` (String) AWS account ID for this resource.
-* `region` (String) AWS Region for this resource.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Registry Record statuses using `registry_id` and `record_id` separated by a comma (`,`). For example:
 
