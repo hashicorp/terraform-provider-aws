@@ -177,8 +177,8 @@ resource "aws_bedrockagentcore_registry_record" "example" {
 
 #### Required
 
-- `record_id` (String) Registry record ID.
-- `registry_id` (String) Registry ID.
+* `record_id` (String) Registry record ID.
+* `registry_id` (String) Registry ID.
 
 #### Optional
 
