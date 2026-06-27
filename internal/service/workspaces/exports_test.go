@@ -13,5 +13,6 @@ var (
 	FindConnectionAliasByID = findConnectionAliasByID
 	FindDirectoryByID       = findDirectoryByID
 	FindIPGroupByID         = findIPGroupByID
+	FindPoolByID            = findPoolByID
 	FindWorkspaceByID       = findWorkspaceByID
 )
