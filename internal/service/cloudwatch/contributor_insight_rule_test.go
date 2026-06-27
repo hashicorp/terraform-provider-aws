@@ -20,7 +20,6 @@ import (
 
 func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.InsightRule
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
@@ -47,7 +46,7 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					"rule_definition",
@@ -60,7 +59,6 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.InsightRule
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
@@ -103,7 +101,7 @@ func testAccCheckContributorInsightRuleDestroy(ctx context.Context, t *testing.T
 				continue
 			}
 
-			_, err := tfcloudwatch.FindContributorInsightRuleByName(ctx, conn, rs.Primary.Attributes["rule_name"])
+			_, err := tfcloudwatch.FindInsightRuleByName(ctx, conn, rs.Primary.Attributes["rule_name"])
 
 			if retry.NotFound(err) {
 				continue
@@ -120,39 +118,24 @@ func testAccCheckContributorInsightRuleDestroy(ctx context.Context, t *testing.T
 	}
 }
 
-func testAccCheckContributorInsightRuleExists(ctx context.Context, t *testing.T, name string, contributorinsightrule *types.InsightRule) resource.TestCheckFunc {
+func testAccCheckContributorInsightRuleExists(ctx context.Context, t *testing.T, n string, v *types.InsightRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Contributor Insight Rule Rule Name is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
-		output, err := tfcloudwatch.FindContributorInsightRuleByName(ctx, conn, rs.Primary.Attributes["rule_name"])
+		output, err := tfcloudwatch.FindInsightRuleByName(ctx, conn, rs.Primary.Attributes["rule_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*contributorinsightrule = *output
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccContributorInsightRuleImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["rule_name"], nil
 	}
 }
 

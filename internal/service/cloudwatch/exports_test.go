@@ -16,9 +16,9 @@ var (
 
 	FindAlarmMuteRuleByName                                    = findAlarmMuteRuleByName
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
-	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
 	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
 	FindDashboardByName                                        = findDashboardByName
+	FindInsightRuleByName                                      = findInsightRuleByName
 	FindMetricAlarmByName                                      = findMetricAlarmByName
 	FindMetricStreamByName                                     = findMetricStreamByName
 	FindOtelEnrichment                                         = findOTelEnrichment

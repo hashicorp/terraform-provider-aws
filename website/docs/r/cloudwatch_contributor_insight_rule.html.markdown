@@ -42,17 +42,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Contributor Insight Rule using the `rule_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_cloudwatch_contributor_insight_rule.example
-  id = "contributor_insight_rule-name"
+  identity = {
+    rule_name = "example-rule"
+  }
+}
+
+resource "aws_cloudwatch_contributor_insight_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Contributor Insight Rule using the `rule_name`. For example:
+### Identity Schema
+
+#### Required
+
+* `rule_name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Contributor Insight Rules using `rule_name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_contributor_insight_rule.example
+  id = "example-rule"
+}
+```
+
+Using `terraform import`, import Contributor Insight Rules using `rule_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_contributor_insight_rule.example contributor_insight_rule-name
+% terraform import aws_cloudwatch_contributor_insight_rule.example example-rule
 ```
