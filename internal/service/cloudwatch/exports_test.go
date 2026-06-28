@@ -14,12 +14,12 @@ var (
 	ResourceMetricStream                  = resourceMetricStream
 	ResourceOtelEnrichment                = newOTelEnrichmentResource
 
-	FindAlarmMuteRuleByName                                    = findAlarmMuteRuleByName
-	FindCompositeAlarmByName                                   = findCompositeAlarmByName
-	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
-	FindDashboardByName                                        = findDashboardByName
-	FindInsightRuleByName                                      = findInsightRuleByName
-	FindMetricAlarmByName                                      = findMetricAlarmByName
-	FindMetricStreamByName                                     = findMetricStreamByName
-	FindOtelEnrichment                                         = findOTelEnrichment
+	FindAlarmMuteRuleByName     = findAlarmMuteRuleByName
+	FindCompositeAlarmByName    = findCompositeAlarmByName
+	FindDashboardByName         = findDashboardByName
+	FindInsightRuleByName       = findInsightRuleByName
+	FindManagedRuleByTwoPartKey = findManagedRuleByTwoPartKey
+	FindMetricAlarmByName       = findMetricAlarmByName
+	FindMetricStreamByName      = findMetricStreamByName
+	FindOtelEnrichment          = findOTelEnrichment
 )

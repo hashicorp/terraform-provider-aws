@@ -5,3 +5,15 @@ resource/aws_cloudwatch_composite_alarm: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_cloudwatch_contributor_insight_rule: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_contributor_managed_insight_rule: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_contributor_managed_insight_rule: Add plan-time validation of `resource_arn` and `template_name`
+```
+
+```release-note:bug
+resource/aws_cloudwatch_contributor_managed_insight_rule: Mark `resource_arn` and `template_name` as as `ForceNew`
+```

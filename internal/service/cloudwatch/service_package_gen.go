@@ -69,6 +69,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrResourceARN, true),
+				inttypes.StringIdentityAttribute("template_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      contributorManagedInsightRuleImportID{},
+			},
 		},
 		{
 			Factory:  newOTelEnrichmentResource,
