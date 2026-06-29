@@ -61,7 +61,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id", "database_installation_files"},
 			},
 		},
 	})
@@ -107,7 +107,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id", "database_installation_files"},
 			},
 			{
 				Config: testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, description2),
@@ -160,7 +160,7 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "database_installation_files"},
 			},
 		},
 	})
@@ -206,7 +206,77 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "database_installation_files"},
+			},
+		},
+	})
+}
+
+func TestAccRDSCustomDBEngineVersion_databaseInstallationFiles(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	// Requires SQL Server Developer Edition installation media and Cumulative Update executable in S3 bucket owned
+	// (bucket must be in operating region) by operating account set as environmental variable
+	// Pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/sqlserver-dev-edition.preparing.html
+	s3BucketNameKey := "RDS_SQL_DEV_S3_BUCKET_NAME"
+	s3BucketName := os.Getenv(s3BucketNameKey)
+	if s3BucketName == "" {
+		t.Skipf("Environment variable %s is not set", s3BucketNameKey)
+	}
+
+	s3PrefixKey := "RDS_SQL_DEV_S3_PREFIX"
+	s3Prefix := os.Getenv(s3PrefixKey)
+	if s3Prefix == "" {
+		t.Skipf("Environment variable %s is not set", s3PrefixKey)
+	}
+
+	isoFileNameKey := "RDS_SQL_DEV_ISO_FILE_NAME"
+	isoFileName := os.Getenv(isoFileNameKey)
+	if isoFileName == "" {
+		t.Skipf("Environment variable %s is not set", isoFileNameKey)
+	}
+
+	cuExeFileNameKey := "RDS_SQL_DEV_CU_EXE_FILE_NAME"
+	cuExeFileName := os.Getenv(cuExeFileNameKey)
+	if cuExeFileName == "" {
+		t.Skipf("Environment variable %s is not set", cuExeFileNameKey)
+	}
+
+	var customdbengineversion types.DBEngineVersion
+	rName := fmt.Sprintf("%s%s%d", "16.00.4215.2.", acctest.ResourcePrefix, acctest.RandIntRange(t, 100, 999))
+	resourceName := "aws_rds_custom_db_engine_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDBEngineVersionConfig_databaseInstallationFiles(rName, s3BucketName, s3Prefix, isoFileName, cuExeFileName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomDBEngineVersionExists(ctx, t, resourceName, &customdbengineversion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttr(resourceName, "database_installation_files_s3_bucket_name", s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, "database_installation_files_s3_prefix", s3Prefix),
+					resource.TestCheckResourceAttr(resourceName, "database_installation_files.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "database_installation_files.*", isoFileName),
+					resource.TestCheckTypeSetElemAttr(resourceName, "database_installation_files.*", cuExeFileName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:sqlserver-dev-ee.+%s.+`, rName))),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "database_installation_files"},
 			},
 		},
 	})
@@ -456,4 +526,19 @@ resource "aws_rds_custom_db_engine_version" "test" {
   }
 }
 `, rName, ami, key, value)
+}
+
+func testAccCustomDBEngineVersionConfig_databaseInstallationFiles(rName, s3BucketName, s3Prefix, isoFileName, cuExeFileName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_custom_db_engine_version" "test" {
+  engine                                     = "sqlserver-dev-ee"
+  engine_version                             = %[1]q
+  database_installation_files_s3_bucket_name = %[2]q
+  database_installation_files_s3_prefix      = %[3]q
+  database_installation_files = [
+    %[4]q,
+    %[5]q
+  ]
+}
+`, rName, s3BucketName, s3Prefix, isoFileName, cuExeFileName)
 }
