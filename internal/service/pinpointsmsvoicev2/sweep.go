@@ -107,7 +107,7 @@ func sweepPools(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping End User Messaging SMS Phone Numbers (%s): %w", region, err)
+		return fmt.Errorf("error sweeping End User Messaging SMS Pools (%s): %w", region, err)
 	}
 
 	return nil
