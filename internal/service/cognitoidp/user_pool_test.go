@@ -2131,6 +2131,13 @@ func testAccCheckUserPoolDestroy(ctx context.Context, t *testing.T) resource.Tes
 				continue
 			}
 
+			// The associated KMS key may be scheduled for deletion (disabled) by the time
+			// this check runs, causing Cognito to return a KMS validation error instead of
+			// ResourceNotFoundException. Treat this as confirmation the pool is gone.
+			if err != nil && strings.Contains(err.Error(), "is in an invalid state") {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
@@ -3422,6 +3429,33 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "test" {
