@@ -216,17 +216,17 @@ func (r *poolResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// The seed identity is opaque to the user; they always interact with `origination_identities` as a symmetric set.
 	seed, extras := identities[0], identities[1:]
 
-	input := &pinpointsmsvoicev2.CreatePoolInput{
+	input := pinpointsmsvoicev2.CreatePoolInput{
 		ClientToken:         aws.String(create.UniqueId(ctx)),
 		OriginationIdentity: aws.String(seed),
 		Tags:                getTagsIn(ctx),
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input, fwflex.WithIgnoredFieldNamesAppend("OriginationIdentities")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("OriginationIdentities")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.CreatePool(ctx, input)
+	out, err := conn.CreatePool(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, seed)
 		return
@@ -389,14 +389,14 @@ func (r *poolResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	if diff.HasChanges() {
-		input := &pinpointsmsvoicev2.UpdatePoolInput{
+		input := pinpointsmsvoicev2.UpdatePoolInput{
 			PoolId: aws.String(poolID),
 		}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input, diff.IgnoredFieldNamesOpts()...))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if err := updatePoolWithIAMPropagation(ctx, conn, input); err != nil {
+		if err := updatePoolWithIAMPropagation(ctx, conn, &input); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, poolID)
 			return
 		}
@@ -439,11 +439,11 @@ func (r *poolResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	input := &pinpointsmsvoicev2.DeletePoolInput{
+	input := pinpointsmsvoicev2.DeletePoolInput{
 		PoolId: state.PoolID.ValueStringPointer(),
 	}
 
-	_, err := conn.DeletePool(ctx, input)
+	_, err := conn.DeletePool(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -772,7 +772,7 @@ func validateSenderIdentity(identityARN string, s awstypes.SenderIdInformation, 
 
 func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
 	for _, identity := range identities {
-		input := &pinpointsmsvoicev2.AssociateOriginationIdentityInput{
+		input := pinpointsmsvoicev2.AssociateOriginationIdentityInput{
 			ClientToken:         aws.String(create.UniqueId(ctx)),
 			PoolId:              aws.String(poolID),
 			OriginationIdentity: aws.String(identity),
@@ -783,7 +783,7 @@ func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev
 		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, *awstypes.ThrottlingException](
 			ctx, originationIdentityTimeout,
 			func(ctx context.Context) (*pinpointsmsvoicev2.AssociateOriginationIdentityOutput, error) {
-				return conn.AssociateOriginationIdentity(ctx, input)
+				return conn.AssociateOriginationIdentity(ctx, &input)
 			},
 		)
 		if err != nil {
@@ -795,7 +795,7 @@ func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev
 
 func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
 	for _, identity := range identities {
-		input := &pinpointsmsvoicev2.DisassociateOriginationIdentityInput{
+		input := pinpointsmsvoicev2.DisassociateOriginationIdentityInput{
 			ClientToken:         aws.String(create.UniqueId(ctx)),
 			PoolId:              aws.String(poolID),
 			OriginationIdentity: aws.String(identity),
@@ -804,7 +804,7 @@ func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoi
 		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, *awstypes.ThrottlingException](
 			ctx, originationIdentityTimeout,
 			func(ctx context.Context) (*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, error) {
-				return conn.DisassociateOriginationIdentity(ctx, input)
+				return conn.DisassociateOriginationIdentity(ctx, &input)
 			},
 		)
 		// Tolerate failure modes whose desired post-condition (identity not
@@ -907,11 +907,11 @@ func statusPool(conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFu
 }
 
 func findPoolByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PoolInformation, error) {
-	input := &pinpointsmsvoicev2.DescribePoolsInput{
+	input := pinpointsmsvoicev2.DescribePoolsInput{
 		PoolIds: []string{id},
 	}
 
-	output, err := findPool(ctx, conn, input)
+	output, err := findPool(ctx, conn, &input)
 	if err != nil {
 		return nil, err
 	}
