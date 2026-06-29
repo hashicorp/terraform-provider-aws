@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -38,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfboolvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/boolvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -176,8 +176,8 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 					boolplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Bool{
-					boolvalidator.AlsoRequires(
-						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
+					tfboolvalidator.AlsoRequiresWhenTrue(
+						path.MatchRelative().AtParent().AtName("two_way_channel_arn"),
 					),
 				},
 			},

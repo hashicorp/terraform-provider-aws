@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfboolvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/boolvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -169,6 +170,11 @@ func (r *poolResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:    true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Bool{
+					tfboolvalidator.AlsoRequiresWhenTrue(
+						path.MatchRelative().AtParent().AtName("two_way_channel_arn"),
+					),
 				},
 			},
 		},
