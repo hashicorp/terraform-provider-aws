@@ -343,5 +343,5 @@ func findManagedRuleByTwoPartKey(ctx context.Context, conn *cloudwatch.Client, r
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	return output, err
+	return output, smarterr.NewError(err)
 }
