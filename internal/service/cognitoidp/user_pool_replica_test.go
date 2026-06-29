@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -148,6 +149,12 @@ func testAccCheckUserPoolReplicaDestroy(ctx context.Context, t *testing.T) resou
 			if retry.NotFound(err) {
 				continue
 			}
+			// The associated KMS key may be scheduled for deletion (disabled) by the time
+			// this check runs, causing Cognito to return a KMS validation error instead of
+			// ResourceNotFoundException. Treat this as confirmation the replica is gone.
+			if err != nil && strings.Contains(err.Error(), "is in an invalid state") {
+				continue
+			}
 			if err != nil {
 				return err
 			}
@@ -169,6 +176,68 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_replica_key" "test" {
+  provider        = awsalternate
+  primary_key_arn = aws_kms_key.test.arn
+  description     = %[1]q
+
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -183,6 +252,8 @@ resource "aws_cognito_user_pool" "test" {
 resource "aws_cognito_user_pool_replica" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
   region_name  = data.aws_region.alternate.region
+
+  depends_on = [aws_kms_replica_key.test]
 }
 `, rName))
 }
@@ -197,6 +268,75 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_replica_key" "test" {
+  provider        = awsalternate
+  primary_key_arn = aws_kms_key.test.arn
+  description     = %[1]q
+
+  deletion_window_in_days = 7
+
+  # When a Cognito user pool replica is activated, AWS takes control of this key
+  # and may disable it from Terraform's perspective. Ignore drift on enabled to
+  # prevent a non-empty plan from blocking subsequent test steps.
+  lifecycle {
+    ignore_changes = [enabled]
+  }
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -212,6 +352,8 @@ resource "aws_cognito_user_pool_replica" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
   region_name  = data.aws_region.alternate.region
   status       = %[2]q
+
+  depends_on = [aws_kms_replica_key.test]
 }
 `, rName, status))
 }
@@ -263,6 +405,68 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_replica_key" "test" {
+  provider        = awsalternate
+  primary_key_arn = aws_kms_key.test.arn
+  description     = %[1]q
+
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -281,6 +485,8 @@ resource "aws_cognito_user_pool_replica" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [aws_kms_replica_key.test]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -295,6 +501,68 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_replica_key" "test" {
+  provider        = awsalternate
+  primary_key_arn = aws_kms_key.test.arn
+  description     = %[1]q
+
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -314,6 +582,8 @@ resource "aws_cognito_user_pool_replica" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_kms_replica_key.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
