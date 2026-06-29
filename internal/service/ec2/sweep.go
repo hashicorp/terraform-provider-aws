@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -1830,7 +1831,7 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 			d := r.Data(nil)
 			d.SetId(subnetID)
-			d.Set(names.AttrVPCID, aws.ToString(v.VpcId))
+			d.Set(names.AttrVPCID, v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -1845,15 +1846,15 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 // aws_vpc Delete paths cannot remove these endpoints, so any subnet or VPC they
 // reference cannot be deleted by the sweeper and must be skipped.
 func findResourcesBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn *ec2.Client) (subnetIDs, vpcIDs map[string][]string, err error) {
-	input := &ec2.DescribeVpcEndpointsInput{
+	input := ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"vpc-endpoint-state": vpcEndpointStateAvailable,
 		}),
 	}
 
-	endpoints, err := findVPCEndpoints(ctx, conn, input)
+	endpoints, err := findVPCEndpoints(ctx, conn, &input)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, nil, nil
 		}
 		return nil, nil, err
