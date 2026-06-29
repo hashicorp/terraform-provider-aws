@@ -181,7 +181,7 @@ func TestAccBedrockAgentCoreBrowser_enterprisePolicies(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enterprise_policies"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enterprise_policy"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrType: tfknownvalue.StringExact(awstypes.BrowserEnterprisePolicyTypeManaged),
 						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"s3": knownvalue.ListSizeExact(1),
@@ -230,7 +230,7 @@ func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificates"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"secrets_manager": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
@@ -674,7 +674,7 @@ resource "aws_bedrockagentcore_browser" "test" {
     network_mode = "PUBLIC"
   }
 
-  enterprise_policies {
+  enterprise_policy {
     type = "MANAGED"
     location {
       s3 {
@@ -720,7 +720,7 @@ resource "aws_bedrockagentcore_browser" "test" {
     network_mode = "PUBLIC"
   }
 
-  certificates {
+  certificate {
     location {
       secrets_manager {
         secret_arn = aws_secretsmanager_secret_version.test.arn
