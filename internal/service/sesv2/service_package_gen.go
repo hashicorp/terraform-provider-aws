@@ -33,6 +33,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newEmailIdentityConfigurationSetAttributesResource,
+			TypeName: "aws_sesv2_email_identity_configuration_set_attributes",
+			Name:     "Email Identity Configuration Set Attributes",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newTenantResource,
 			TypeName: "aws_sesv2_tenant",
 			Name:     "Tenant",

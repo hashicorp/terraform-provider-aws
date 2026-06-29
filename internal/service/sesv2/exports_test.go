@@ -5,18 +5,19 @@ package sesv2
 
 // Exports for use in tests only.
 var (
-	ResourceAccountVDMAttributes             = resourceAccountVDMAttributes
-	ResourceConfigurationSet                 = resourceConfigurationSet
-	ResourceConfigurationSetEventDestination = resourceConfigurationSetEventDestination
-	ResourceContactList                      = resourceContactList
-	ResourceDedicatedIPAssignment            = resourceDedicatedIPAssignment
-	ResourceDedicatedIPPool                  = resourceDedicatedIPPool
-	ResourceEmailIdentity                    = resourceEmailIdentity
-	ResourceEmailIdentityFeedbackAttributes  = resourceEmailIdentityFeedbackAttributes
-	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
-	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
-	ResourceTenant                           = newTenantResource
-	ResourceTenantResource                   = newTenantResourceAssociationResource
+	ResourceAccountVDMAttributes                        = resourceAccountVDMAttributes
+	ResourceConfigurationSet                            = resourceConfigurationSet
+	ResourceConfigurationSetEventDestination            = resourceConfigurationSetEventDestination
+	ResourceContactList                                 = resourceContactList
+	ResourceDedicatedIPAssignment                       = resourceDedicatedIPAssignment
+	ResourceDedicatedIPPool                             = resourceDedicatedIPPool
+	ResourceEmailIdentity                               = resourceEmailIdentity
+	ResourceEmailIdentityConfigurationSetAttributes     = newEmailIdentityConfigurationSetAttributesResource
+	ResourceEmailIdentityFeedbackAttributes             = resourceEmailIdentityFeedbackAttributes
+	ResourceEmailIdentityMailFromAttributes             = resourceEmailIdentityMailFromAttributes
+	ResourceEmailIdentityPolicy                         = resourceEmailIdentityPolicy
+	ResourceTenant                                      = newTenantResource
+	ResourceTenantResource                              = newTenantResourceAssociationResource
 
 	FindAccountSuppressionAttributes                 = findAccountSuppressionAttributes
 	FindAccountVDMAttributes                         = findAccountVDMAttributes
