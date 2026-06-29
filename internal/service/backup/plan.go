@@ -137,6 +137,24 @@ func resourcePlan() *schema.Resource {
 								Optional: true,
 								Default:  false,
 							},
+							"index_action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_types": {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											Required: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringInSlice([]string{"EBS", "S3"}, false),
+											},
+										},
+									},
+								},
+							},
 							"lifecycle": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -411,6 +429,9 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 		if v, ok := tfMap["enable_continuous_backup"].(bool); ok {
 			apiObject.EnableContinuousBackup = aws.Bool(v)
 		}
+		if v, ok := tfMap["index_action"].([]any); ok && len(v) > 0 {
+			apiObject.IndexActions = expandIndexActions(v)
+		}
 		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
@@ -488,6 +509,23 @@ func expandCopyActions(tfList []any) []awstypes.CopyAction {
 
 		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandIndexActions(tfList []any) []awstypes.IndexAction {
+	apiObjects := []awstypes.IndexAction{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.IndexAction{}
+
+		if v, ok := tfMap["resource_types"].(*schema.Set); ok && v.Len() > 0 && v.List()[0] != nil {
+			apiObject.ResourceTypes = flex.ExpandStringValueSet(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -591,6 +629,10 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 			tfMap["copy_action"] = flattenCopyActions(v)
 		}
 
+		if v := apiObject.IndexActions; v != nil {
+			tfMap["index_action"] = flattenIndexActions(v)
+		}
+
 		if v := apiObject.Lifecycle; v != nil {
 			tfMap["lifecycle"] = flattenLifecycle(v)
 		}
@@ -643,6 +685,25 @@ func flattenCopyActions(apiObjects []awstypes.CopyAction) []any {
 		tfList = append(tfList, tfMap)
 	}
 
+	return tfList
+}
+
+func flattenIndexActions(apiObject []awstypes.IndexAction) []any {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, indexAction := range apiObject {
+		tfMap := map[string]any{}
+
+		if v := indexAction.ResourceTypes; len(v) > 0 {
+			tfMap["resource_types"] = flex.FlattenStringValueSet(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
 	return tfList
 }
 
