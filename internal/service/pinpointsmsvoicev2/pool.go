@@ -801,15 +801,23 @@ func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoi
 				return conn.DisassociateOriginationIdentity(ctx, input)
 			},
 		)
-		// Tolerate ResourceNotFoundException and two ConflictExceptions
-		// that imply the desired post-condition is already satisfied.
+		// Tolerate failure modes whose desired post-condition (identity not
+		// associated with the pool) is already satisfied: the identity or pool
+		// no longer exists, or the identity is already not associated.
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			continue
 		}
-		if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok &&
-			(ce.Reason == awstypes.ConflictExceptionReasonPhoneNumberNotAssociatedToPool ||
-				ce.Reason == awstypes.ConflictExceptionReasonLastPhoneNumber) {
-			continue
+		if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok {
+			switch ce.Reason {
+			case awstypes.ConflictExceptionReasonPhoneNumberNotAssociatedToPool:
+				continue
+			case awstypes.ConflictExceptionReasonLastPhoneNumber:
+				// AWS refused the disassociation: a pool must retain at least
+				// one phone-number origination identity. The identity is still
+				// attached, so surface a clear error rather than silently
+				// returning success.
+				return fmt.Errorf("disassociating origination identity %s: a pool must retain at least one phone-number origination identity; add a replacement phone number before removing this one, or destroy the pool: %w", identity, err)
+			}
 		}
 		if err != nil {
 			return fmt.Errorf("disassociating origination identity %s: %w", identity, err)
