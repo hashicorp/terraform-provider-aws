@@ -240,6 +240,7 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration").AtSliceIndex(0).AtMapKey("input_configuration").AtSliceIndex(0).AtMapKey("payload_filter").AtSliceIndex(0).AtMapKey("exclude").AtSliceIndex(0).AtMapKey("field"), knownvalue.StringExact("RESPONSE_BODY")),
 				},
 			},
 			{
@@ -1325,6 +1326,12 @@ resource "aws_bedrockagentcore_gateway" "test" {
 
     input_configuration {
       pass_request_headers = true
+
+      payload_filter {
+        exclude {
+          field = "RESPONSE_BODY"
+        }
+      }
     }
   }
 }
