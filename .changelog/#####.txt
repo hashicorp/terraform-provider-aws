@@ -29,3 +29,7 @@ resource/aws_cloudwatch_contributor_insight_rule: Add plan-time validation of `r
 ```release-note:enhancement
 resource/aws_cloudwatch_contributor_insight_rule: Change `rule_state` to Optional and Computed
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_dashboard: Add Resource Identity support
+```
