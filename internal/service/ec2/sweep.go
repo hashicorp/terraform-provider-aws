@@ -1824,7 +1824,7 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 			subnetID := aws.ToString(v.SubnetId)
 
 			if endpointIDs, blocked := blockedSubnets[subnetID]; blocked {
-				log.Printf("[INFO] Skipping EC2 Subnet %s: blocked by requester-managed VPC endpoint(s) %v", subnetID, endpointIDs)
+				logSweepBlockedByRequesterManagedVPCEndpoint("EC2 Subnet", subnetID, endpointIDs)
 				continue
 			}
 
@@ -1874,6 +1874,24 @@ func findResourcesBlockedByRequesterManagedVPCEndpoints(ctx context.Context, con
 		}
 	}
 	return subnetIDs, vpcIDs, nil
+}
+
+// logSweepBlockedByRequesterManagedVPCEndpoint emits an operator-facing [WARN]
+// when a sweeper skips a resource because of a requester-managed VPC endpoint
+// it cannot delete. The message identifies the blocker, explains why the
+// sweeper cannot recover, and suggests opening an AWS Support case as the
+// unblock path. Wording is centralized so both the subnet and VPC sweepers
+// emit the same guidance, and so it stays easy to refine in one place.
+func logSweepBlockedByRequesterManagedVPCEndpoint(resourceKind, resourceID string, endpointIDs []string) {
+	log.Printf("[WARN] Skipping %s %s: blocked by requester-managed VPC endpoint(s) %v\n"+
+		"  Why: Requester-managed VPC endpoints cannot be removed by the customer role; "+
+		"DeleteVpcEndpoints and ModifyVpcEndpoint both refuse them. The most common cause is "+
+		"an orphan AWS-managed endpoint (e.g., left behind by GuardDuty Runtime Monitoring "+
+		"after the feature was disabled, sometimes against an endpoint service AWS has since retired).\n"+
+		"  Next: If not already addressed, open an AWS Support case (service: "+
+		"amazon-virtual-private-cloud, category: vpc-endpoints) requesting force-delete of "+
+		"the listed endpoint(s). A subsequent sweep will then clear this resource automatically.",
+		resourceKind, resourceID, endpointIDs)
 }
 
 func sweepTrafficMirrorFilters(region string) error {
@@ -2579,7 +2597,7 @@ func sweepVPCs(region string) error {
 			vpcID := aws.ToString(v.VpcId)
 
 			if endpointIDs, blocked := blockedVPCs[vpcID]; blocked {
-				log.Printf("[INFO] Skipping EC2 VPC %s: blocked by requester-managed VPC endpoint(s) %v", vpcID, endpointIDs)
+				logSweepBlockedByRequesterManagedVPCEndpoint("EC2 VPC", vpcID, endpointIDs)
 				continue
 			}
 
