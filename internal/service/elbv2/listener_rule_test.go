@@ -2306,8 +2306,8 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
 						"host_header_rewrite_config.#":                   "1",
 						"host_header_rewrite_config.0.rewrite.#":         "1",
-						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
-						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).test$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
 						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
@@ -2327,8 +2327,8 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
 						"host_header_rewrite_config.#":                   "1",
 						"host_header_rewrite_config.0.rewrite.#":         "1",
-						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).com$",
-						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).test$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
 						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
@@ -5127,8 +5127,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }
@@ -5177,8 +5177,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite2-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite2-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }

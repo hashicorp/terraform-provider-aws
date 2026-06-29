@@ -942,6 +942,7 @@ data "aws_partition" "current" {}
 // `permanent_deletion_time_in_days` of 30.
 func testAccCertificateAuthorityConfig_defaultsOnly(commonName string) string {
 	return fmt.Sprintf(`
+# tflint-ignore: opa_deny_acmpca_deletion_time
 resource "aws_acmpca_certificate_authority" "test" {
   usage_mode = "SHORT_LIVED_CERTIFICATE"
 

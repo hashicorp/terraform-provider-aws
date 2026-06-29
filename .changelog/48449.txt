@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appautoscaling_target: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_appautoscaling_target
+```

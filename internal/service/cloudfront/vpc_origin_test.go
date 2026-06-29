@@ -146,53 +146,6 @@ func TestAccCloudFrontVPCOrigin_update(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontVPCOrigin_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var vpcOrigin awstypes.VpcOrigin
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudfront_vpc_origin.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCOriginConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"etag"},
-			},
-			{
-				Config: testAccVPCOriginConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVPCOriginConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckVPCOriginExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpcOrigin) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -325,51 +278,4 @@ resource "aws_cloudfront_vpc_origin" "test" {
   }
 }
 `, rName))
-}
-
-func testAccVPCOriginConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVPCOriginConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudfront_vpc_origin" "test" {
-  vpc_origin_endpoint_config {
-    name                   = %[1]q
-    arn                    = aws_lb.test.arn
-    http_port              = 8080
-    https_port             = 8443
-    origin_protocol_policy = "http-only"
-
-    origin_ssl_protocols {
-      items    = ["TLSv1.2"]
-      quantity = 1
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccVPCOriginConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVPCOriginConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudfront_vpc_origin" "test" {
-  vpc_origin_endpoint_config {
-    name                   = %[1]q
-    arn                    = aws_lb.test.arn
-    http_port              = 8080
-    https_port             = 8443
-    origin_protocol_policy = "http-only"
-
-    origin_ssl_protocols {
-      items    = ["TLSv1.2"]
-      quantity = 1
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

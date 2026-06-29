@@ -493,6 +493,12 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceCertificateFlatten(ctx, d, certificate)...)
+}
+
+func resourceCertificateFlatten(_ context.Context, d *schema.ResourceData, certificate *types.CertificateDetail) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
 
 	d.Set(names.AttrARN, certificate.CertificateArn)

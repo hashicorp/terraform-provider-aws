@@ -341,8 +341,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
-		var implementation common.Implementation
-
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			args, err := common.ParseArgs(m[3])
 			if err != nil {
@@ -351,10 +349,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
-				implementation = common.ImplementationFramework
+				d.Implementation = common.ImplementationFramework
 
 			case "SDKResource":
-				implementation = common.ImplementationSDK
+				d.Implementation = common.ImplementationSDK
 
 			case "Region":
 				if attr, ok := args.Keyword["global"]; ok {
@@ -470,7 +468,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			default:
-				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.goImports); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
 					continue
 				}
@@ -492,6 +490,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 		if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
 			v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
+		}
+		if d.HasV6_0NullValuesError && d.IdentityVersion != 0 {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: \"V60SDKv2Fix\" should no longer be specified when a new Resource Identity version is created", v.packageName, v.functionName))
 		}
 	} else {
 		if d.HasNoPreExistingResource {
