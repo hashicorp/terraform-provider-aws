@@ -51,6 +51,7 @@ const (
 
 // @FrameworkResource("aws_cloudwatch_contributor_managed_insight_rule", name="Contributor Managed Insight Rule")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 // @IdentityAttribute("resource_arn")
 // @IdentityAttribute("template_name")
 // @ImportIDHandler("contributorManagedInsightRuleImportID")
@@ -94,7 +95,7 @@ func (r *contributorManagedInsightRuleResource) Schema(ctx context.Context, req 
 				Computed:   true,
 				Default:    stateType.AttributeDefault(stateValueEnabled),
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTags:    tftags.TagsAttributeForceNew(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
 				Required: true,
