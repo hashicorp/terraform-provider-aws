@@ -25,3 +25,7 @@ resource/aws_cloudwatch_contributor_insight_rule: Mark `rule_name` as as `ForceN
 ```release-note:enhancement
 resource/aws_cloudwatch_contributor_insight_rule: Add plan-time validation of `rule_definition`
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_contributor_insight_rule: Change `rule_state` to Optional and Computed
+```

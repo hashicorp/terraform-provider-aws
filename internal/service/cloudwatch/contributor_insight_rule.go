@@ -68,6 +68,10 @@ func (r *contributorInsightRuleResource) Schema(ctx context.Context, req resourc
 			"rule_state": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[stateValue](),
 				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -119,6 +123,9 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 
 	// Set values for unknowns.
 	plan.ResourceARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
+	if plan.RuleState.IsUnknown() {
+		plan.RuleState = fwtypes.StringEnumValue(stateValueEnabled)
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
