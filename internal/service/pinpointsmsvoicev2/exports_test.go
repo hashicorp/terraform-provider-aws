@@ -9,9 +9,11 @@ var (
 	ResourceEventDestination = newEventDestinationResource
 	ResourceOptOutList       = newOptOutListResource
 	ResourcePhoneNumber      = newPhoneNumberResource
+	ResourceSenderID         = newSenderIDResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey = findEventDestinationByTwoPartKey
 	FindOptOutListByID               = findOptOutListByID
 	FindPhoneNumberByID              = findPhoneNumberByID
+	FindSenderIDByTwoPartKey         = findSenderIDByTwoPartKey
 )
