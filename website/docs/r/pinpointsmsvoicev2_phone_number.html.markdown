@@ -26,14 +26,17 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
-* `force_disassociate` - (Optional) Whether to disassociate the phone number from any pool it is associated with before destroying it. Defaults to `false`.
 * `iso_country_code` - (Required) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) Type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
 * `number_capabilities` - (Required) Whether the origination identity can be used for text messages, voice calls or both. Valid values are `SMS` and `VOICE`.
 * `number_type` - (Required) Type of phone number to request. Possible values are `LONG_CODE`, `TOLL_FREE`, `TEN_DLC`, or `SIMULATOR`.
+
+The following arguments are optional:
+
+* `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
+* `force_disassociate` - (Optional) Whether to disassociate the phone number from any pool it is associated with before destroying it.
 * `opt_out_list_name` - (Optional) Name of the opt-out list to associate with the phone number.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registration_id` - (Optional) Use this field to attach your phone number for an external registration process.
