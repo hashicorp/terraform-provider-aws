@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -121,56 +122,51 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 	}
 
 	resourceARN, templateName := fwflex.StringValueFromFramework(ctx, plan.ResourceARN), fwflex.StringValueFromFramework(ctx, plan.TemplateName)
+	input := cloudwatch.PutManagedInsightRulesInput{
+		ManagedRules: []awstypes.ManagedRule{
+			{
+				ResourceARN:  aws.String(resourceARN),
+				Tags:         getTagsIn(ctx),
+				TemplateName: aws.String(templateName),
+			},
+		},
+	}
+	output, err := conn.PutManagedInsightRules(ctx, &input)
+	if err == nil {
+		err = partialFailuresError(output.Failures)
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		return
+	}
+
+	// Taint the resource.
+	resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), resourceARN)
+	resp.State.SetAttribute(ctx, path.Root("template_name"), templateName)
+
+	rule, err := findManagedRuleByTwoPartKey(ctx, conn, resourceARN, templateName)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		return
+	}
+	ruleName := aws.ToString(rule.RuleState.RuleName)
+
 	switch state := plan.State.ValueEnum(); state {
 	case stateValueEnabled:
-		input := cloudwatch.PutManagedInsightRulesInput{
-			ManagedRules: []awstypes.ManagedRule{
-				{
-					ResourceARN:  aws.String(resourceARN),
-					Tags:         getTagsIn(ctx),
-					TemplateName: aws.String(templateName),
-				},
-			},
-		}
-		output, err := conn.PutManagedInsightRules(ctx, &input)
-		if err == nil {
-			err = partialFailuresError(output.Failures)
-		}
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		if err := enableInsightRule(ctx, conn, ruleName); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
 			return
 		}
-
-		rule, err := findManagedRuleByTwoPartKey(ctx, conn, resourceARN, templateName)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
-			return
-		}
-		ruleName := aws.ToString(rule.RuleState.RuleName)
-
-		// Set values for unknowns.
-		plan.ARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
-		plan.RuleName = fwflex.StringValueToFramework(ctx, ruleName)
 	case stateValueDisabled:
-		rule, err := findManagedRuleByTwoPartKey(ctx, conn, resourceARN, templateName)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
-			return
-		}
-
-		ruleName := aws.ToString(rule.RuleState.RuleName)
-		input := cloudwatch.DisableInsightRulesInput{
-			RuleNames: []string{ruleName},
-		}
-		output, err := conn.DisableInsightRules(ctx, &input)
-		if err == nil {
-			err = partialFailuresError(output.Failures)
-		}
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		if err := disableInsightRule(ctx, conn, ruleName); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
 			return
 		}
 	}
+
+	// Set values for unknowns.
+	plan.ARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
+	plan.RuleName = fwflex.StringValueToFramework(ctx, ruleName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -218,39 +214,17 @@ func (r *contributorManagedInsightRuleResource) Update(ctx context.Context, req 
 
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	resourceARN, templateName := fwflex.StringValueFromFramework(ctx, new.ResourceARN), fwflex.StringValueFromFramework(ctx, new.TemplateName)
-	if !new.State.Equal(old.State) {
-		switch state := new.State.ValueEnum(); state {
-		case stateValueEnabled:
-			input := cloudwatch.PutManagedInsightRulesInput{
-				ManagedRules: []awstypes.ManagedRule{
-					{
-						ResourceARN:  aws.String(resourceARN),
-						TemplateName: aws.String(templateName),
-					},
-				},
-			}
-			output, err := conn.PutManagedInsightRules(ctx, &input)
-			if err == nil {
-				err = partialFailuresError(output.Failures)
-			}
-			if err != nil {
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
-				return
-			}
-		case stateValueDisabled:
-			ruleName := fwflex.StringValueFromFramework(ctx, new.RuleName)
-			input := cloudwatch.DisableInsightRulesInput{
-				RuleNames: []string{ruleName},
-			}
-			output, err := conn.DisableInsightRules(ctx, &input)
-			if err == nil {
-				err = partialFailuresError(output.Failures)
-			}
-			if err != nil {
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
-				return
-			}
+	ruleName := fwflex.StringValueFromFramework(ctx, new.RuleName)
+	switch state := new.State.ValueEnum(); state {
+	case stateValueEnabled:
+		if err := enableInsightRule(ctx, conn, ruleName); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+			return
+		}
+	case stateValueDisabled:
+		if err := disableInsightRule(ctx, conn, ruleName); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+			return
 		}
 	}
 

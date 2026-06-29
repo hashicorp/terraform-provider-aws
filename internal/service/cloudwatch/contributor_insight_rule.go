@@ -52,9 +52,11 @@ func (r *contributorInsightRuleResource) Schema(ctx context.Context, req resourc
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: framework.ARNAttributeComputedOnly(),
 			"rule_definition": schema.StringAttribute{
+				// TODO: Update!!
 				Required: true,
 			},
 			"rule_name": schema.StringAttribute{
+				// TODO ForceNew
 				Required: true,
 			},
 			"rule_state": schema.StringAttribute{
@@ -102,6 +104,7 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 				RuleNames: []string{ruleName},
 			}
 			_, err = conn.EnableInsightRules(ctx, &input)
+			// TODO partialFailures....
 		}
 
 		if err != nil {
@@ -208,6 +211,34 @@ func (r *contributorInsightRuleResource) Delete(ctx context.Context, req resourc
 
 func insightRuleARN(ctx context.Context, c *conns.AWSClient, ruleName string) string {
 	return c.RegionalARN(ctx, "cloudwatch", "insight-rule/"+ruleName)
+}
+
+func enableInsightRule(ctx context.Context, conn *cloudwatch.Client, ruleName string) error {
+	input := cloudwatch.EnableInsightRulesInput{
+		RuleNames: []string{ruleName},
+	}
+	output, err := conn.EnableInsightRules(ctx, &input)
+	if err == nil {
+		err = partialFailuresError(output.Failures)
+	}
+	if err != nil {
+		return smarterr.NewError(err)
+	}
+	return nil
+}
+
+func disableInsightRule(ctx context.Context, conn *cloudwatch.Client, ruleName string) error {
+	input := cloudwatch.DisableInsightRulesInput{
+		RuleNames: []string{ruleName},
+	}
+	output, err := conn.DisableInsightRules(ctx, &input)
+	if err == nil {
+		err = partialFailuresError(output.Failures)
+	}
+	if err != nil {
+		return smarterr.NewError(err)
+	}
+	return nil
 }
 
 func findInsightRuleByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.InsightRule, error) {
