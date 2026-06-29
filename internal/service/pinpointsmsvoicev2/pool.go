@@ -524,6 +524,21 @@ func originationIdentitiesEqual(a, b []string) bool {
 	return true
 }
 
+// needsPostCreateUpdate reports whether the plan asks for any pool attribute
+// that CreatePool cannot set, and therefore requires a follow-up UpdatePool.
+//
+// CreatePoolInput only accepts MessageType, OriginationIdentity, ClientToken,
+// DeletionProtectionEnabled, IsoCountryCode and Tags. The remaining mutable
+// pool settings (opt-out list, self-managed opt-outs, shared routes, two-way
+// SMS configuration) can only be set via UpdatePool.
+//
+// AWS seeds those settings on the new pool from the seed origination identity
+// passed to CreatePool, so we compare each plan value against what AWS just
+// derived and skip the UpdatePool when the plan already matches. Null plan
+// values (unset by the user) are ignored — AWS's seeded value wins.
+//
+// When adding a new pool attribute, check whether it appears in
+// CreatePoolInput. If it does not, add a comparison here.
 func needsPostCreateUpdate(plan poolResourceModel, pool *awstypes.PoolInformation) bool {
 	if !plan.OptOutListName.IsNull() && plan.OptOutListName.ValueString() != aws.ToString(pool.OptOutListName) {
 		return true
