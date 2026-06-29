@@ -854,6 +854,13 @@ func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID
 func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) error {
 	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrVPCID), vpcID)
 
+	// Without a VPC ID we cannot perform the ownership check or list endpoints.
+	// Bail early rather than failing the lookup and falsely reporting "no work to do."
+	if vpcID == "" {
+		tflog.Debug(ctx, "Skipping GuardDuty cleanup: empty VPC ID")
+		return nil
+	}
+
 	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
 	if err != nil {
 		tflog.Warn(ctx, "Error checking VPC ownership for GuardDuty cleanup", map[string]any{
