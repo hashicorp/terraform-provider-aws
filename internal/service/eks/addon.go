@@ -263,29 +263,9 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On (%s): %s", d.Id(), err)
 	}
 
-	d.Set("addon_name", addon.AddonName)
-	d.Set("addon_version", addon.AddonVersion)
-	d.Set(names.AttrARN, addon.AddonArn)
-	d.Set(names.AttrClusterName, addon.ClusterName)
-	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
-	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
-	if addon.NamespaceConfig != nil {
-		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting namespace_config: %s", err)
-		}
-	} else {
-		d.Set("namespace_config", nil)
-	}
-	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+	if err := resourceAddonFlatten(ctx, meta.(*conns.AWSClient), addon, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	} else if err := d.Set("pod_identity_association", tfList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
 	}
-	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
-
-	setTagsOut(ctx, addon.Tags)
-
 	return diags
 }
 
@@ -686,4 +666,34 @@ func (addonImportID) Parse(id string) (string, map[string]any, error) {
 
 func (addonImportID) Create(d *schema.ResourceData) string {
 	return addonCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("addon_name").(string))
+}
+
+func resourceAddonFlatten(ctx context.Context, awsClient *conns.AWSClient, addon *types.Addon, d *schema.ResourceData) error {
+	conn := awsClient.EKSClient(ctx)
+	clusterName := aws.ToString(addon.ClusterName)
+
+	d.Set("addon_name", addon.AddonName)
+	d.Set("addon_version", addon.AddonVersion)
+	d.Set(names.AttrARN, addon.AddonArn)
+	d.Set(names.AttrClusterName, addon.ClusterName)
+	d.Set("configuration_values", addon.ConfigurationValues)
+	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	if addon.NamespaceConfig != nil {
+		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
+			return fmt.Errorf("setting namespace_config: %w", err)
+		}
+	} else {
+		d.Set("namespace_config", nil)
+	}
+	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+		return err
+	} else if err := d.Set("pod_identity_association", tfList); err != nil {
+		return fmt.Errorf("setting pod_identity_association: %w", err)
+	}
+	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
+
+	setTagsOut(ctx, addon.Tags)
+
+	return nil
 }
