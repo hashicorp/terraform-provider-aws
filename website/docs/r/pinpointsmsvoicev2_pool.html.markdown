@@ -90,7 +90,7 @@ The following arguments are optional:
 * `self_managed_opt_outs_enabled` - (Optional) Whether the pool relies on self-managed opt-out handling. When `false`, AWS auto-replies to HELP/STOP requests and manages the opt-out list.
 * `shared_routes_enabled` - (Optional) Whether shared routes are enabled for the pool. When `true`, messages may use shared phone numbers or sender IDs in countries that allow it.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `two_way_channel_arn` - (Optional) ARN of the two-way channel that receives inbound messages.
+* `two_way_channel_arn` - (Optional) Destination for incoming messages. Specify an ARN to receive incoming messages, or `connect.[region].amazonaws.com` (with `[region]` replaced by the AWS Region of the Amazon Connect instance) to set Amazon Connect as the inbound destination.
 * `two_way_channel_role` - (Optional) ARN of the IAM role that End User Messaging SMS assumes to publish inbound messages to the two-way channel.
 * `two_way_enabled` - (Optional) Whether inbound message reception is enabled for the pool. When `true`, `two_way_channel_arn` must be set.
 
