@@ -100,7 +100,7 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 					testAccCheckContributorManagedInsightRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
-				ExpectNonEmptyPlan: false,
+				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
