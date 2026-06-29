@@ -14,9 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -41,7 +42,7 @@ import (
 )
 
 // @FrameworkResource("aws_workspaces_pool", name="Pool")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="pool_id")
 func newResourcePool(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePool{}
 
@@ -58,19 +59,12 @@ const (
 
 type resourcePool struct {
 	framework.ResourceWithModel[resourcePoolModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
 func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	s := schema.Schema{
+	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"bundle_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -80,6 +74,11 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"Bundle ID must be in the format 'wsb-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers",
 					),
 				},
+			},
+			"capacity_status": framework.ResourceComputedListOfObjectsAttribute[capacityStatusModel](ctx),
+			"created_at": schema.StringAttribute{
+				Computed:   true,
+				CustomType: timetypes.RFC3339Type{},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Required: true,
@@ -106,8 +105,19 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 					),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"pool_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"pool_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"pool_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -121,10 +131,8 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"running_mode": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("AUTO_STOP", "ALWAYS_ON"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.PoolsRunningMode](),
+				Required:   true,
 			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
@@ -132,8 +140,9 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:     tftags.TagsAttribute(),
+			names.AttrTagsAll:  tftags.TagsAttributeComputedOnly(),
+			"timeout_settings": framework.ResourceOptionalComputedListOfObjectsAttribute[timeoutSettingsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			"application_settings": schema.ListNestedBlock{
@@ -191,67 +200,26 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 					listvalidator.SizeAtMost(1),
 				},
 			},
-			"timeout_settings": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[timeoutSettingsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(0),
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"disconnect_timeout_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.Int64{
-								int64validator.Between(60, 36000),
-							},
-						},
-						"idle_disconnect_timeout_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.Int64{
-								int64validator.Between(0, 36000),
-							},
-						},
-						"max_user_duration_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.Int64{
-								int64validator.Between(600, 432000),
-							},
-						},
-					},
-				},
-			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
-
-	if s.Blocks == nil {
-		s.Blocks = make(map[string]schema.Block)
-	}
-	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
-		Create: true,
-		Update: true,
-		Delete: true,
-	})
-
-	resp.Schema = s
 }
 
 func (r *resourcePool) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().WorkSpacesClient(ctx)
 
 	var plan resourcePoolModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input workspaces.CreateWorkspacesPoolInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Pool")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -259,117 +227,117 @@ func (r *resourcePool) Create(ctx context.Context, req resource.CreateRequest, r
 
 	out, err := conn.CreateWorkspacesPool(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolName.String())
 		return
 	}
 	if out == nil || out.WorkspacesPool == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.PoolName.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan, flex.WithFieldNamePrefix("Pool")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPoolCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitPoolCreated(ctx, conn, plan.PoolId.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolName.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourcePool) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().WorkSpacesClient(ctx)
 
 	var state resourcePoolModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPoolByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findPoolByID(ctx, conn, state.PoolId.ValueString())
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolId.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Pool")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourcePool) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().WorkSpacesClient(ctx)
 
 	var plan, state resourcePoolModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input workspaces.UpdateWorkspacesPoolInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Pool")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		out, err := conn.UpdateWorkspacesPool(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolId.String())
 			return
 		}
 		if out == nil || out.WorkspacesPool == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.PoolId.String())
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan, flex.WithFieldNamePrefix("Pool")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitPoolUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitPoolUpdated(ctx, conn, plan.PoolId.ValueString(), updateTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolId.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourcePool) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().WorkSpacesClient(ctx)
 
 	var state resourcePoolModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := workspaces.TerminateWorkspacesPoolInput{
-		PoolId: state.ID.ValueStringPointer(),
+		PoolId: state.PoolId.ValueStringPointer(),
 	}
 
 	_, err := conn.TerminateWorkspacesPool(ctx, &input)
@@ -378,14 +346,14 @@ func (r *resourcePool) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolId.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPoolDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitPoolDeleted(ctx, conn, state.PoolId.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PoolId.String())
 		return
 	}
 }
@@ -453,9 +421,9 @@ func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, ti
 }
 
 func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findPoolByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -467,6 +435,10 @@ func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.S
 	}
 }
 
+func (r *resourcePool) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("pool_id"), request, response)
+}
+
 func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.WorkspacesPool, error) {
 	input := &workspaces.DescribeWorkspacesPoolsInput{
 		PoolIds: []string{id},
@@ -476,8 +448,7 @@ func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*aws
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			})
 		}
 
@@ -485,7 +456,7 @@ func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*aws
 	}
 
 	if out == nil || out.WorkspacesPools == nil || len(out.WorkspacesPools) == 0 {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return &out.WorkspacesPools[0], nil
@@ -494,14 +465,16 @@ func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*aws
 type resourcePoolModel struct {
 	framework.WithRegionModel
 	ApplicationSettings fwtypes.ListNestedObjectValueOf[applicationSettingsModel] `tfsdk:"application_settings"`
-	ARN                 types.String                                              `tfsdk:"arn"`
 	BundleId            types.String                                              `tfsdk:"bundle_id"`
 	Capacity            fwtypes.ListNestedObjectValueOf[capacityModel]            `tfsdk:"capacity"`
+	CapacityStatus      fwtypes.ListNestedObjectValueOf[capacityStatusModel]      `tfsdk:"capacity_status"`
+	CreatedAt           timetypes.RFC3339                                         `tfsdk:"created_at"`
 	Description         types.String                                              `tfsdk:"description"`
 	DirectoryId         types.String                                              `tfsdk:"directory_id"`
-	ID                  types.String                                              `tfsdk:"id"`
-	Name                types.String                                              `tfsdk:"name"`
-	RunningMode         types.String                                              `tfsdk:"running_mode"`
+	PoolArn             types.String                                              `tfsdk:"pool_arn"`
+	PoolId              types.String                                              `tfsdk:"pool_id"`
+	PoolName            types.String                                              `tfsdk:"pool_name"`
+	RunningMode         fwtypes.StringEnum[awstypes.PoolsRunningMode]             `tfsdk:"running_mode"`
 	State               types.String                                              `tfsdk:"state"`
 	Tags                tftags.Map                                                `tfsdk:"tags"`
 	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
@@ -517,6 +490,13 @@ type applicationSettingsModel struct {
 
 type capacityModel struct {
 	DesiredUserSessions types.Int64 `tfsdk:"desired_user_sessions"`
+}
+
+type capacityStatusModel struct {
+	ActiveUserSessions    types.Int64 `tfsdk:"active_user_sessions"`
+	ActualUserSessions    types.Int64 `tfsdk:"actual_user_sessions"`
+	AvailableUserSessions types.Int64 `tfsdk:"available_user_sessions"`
+	DesiredUserSessions   types.Int64 `tfsdk:"desired_user_sessions"`
 }
 
 type timeoutSettingsModel struct {
