@@ -1805,6 +1805,7 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		for _, v := range page.Subnets {
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
+			d.Set(names.AttrVPCID, aws.ToString(v.VpcId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
