@@ -121,7 +121,7 @@ jobs:
 
       # Save build cache for reuse by go_test and future runs
       - name: Save Go Build Cache
-        uses: actions/cache/save@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always() && steps.cache-go-build.outputs.cache-hit != 'true'
         continue-on-error: true
         timeout-minutes: 5
@@ -251,7 +251,7 @@ jobs:
       # Save updated cache with test compilation (but cleaned)
       # Only shard 0 saves to avoid race conditions
       - name: Save Go Build Cache
-        uses: actions/cache/save@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always() && matrix.shard == 0 && steps.cache-go-build.outputs.cache-hit != 'true'
         continue-on-error: true
         timeout-minutes: 5
