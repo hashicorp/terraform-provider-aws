@@ -46,9 +46,11 @@ func TestAccCognitoIDPUserPoolReplica_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccUserPoolReplicaImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
 			},
 		},
 	})
@@ -114,6 +116,16 @@ func TestAccCognitoIDPUserPoolReplica_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccUserPoolReplicaImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+		return rs.Primary.Attributes[names.AttrUserPoolID] + "," + rs.Primary.Attributes["region_name"], nil
+	}
 }
 
 func testAccCheckUserPoolReplicaExists(ctx context.Context, t *testing.T, n string, v *awstypes.UserPoolReplicaType) resource.TestCheckFunc {
