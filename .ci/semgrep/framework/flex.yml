@@ -69,6 +69,7 @@ rules:
         - "/internal/service/emr/supported_instance_types_data_source.go"
         - "/internal/service/lexv2models/bot.go"
         - "/internal/service/lexv2models/bot_locale.go"
+        - "/internal/service/mediaconnect/flow.go"
         - "/internal/service/medialive/multiplex_program.go"
         - "/internal/service/networkfirewall/tls_inspection_configuration.go"
         - "/internal/service/opensearchserverless/security_config.go"
