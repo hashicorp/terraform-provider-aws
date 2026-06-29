@@ -20,9 +20,7 @@ func partialFailuresError(apiObjects []awstypes.PartialFailure) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := partialFailureError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s %s: %w", aws.ToString(apiObject.ExceptionType), aws.ToString(apiObject.FailureResource), err))
-		}
+		errs = append(errs, fmt.Errorf("%s %s: %w", aws.ToString(apiObject.ExceptionType), aws.ToString(apiObject.FailureResource), partialFailureError(apiObject)))
 	}
 
 	return errors.Join(errs...)
