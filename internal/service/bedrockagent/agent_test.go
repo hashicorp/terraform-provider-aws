@@ -261,6 +261,15 @@ func TestAccBedrockAgentAgent_guardrail(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAgentConfig_guardrail_withConfig(rName+"NameChange", "anthropic.claude-v2", "DRAFT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "guardrail_configuration.0.guardrail_identifier", guardrailResourceName, "guardrail_id"),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.0.guardrail_version", "DRAFT"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
