@@ -146,6 +146,7 @@ This resource supports the following arguments:
   Application Load Balancers do not support the `alb` target type.
 * `ip_address_type` (Optional, forces new resource) The type of IP addresses used by the target group, only supported when target type is set to `ip`. Possible values are `ipv4` or `ipv6`.
 * `vpc_id` - (Optional, Forces new resource) Identifier of the VPC in which to create the target group. Required when `target_type` is `instance`, `ip` or `alb`. Does not apply when `target_type` is `lambda`.
+* `waf_http2_traffic_inspection_behavior` - (Optional) Determines how AWS WAF inspects HTTP/2 request bodies before routing to HTTP/2 targets. Only applicable for Application Load Balancer target groups when `target_type` is `instance` or `ip`. The value is `inspect_immediately` or `inspect_after_sufficient_data`. The default is `inspect_immediately`. Set to `inspect_after_sufficient_data` to have the load balancer accumulate HTTP/2 data frames before AWS WAF performs inspection, ensuring the full request payload is inspected. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html#waf-http2-inspection) for more information.
 
 ### health_check
 

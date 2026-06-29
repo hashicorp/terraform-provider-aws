@@ -114,6 +114,7 @@ const (
 	targetGroupAttributeStickinessAppCookieCookieName           = "stickiness.app_cookie.cookie_name"
 	targetGroupAttributeStickinessAppCookieDurationSeconds      = "stickiness.app_cookie.duration_seconds"
 	targetGroupAttributeStickinessLBCookieDurationSeconds       = "stickiness.lb_cookie.duration_seconds"
+	targetGroupAttributeWAFHTTP2TrafficInspectionBehavior       = "waf.http2.traffic_inspection_behavior"
 
 	// The following attribute is supported only if the load balancer is an Application Load Balancer and the target is a Lambda function:
 	targetGroupAttributeLambdaMultiValueHeadersEnabled = "lambda.multi_value_headers.enabled"
@@ -223,5 +224,17 @@ func protocolVersionEnumValues() []string {
 		protocolVersionGRPC,
 		protocolVersionHTTP1,
 		protocolVersionHTTP2,
+	}
+}
+
+const (
+	wafHTTP2TrafficInspectionBehaviorInspectImmediately         = "inspect_immediately"
+	wafHTTP2TrafficInspectionBehaviorInspectAfterSufficientData = "inspect_after_sufficient_data"
+)
+
+func wafHTTP2TrafficInspectionBehavior_Values() []string {
+	return []string{
+		wafHTTP2TrafficInspectionBehaviorInspectImmediately,
+		wafHTTP2TrafficInspectionBehaviorInspectAfterSufficientData,
 	}
 }
