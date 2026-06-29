@@ -9,9 +9,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
@@ -34,23 +38,31 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightRuleConfig_basic(rName, "ENABLED"),
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "rule_state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "rule_definition", "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					"rule_definition",
-					"rule_state",
 				},
 			},
 		},
@@ -73,7 +85,10 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightRuleConfig_basic(rName, "ENABLED"),
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorInsightRule, resourceName),
@@ -85,6 +100,142 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchContributorInsightRule_updateState(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.InsightRule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/rule_state/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"rule_state":    config.StringVariable("DISABLED"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_state"), knownvalue.StringExact("DISABLED")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+				ImportStateVerifyIgnore: []string{
+					"rule_definition",
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/rule_state/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"rule_state":    config.StringVariable("ENABLED"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_state"), knownvalue.StringExact("ENABLED")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/rule_state/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"rule_state":    config.StringVariable("DISABLED"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_state"), knownvalue.StringExact("DISABLED")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchContributorInsightRule_updateDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.InsightRule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/rule_definition/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"aggregate_on":  config.StringVariable("Count"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ContributorInsightRule/rule_definition/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"aggregate_on":  config.StringVariable("Sum"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -137,14 +288,4 @@ func testAccCheckContributorInsightRuleExists(ctx context.Context, t *testing.T,
 
 		return nil
 	}
-}
-
-func testAccContributorInsightRuleConfig_basic(rName, state string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_contributor_insight_rule" "test" {
-  rule_name       = %[1]q
-  rule_state      = %[2]q
-  rule_definition = "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
-}
-`, rName, state)
 }

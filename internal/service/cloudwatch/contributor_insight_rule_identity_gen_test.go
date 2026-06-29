@@ -71,7 +71,7 @@ func TestAccCloudWatchContributorInsightRule_Identity_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 
@@ -164,7 +164,7 @@ func TestAccCloudWatchContributorInsightRule_Identity_regionOverride(t *testing.
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 

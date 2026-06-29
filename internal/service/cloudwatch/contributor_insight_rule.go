@@ -38,7 +38,7 @@ import (
 // @IdentityAttribute("rule_name")
 // @Testing(preIdentityVersion="v6.52.0")
 // @Testing(importStateIdAttribute="rule_name")
-// @Testing(importIgnore="rule_definition;rule_state")
+// @Testing(importIgnore="rule_definition")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
 func newContributorInsightRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &contributorInsightRuleResource{}
@@ -146,11 +146,12 @@ func (r *contributorInsightRuleResource) Read(ctx context.Context, req resource.
 	}
 
 	// Set attributes for import.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state), smerr.ID, state.RuleName.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	state.ResourceARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
+	state.RuleState = fwtypes.StringEnumValue(stateValue(aws.ToString(out.State)))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }

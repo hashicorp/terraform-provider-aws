@@ -1,6 +1,9 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_cloudwatch_contributor_insight_rule" "test" {
-{{- template "region" }}
-  rule_name = var.rName
+  rule_name  = var.rName
+  rule_state = var.rule_state
 
   rule_definition = <<EOF
 {
@@ -30,6 +33,15 @@ resource "aws_cloudwatch_contributor_insight_rule" "test" {
     "AggregateOn": "Sum"
 }
 EOF
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "rule_state" {
+  type     = string
+  nullable = false
 }
