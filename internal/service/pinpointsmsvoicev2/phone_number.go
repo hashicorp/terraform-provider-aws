@@ -399,6 +399,13 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 		}
 	}
 
+	// Only retry on the "associated to pool" conflict when force_disassociate
+	// is set, because that path explicitly disassociates the phone number first
+	// and the conflict is then just AWS eventual consistency. Without
+	// force_disassociate there is nothing here that will make the association
+	// go away, so retrying just burns the delete timeout — surface the error
+	// quickly instead.
+	forceDisassociate := data.ForceDisassociate.ValueBool()
 	_, err := tfresource.RetryWhen(ctx, deadline.Remaining(),
 		func(ctx context.Context) (*pinpointsmsvoicev2.ReleasePhoneNumberOutput, error) {
 			return conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
@@ -406,6 +413,9 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 			})
 		},
 		func(err error) (bool, error) {
+			if !forceDisassociate {
+				return false, err
+			}
 			if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok && ce.Reason == awstypes.ConflictExceptionReasonPhoneNumberAssociatedToPool {
 				return true, err
 			}
