@@ -49,8 +49,6 @@ This resource supports the following arguments:
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested Fields
-
 #### `player_latency_policy`
 
 * `maximum_individual_player_latency_milliseconds` - (Required) Maximum latency value that is allowed for any player.

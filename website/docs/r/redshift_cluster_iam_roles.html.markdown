@@ -36,6 +36,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Redshift Cluster ID.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `75m`)
+* `update` - (Default `75m`)
+* `delete` - (Default `40m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:

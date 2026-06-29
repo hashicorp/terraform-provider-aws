@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_securityhub_automation_rule: Deprecates `id` in favor of `arn`
+```
+
+```release-note:enhancement
+resource/aws_ssmcontacts_rotation: Deprecates `id` in favor of `arn`
+```
+
+```release-note:enhancement
+resource/aws_ssoadmin_trusted_token_issuer: Deprecates `id` in favor of `arn`
+```

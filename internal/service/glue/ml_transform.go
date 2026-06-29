@@ -42,150 +42,152 @@ func resourceMLTransform() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"input_record_tables": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrTableName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"connection_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"input_record_tables": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"connection_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"find_matches_parameters": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"accuracy_cost_trade_off": {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: validation.FloatAtMost(1.0),
-									},
-									"enforce_provided_labels": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"precision_recall_trade_off": {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: validation.FloatAtMost(1.0),
-									},
-									"primary_key_column_name": {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrParameters: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"find_matches_parameters": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"accuracy_cost_trade_off": {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: validation.FloatAtMost(1.0),
+										},
+										"enforce_provided_labels": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"precision_recall_trade_off": {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: validation.FloatAtMost(1.0),
+										},
+										"primary_key_column_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"transform_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TransformType](),
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:          schema.TypeFloat,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"number_of_workers", "worker_type"},
-				ValidateFunc:  validation.FloatBetween(2, 100),
-			},
-			"max_retries": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 10),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2880,
-			},
-			"worker_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{names.AttrMaxCapacity},
-				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
-				RequiredWith:     []string{"number_of_workers"},
-			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.IntAtLeast(1),
-				RequiredWith:  []string{"worker_type"},
-			},
-			"label_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSchema: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"data_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+							"transform_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransformType](),
+							},
 						},
 					},
 				},
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"glue_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:          schema.TypeFloat,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"number_of_workers", "worker_type"},
+					ValidateFunc:  validation.FloatBetween(2, 100),
+				},
+				"max_retries": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 10),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTimeout: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  2880,
+				},
+				"worker_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{names.AttrMaxCapacity},
+					ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+					RequiredWith:     []string{"number_of_workers"},
+				},
+				"number_of_workers": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrMaxCapacity},
+					ValidateFunc:  validation.IntAtLeast(1),
+					RequiredWith:  []string{"worker_type"},
+				},
+				"label_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSchema: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"data_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

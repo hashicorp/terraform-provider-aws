@@ -36,7 +36,7 @@ resource "aws_securityhub_standards_control_association" "cis_aws_foundations_be
 }
 ```
 
-## Disabling security control in all standards
+### Disabling security control in all standards
 
 ```terraform
 resource "aws_securityhub_account" "example" {}

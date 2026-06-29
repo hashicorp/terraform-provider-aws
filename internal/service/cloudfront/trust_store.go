@@ -37,7 +37,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_trust_store", name="Trust Store")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront;cloudfront;cloudfront.GetTrustStoreOutput")
+// @Testing(importIgnore="ca_certificates_bundle_source")
 func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &trustStoreResource{}
 

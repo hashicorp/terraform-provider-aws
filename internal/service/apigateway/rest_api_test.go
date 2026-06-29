@@ -88,6 +88,14 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -222,6 +230,34 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509), string(types.EndpointAccessModeBasic)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeBasic)),
 				),
 			},
 			{
@@ -1475,6 +1511,13 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccRestAPIConfig_policySetByBody(rName, "Deny"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Deny"`)),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2159,6 +2202,20 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName)
+}
+
+func testAccRestAPIConfig_securityPolicy(rName, securityPolicy, endpointAccessMode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name                 = %[1]q
+  security_policy      = %[2]q
+  endpoint_access_mode = %[3]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+`, rName, securityPolicy, endpointAccessMode)
 }
 
 func testAccRestAPIConfig_keySource(rName string, apiKeySource string) string {
