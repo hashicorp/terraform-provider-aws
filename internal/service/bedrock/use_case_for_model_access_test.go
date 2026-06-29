@@ -154,7 +154,5 @@ func testAccPreCheckFoundationModelUseCaseAlreadyExists(ctx context.Context, t *
 		return
 	}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+	t.Fatalf("unexpected PreCheck error: %s", err)
 }
