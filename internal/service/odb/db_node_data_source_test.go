@@ -12,12 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -51,31 +49,31 @@ func TestAccODBDBNodeDataSource_basic(t *testing.T) {
 	}
 	var dbNode odb.GetDbNodeOutput
 	dataSourceName := "data.aws_odb_db_node.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDBNodeDestroyed(ctx),
+		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDBNodeDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(publicKey),
+				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(t, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodeDataSourceTestEntity.testAccCheckDBNodeExists(ctx, dataSourceName, &dbNode),
+					dbNodeDataSourceTestEntity.testAccCheckDBNodeExists(ctx, t, dataSourceName, &dbNode),
 				),
 			},
 		},
 	})
 }
 
-func (testDbNodeDataSourceTest) testAccCheckDBNodeExists(ctx context.Context, name string, output *odb.GetDbNodeOutput) resource.TestCheckFunc {
+func (testDbNodeDataSourceTest) testAccCheckDBNodeExists(ctx context.Context, t *testing.T, name string, output *odb.GetDbNodeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServer, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		var dbNodeId = rs.Primary.ID
 		var attributes = rs.Primary.Attributes
 		cloudVmClusterId := attributes["cloud_vm_cluster_id"]
@@ -92,9 +90,9 @@ func (testDbNodeDataSourceTest) testAccCheckDBNodeExists(ctx context.Context, na
 	}
 }
 
-func (testDbNodeDataSourceTest) testAccCheckDBNodeDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (testDbNodeDataSourceTest) testAccCheckDBNodeDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
@@ -119,9 +117,8 @@ func (testDbNodeDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cli
 	output, err := conn.GetCloudVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return err
@@ -132,8 +129,8 @@ func (testDbNodeDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cli
 	return nil
 }
 
-func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig(publicKey string) string {
-	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig(publicKey)
+func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig(t *testing.T, publicKey string) string {
+	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig(t, publicKey)
 
 	return fmt.Sprintf(`
 %s
@@ -150,10 +147,10 @@ data "aws_odb_db_node" "test" {
 `, vmClusterConfig)
 }
 
-func (testDbNodeDataSourceTest) vmClusterBasicConfig(publicKey string) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
-	oracleDBNetDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
-	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
+func (testDbNodeDataSourceTest) vmClusterBasicConfig(t *testing.T, publicKey string) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
+	oracleDBNetDisplayName := acctest.RandomWithPrefix(t, dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
 	dsTfCodeVmCluster := fmt.Sprintf(`
 
 
