@@ -1797,7 +1797,7 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	//   aws ec2 describe-vpc-endpoints --region <region> \
 	//     --filters Name=vpc-endpoint-state,Values=available \
 	//     --query 'VpcEndpoints[?RequesterManaged==`true`].{Endpoint:VpcEndpointId,Subnets:SubnetIds,Service:ServiceName}'
-	blockedSubnets, err := findSubnetsBlockedByRequesterManagedVPCEndpoints(ctx, conn)
+	blockedSubnets, _, err := findResourcesBlockedByRequesterManagedVPCEndpoints(ctx, conn)
 	if err != nil {
 		return nil, fmt.Errorf("listing requester-managed VPC endpoints: %w", err)
 	}
@@ -1839,11 +1839,12 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	return sweepResources, nil
 }
 
-// findSubnetsBlockedByRequesterManagedVPCEndpoints returns a map of subnet ID to the IDs
-// of available, requester-managed VPC endpoints associated with that subnet. Such endpoints
-// cannot be removed by the user role, so any subnet they reference cannot be deleted by the
-// sweeper and must be skipped.
-func findSubnetsBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn *ec2.Client) (map[string][]string, error) {
+// findResourcesBlockedByRequesterManagedVPCEndpoints returns two maps keyed by
+// subnet ID and VPC ID respectively, each mapping to the IDs of available,
+// requester-managed VPC endpoints anchoring that resource. The aws_subnet and
+// aws_vpc Delete paths cannot remove these endpoints, so any subnet or VPC they
+// reference cannot be deleted by the sweeper and must be skipped.
+func findResourcesBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn *ec2.Client) (subnetIDs, vpcIDs map[string][]string, err error) {
 	input := &ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"vpc-endpoint-state": vpcEndpointStateAvailable,
@@ -1853,22 +1854,26 @@ func findSubnetsBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn 
 	endpoints, err := findVPCEndpoints(ctx, conn, input)
 	if err != nil {
 		if tfresource.NotFound(err) {
-			return nil, nil
+			return nil, nil, nil
 		}
-		return nil, err
+		return nil, nil, err
 	}
 
-	blocked := make(map[string][]string)
+	subnetIDs = make(map[string][]string)
+	vpcIDs = make(map[string][]string)
 	for _, ep := range endpoints {
 		if !aws.ToBool(ep.RequesterManaged) {
 			continue
 		}
 		endpointID := aws.ToString(ep.VpcEndpointId)
 		for _, subnetID := range ep.SubnetIds {
-			blocked[subnetID] = append(blocked[subnetID], endpointID)
+			subnetIDs[subnetID] = append(subnetIDs[subnetID], endpointID)
+		}
+		if vpcID := aws.ToString(ep.VpcId); vpcID != "" {
+			vpcIDs[vpcID] = append(vpcIDs[vpcID], endpointID)
 		}
 	}
-	return blocked, nil
+	return subnetIDs, vpcIDs, nil
 }
 
 func sweepTrafficMirrorFilters(region string) error {
@@ -2538,6 +2543,17 @@ func sweepVPCs(region string) error {
 	conn := client.EC2Client(ctx)
 	var sweepResources []sweep.Sweepable
 
+	// Pre-compute the set of VPCs that contain a requester-managed VPC endpoint. The
+	// aws_vpc Delete path cannot remove these endpoints (DeleteVpcEndpoints refuses
+	// requester-managed endpoints, and the in-resource GuardDuty cleanup only matches
+	// endpoints whose service name and tags fit a narrow heuristic), so DeleteVpc keeps
+	// returning DependencyViolation. See sweepSubnets for the symmetric guard on the
+	// subnet side and the debug one-liner that lists currently-blocking endpoints.
+	_, blockedVPCs, err := findResourcesBlockedByRequesterManagedVPCEndpoints(ctx, conn)
+	if err != nil {
+		return fmt.Errorf("listing requester-managed VPC endpoints (%s): %w", region, err)
+	}
+
 	input := ec2.DescribeVpcsInput{
 		Filters: []awstypes.Filter{
 			{
@@ -2560,9 +2576,16 @@ func sweepVPCs(region string) error {
 		}
 
 		for _, v := range page.Vpcs {
+			vpcID := aws.ToString(v.VpcId)
+
+			if endpointIDs, blocked := blockedVPCs[vpcID]; blocked {
+				log.Printf("[INFO] Skipping EC2 VPC %s: blocked by requester-managed VPC endpoint(s) %v", vpcID, endpointIDs)
+				continue
+			}
+
 			r := resourceVPC()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.VpcId))
+			d.SetId(vpcID)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
