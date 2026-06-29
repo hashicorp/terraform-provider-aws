@@ -26,6 +26,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.PinpointSMSVoiceV2ServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"ServiceQuotaExceededException",
+	)
+}
+
 func TestPoolValidatePhoneIdentity(t *testing.T) {
 	t.Parallel()
 
