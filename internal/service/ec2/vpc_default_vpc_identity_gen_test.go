@@ -186,7 +186,7 @@ func TestAccVPCDefaultVPC_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.51.0
+// Resource Identity was added after v6.52.0
 func TestAccVPCDefaultVPC_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -203,7 +203,7 @@ func TestAccVPCDefaultVPC_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DefaultVPC/basic_v6.51.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DefaultVPC/basic_v6.52.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultVPCExists(ctx, t, resourceName, &v),
@@ -239,7 +239,7 @@ func TestAccVPCDefaultVPC_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.51.0
+// Resource Identity was added after v6.52.0
 func TestAccVPCDefaultVPC_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -261,7 +261,7 @@ func TestAccVPCDefaultVPC_Identity_ExistingResource_noRefreshNoChange(t *testing
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DefaultVPC/basic_v6.51.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DefaultVPC/basic_v6.52.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultVPCExists(ctx, t, resourceName, &v),
