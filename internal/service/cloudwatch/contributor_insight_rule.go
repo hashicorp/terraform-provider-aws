@@ -12,8 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -52,16 +56,18 @@ func (r *contributorInsightRuleResource) Schema(ctx context.Context, req resourc
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: framework.ARNAttributeComputedOnly(),
 			"rule_definition": schema.StringAttribute{
-				// TODO: Update!!
-				Required: true,
+				CustomType: jsontypes.NormalizedType{},
+				Required:   true,
 			},
 			"rule_name": schema.StringAttribute{
-				// TODO ForceNew
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"rule_state": schema.StringAttribute{
-				Optional:   true,
 				CustomType: fwtypes.StringEnumType[stateValue](),
+				Optional:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -95,23 +101,24 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	// Set values for unknowns.
-	plan.ResourceARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
+	// Taint the resource.
+	resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)
 
-	if !plan.RuleState.IsNull() {
-		if plan.RuleState.ValueEnum() == stateValueEnabled {
-			input := cloudwatch.EnableInsightRulesInput{
-				RuleNames: []string{ruleName},
-			}
-			_, err = conn.EnableInsightRules(ctx, &input)
-			// TODO partialFailures....
+	switch ruleState := plan.RuleState.ValueEnum(); ruleState {
+	case stateValueEnabled:
+		if err := enableInsightRule(ctx, conn, ruleName); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+			return
 		}
-
-		if err != nil {
+	case stateValueDisabled:
+		if err := disableInsightRule(ctx, conn, ruleName); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
 			return
 		}
 	}
+
+	// Set values for unknowns.
+	plan.ResourceARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -162,23 +169,30 @@ func (r *contributorInsightRuleResource) Update(ctx context.Context, req resourc
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	ruleName := fwflex.StringValueFromFramework(ctx, new.RuleName)
-	if !new.RuleState.IsNull() && !new.RuleState.Equal(old.RuleState) {
+
+	if !new.RuleDefinition.Equal(old.RuleDefinition) {
+		input := cloudwatch.PutInsightRuleInput{
+			RuleDefinition: fwflex.StringFromFramework(ctx, new.RuleDefinition),
+			RuleName:       aws.String(ruleName),
+		}
+		_, err := conn.PutInsightRule(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+			return
+		}
+	}
+
+	if !new.RuleState.Equal(old.RuleState) {
 		switch ruleState := new.RuleState.ValueEnum(); ruleState {
 		case stateValueEnabled:
-			input := cloudwatch.EnableInsightRulesInput{
-				RuleNames: []string{ruleName},
-			}
-			_, err := conn.EnableInsightRules(ctx, &input)
-			if err != nil {
+			if err := enableInsightRule(ctx, conn, ruleName); err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+				return
 			}
 		case stateValueDisabled:
-			input := cloudwatch.DisableInsightRulesInput{
-				RuleNames: []string{ruleName},
-			}
-			_, err := conn.DisableInsightRules(ctx, &input)
-			if err != nil {
+			if err := disableInsightRule(ctx, conn, ruleName); err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleName)
+				return
 			}
 		}
 	}
@@ -282,7 +296,7 @@ func findInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloud
 type contributorInsightRuleResourceModel struct {
 	framework.WithRegionModel
 	ResourceARN    types.String                   `tfsdk:"resource_arn"`
-	RuleDefinition types.String                   `tfsdk:"rule_definition"`
+	RuleDefinition jsontypes.Normalized           `tfsdk:"rule_definition"`
 	RuleName       types.String                   `tfsdk:"rule_name"`
 	RuleState      fwtypes.StringEnum[stateValue] `tfsdk:"rule_state"`
 	Tags           tftags.Map                     `tfsdk:"tags"`
