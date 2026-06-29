@@ -41,11 +41,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	poolDisassociationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
@@ -378,6 +375,8 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
+	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
+
 	// When force_disassociate is set, clear any pool association
 	// before releasing. AWS rejects a release on an associated phone
 	// number, so disassociation must precede release.
@@ -400,7 +399,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 		}
 	}
 
-	_, err := tfresource.RetryWhen(ctx, poolDisassociationTimeout,
+	_, err := tfresource.RetryWhen(ctx, deadline.Remaining(),
 		func(ctx context.Context) (*pinpointsmsvoicev2.ReleasePhoneNumberOutput, error) {
 			return conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
 				PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
@@ -424,7 +423,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	if _, err := waitPhoneNumberDeleted(ctx, conn, data.PhoneNumberID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitPhoneNumberDeleted(ctx, conn, data.PhoneNumberID.ValueString(), deadline.Remaining()); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) delete", data.PhoneNumberID.ValueString()), err.Error())
 
 		return
