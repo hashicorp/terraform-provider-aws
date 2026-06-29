@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -42,14 +40,14 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 	avmcResource := "aws_odb_cloud_autonomous_vm_cluster.test"
 	avmcDataSource := "data.aws_odb_cloud_autonomous_vm_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterDSTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterDSTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterDSTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterDSTestEntity.avmcBasic(t),
@@ -61,9 +59,9 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func (autonomousVMClusterDSTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func (autonomousVMClusterDSTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_autonomous_vm_cluster" {
@@ -85,7 +83,7 @@ func (autonomousVMClusterDSTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx
 	}
 }
 func (autonomousVMClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListCloudAutonomousVmClustersInput{}
 	_, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
@@ -97,9 +95,9 @@ func (autonomousVMClusterDSTest) testAccPreCheck(ctx context.Context, t *testing
 }
 
 func (autonomousVMClusterDSTest) avmcBasic(t *testing.T) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
-	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
