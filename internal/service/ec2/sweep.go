@@ -1784,6 +1784,24 @@ func sweepSpotInstanceRequests(region string) error {
 func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
 
+	// Pre-compute the set of subnets that contain a requester-managed VPC endpoint. The
+	// aws_subnet Delete path cannot remove these: DeleteVpcEndpoints and ModifyVpcEndpoint
+	// both refuse requester-managed endpoints, so an unattended sweep would spin on
+	// DependencyViolation for the full schema.TimeoutDelete (~20 min per subnet). The most
+	// common source is orphan GuardDuty Runtime Monitoring endpoints whose underlying
+	// endpoint service has been decommissioned; clearing those requires AWS Support.
+	// The companion aws_vpc_endpoint sweeper already skips RequesterManaged=true endpoints
+	// for the same reason; this is the symmetric guard on the consumer side.
+	//
+	// To inspect what this would skip in a region:
+	//   aws ec2 describe-vpc-endpoints --region <region> \
+	//     --filters Name=vpc-endpoint-state,Values=available \
+	//     --query 'VpcEndpoints[?RequesterManaged==`true`].{Endpoint:VpcEndpointId,Subnets:SubnetIds,Service:ServiceName}'
+	blockedSubnets, err := findSubnetsBlockedByRequesterManagedVPCEndpoints(ctx, conn)
+	if err != nil {
+		return nil, fmt.Errorf("listing requester-managed VPC endpoints: %w", err)
+	}
+
 	var sweepResources []sweep.Sweepable
 
 	r := resourceSubnet()
@@ -1803,8 +1821,15 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.Subnets {
+			subnetID := aws.ToString(v.SubnetId)
+
+			if endpointIDs, blocked := blockedSubnets[subnetID]; blocked {
+				log.Printf("[INFO] Skipping EC2 Subnet %s: blocked by requester-managed VPC endpoint(s) %v", subnetID, endpointIDs)
+				continue
+			}
+
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.SubnetId))
+			d.SetId(subnetID)
 			d.Set(names.AttrVPCID, aws.ToString(v.VpcId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -1812,6 +1837,38 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	}
 
 	return sweepResources, nil
+}
+
+// findSubnetsBlockedByRequesterManagedVPCEndpoints returns a map of subnet ID to the IDs
+// of available, requester-managed VPC endpoints associated with that subnet. Such endpoints
+// cannot be removed by the user role, so any subnet they reference cannot be deleted by the
+// sweeper and must be skipped.
+func findSubnetsBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn *ec2.Client) (map[string][]string, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-endpoint-state": vpcEndpointStateAvailable,
+		}),
+	}
+
+	endpoints, err := findVPCEndpoints(ctx, conn, input)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	blocked := make(map[string][]string)
+	for _, ep := range endpoints {
+		if !aws.ToBool(ep.RequesterManaged) {
+			continue
+		}
+		endpointID := aws.ToString(ep.VpcEndpointId)
+		for _, subnetID := range ep.SubnetIds {
+			blocked[subnetID] = append(blocked[subnetID], endpointID)
+		}
+	}
+	return blocked, nil
 }
 
 func sweepTrafficMirrorFilters(region string) error {
