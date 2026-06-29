@@ -33,3 +33,7 @@ resource/aws_cloudwatch_contributor_insight_rule: Change `rule_state` to Optiona
 ```release-note:enhancement
 resource/aws_cloudwatch_dashboard: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_metric_stream: Add Resource Identity support
+```
