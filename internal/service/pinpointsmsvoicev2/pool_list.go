@@ -45,7 +45,8 @@ func (l *poolListResource) List(ctx context.Context, request list.ListRequest, s
 	tflog.Info(ctx, "Listing End User Messaging SMS Pools")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		pools, err := findPools(ctx, conn, &pinpointsmsvoicev2.DescribePoolsInput{})
+		input := pinpointsmsvoicev2.DescribePoolsInput{}
+		pools, err := findPools(ctx, conn, &input)
 		if err != nil {
 			result := fwdiag.NewListResultErrorDiagnostic(err)
 			yield(result)
