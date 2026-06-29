@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_s3_access_point: Fix support for S3 Express One Zone Directory Bucket Access Points by ensuring proper AWS SDK endpoint routing
+```
+
+```release-note:bug
+resource/aws_s3control_access_point_policy: Fix support for S3 Express One Zone Directory Bucket Access Points by ensuring proper AWS SDK endpoint routing
+```
+
+```release-note:bug
+resource/aws_s3control_bucket_policy: Fix support for S3 Express One Zone Directory Bucket resources by ensuring proper AWS SDK endpoint routing
+```
+
+```release-note:bug
+resource/aws_s3control_bucket_lifecycle_configuration: Fix support for S3 Express One Zone Directory Bucket resources by ensuring proper AWS SDK endpoint routing
+```
+
+```release-note:bug
+resource/aws_s3control_directory_bucket_access_point_scope: Fix operations by ensuring proper AWS SDK endpoint routing for Directory Buckets
+```
