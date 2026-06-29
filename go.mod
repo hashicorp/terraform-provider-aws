@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.35.6
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.22.7
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.61.0
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.69.4
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.22.6
@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.41.7
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.37.6
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.49.5
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.308.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.85.0
@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.79.3
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.37.7
@@ -149,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.75.4
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.52.6
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.61.3
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.26.5
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/location v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.50.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.93.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.40.1
@@ -207,7 +207,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.42.7
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.114.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.115.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.119.3
@@ -326,8 +326,8 @@ require (
 	go.opentelemetry.io/otel v1.44.0
 	golang.org/x/crypto v0.53.0
 	golang.org/x/text v0.38.0
-	golang.org/x/tools v0.46.0
-	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
+	golang.org/x/tools v0.47.0
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.7
 )
 
 require (
@@ -386,7 +386,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
+	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
