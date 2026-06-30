@@ -1890,6 +1890,12 @@ service/resiliencehub:
           - any-glob-to-any-file:
               - 'internal/service/resiliencehub/**/*'
               - 'website/**/resiliencehub_*'
+service/resiliencehubv2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/resiliencehubv2/**/*'
+              - 'website/**/resiliencehubv2_*'
 service/resourceexplorer2:
   - any:
       - changed-files:

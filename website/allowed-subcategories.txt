@@ -203,6 +203,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
