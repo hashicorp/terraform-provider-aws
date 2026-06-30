@@ -457,7 +457,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationInference(t *testin
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName),
+				Config: testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1660,11 +1660,15 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, endpoint))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName string) string {
+func testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName, credentialProviderContent string) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
 
   target_configuration {
     inference {
@@ -1682,7 +1686,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     }
   }
 }
-`, rName))
+`, rName, credentialProviderContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint string, listingMode awstypes.ListingMode) string {
