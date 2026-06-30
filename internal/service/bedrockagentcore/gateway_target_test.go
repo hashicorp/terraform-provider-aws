@@ -501,7 +501,9 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPPassthrough(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPPassthrough(rName, `    gateway_iam_role {
+      service = "lambda"
+    }`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
