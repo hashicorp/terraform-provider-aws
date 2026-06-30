@@ -15,8 +15,7 @@ resource/aws_cloudwatch_contributor_managed_insight_rule: Add plan-time validati
 ```
 
 ```release-note:bug
-resource/aws_cloudwatch_contributor_managed_insight_rule: Mark `resource_arn`, `tags` and `template_name` as as `ForceNew`
-```
+resource/aws_cloudwatch_contributor_managed_insight_rule: Mark `resource_arn`, `tags` and `template_name` as `ForceNew`
 
 ```release-note:bug
 resource/aws_cloudwatch_contributor_insight_rule: Mark `rule_name` as as `ForceNew`
