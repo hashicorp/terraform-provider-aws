@@ -6916,12 +6916,12 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
@@ -6965,12 +6965,12 @@ func TestAccEC2Instance_spot_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_spot_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
