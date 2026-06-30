@@ -238,6 +238,36 @@ func TestAccLambdaInvokeAction_tenantId(t *testing.T) {
 	})
 }
 
+func TestAccLambdaInvokeAction_maximumRetryAttempts(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	expectedResult := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+	retryAttempts := 10
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvokeActionConfig_maximumRetryAttempts(rName, testData, inputJSON, retryAttempts),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, ""),
+				),
+			},
+		},
+	})
+}
+
 // Test helper functions
 
 // testAccCheckInvokeAction verifies that the action can successfully invoke a Lambda function
@@ -638,4 +668,28 @@ resource "terraform_data" "trigger" {
   }
 }
 `, inputJSON))
+}
+
+func testAccInvokeActionConfig_maximumRetryAttempts(rName, testData, inputJSON string, attempts int) string {
+	return acctest.ConfigCompose(
+		testAccInvokeActionConfig_function(rName, testData),
+		fmt.Sprintf(`
+action "aws_lambda_invoke" "test" {
+  config {
+    function_name          = aws_lambda_function.test.function_name
+    payload                = %[1]q
+    maximum_retry_attempts = %[2]d
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_lambda_invoke.test]
+    }
+  }
+}
+`, inputJSON, attempts))
 }
