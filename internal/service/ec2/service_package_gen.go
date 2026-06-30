@@ -45,6 +45,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newCapacityBlockReservationDataSource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

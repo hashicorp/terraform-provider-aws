@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -15,12 +17,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_ec2_capacity_block_reservation", name="Capacity Block Reservation")
+// @Tags
+// @Testing(tagsTest=false)
 func newCapacityBlockReservationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &capacityBlockReservationDataSource{}, nil
 }
@@ -131,39 +135,39 @@ func (d *capacityBlockReservationDataSource) Schema(ctx context.Context, _ datas
 
 func (d *capacityBlockReservationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data capacityBlockReservationDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := d.Meta().EC2Client(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	input := ec2.DescribeCapacityReservationsInput{
 		Filters: newCustomFilterListFramework(ctx, data.Filters),
 	}
 
-	if !data.ID.IsNull() {
-		input.CapacityReservationIds = []string{fwflex.StringValueFromFramework(ctx, data.ID)}
+	if !data.ID.IsNull() || !data.ID.IsUnknown() {
+		input.CapacityReservationIds = []string{data.ID.ValueString()}
+	}
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
 	output, err := findCapacityReservation(ctx, conn, &input)
 	if err != nil {
-		response.Diagnostics.AddError(
-			"reading EC2 Capacity Block Reservation",
-			tfresource.SingularDataSourceFindError("EC2 Capacity Block Reservation", err).Error(),
-		)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID)
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("CapacityReservation"))...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("CapacityReservation")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+	
+	setTagsOut(ctx, output.Tags)
 
-	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 type capacityBlockReservationDataSourceModel struct {
