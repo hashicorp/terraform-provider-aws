@@ -142,6 +142,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  resourceSigningConfiguration,
+			TypeName: "aws_ecr_signing_configuration",
+			Name:     "Signing Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  resourceReplicationConfiguration,
 			TypeName: "aws_ecr_replication_configuration",
 			Name:     "Replication Configuration",
