@@ -2015,7 +2015,7 @@ func (m *passthroughTargetConfigurationModel) Flatten(ctx context.Context, v any
 func (m passthroughTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	r := awstypes.PassthroughTargetConfiguration{
+	r := &awstypes.PassthroughTargetConfiguration{
 		Endpoint:     fwflex.StringFromFramework(ctx, m.Endpoint),
 		ProtocolType: awstypes.PassthroughProtocolType(m.ProtocolType.ValueString()),
 	}
