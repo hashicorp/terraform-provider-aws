@@ -1670,7 +1670,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 func testAccGatewayTargetConfig_targetConfigurationMCPServerToolSchema(rName, endpoint string, resourcePriority int) string {
-	toolSchema := `[{"name":"echo","description":"Echoes input","inputSchema":{"type":"object","properties":{"message":{"type":"string"}},"required":["message"]}}]`
+	toolSchema := `{"tools":[{"name":"echo","description":"Echoes input","inputSchema":{"type":"object","properties":{"message":{"type":"string"}},"required":["message"]}}]}`
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
