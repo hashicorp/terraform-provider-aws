@@ -2385,6 +2385,15 @@ func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
 // skipped when it is unset. The gateway execution role is granted
 // bedrock:Retrieve on the KB ARN — without it, CreateGatewayTarget fails with
 // "Insufficient permissions to validate the specified resource."
+//
+// The connector's contract was confirmed by probing CreateGatewayTarget
+// directly: the only valid configuration name is "Retrieve", its only
+// recognized parameter is "knowledgeBaseId" (e.g. "numberOfResults" is
+// rejected), and the connector's Retrieve tool requires a MANAGED-type
+// knowledge base — a VECTOR KB fails with "Retrieve is not supported for this
+// knowledge base type", and MANAGED KBs are gated to allowlisted accounts. So
+// the supplied KB id must belong to a MANAGED (fully managed) knowledge base
+// in an entitled account/region.
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
 	ctx := acctest.Context(t)
 	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
