@@ -164,7 +164,6 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 		}
 	}
 
-	// Set values for unknowns.
 	plan.ARN = fwflex.StringValueToFramework(ctx, insightRuleARN(ctx, c, ruleName))
 	plan.RuleName = fwflex.StringValueToFramework(ctx, ruleName)
 
