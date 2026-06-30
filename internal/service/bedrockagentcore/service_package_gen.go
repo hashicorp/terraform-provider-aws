@@ -7,6 +7,8 @@ package bedrockagentcore
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -72,6 +74,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newEvaluatorResource,
+			TypeName: "aws_bedrockagentcore_evaluator",
+			Name:     "Evaluator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluator_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
+				inttypes.WithIdentityDuplicateAttrs("evaluator_id"),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",
@@ -85,6 +102,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newHarnessResource,
+			TypeName: "aws_bedrockagentcore_harness",
+			Name:     "Harness",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("harness_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newMemoryResource,
@@ -111,6 +141,66 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newOnlineEvaluationConfigResource,
+			TypeName: "aws_bedrockagentcore_online_evaluation_config",
+			Name:     "Online Evaluation Config",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "online_evaluation_config_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newPolicyResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      policyImportID{},
+			},
+		},
+		{
+			Factory:  newPolicyEngineResource,
+			TypeName: "aws_bedrockagentcore_policy_engine",
+			Name:     "Policy Engine",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "policy_engine_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newRegistryResource,
+			TypeName: "aws_bedrockagentcore_registry",
+			Name:     "Registry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_bedrockagentcore_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTokenVaultCMKResource,
 			TypeName: "aws_bedrockagentcore_token_vault_cmk",
 			Name:     "Token Vault CMK",
@@ -123,6 +213,76 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newEvaluatorResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_evaluator",
+			Name:     "Evaluator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluator_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
+				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
+		},
+		{
+			Factory:  newHarnessResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_harness",
+			Name:     "Harness",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("harness_id", true)),
+		},
+		{
+			Factory:  newOnlineEvaluationConfigResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_online_evaluation_config",
+			Name:     "Online Evaluation Config",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "online_evaluation_config_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
+		},
+		{
+			Factory:  newPolicyResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_policy",
+			Name:     "Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_engine_id", true),
+				inttypes.StringIdentityAttribute("policy_id", true),
+			}),
+		},
+		{
+			Factory:  newPolicyEngineResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_policy_engine",
+			Name:     "Policy Engine",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "policy_engine_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
+		},
+		{
+			Factory:  newRegistryResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_registry",
+			Name:     "Registry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

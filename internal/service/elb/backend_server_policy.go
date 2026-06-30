@@ -30,20 +30,22 @@ func resourceBackendServerPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBackendServerPolicySet,
 		DeleteWithoutTimeout: resourceBackendServerPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"instance_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"policy_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"policy_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+			}
 		},
 	}
 }

@@ -40,105 +40,107 @@ func resourceRemediationConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceRemediationConfigurationPut,
 		DeleteWithoutTimeout: resourceRemediationConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"config_rule_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"execution_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ssm_controls": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"concurrent_execution_rate_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 100),
-									},
-									"error_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"config_rule_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"execution_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ssm_controls": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"concurrent_execution_rate_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 100),
+										},
+										"error_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 100),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"maximum_automatic_attempts": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
-			},
-			names.AttrParameter: {
-				Type:     schema.TypeList,
-				MaxItems: 25,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"resource_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"static_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"static_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"maximum_automatic_attempts": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 25),
+				},
+				names.AttrParameter: {
+					Type:     schema.TypeList,
+					MaxItems: 25,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"resource_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"static_value": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"static_values": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"retry_attempt_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 2678000),
-			},
-			"target_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"target_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.RemediationTargetType](),
-			},
-			"target_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"retry_attempt_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 2678000),
+				},
+				"target_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"target_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.RemediationTargetType](),
+				},
+				"target_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

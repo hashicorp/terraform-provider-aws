@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -47,7 +48,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 						names.AttrIOPS:                "0",
 						names.AttrThroughput:          "0",
 						names.AttrVolumeSize:          "8",
-						"outpost_arn":                 "",
+						names.AttrOutpostARN:          "",
 						names.AttrVolumeType:          "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
@@ -213,6 +214,14 @@ func TestAccEC2AMI_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceAMI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -246,7 +255,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 						names.AttrIOPS:                "0",
 						names.AttrThroughput:          "0",
 						names.AttrVolumeSize:          "8",
-						"outpost_arn":                 "",
+						names.AttrOutpostARN:          "",
 						names.AttrVolumeType:          "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
@@ -310,7 +319,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 						names.AttrIOPS:                "0",
 						names.AttrThroughput:          "0",
 						names.AttrVolumeSize:          "8",
-						"outpost_arn":                 "",
+						names.AttrOutpostARN:          "",
 						names.AttrVolumeType:          "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
@@ -321,7 +330,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 						names.AttrIOPS:                "100",
 						names.AttrThroughput:          "500",
 						names.AttrVolumeSize:          "10",
-						"outpost_arn":                 "",
+						names.AttrOutpostARN:          "",
 						names.AttrVolumeType:          "gp3",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", acctest.CtFalse),

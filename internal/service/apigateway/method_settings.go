@@ -38,87 +38,89 @@ func resourceMethodSettings() *schema.Resource {
 			StateContext: resourceMethodSettingsImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"method_path": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"settings": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_data_encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"cache_ttl_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"caching_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"data_trace_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"logging_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"OFF",
-								"ERROR",
-								"INFO",
-							}, false),
-						},
-						"metrics_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"require_authorization_for_cache_control": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"throttling_burst_limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  -1,
-						},
-						"throttling_rate_limit": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  -1,
-						},
-						"unauthorized_cache_control_header_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.UnauthorizedCacheControlHeaderStrategy](),
-							Computed:         true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"method_path": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"settings": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_data_encrypted": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"cache_ttl_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"caching_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"data_trace_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"logging_level": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"OFF",
+									"ERROR",
+									"INFO",
+								}, false),
+							},
+							"metrics_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"require_authorization_for_cache_control": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"throttling_burst_limit": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  -1,
+							},
+							"throttling_rate_limit": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  -1,
+							},
+							"unauthorized_cache_control_header_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.UnauthorizedCacheControlHeaderStrategy](),
+								Computed:         true,
+							},
 						},
 					},
 				},
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

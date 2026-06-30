@@ -53,24 +53,24 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual service. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual service. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) Virtual service specification to apply.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
+* `spec` - (Required) Virtual service specification to apply. See [`spec` Block](#spec-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `provider`- (Optional) App Mesh object that is acting as the provider for a virtual service. You can specify a single virtual node or virtual router.
+* `provider` - (Optional) App Mesh object that is acting as the provider for a virtual service. You can specify a single virtual node or virtual router. See [`provider` Block](#provider-block) for details.
 
-The `provider` object supports the following:
+### `provider` Block
 
-* `virtual_node` - (Optional) Virtual node associated with a virtual service.
-* `virtual_router` - (Optional) Virtual router associated with a virtual service.
+* `virtual_node` - (Optional) Virtual node associated with a virtual service. See [`virtual_node` Block](#virtual_node-block) for details.
+* `virtual_router` - (Optional) Virtual router associated with a virtual service. See [`virtual_router` Block](#virtual_router-block) for details.
 
-The `virtual_node` object supports the following:
+### `virtual_node` Block
 
 * `virtual_node_name` - (Required) Name of the virtual node that is acting as a service provider. Must be between 1 and 255 characters in length.
 
-The `virtual_router` object supports the following:
+### `virtual_router` Block
 
 * `virtual_router_name` - (Required) Name of the virtual router that is acting as a service provider. Must be between 1 and 255 characters in length.
 
@@ -101,5 +101,3 @@ Using `terraform import`, import App Mesh virtual services using `mesh_name` tog
 ```console
 % terraform import aws_appmesh_virtual_service.servicea simpleapp/servicea.simpleapp.local
 ```
-
-[1]: /docs/providers/aws/index.html

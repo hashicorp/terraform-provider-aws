@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,13 +21,11 @@ import (
 )
 
 func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -72,20 +71,26 @@ func TestAccCloudFrontMultiTenantDistribution_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -158,14 +163,12 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -192,13 +195,11 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46302
 func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponsePagePath(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -228,13 +229,11 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 }
 
 func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -275,15 +274,62 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_originMtlsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	certificateResourceName := "aws_acm_certificate.test"
+	certificateResourceName2 := "aws_acm_certificate.test2"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_originMtlsConfig(t, rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.custom_origin_config.0.origin_mtls_config.0.client_certificate_arn", certificateResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46045
 func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -315,13 +361,11 @@ func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -357,7 +401,6 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 }
 
 func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *testing.T) {
-	t.Parallel()
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	ctx := acctest.Context(t)
@@ -365,7 +408,7 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -400,7 +443,6 @@ func TestAccCloudFrontMultiTenantDistribution_functionAssociationSwapBlocks(t *t
 }
 
 func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlocks(t *testing.T) {
-	t.Parallel()
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
 	// This test requires creating Lambda@Edge functions which may hang around for hours after distribution
@@ -412,7 +454,7 @@ func TestAccCloudFrontMultiTenantDistribution_lambdaFunctionAssociationSwapBlock
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -826,7 +868,80 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 }
 `, comment, httpVersion, defaultRootObjectConfig)
 }
+func testAccMultiTenantDistributionConfig_originMtlsConfig(t *testing.T, rName string, certIndex int) string {
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedClientCertificatePEM(t, key, rName+".example.com")
+	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate2 := acctest.TLSRSAX509SelfSignedClientCertificatePEM(t, key2, rName+"-updated.example.com")
 
+	return acctest.ConfigCompose(testAccRegionProviderConfig(), fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+}
+
+resource "aws_acm_certificate" "test2" {
+  certificate_body = "%[3]s"
+  private_key      = "%[4]s"
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test distribution with origin mTLS config"
+
+  origin {
+    domain_name = "www.example.com"
+    id          = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+
+      origin_mtls_config {
+        client_certificate_arn = %[5]s
+      }
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key),
+		acctest.TLSPEMEscapeNewlines(certificate2), acctest.TLSPEMEscapeNewlines(key2),
+		[]string{"aws_acm_certificate.test.arn", "aws_acm_certificate.test2.arn"}[certIndex]))
+}
 func testAccMultiTenantDistributionConfig_s3OriginWithOAC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {

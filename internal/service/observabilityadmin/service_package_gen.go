@@ -7,6 +7,8 @@ package observabilityadmin
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +36,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "rule_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newS3TableIntegrationResource,
+			TypeName: "aws_observabilityadmin_s3_table_integration",
+			Name:     "S3 Table Integration",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newTelemetryEnrichmentResource,
@@ -78,7 +93,58 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newTelemetryRuleResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule",
+			Name:     "Telemetry Rule",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newTelemetryRuleResourceAsListResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule",
+			Name:     "Telemetry Rule",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResourceAsListResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "rule_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

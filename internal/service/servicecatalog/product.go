@@ -49,119 +49,121 @@ func resourceProduct() *schema.Resource {
 			Delete: schema.DefaultTimeout(ProductDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"distributor": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"has_default_path": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_parameters": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"disable_template_validation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  false,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"template_physical_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"provisioning_artifact_parameters.0.template_url",
-								"provisioning_artifact_parameters.0.template_physical_id",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"distributor": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"has_default_path": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_parameters": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
 							},
-						},
-						"template_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"provisioning_artifact_parameters.0.template_url",
-								"provisioning_artifact_parameters.0.template_physical_id",
+							"disable_template_validation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  false,
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"template_physical_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"provisioning_artifact_parameters.0.template_url",
+									"provisioning_artifact_parameters.0.template_physical_id",
+								},
+							},
+							"template_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"provisioning_artifact_parameters.0.template_url",
+									"provisioning_artifact_parameters.0.template_physical_id",
+								},
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"support_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"support_email": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"support_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProductType](),
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"support_description": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"support_email": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"support_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProductType](),
+				},
+			}
 		},
 	}
 }

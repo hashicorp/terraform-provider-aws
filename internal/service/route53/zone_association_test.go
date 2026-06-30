@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -63,6 +64,14 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -88,6 +97,14 @@ func TestAccRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, ec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(vpcResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(vpcResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -113,6 +130,14 @@ func TestAccRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(route53ZoneResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(route53ZoneResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

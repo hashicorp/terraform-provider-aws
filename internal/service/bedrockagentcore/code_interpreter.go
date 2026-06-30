@@ -7,7 +7,6 @@ package bedrockagentcore
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -94,35 +92,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"certificates": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 200),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"secrets_manager": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"secret_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			names.AttrCertificate: certificateSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -227,6 +197,8 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
 
 	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("code_interpreter_id"), codeInterpreterID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
@@ -380,7 +352,7 @@ func findCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 
 type codeInterpreterResourceModel struct {
 	framework.WithRegionModel
-	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                         `tfsdk:"certificates"`
+	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                         `tfsdk:"certificate"`
 	CodeInterpreterARN   types.String                                                              `tfsdk:"code_interpreter_arn"`
 	CodeInterpreterID    types.String                                                              `tfsdk:"code_interpreter_id"`
 	Description          types.String                                                              `tfsdk:"description"`
@@ -395,59 +367,4 @@ type codeInterpreterResourceModel struct {
 type codeInterpreterNetworkConfigurationModel struct {
 	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
 	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel]         `tfsdk:"vpc_config"`
-}
-
-type certificateModel struct {
-	SecretsManager fwtypes.ListNestedObjectValueOf[secretsManagerLocationModel] `tfsdk:"secrets_manager"`
-}
-
-type secretsManagerLocationModel struct {
-	SecretARN fwtypes.ARN `tfsdk:"secret_arn"`
-}
-
-var (
-	_ fwflex.Expander  = certificateModel{}
-	_ fwflex.Flattener = &certificateModel{}
-)
-
-func (m *certificateModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	switch t := v.(type) {
-	case awstypes.Certificate:
-		if sm, ok := t.Location.(*awstypes.CertificateLocationMemberSecretsManager); ok {
-			var data secretsManagerLocationModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, sm.Value, &data))
-			if diags.HasError() {
-				return diags
-			}
-			m.SecretsManager = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-		}
-
-	default:
-		diags.AddError(
-			"Unsupported Type",
-			fmt.Sprintf("certificate flatten: %T", v),
-		)
-	}
-	return diags
-}
-
-func (m certificateModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var c awstypes.Certificate
-	switch {
-	case !m.SecretsManager.IsNull():
-		data, d := m.SecretsManager.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.CertificateLocationMemberSecretsManager
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		c.Location = &r
-	}
-	return &c, diags
 }

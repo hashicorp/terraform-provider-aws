@@ -58,282 +58,284 @@ func resourceWindowsFileSystem() *schema.Resource {
 			Update: schema.DefaultTimeout(45 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"self_managed_active_directory"},
-			},
-			"aliases": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"self_managed_active_directory"},
+				},
+				"aliases": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(4, 253),
+							// validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([.][0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])+$`), "must be in the fqdn format hostname.domain"),
+						),
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_log_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audit_log_destination": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+								StateFunc:    windowsAuditLogStateFunc,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
+								},
+							},
+							"file_access_audit_log_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
+								ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
+							},
+							"file_share_access_audit_log_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
+								ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
+							},
+						},
+					},
+				},
+				"automatic_backup_retention_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      7,
+					ValidateFunc: validation.IntBetween(0, 90),
+				},
+				"backup_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"copy_tags_to_backups": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"daily_automatic_backup_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(4, 253),
-						// validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([.][0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])+$`), "must be in the fqdn format hostname.domain"),
+						validation.StringLenBetween(5, 5),
+						validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 					),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_log_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"audit_log_destination": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-							StateFunc:    windowsAuditLogStateFunc,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
+				"deployment_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.WindowsDeploymentTypeSingleAz1,
+					ValidateDiagFunc: enum.Validate[awstypes.WindowsDeploymentType](),
+				},
+				"disk_iops_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIOPS: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(0, 350000),
 							},
-						},
-						"file_access_audit_log_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
-							ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
-						},
-						"file_share_access_audit_log_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.WindowsAccessAuditLogLevelDisabled,
-							ValidateDiagFunc: enum.Validate[awstypes.WindowsAccessAuditLogLevel](),
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DiskIopsConfigurationModeAutomatic,
+								ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
+							},
 						},
 					},
 				},
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      7,
-				ValidateFunc: validation.IntBetween(0, 90),
-			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
-				),
-			},
-			"deployment_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.WindowsDeploymentTypeSingleAz1,
-				ValidateDiagFunc: enum.Validate[awstypes.WindowsDeploymentType](),
-			},
-			"disk_iops_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 350000),
-						},
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DiskIopsConfigurationModeAutomatic,
-							ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
-						},
-					},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"final_backup_tags": tftags.TagsSchema(),
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"preferred_file_server_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"preferred_subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"remote_administration_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"self_managed_active_directory": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"active_directory_id"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"domain_join_service_account_secret": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-							ConflictsWith: []string{
-								"self_managed_active_directory.0.password",
-								"self_managed_active_directory.0.username",
-							},
-						},
-						"dns_ips": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 2,
-							Elem: &schema.Schema{
+				"final_backup_tags": tftags.TagsSchema(),
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"preferred_file_server_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"preferred_subnet_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"remote_administration_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"self_managed_active_directory": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"active_directory_id"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"domain_join_service_account_secret": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+								ConflictsWith: []string{
+									"self_managed_active_directory.0.password",
+									"self_managed_active_directory.0.username",
+								},
 							},
-						},
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"file_system_administrators_group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "Domain Admins",
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-						"organizational_unit_distinguished_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2000),
-						},
-						names.AttrPassword: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-							ConflictsWith: []string{
-								"self_managed_active_directory.0.domain_join_service_account_secret",
-								"self_managed_active_directory.0.password_wo",
+							"dns_ips": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPAddress,
+								},
 							},
-						},
-						"password_wo": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							WriteOnly: true,
-							Sensitive: true,
-							ConflictsWith: []string{
-								"self_managed_active_directory.0.domain_join_service_account_secret",
-								"self_managed_active_directory.0.password",
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							RequiredWith: []string{"self_managed_active_directory.0.password_wo_version"},
-						},
-						"password_wo_version": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							RequiredWith: []string{"self_managed_active_directory.0.password_wo"},
-						},
-						names.AttrUsername: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-							ConflictsWith: []string{
-								"self_managed_active_directory.0.domain_join_service_account_secret",
+							"file_system_administrators_group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "Domain Admins",
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"organizational_unit_distinguished_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2000),
+							},
+							names.AttrPassword: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+								ConflictsWith: []string{
+									"self_managed_active_directory.0.domain_join_service_account_secret",
+									"self_managed_active_directory.0.password_wo",
+								},
+							},
+							"password_wo": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								WriteOnly: true,
+								Sensitive: true,
+								ConflictsWith: []string{
+									"self_managed_active_directory.0.domain_join_service_account_secret",
+									"self_managed_active_directory.0.password",
+								},
+								RequiredWith: []string{"self_managed_active_directory.0.password_wo_version"},
+							},
+							"password_wo_version": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								RequiredWith: []string{"self_managed_active_directory.0.password_wo"},
+							},
+							names.AttrUsername: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+								ConflictsWith: []string{
+									"self_managed_active_directory.0.domain_join_service_account_secret",
+								},
 							},
 						},
 					},
 				},
-			},
-			"skip_final_backup": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"storage_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(32, 65536),
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StorageTypeSsd,
-				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput_capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4608, 6144, 9216, 12228}),
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
-				),
-			},
+				"skip_final_backup": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"storage_capacity": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(32, 65536),
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StorageTypeSsd,
+					ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throughput_capacity": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntInSlice([]int{8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4608, 6144, 9216, 12228}),
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(7, 7),
+						validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					),
+				},
+			}
 		},
 	}
 }

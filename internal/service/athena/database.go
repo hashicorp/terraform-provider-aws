@@ -41,80 +41,82 @@ func resourceDatabase() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acl_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_acl_option": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acl_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_acl_option": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_option": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
-						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_option": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"workgroup": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				names.AttrExpectedBucketOwner: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"workgroup": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

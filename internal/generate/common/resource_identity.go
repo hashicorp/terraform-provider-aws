@@ -100,6 +100,23 @@ func (r ResourceIdentity) IdentityAttributeName() string {
 	return ""
 }
 
+func (r ResourceIdentity) IdentityAttributeResourceAttribute() string {
+	return namesgen.ConstOrQuote(r.IdentityAttributeResourceAttributeName())
+}
+
+func (r ResourceIdentity) IdentityAttributeResourceAttributeName() string {
+	if r.identityAttributeName != "" {
+		return r.identityAttributeName
+	}
+	if len(r.IdentityAttributes) == 1 {
+		if r.IdentityAttributes[0].ResourceAttributeName_ != "" {
+			return r.IdentityAttributes[0].ResourceAttributeName_
+		}
+		return r.IdentityAttributes[0].Name_
+	}
+	return ""
+}
+
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrNames) > 0
 }

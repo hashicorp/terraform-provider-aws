@@ -40,15 +40,17 @@ func resourceBusPolicy() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusName,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusName,
+					Default:      DefaultEventBusName,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }

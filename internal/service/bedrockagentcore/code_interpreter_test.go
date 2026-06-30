@@ -199,14 +199,20 @@ func TestAccBedrockAgentCoreCodeInterpreter_certificates(t *testing.T) {
 				Config: testAccCodeInterpreterConfig_certificates(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.0.secrets_manager.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificates.0.secrets_manager.0.secret_arn"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificate), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secrets_manager": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+							})}),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -396,13 +402,13 @@ resource "aws_bedrockagentcore_code_interpreter" "test" {
     network_mode = "SANDBOX"
   }
 
-  certificates {
-    secrets_manager {
-      secret_arn = aws_secretsmanager_secret.test.arn
+  certificate {
+    location {
+      secrets_manager {
+        secret_arn = aws_secretsmanager_secret_version.test.arn
+      }
     }
   }
-
-  depends_on = [aws_secretsmanager_secret_version.test]
 }
 `, rName)
 }

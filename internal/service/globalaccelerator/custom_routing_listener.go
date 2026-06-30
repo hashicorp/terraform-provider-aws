@@ -42,36 +42,38 @@ func resourceCustomRoutingListener() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accelerator_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"port_range": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accelerator_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"port_range": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

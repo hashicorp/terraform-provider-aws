@@ -40,95 +40,97 @@ func resourceComponent() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"change_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"data": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"data", names.AttrURI},
-				ValidateFunc: validation.StringLenBetween(1, 16000),
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Platform](),
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			"supported_os_versions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotEmpty,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				MinItems: 1,
-				MaxItems: 25,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrURI: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"data", names.AttrURI},
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
+				"change_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"data": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"data", names.AttrURI},
+					ValidateFunc: validation.StringLenBetween(1, 16000),
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 126),
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Platform](),
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				"supported_os_versions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+					MinItems: 1,
+					MaxItems: 25,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrURI: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"data", names.AttrURI},
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			}
 		},
 	}
 }

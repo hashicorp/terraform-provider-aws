@@ -96,6 +96,14 @@ func TestAccRoute53RecordsExclusive_disappears_Zone(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), zoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(zoneResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(zoneResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

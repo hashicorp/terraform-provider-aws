@@ -25,165 +25,167 @@ func dataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationRead,
 
-		Schema: map[string]*schema.Schema{
-			"accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_service_access_principals": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"enabled_policy_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"feature_set": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"non_master_accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"return_organization_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"roots": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_service_access_principals": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"enabled_policy_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"feature_set": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_email": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"non_master_accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"policy_types": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+					},
+				},
+				"return_organization_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"roots": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"policy_types": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

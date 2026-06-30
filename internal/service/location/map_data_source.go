@@ -24,41 +24,43 @@ import (
 func DataSourceMap() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMapRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"style": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"style": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"map_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"map_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"map_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"map_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

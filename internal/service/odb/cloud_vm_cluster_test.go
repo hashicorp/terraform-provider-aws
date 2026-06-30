@@ -14,9 +14,9 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -41,27 +41,27 @@ func TestAccODBCloudVmCluster_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var cloudvmcluster odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 	resourceName := "aws_odb_cloud_vm_cluster.test"
-	basicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	basicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: basicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster),
 				),
 			},
 			{
@@ -79,26 +79,26 @@ func TestAccODBCloudVmCluster_allParams(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var cloudvmcluster odbtypes.CloudVmCluster
-	vmcClusterDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcClusterDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 	resourceName := "aws_odb_cloud_vm_cluster.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: vmClusterTestEntity.cloudVmClusterWithAllParameters(vmcClusterDisplayName, publicKey),
+				Config: vmClusterTestEntity.cloudVmClusterWithAllParameters(t, vmcClusterDisplayName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -125,15 +125,15 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	vmcNoTag, vmcWithTag := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcNoTag, vmcWithTag := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmcNoTag,
@@ -141,7 +141,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						return nil
 					}),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster1),
 				),
 			},
 			{
@@ -155,7 +155,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
 							return errors.New("Should  not create a new cloud vm cluster for tag update")
@@ -179,7 +179,7 @@ func TestAccODBCloudVmCluster_giVersionTag(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -187,15 +187,15 @@ func TestAccODBCloudVmCluster_giVersionTag(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithGiVersionTag(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithGiVersionTag(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmcWithGiVersionTag,
@@ -204,7 +204,7 @@ func TestAccODBCloudVmCluster_giVersionTag(t *testing.T) {
 						return nil
 					}),
 					resource.TestCheckResourceAttr(resourceName, "gi_version_computed", "26.0.0.0"),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster1),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix("tf-real")
+	vmcDisplayName := acctest.RandomWithPrefix(t, "tf-real")
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -231,15 +231,15 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	vmcWithoutTag, vmcWithTag := vmClusterTestEntity.cloudVmClusterReal(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcWithoutTag, vmcWithTag := vmClusterTestEntity.cloudVmClusterReal(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmcWithoutTag,
@@ -247,7 +247,7 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						return nil
 					}),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster1),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccODBCloudVmCluster_real(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
 							return errors.New("Should  not create a new cloud vm cluster for tag update")
@@ -284,30 +284,38 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var cloudvmcluster odbtypes.CloudVmCluster
-	vmClusterDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmClusterDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-	vmcBasicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmClusterDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcBasicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(t, vmClusterDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmcBasicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudVmCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -320,7 +328,7 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix("Ofake")
+	vmcDisplayName := acctest.RandomWithPrefix(t, "Ofake")
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -328,15 +336,15 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	vmcWithoutTag, vmcWithTag := vmClusterTestEntity.cloudVmClusterByARN(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcWithoutTag, vmcWithTag := vmClusterTestEntity.cloudVmClusterByARN(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmcWithoutTag,
@@ -344,7 +352,7 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						return nil
 					}),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster1),
 				),
 			},
 			{
@@ -357,7 +365,7 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
 							return errors.New("Should  not create a new cloud vm cluster for tag update")
@@ -381,15 +389,15 @@ func TestAccODBCloudVmCluster_variables(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
@@ -401,9 +409,9 @@ func TestAccODBCloudVmCluster_variables(t *testing.T) {
 	})
 }
 
-func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
@@ -421,7 +429,7 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.
 	}
 }
 
-func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.Context, name string, cloudvmcluster *odbtypes.CloudVmCluster) resource.TestCheckFunc {
+func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.Context, t *testing.T, name string, cloudvmcluster *odbtypes.CloudVmCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -430,7 +438,7 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.C
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not set"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		resp, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
@@ -441,7 +449,7 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.C
 }
 
 func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListCloudVmClustersInput{}
 	_, err := conn.ListCloudVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
@@ -489,9 +497,9 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 }
 `, rName)
 }
-func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisplayName, sshKey string) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(t *testing.T, vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmcNoTag := fmt.Sprintf(`
@@ -568,9 +576,9 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 	return vmcNoTag, vmcWithTag
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(vmClusterDisplayName, sshKey string) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(t *testing.T, vmClusterDisplayName, sshKey string) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 
@@ -649,9 +657,9 @@ resource "aws_odb_network" "test" {
 	return resource
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterReal(vmClusterDisplayName, sshKey string) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix("tf-real")
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) cloudVmClusterReal(t *testing.T, vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, "tf-real")
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmClusterResourceNoTag := fmt.Sprintf(`
@@ -728,9 +736,9 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 	return vmClusterResourceNoTag, vmClusterResourceWithTag
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterByARN(vmClusterDisplayName, sshKey string) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix("Ofake-exa")
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) cloudVmClusterByARN(t *testing.T, vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, "Ofake-exa")
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmClusterResourceNoTag := fmt.Sprintf(`
@@ -816,9 +824,9 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 	return vmClusterResourceNoTag, vmClusterResourceWithTag
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterConfigWithGiVersionTag(vmClusterDisplayName, sshKey string) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) cloudVmClusterConfigWithGiVersionTag(t *testing.T, vmClusterDisplayName, sshKey string) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmcWithGiVersionTag := fmt.Sprintf(`
@@ -878,7 +886,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
 	var cloudvmcluster3 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -887,14 +895,14 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 		return
 	}
 
-	vmcWithoutGiVersionTag, vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmcDisplayName, publicKey)
-	resource.ParallelTest(t, resource.TestCase{
+	vmcWithoutGiVersionTag, vmcWithGiVersionTag := vmClusterTestEntity.cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(t, vmcDisplayName, publicKey)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ODBServiceID),
-		CheckDestroy: vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy: vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -905,7 +913,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 				},
 				Config: vmcWithoutGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
@@ -914,7 +922,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   vmcWithoutGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
@@ -928,7 +936,7 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   vmcWithGiVersionTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster3),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster3),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.odb:input_gi_version", "26.0.0.0"),
@@ -944,9 +952,9 @@ func TestAccODBCloudVmCluster_previousProviderVersion(t *testing.T) {
 	})
 }
 
-func (cloudVmClusterResourceTest) cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(vmClusterDisplayName, sshKey string) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+func (cloudVmClusterResourceTest) cloudVmClusterConfigWithOlderTfProviderAndUpgradeToLatest(t *testing.T, vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmcWithoutGiVersionTag := fmt.Sprintf(`

@@ -48,88 +48,90 @@ func resourceNetworkACLRule() *schema.Resource {
 			StateContext: resourceNetworkACLRuleImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCIDRBlock: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
-			},
-			"egress": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"from_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"icmp_code": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"icmp_type": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
-			},
-			"network_acl_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if v, ok := ianaProtocolAToI[old]; ok {
-						old = strconv.Itoa(v)
-					}
-					if v, ok := ianaProtocolAToI[new]; ok {
-						new = strconv.Itoa(v)
-					}
-
-					return old == new
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCIDRBlock: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 				},
-				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-					_, err := networkACLProtocolNumber(v.(string))
-
-					if err != nil {
-						errors = append(errors, fmt.Errorf("%q : %w", k, err))
-					}
-
-					return
+				"egress": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
 				},
-			},
-			"rule_action": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+				"from_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
 				},
-				ValidateDiagFunc: enum.Validate[awstypes.RuleAction](),
-			},
-			"rule_number": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"to_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
+				"icmp_code": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"icmp_type": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
+				},
+				"network_acl_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if v, ok := ianaProtocolAToI[old]; ok {
+							old = strconv.Itoa(v)
+						}
+						if v, ok := ianaProtocolAToI[new]; ok {
+							new = strconv.Itoa(v)
+						}
+
+						return old == new
+					},
+					ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+						_, err := networkACLProtocolNumber(v.(string))
+
+						if err != nil {
+							errors = append(errors, fmt.Errorf("%q : %w", k, err))
+						}
+
+						return
+					},
+				},
+				"rule_action": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					ValidateDiagFunc: enum.Validate[awstypes.RuleAction](),
+				},
+				"rule_number": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				"to_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -28,24 +28,26 @@ func dataSourceGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRead,
 
-		Schema: map[string]*schema.Schema{
-			"amazon_side_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amazon_side_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

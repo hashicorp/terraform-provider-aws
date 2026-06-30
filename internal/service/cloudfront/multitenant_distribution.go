@@ -47,6 +47,7 @@ const (
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
@@ -482,6 +483,22 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									"origin_ssl_protocols": schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"origin_mtls_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[originMtlsConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"client_certificate_arn": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.ARNType,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -1086,9 +1103,14 @@ type customOriginConfigModel struct {
 	HTTPSPort              types.Int32                                                  `tfsdk:"https_port"`
 	IPAddressType          fwtypes.StringEnum[awstypes.IpAddressType]                   `tfsdk:"ip_address_type"`
 	OriginKeepaliveTimeout types.Int32                                                  `tfsdk:"origin_keepalive_timeout"`
+	OriginMtlsConfig       fwtypes.ListNestedObjectValueOf[originMtlsConfigModel]       `tfsdk:"origin_mtls_config" autoflex:",omitempty"`
 	OriginReadTimeout      types.Int32                                                  `tfsdk:"origin_read_timeout"`
 	OriginProtocolPolicy   fwtypes.StringEnum[awstypes.OriginProtocolPolicy]            `tfsdk:"origin_protocol_policy"`
 	OriginSSLProtocols     fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"origin_ssl_protocols" autoflex:",xmlwrapper=Items"`
+}
+
+type originMtlsConfigModel struct {
+	ClientCertificateArn fwtypes.ARN `tfsdk:"client_certificate_arn"`
 }
 
 type originShieldModel struct {

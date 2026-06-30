@@ -8,6 +8,7 @@ linters:
     # !! only add f-m linters here
     - goconst
     - gocritic
+    - godox
     - govet
     - importas
     - ineffassign
@@ -26,6 +27,10 @@ linters:
         - opinionated
         - performance
         - style
+    godox:
+      keywords:
+        # for lingering skaff TIP comments
+        - TIP
     importas:
       no-unaliased: true
       alias:
@@ -57,10 +62,12 @@ linters:
         - retry.RetryContext
         - schema.DefaultTimeout
         - validation.*
-        - floatBetweenSchema
-        - intBetweenSchema
-        - stringLenBetweenSchema
+        - sdkschema.FloatBetweenSchema
+        - sdkschema.IntBetweenSchema
+        - sdkschema.StringLenBetweenSchema
         # Terraform Plugin Framework
+        - float32validator.*
+        - float64validator.*
         - fwactions.TimeoutOr
         - int32validator.*
         - int64validator.*
