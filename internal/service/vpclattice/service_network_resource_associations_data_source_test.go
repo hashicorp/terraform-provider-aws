@@ -66,8 +66,8 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 						"associations.*",
 						map[string]string{
 							"resource_configuration_name": fmt.Sprintf("%s-dns", rName),
-							names.AttrStatus:               "ACTIVE",
-							"is_managed_association":        acctest.CtFalse,
+							names.AttrStatus:              "ACTIVE",
+							"is_managed_association":      acctest.CtFalse,
 						}),
 					// By resource configuration: query is symmetric with the by-service-network path.
 					resource.TestCheckTypeSetElemAttrPair(
@@ -132,8 +132,9 @@ resource "aws_vpclattice_resource_configuration" "dns-test" {
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
-  port_ranges = ["80"]
-  protocol    = "TCP"
+  custom_domain_name = "example.com"
+  port_ranges        = ["80"]
+  protocol           = "TCP"
 
   resource_configuration_definition {
     dns_resource {
@@ -170,6 +171,7 @@ resource "aws_vpclattice_resource_configuration" "parent-test" {
 resource "aws_vpclattice_service_network_resource_association" "dns-test" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.dns-test.id
   service_network_identifier        = aws_vpclattice_service_network.test-sn-1.id
+  private_dns_enabled               = true
 }
 
 resource "aws_vpclattice_service_network_resource_association" "ip-test" {
