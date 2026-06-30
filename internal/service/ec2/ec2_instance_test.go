@@ -6998,7 +6998,7 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 	reservationID := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID")
 	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_INSTANCE_TYPE")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -7021,11 +7021,7 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 							}),
 						}),
 					})),
-					statecheck.CompareValuePairs(
-						resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"),
-						"aws_ec2_capacity_block_reservation.test", tfjsonpath.New(names.AttrID),
-						compare.ValuesSame(),
-					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"), knownvalue.StringExact(reservationID)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact(string(awstypes.InstanceLifecycleTypeCapacityBlock))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
