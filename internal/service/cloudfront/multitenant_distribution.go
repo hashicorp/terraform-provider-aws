@@ -292,6 +292,19 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
+			"cache_tag_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cacheTagConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"header_name": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			"default_cache_behavior": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[defaultCacheBehaviorModel](ctx),
 				Validators: []validator.List{
@@ -1168,6 +1181,7 @@ type multiTenantDistributionResourceModel struct {
 	ActiveTrustedKeyGroups        fwtypes.ListNestedObjectValueOf[activeTrustedKeyGroupsModel] `tfsdk:"active_trusted_key_groups" autoflex:",xmlwrapper=Items,omitempty"`
 	ARN                           types.String                                                 `tfsdk:"arn"`
 	CacheBehaviors                fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]          `tfsdk:"cache_behavior" autoflex:",xmlwrapper=Items,omitempty"`
+	CacheTagConfig                fwtypes.ListNestedObjectValueOf[cacheTagConfigModel]         `tfsdk:"cache_tag_config" autoflex:",omitempty"`
 	CallerReference               types.String                                                 `tfsdk:"caller_reference"`
 	ConnectionMode                fwtypes.StringEnum[awstypes.ConnectionMode]                  `tfsdk:"connection_mode"`
 	Comment                       types.String                                                 `tfsdk:"comment"`
@@ -1205,6 +1219,10 @@ type originModel struct {
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
+}
+
+type cacheTagConfigModel struct {
+	HeaderName types.String `tfsdk:"header_name"`
 }
 
 type customHeaderModel struct {
