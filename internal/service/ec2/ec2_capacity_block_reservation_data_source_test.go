@@ -16,7 +16,7 @@ import (
 // Capacity Blocks must be purchased upfront with real money and only exist
 // for limited GPU/ML instance types, so the acceptance tests below assume an
 // existing pre-provisioned Capacity Block reservation discoverable via the
-// CAPACITY_BLOCK_RESERVATION_ID environment variable. Tests are skipped when
+// TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID environment variable. Tests are skipped when
 // the variable is not set.
 
 func TestAccEC2CapacityBlockReservationDataSource_id(t *testing.T) {
