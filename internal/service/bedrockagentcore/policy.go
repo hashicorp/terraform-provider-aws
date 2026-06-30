@@ -77,6 +77,14 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringvalidator.LengthBetween(1, 4096),
 				},
 			},
+			"enforcement_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.EnforcementMode](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -117,9 +125,30 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"cedar": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cedarPolicyModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									// If another member is added to the union, this will need to be updated.
+									path.MatchRelative().AtParent().AtName("cedar"),
+									path.MatchRelative().AtParent().AtName(names.AttrPolicy),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"statement": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+						names.AttrPolicy: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[policyStatementModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									// If another member is added to the union, this will need to be updated.
+									path.MatchRelative().AtParent().AtName("cedar"),
+									path.MatchRelative().AtParent().AtName(names.AttrPolicy),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -167,7 +196,8 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 
 	policyEngineID, policyID := aws.ToString(out.PolicyEngineId), aws.ToString(out.PolicyId)
 
-	if _, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	policy, err := waitPolicyCreated(ctx, conn, policyEngineID, policyID, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		// Taint the resource.
 		response.State.SetAttribute(ctx, path.Root("policy_engine_id"), policyEngineID)
 		response.State.SetAttribute(ctx, path.Root("policy_id"), policyID)
@@ -178,6 +208,8 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 	// Set values for unknowns.
 	data.PolicyARN = fwflex.StringToFramework(ctx, out.PolicyArn)
 	data.PolicyID = fwflex.StringValueToFramework(ctx, policyID)
+	// enforcement_mode is Optional+Computed; populate the server-resolved value.
+	data.EnforcementMode = fwtypes.StringEnumValue(policy.EnforcementMode)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -416,18 +448,20 @@ func (policyImportID) Parse(id string) (string, map[string]any, error) {
 
 type policyResourceModel struct {
 	framework.WithRegionModel
-	Definition     fwtypes.ListNestedObjectValueOf[policyDefinitionModel] `tfsdk:"definition"`
-	Description    types.String                                           `tfsdk:"description"`
-	Name           types.String                                           `tfsdk:"name"`
-	PolicyARN      types.String                                           `tfsdk:"policy_arn"`
-	PolicyEngineID types.String                                           `tfsdk:"policy_engine_id"`
-	PolicyID       types.String                                           `tfsdk:"policy_id"`
-	ValidationMode fwtypes.StringEnum[awstypes.PolicyValidationMode]      `tfsdk:"validation_mode"`
-	Timeouts       timeouts.Value                                         `tfsdk:"timeouts"`
+	Definition      fwtypes.ListNestedObjectValueOf[policyDefinitionModel] `tfsdk:"definition"`
+	Description     types.String                                           `tfsdk:"description"`
+	EnforcementMode fwtypes.StringEnum[awstypes.EnforcementMode]           `tfsdk:"enforcement_mode"`
+	Name            types.String                                           `tfsdk:"name"`
+	PolicyARN       types.String                                           `tfsdk:"policy_arn"`
+	PolicyEngineID  types.String                                           `tfsdk:"policy_engine_id"`
+	PolicyID        types.String                                           `tfsdk:"policy_id"`
+	ValidationMode  fwtypes.StringEnum[awstypes.PolicyValidationMode]      `tfsdk:"validation_mode"`
+	Timeouts        timeouts.Value                                         `tfsdk:"timeouts"`
 }
 
 type policyDefinitionModel struct {
-	Cedar fwtypes.ListNestedObjectValueOf[cedarPolicyModel] `tfsdk:"cedar"`
+	Cedar  fwtypes.ListNestedObjectValueOf[cedarPolicyModel]     `tfsdk:"cedar"`
+	Policy fwtypes.ListNestedObjectValueOf[policyStatementModel] `tfsdk:"policy"`
 }
 
 var (
@@ -448,6 +482,17 @@ func (m policyDefinitionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 		var r awstypes.PolicyDefinitionMemberCedar
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
+
+	case !m.Policy.IsNull():
+		data, d := m.Policy.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PolicyDefinitionMemberPolicy
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		return &r, diags
 	}
 	return nil, diags
 }
@@ -463,6 +508,14 @@ func (m *policyDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnos
 		}
 		m.Cedar = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
+	case awstypes.PolicyDefinitionMemberPolicy:
+		var model policyStatementModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Policy = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -473,5 +526,9 @@ func (m *policyDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnos
 }
 
 type cedarPolicyModel struct {
+	Statement types.String `tfsdk:"statement"`
+}
+
+type policyStatementModel struct {
 	Statement types.String `tfsdk:"statement"`
 }
