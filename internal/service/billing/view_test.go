@@ -323,6 +323,62 @@ func TestAccBillingView_dataFilterExpressionDimensions(t *testing.T) {
 	})
 }
 
+func TestAccBillingView_dataFilterExpressionCostCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view1, view2 awstypes.BillingViewElement
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+	costCategoryResourceName := "aws_ce_cost_category.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_dataFilterExpressionCostCategories(rName, []string{"production"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, t, resourceName, &view1),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_filter_expression.0.cost_categories.0.key", costCategoryResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.0.values.0", "production"),
+				),
+			},
+			{
+				Config: testAccViewConfig_dataFilterExpressionCostCategories(rName, []string{"production", "staging"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, t, resourceName, &view2),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_filter_expression.0.cost_categories.0.key", costCategoryResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.0.values.0", "production"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.cost_categories.0.values.1", "staging"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckViewDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BillingClient(ctx)
@@ -469,6 +525,56 @@ resource "aws_billing_view" "test" {
   }
 }
 `, rName, tagKey, tagValuesStr.String()))
+}
+
+func testAccViewConfig_dataFilterExpressionCostCategories(rName string, ccValues []string) string {
+	var ccValuesStr strings.Builder
+	for i, v := range ccValues {
+		if i > 0 {
+			ccValuesStr.WriteString(", ")
+		}
+		fmt.Fprintf(&ccValuesStr, "%q", v)
+	}
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+  rule {
+    value = "production"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+  rule {
+    value = "staging"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-stg"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+}
+
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test with data_filter_expression cost_categories"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+  data_filter_expression {
+    cost_categories {
+      key    = aws_ce_cost_category.test.name
+      values = [%[2]s]
+    }
+  }
+}
+`, rName, ccValuesStr.String()))
 }
 
 func testAccViewConfig_dataFilterExpressionDimensions(rName, dimensionKey string, dimensionValues []string) string {
