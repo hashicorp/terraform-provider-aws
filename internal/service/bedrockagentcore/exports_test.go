@@ -13,6 +13,7 @@ var (
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
+	ResourceGatewayWAFConfiguration  = newGatewayWAFConfigurationResource
 	ResourceMemory                   = newMemoryResource
 	ResourceResourcePolicy           = newResourcePolicyResource
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
