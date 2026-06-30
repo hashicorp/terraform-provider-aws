@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -465,9 +464,8 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	output, err := conn.DescribeDaemon(ctx, input)
 
 	if errs.IsA[*awstypes.DaemonNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -480,9 +478,8 @@ func findDaemonByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstyp
 	}
 
 	if output.Daemon.Status == awstypes.DaemonStatusDeleteInProgress {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(awstypes.DaemonStatusDeleteInProgress),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(awstypes.DaemonStatusDeleteInProgress),
 		}
 	}
 
@@ -503,8 +500,8 @@ func findDaemonRevisionByARN(ctx context.Context, conn *ecs.Client, arn string) 
 	return tfresource.AssertSingleValueResult(output.DaemonRevisions)
 }
 
-func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDaemon(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDaemonByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -520,10 +517,10 @@ func statusDaemon(ctx context.Context, conn *ecs.Client, arn string) sdkretry.St
 }
 
 func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DaemonStatusActive),
-		Refresh: statusDaemon(ctx, conn, arn),
+		Refresh: statusDaemon(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -533,10 +530,10 @@ func waitDaemonActive(ctx context.Context, conn *ecs.Client, arn string, timeout
 }
 
 func waitDaemonDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DaemonStatusActive, awstypes.DaemonStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusDaemon(ctx, conn, arn),
+		Refresh: statusDaemon(conn, arn),
 		Timeout: timeout,
 	}
 

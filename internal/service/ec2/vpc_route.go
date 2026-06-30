@@ -337,6 +337,12 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
+	return resourceRouteFlatten(d, route)
+}
+
+func resourceRouteFlatten(d *schema.ResourceData, route *awstypes.Route) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)

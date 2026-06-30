@@ -90,6 +90,7 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Kubernetes server version for the cluster.
 * `vpc_config` - Nested list containing VPC configuration for the cluster.
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
+    * `control_plane_egress_mode` - The egress mode for the EKS control plane. Possible values are `AWS_MANAGED` and `CUSTOMER_ROUTED`.
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.

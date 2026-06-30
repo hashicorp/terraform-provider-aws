@@ -354,6 +354,10 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"customer_action_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"encryption_info": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1188,6 +1192,7 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.ClusterInfo, out
 		d.Set("configuration_info", nil)
 	}
 	d.Set("current_version", cluster.CurrentVersion)
+	d.Set("customer_action_status", cluster.CustomerActionStatus)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 	if cluster.EncryptionInfo != nil {
 		if err := d.Set("encryption_info", []any{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
