@@ -61,6 +61,52 @@ resource "aws_cognito_user_pool" "test" {
 }
 ```
 
+### With Customer-Managed KMS Key (Multi-Region Replication)
+
+```terraform
+resource "aws_kms_key" "example" {
+  description             = "cognito-multi-region"
+  deletion_window_in_days = 7
+  multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_cognito_user_pool" "example" {
+  name = "example"
+
+  key_configuration {
+    key_type    = "CUSTOMER_MANAGED_KEY"
+    kms_key_arn = aws_kms_key.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -132,6 +178,8 @@ This resource supports the following arguments:
 * `subject` - (Optional) The subject of the email messages that your user pool sends to users with codes for MFA and email OTP sign-in.
 
 ### key_configuration
+
+~> **NOTE:** When using `CUSTOMER_MANAGED_KEY`, the KMS key policy must grant `cognito-idp.amazonaws.com` the `kms:CreateGrant` and `kms:DescribeKey` permissions. See the [With Customer-Managed KMS Key](#with-customer-managed-kms-key-multi-region-replication) example above.
 
 * `key_type` - (Optional) Type of encryption key for the user pool. Valid values are `AWS_OWNED_KEY` and `CUSTOMER_MANAGED_KEY`. Use `CUSTOMER_MANAGED_KEY` with a multi-Region KMS key to enable multi-Region replication of the user pool.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the user pool. Required when `key_type` is `CUSTOMER_MANAGED_KEY`.
