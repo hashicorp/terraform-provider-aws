@@ -2370,13 +2370,20 @@ resource "aws_route_table_association" "test" {
 // the connector MCP target with a FULL config (source + configurations +
 // parameter_values + parameter_overrides + enabled) at plan time only.
 //
-// Live-create acceptance is PENDING a real provisioned connector with known
-// tool names in the test account: AWS rejects a source-only config with
-// "Connector configurations must not be null", and any guessed tool name in
-// `configurations` fails with "Configuration '<name>': not found in connector".
-// Plan-only still walks the schema and the Expand path through
-// `connectorConfigurationModel.Expand`, which carries the JSON ->
-// smithy document conversion for `parameter_values`.
+// Live-create acceptance is PENDING an account that is ENTITLED to a connector
+// integration. Probing CreateGatewayTarget directly against the API shows:
+//   - connectorId "bedrock-knowledge-bases" is a recognized id, but in an
+//     unentitled account every configuration resolves empty and the call fails
+//     with "Connector configurations must not be empty" (and a source-only
+//     config fails with "Connector configurations must not be null");
+//   - an unknown id (e.g. "knowledge-bases") fails with "Connector integration
+//     <id> is not available for this account".
+//
+// There is no list/describe API for the connector catalog, so a reviewer with
+// an entitled account should set connectorId + a real tool name and drop
+// PlanOnly to convert this to a live create. Plan-only still walks the schema
+// and the Expand path through `connectorConfigurationModel.Expand`, which
+// carries the JSON -> smithy document conversion for `parameter_values`.
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
