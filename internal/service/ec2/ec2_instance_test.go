@@ -11001,17 +11001,13 @@ resource "aws_instance" "test" {
 
   capacity_reservation_specification {
     capacity_reservation_target {
-      capacity_reservation_id = data.aws_ec2_capacity_block_reservation.test.id
+      capacity_reservation_id = %[1]q
     }
   }
 
   instance_market_options {
     market_type = "capacity-block"
   }
-}
-
-data "aws_ec2_capacity_block_reservation" "test" {
-  id = %[1]q
 }
 `, reservationID, instanceType))
 }
