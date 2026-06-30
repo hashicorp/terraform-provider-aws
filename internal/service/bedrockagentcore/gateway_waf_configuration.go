@@ -215,7 +215,7 @@ func (r *gatewayWAFConfigurationResource) putWAFConfiguration(ctx context.Contex
 		return err
 	}
 
-	if _, err := waitGatewayUpdated(ctx, conn, gatewayID, timeout); err != nil {
+	if err := waitGatewayUpdated(ctx, conn, gatewayID, timeout); err != nil {
 		return err
 	}
 
