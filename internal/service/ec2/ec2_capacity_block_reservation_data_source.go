@@ -144,16 +144,14 @@ func (d *capacityBlockReservationDataSource) Read(ctx context.Context, request d
 
 	conn := d.Meta().EC2Client(ctx)
 
-	input := ec2.DescribeCapacityReservationsInput{
-		Filters: newCustomFilterListFramework(ctx, data.Filters),
-	}
+	var input ec2.DescribeCapacityReservationsInput
 
 	if !data.ID.IsNull() || !data.ID.IsUnknown() {
 		input.CapacityReservationIds = []string{data.ID.ValueString()}
 	}
 
-	if len(input.Filters) == 0 {
-		input.Filters = nil
+	if filters := newCustomFilterListFramework(ctx, data.Filters); len(filters) > 0 {
+		input.Filters = filters
 	}
 
 	output, err := findCapacityReservation(ctx, conn, &input)
