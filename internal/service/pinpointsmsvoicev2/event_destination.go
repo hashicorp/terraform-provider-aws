@@ -49,6 +49,7 @@ import (
 // @ImportIDHandler("eventDestinationImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="configuration_set_name;event_destination_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(tagsTest=false)
 func newEventDestinationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventDestinationResource{}, nil
 }
