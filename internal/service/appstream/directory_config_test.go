@@ -386,6 +386,8 @@ resource "aws_directory_service_directory" "test" {
 }
 
 resource "aws_acmpca_certificate_authority" "test_ca" {
+  permanent_deletion_time_in_days = 7
+
   type       = "ROOT"
   usage_mode = "SHORT_LIVED_CERTIFICATE"
 

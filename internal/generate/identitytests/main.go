@@ -19,8 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/go-version"
@@ -133,14 +131,7 @@ func main() {
 			},
 			"NewVersion":            version.NewVersion,
 			"VersionDecrementMinor": common.VersionDecrementMinor,
-			// FirstUpper returns a string with the first character as upper case.
-			"FirstUpper": func(s string) string {
-				if s == "" {
-					return ""
-				}
-				r, n := utf8.DecodeRuneInString(s)
-				return string(unicode.ToUpper(r)) + s[n:]
-			},
+			"FirstUpper":            common.FirstUpper,
 		}
 		templates := template.New("identitytests").Funcs(templateFuncMap)
 

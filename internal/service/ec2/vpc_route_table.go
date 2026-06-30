@@ -239,6 +239,12 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	return resourceRouteTableFlatten(ctx, c, conn, d, routeTable)
+}
+
+func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, conn *ec2.Client, d *schema.ResourceData, routeTable *awstypes.RouteTable) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	ownerID := aws.ToString(routeTable.OwnerId)
 	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
@@ -826,6 +832,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap["egress_only_gateway_id"] = aws.ToString(v)
 	}
 
+	// VPC Endpoint ID is returned in Gateway ID field.
 	if v := apiObject.GatewayId; v != nil {
 		if strings.HasPrefix(aws.ToString(v), "vpce-") {
 			tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
@@ -846,7 +853,9 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
+	// ODB Network ARN is also returned in Gateway ID field.
 	if v := apiObject.OdbNetworkArn; v != nil {
+		tfMap["gateway_id"] = nil
 		tfMap["odb_network_arn"] = aws.ToString(v)
 	}
 

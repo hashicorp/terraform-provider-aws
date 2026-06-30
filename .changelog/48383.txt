@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_detective_graph: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_detective_organization_configuration: Add Resource Identity support
+```

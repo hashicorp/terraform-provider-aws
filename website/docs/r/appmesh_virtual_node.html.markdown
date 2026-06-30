@@ -10,16 +10,7 @@ description: |-
 
 Provides an AWS App Mesh virtual node resource.
 
-## Breaking Changes
-
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), `aws_appmesh_virtual_node` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
-
-* Rename the `service_name` attribute of the `dns` object to `hostname`.
-
-* Replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks,
-setting `virtual_service_name` to the name of the service.
-
-The Terraform state associated with existing resources will automatically be migrated.
+~> **Note:** Because of backward incompatible API changes ([see issue](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), resource definitions created with provider versions earlier than v2.3.0 must be modified: rename the `service_name` attribute of the `dns` object to `hostname`; replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks, setting `virtual_service_name` to the name of the service. Existing Terraform state is automatically migrated.
 
 ## Example Usage
 

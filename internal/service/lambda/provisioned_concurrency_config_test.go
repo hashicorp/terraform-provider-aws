@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const testAccProvisionedConcurrencyLegacyRuntime = "nodejs18.x"
+
 func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -235,8 +237,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_aliasChangeWithProvisionedConcurr
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	filename1 := "test-fixtures/lambdapinpoint.zip"
-	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
+	filename1 := "test-fixtures/lambdanode24compat.zip"
+	filename2 := "test-fixtures/lambdanode24compat_modified.zip"
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
@@ -269,8 +271,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_aliasChangeWithProvisionedConcurr
 func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	filename1 := "test-fixtures/lambdapinpoint.zip"
-	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
+	filename1 := "test-fixtures/lambdanode24compat.zip"
+	filename2 := "test-fixtures/lambdanode24compat_modified.zip"
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
@@ -331,7 +333,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_idMigration530(t *testing.T) {
 						VersionConstraint: "5.3.0",
 					},
 				},
-				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutionsWithRuntime(rName, 1, testAccProvisionedConcurrencyLegacyRuntime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
@@ -343,7 +345,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_idMigration530(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
+				Config:                   testAccProvisionedConcurrencyConfigConfig_concurrentExecutionsWithRuntime(rName, 1, testAccProvisionedConcurrencyLegacyRuntime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
@@ -414,10 +416,14 @@ func testAccCheckProvisionedConcurrencyConfigExistsByName(ctx context.Context, t
 }
 
 func testAccProvisionedConcurrencyConfigConfig_base(rName string) string {
-	return testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, "test-fixtures/lambdapinpoint.zip")
+	return testAccProvisionedConcurrencyConfigConfigBase_withFilenameAndRuntime(rName, "test-fixtures/lambdanode24compat.zip", "nodejs24.x")
 }
 
 func testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, filename string) string {
+	return testAccProvisionedConcurrencyConfigConfigBase_withFilenameAndRuntime(rName, filename, "nodejs24.x")
+}
+
+func testAccProvisionedConcurrencyConfigConfigBase_withFilenameAndRuntime(rName, filename, runtime string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -450,18 +456,22 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   filename      = %[2]q
   role          = aws_iam_role.test.arn
-  handler       = "lambdapinpoint.handler"
+  handler       = %[4]q
   publish       = true
-  runtime       = "nodejs22.x"
+  runtime       = %[3]q
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, filename)
+`, rName, filename, runtime, "lambdanode24compat.handler")
 }
 
 func testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName string, provisionedConcurrentExecutions int) string {
+	return testAccProvisionedConcurrencyConfigConfig_concurrentExecutionsWithRuntime(rName, provisionedConcurrentExecutions, "nodejs24.x")
+}
+
+func testAccProvisionedConcurrencyConfigConfig_concurrentExecutionsWithRuntime(rName string, provisionedConcurrentExecutions int, runtime string) string {
 	return acctest.ConfigCompose(
-		testAccProvisionedConcurrencyConfigConfig_base(rName),
+		testAccProvisionedConcurrencyConfigConfigBase_withFilenameAndRuntime(rName, "test-fixtures/lambdanode24compat.zip", runtime),
 		fmt.Sprintf(`
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name

@@ -949,6 +949,17 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Project (%s): %s", d.Id(), err)
 	}
 
+	diags = append(diags, resourceProjectFlatten(ctx, d, project)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
+}
+
+func resourceProjectFlatten(ctx context.Context, d *schema.ResourceData, project *types.Project) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, project.Arn)
 	if project.Artifacts != nil {
 		if err := d.Set("artifacts", []any{flattenProjectArtifacts(project.Artifacts)}); err != nil {

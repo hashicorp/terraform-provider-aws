@@ -12,5 +12,6 @@ const (
 )
 
 const (
-	errCodeValidationException = "ValidationException"
+	errCodeInvalidArgumentException = "InvalidArgumentException"
+	errCodeValidationException      = "ValidationException"
 )

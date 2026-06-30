@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lakeformation_resource_lf_tag: Prevent crash when processing null tag values during read operations
+```

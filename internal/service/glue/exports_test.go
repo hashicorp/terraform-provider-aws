@@ -6,7 +6,6 @@ package glue
 // Exports for use in tests only.
 var (
 	ResourceCatalog                       = newCatalogResource
-	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier

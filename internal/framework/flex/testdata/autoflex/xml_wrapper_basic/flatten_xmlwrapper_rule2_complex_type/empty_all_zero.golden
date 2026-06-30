@@ -53,7 +53,7 @@
     "autoflex.source.path": "Oaks",
     "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
     "autoflex.target.path": "Oak",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel·106]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel·110]"
   },
   {
     "@level": "trace",
@@ -62,6 +62,6 @@
     "autoflex.source.path": "Oaks",
     "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
     "autoflex.target.path": "Oak",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel·106]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel·110]"
   }
 ]

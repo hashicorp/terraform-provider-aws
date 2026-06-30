@@ -248,6 +248,8 @@ func (r *browserResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	if _, err := waitBrowserCreated(ctx, conn, browserID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("browser_id"), browserID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, browserID)
 		return
 	}

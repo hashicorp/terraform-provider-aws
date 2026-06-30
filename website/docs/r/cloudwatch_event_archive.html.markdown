@@ -25,7 +25,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
-## Example Usage Optional Arguments
+### Example Usage Optional Arguments
 
 ```terraform
 resource "aws_cloudwatch_event_bus" "order" {
@@ -43,7 +43,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
-## Example Usage CMK Encryption
+### Example Usage CMK Encryption
 
 ```terraform
 data "aws_caller_identity" "current" {}

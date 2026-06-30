@@ -13,6 +13,13 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"S3TableIntegration": {
+			acctest.CtBasic:      testAccS3TableIntegration_basic,
+			acctest.CtDisappears: testAccS3TableIntegration_disappears,
+			"kmsKey":             testAccS3TableIntegration_kmsKey,
+			"tags":               testAccS3TableIntegration_tags,
+			"Identity":           testAccObservabilityAdminS3TableIntegration_identitySerial,
+		},
 		"TelemetryEnrichment": {
 			acctest.CtBasic:      testAccTelemetryEnrichment_basic,
 			acctest.CtDisappears: testAccTelemetryEnrichment_disappears,

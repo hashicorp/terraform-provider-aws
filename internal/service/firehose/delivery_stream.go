@@ -1567,8 +1567,12 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		return conn.CreateDeliveryStream(ctx, &input)
 	})
 
-	// Some partitions (e.g. ISO) may not support all ExtendedS3DestinationConfiguration fields.
-	if tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationConfiguration") && partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationConfiguration != nil {
+	// Some partitions (e.g. ISO) reject unsupported ExtendedS3DestinationConfiguration
+	// fields with a ValidationException or an InvalidArgumentException. Outside the
+	// standard partition, strip the fields and retry.
+	if partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationConfiguration != nil &&
+		(tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationConfiguration") ||
+			tfawserr.ErrMessageContains(err, errCodeInvalidArgumentException, "S3 File Extension")) {
 		input.ExtendedS3DestinationConfiguration.CustomTimeZone = nil
 		input.ExtendedS3DestinationConfiguration.FileExtension = nil
 		_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
@@ -1774,8 +1778,12 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			return conn.UpdateDestination(ctx, &input)
 		})
 
-		// Some partitions (e.g. ISO) may not support all ExtendedS3DestinationUpdate fields.
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationUpdate") && partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationUpdate != nil {
+		// Some partitions (e.g. ISO) reject unsupported ExtendedS3DestinationUpdate
+		// fields with a ValidationException or an InvalidArgumentException. Outside the
+		// standard partition, strip the fields and retry.
+		if partition != endpoints.AwsPartitionID && input.ExtendedS3DestinationUpdate != nil &&
+			(tfawserr.ErrMessageContains(err, errCodeValidationException, "ExtendedS3DestinationUpdate") ||
+				tfawserr.ErrMessageContains(err, errCodeInvalidArgumentException, "S3 File Extension")) {
 			input.ExtendedS3DestinationUpdate.CustomTimeZone = nil
 			input.ExtendedS3DestinationUpdate.FileExtension = nil
 			_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {

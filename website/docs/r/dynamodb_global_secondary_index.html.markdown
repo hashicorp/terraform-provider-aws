@@ -54,7 +54,7 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
-## Migrating
+### Migrating
 
 Use the following steps to migrate existing Global Secondary Indexes defined inline in `global_secondary_index` on an `aws_dynamodb_table`.
 
@@ -231,6 +231,14 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the GSI.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

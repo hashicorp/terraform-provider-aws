@@ -21,7 +21,7 @@ resource "aws_datasync_agent" "example" {
 }
 ```
 
-## Example Usage with VPC Endpoints
+### Example Usage with VPC Endpoints
 
 ```terraform
 resource "aws_datasync_agent" "example" {

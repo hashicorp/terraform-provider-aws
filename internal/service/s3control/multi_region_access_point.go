@@ -44,115 +44,117 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateS3MultiRegionAccessPointName,
-						},
-						"public_access_block": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							ForceNew:         true,
-							MinItems:         0,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"block_public_acls": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-										ForceNew: true,
-									},
-									"block_public_policy": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-										ForceNew: true,
-									},
-									"ignore_public_acls": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-										ForceNew: true,
-									},
-									"restrict_public_buckets": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateS3MultiRegionAccessPointName,
+							},
+							"public_access_block": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								ForceNew:         true,
+								MinItems:         0,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"block_public_acls": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+											ForceNew: true,
+										},
+										"block_public_policy": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+											ForceNew: true,
+										},
+										"ignore_public_acls": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+											ForceNew: true,
+										},
+										"restrict_public_buckets": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							MinItems: 1,
-							MaxItems: 20,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(3, 255),
-									},
-									"bucket_account_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
+							names.AttrRegion: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								MinItems: 1,
+								MaxItems: 20,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(3, 255),
+										},
+										"bucket_account_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
