@@ -62,6 +62,7 @@ type registryResource struct {
 
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
 		Attributes: map[string]schema.Attribute{
 			"approval_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[approvalConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"authorizer_type": schema.StringAttribute{
