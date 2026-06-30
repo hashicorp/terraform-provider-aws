@@ -2365,3 +2365,86 @@ resource "aws_route_table_association" "test" {
 }
 `, rName, subnetCount))
 }
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationConnector(rName, "bedrock-knowledge-bases"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "retrieve"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.parameter_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.parameter_overrides.0.path", "/numberOfResults"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_targetConfigurationConnector(rName, connectorID string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = %[2]q
+        }
+
+        enabled = ["retrieve"]
+
+        configurations {
+          name        = "retrieve"
+          description = "Retrieve from the knowledge base"
+
+          parameter_values = jsonencode({
+            knowledgeBaseId = "EXAMPLEKB123"
+          })
+
+          parameter_overrides {
+            path        = "/numberOfResults"
+            description = "Number of results to retrieve"
+            visible     = true
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, connectorID))
+}
