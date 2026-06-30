@@ -22,6 +22,15 @@ ENHANCEMENTS:
 * data-source/aws_msk_cluster: Add `customer_action_status` attribute ([#48536](https://github.com/hashicorp/terraform-provider-aws/issues/48536))
 * resource/aws_api_gateway_rest_api: Add `security_policy` and `endpoint_access_mode` arguments ([#47973](https://github.com/hashicorp/terraform-provider-aws/issues/47973))
 * resource/aws_bedrockagentcore_browser: Add `browser_signing`, `certificate`, and `enterprise_policy` configuration blocks ([#47816](https://github.com/hashicorp/terraform-provider-aws/issues/47816))
+* resource/aws_bedrockagentcore_code_interpreter: Add `certificate` argument ([#47817](https://github.com/hashicorp/terraform-provider-aws/issues/47817))
+* resource/aws_cloudwatch_composite_alarm: Add Resource Identity support ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_contributor_insight_rule: Add Resource Identity support ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_contributor_insight_rule: Add plan-time validation of `rule_definition` ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_contributor_insight_rule: Change `rule_state` to Optional and Computed ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_contributor_managed_insight_rule: Add Resource Identity support ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_contributor_managed_insight_rule: Add plan-time validation of `resource_arn` and `template_name` ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_dashboard: Add Resource Identity support ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
+* resource/aws_cloudwatch_metric_stream: Add Resource Identity support ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
 * resource/aws_default_vpc: Add resource identity support ([#47590](https://github.com/hashicorp/terraform-provider-aws/issues/47590))
 * resource/aws_msk_cluster: Add `customer_action_status` attribute ([#48536](https://github.com/hashicorp/terraform-provider-aws/issues/48536))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `force_disassociate` argument ([#48414](https://github.com/hashicorp/terraform-provider-aws/issues/48414))
@@ -32,6 +41,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_codeartifact_authorization_token: Mark `authorization_token` as sensitive ([#48577](https://github.com/hashicorp/terraform-provider-aws/issues/48577))
+* resource/aws_cloudwatch_contributor_managed_insight_rule: Mark `resource_arn`, `tags` and `template_name` as `ForceNew` ([#48679](https://github.com/hashicorp/terraform-provider-aws/issues/48679))
 * resource/aws_default_vpc: Fix provider panic (nil pointer dereference) when importing via an `import` block or `terraform import` ([#47590](https://github.com/hashicorp/terraform-provider-aws/issues/47590))
 * resource/aws_ecs_capacity_provider: Return the underlying error immediately instead of timing out after 20 minutes when deleting a capacity provider that is still associated with a cluster ([#48156](https://github.com/hashicorp/terraform-provider-aws/issues/48156))
 * resource/aws_iam_user: Handle `InvalidAction` errors in partitions where access key cleanup operations are not supported ([#48473](https://github.com/hashicorp/terraform-provider-aws/issues/48473))
