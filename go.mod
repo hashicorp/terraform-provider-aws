@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/athena v1.58.5
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.47.2
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.67.4
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.67.5
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/backup v1.57.6
 	github.com/aws/aws-sdk-go-v2/service/batch v1.66.0
