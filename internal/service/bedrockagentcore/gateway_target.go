@@ -1729,7 +1729,7 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 
 	case awstypes.TargetConfigurationMemberInference:
 		var model inferenceTargetConfigurationModel
-		smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
