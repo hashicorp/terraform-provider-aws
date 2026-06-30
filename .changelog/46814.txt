@@ -1,0 +1,6 @@
+http://googleusercontent.com/immersive_entry_chip/0
+
+### Quick checklist for the file:
+* **Filename:** `46814.txt` (it must match the issue number exactly).
+* **Location:** Inside the `.changelog/` directory at the root of the project.
+* **Content:** Exactly 3 lines of text (the opening backticks line, the release note line, and the closing backticks line).
