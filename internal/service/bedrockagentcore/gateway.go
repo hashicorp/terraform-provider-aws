@@ -411,7 +411,7 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
-		if _, err := waitGatewayUpdated(ctx, conn, gatewayID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if err := waitGatewayUpdated(ctx, conn, gatewayID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 			return
 		}
@@ -507,7 +507,7 @@ func waitGatewayCreated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 	return nil, smarterr.NewError(err)
 }
 
-func waitGatewayUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayOutput, error) {
+func waitGatewayUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GatewayStatusUpdating),
 		Target:                    enum.Slice(awstypes.GatewayStatusReady),
@@ -519,10 +519,10 @@ func waitGatewayUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayOutput); ok {
 		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
-		return out, smarterr.NewError(err)
+		return smarterr.NewError(err)
 	}
 
-	return nil, smarterr.NewError(err)
+	return smarterr.NewError(err)
 }
 
 func waitGatewayDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayOutput, error) {
