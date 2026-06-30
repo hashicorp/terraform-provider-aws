@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_odb_network: Add computed `ec2_placement_group_ids` attribute.
+```
+
+```release-note:enhancement
+data-source/aws_odb_network: Add computed `ec2_placement_group_ids` attribute.
+```

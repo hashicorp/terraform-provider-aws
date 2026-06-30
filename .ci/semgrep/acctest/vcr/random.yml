@@ -15,7 +15,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-randint
     languages: [go]
@@ -30,7 +29,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-randintrange
     languages: [go]
@@ -45,7 +43,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-randstring
     languages: [go]
@@ -60,7 +57,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-randstringfromcharset
     languages: [go]
@@ -75,7 +71,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-charsetalpha
     languages: [go]
@@ -90,7 +85,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"
 
   - id: use-acctest-charsetalphanum
     languages: [go]
@@ -105,4 +99,3 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"

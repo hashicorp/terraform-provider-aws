@@ -22,7 +22,7 @@ const (
 	lineOffset = 2 // 1 for skipping header line + 1 to translate from 0-based to 1-based index
 )
 
-// DocPrefix tests/column needs to be reworked for compatibility with tfproviderdocs
+// DocPrefix tests/column needs to be reworked for compatibility with the documentation linter
 type DocPrefix struct {
 	HumanFriendly  string
 	DocPrefixRegex []string
@@ -187,7 +187,7 @@ func main() {
 
 	var fileErrs bool
 
-	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
+	// DocPrefix needs to be reworked for compatibility with the documentation linter, in the meantime skip
 	err = checkDocDir("../../../website/docs/r/", docPrefixes)
 	if err != nil {
 		fileErrs = true

@@ -136,6 +136,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/interconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -405,6 +406,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage(ctx),
 		inspector.ServicePackage(ctx),
 		inspector2.ServicePackage(ctx),
+		interconnect.ServicePackage(ctx),
 		internetmonitor.ServicePackage(ctx),
 		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),

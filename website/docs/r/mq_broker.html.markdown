@@ -218,15 +218,18 @@ This resource exports the following attributes in addition to the arguments abov
 * `instances` - List of information about allocated brokers (both active & standby).
     * `instances.0.console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
     * `instances.0.ip_address` - IP Address of the broker.
-    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints referenceable e.g., as `instances.0.endpoints.0`. Known endpoints are returned in the deterministic order below, based on protocol prefix and port number; any additional endpoint types introduced in the future are appended afterward in the order returned by the API.
         * For `ActiveMQ`:
-            * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
-            * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
-            * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
-            * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
-            * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
-        * For `RabbitMQ`:
-            * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.0` - `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
+            * `instances.0.endpoints.1` - `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.2` - `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
+            * `instances.0.endpoints.3` - `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
+            * `instances.0.endpoints.4` - `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+        * For `RabbitMQ` prior to version 4.2:
+            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+        * For `RabbitMQ` 4.2 and later, an additional [Prometheus metrics](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-prometheus-metrics.html) endpoint is appended after the AMQP endpoint to keep `instances.0.endpoints.0` stable across versions:
+            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.1` - `https://broker-id.mq.us-west-2.amazonaws.com:16001`
 * `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

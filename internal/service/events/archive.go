@@ -38,49 +38,51 @@ func resourceArchive() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"event_source_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_key_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
-				),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validArchiveName,
-			},
-			"retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v.(string))
+						return json
+					},
+				},
+				"event_source_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validArchiveName,
+				},
+				"retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

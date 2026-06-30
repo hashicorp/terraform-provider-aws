@@ -24,42 +24,44 @@ func dataSourceExport() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExportRead,
 
-		Schema: map[string]*schema.Schema{
-			"accepts": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"application/json", "application/yaml"}, false),
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"oas30", "swagger"}, false),
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accepts": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice([]string{"application/json", "application/yaml"}, false),
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"oas30", "swagger"}, false),
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

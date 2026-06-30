@@ -38,45 +38,47 @@ func resourceAPIDestination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"http_method": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ApiDestinationHttpMethod](),
-			},
-			"invocation_endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"invocation_rate_limit_per_second": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Default:      300,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"http_method": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ApiDestinationHttpMethod](),
+				},
+				"invocation_endpoint": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"invocation_rate_limit_per_second": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+					Default:      300,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+					),
+				},
+			}
 		},
 	}
 }

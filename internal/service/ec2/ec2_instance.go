@@ -776,7 +776,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			},
 			Deprecated: "network_interface is deprecated. To specify the primary network interface, use primary_network_interface instead. To attach additional network interfaces, use the aws_network_interface_attachment resource.",
 		},
-		"outpost_arn": {
+		names.AttrOutpostARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -3269,7 +3269,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	rd.Set("public_ip", instance.PublicIpAddress)
 	rd.Set("private_dns", instance.PrivateDnsName)
 	rd.Set("private_ip", instance.PrivateIpAddress)
-	rd.Set("outpost_arn", instance.OutpostArn)
+	rd.Set(names.AttrOutpostARN, instance.OutpostArn)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))

@@ -33,33 +33,35 @@ func resourceSMSChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"sender_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"short_code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"promotional_messages_per_second": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"transactional_messages_per_second": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"sender_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"short_code": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"promotional_messages_per_second": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"transactional_messages_per_second": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

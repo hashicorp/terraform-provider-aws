@@ -42,6 +42,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - (**Deprecated**) The codeconnections connection ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

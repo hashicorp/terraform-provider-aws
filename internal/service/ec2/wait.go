@@ -1325,6 +1325,46 @@ func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGa
 	return nil, err
 }
 
+func waitLocalGatewayRouteTableVIFGroupAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
+		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
+		Refresh: statusLocalGatewayRouteTableVIFGroupAssociation(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLocalGatewayRouteTableVIFGroupAssociationDisassociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
+		Target:  []string{},
+		Refresh: statusLocalGatewayRouteTableVIFGroupAssociation(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
 	const (
 		timeout = 5 * time.Minute

@@ -83,7 +83,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 	ctx := acctest.Context(t)
 	var example service.ExampleResourceOutput
 	resourceName := "aws_example_resource.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

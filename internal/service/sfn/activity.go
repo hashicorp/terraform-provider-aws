@@ -38,48 +38,50 @@ func resourceActivity() *schema.Resource {
 		UpdateWithoutTimeout: resourceActivityUpdate,
 		DeleteWithoutTimeout: resourceActivityDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kms_data_key_reuse_period_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(60, 900),
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kms_data_key_reuse_period_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(60, 900),
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 80),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 80),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

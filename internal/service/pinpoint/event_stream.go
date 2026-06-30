@@ -36,25 +36,27 @@ func resourceEventStream() *schema.Resource {
 
 		DeprecationMessage: "AWS End User Messaging event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use aws_pinpointsmsvoicev2_event_destination with a configuration set.",
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:       schema.TypeString,
-				Required:   true,
-				ForceNew:   true,
-				Deprecated: "application_id is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
-			},
-			"destination_stream_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-				Deprecated:   "destination_stream_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-				Deprecated:   "role_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:       schema.TypeString,
+					Required:   true,
+					ForceNew:   true,
+					Deprecated: "application_id is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+				"destination_stream_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "destination_stream_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "role_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+			}
 		},
 	}
 }

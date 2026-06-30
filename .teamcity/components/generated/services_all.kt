@@ -128,6 +128,7 @@ val services = mapOf(
     "imagebuilder" to ServiceSpec("EC2 Image Builder", vpcLock = true),
     "inspector" to ServiceSpec("Inspector Classic"),
     "inspector2" to ServiceSpec("Inspector"),
+    "interconnect" to ServiceSpec("Interconnect"),
     "internetmonitor" to ServiceSpec("CloudWatch Internet Monitor"),
     "invoicing" to ServiceSpec("Invoicing"),
     "iot" to ServiceSpec("IoT Core"),

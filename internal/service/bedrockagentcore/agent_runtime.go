@@ -531,6 +531,8 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	agentRuntimeID := aws.ToString(out.AgentRuntimeId)
 
 	if _, err := waitAgentRuntimeCreated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
 	}

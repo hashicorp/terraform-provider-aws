@@ -40,57 +40,59 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketCorsConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketCorsConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
-			"cors_rule": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_methods": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_origins": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"max_age_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
+				},
+				"cors_rule": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_methods": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_origins": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"max_age_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {

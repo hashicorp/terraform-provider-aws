@@ -9,7 +9,7 @@ on:
       timeout:
         description: The number of minutes to wait for Registry ingest
         required: true
-        default: 120
+        default: '120'
       version:
         description: |
           The version of the provider to test initialization for (without the preceding 'v'). If unset, will use the version pulled from the latest GitHub release
@@ -20,7 +20,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: read
+  contents: read # required for reading release metadata and repository state
 
 jobs:
   registry-check:

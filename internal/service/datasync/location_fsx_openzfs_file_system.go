@@ -63,48 +63,50 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fsx_filesystem_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"nfs": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"mount_options": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
-													Type:             schema.TypeString,
-													Default:          awstypes.NfsVersionAutomatic,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"fsx_filesystem_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"nfs": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"mount_options": {
+											Type:     schema.TypeList,
+											Required: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrVersion: {
+														Type:             schema.TypeString,
+														Default:          awstypes.NfsVersionAutomatic,
+														Optional:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
+													},
 												},
 											},
 										},
@@ -114,31 +116,31 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 						},
 					},
 				},
-			},
-			"security_group_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"security_group_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

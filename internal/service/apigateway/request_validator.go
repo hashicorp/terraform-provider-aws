@@ -47,26 +47,28 @@ func resourceRequestValidator() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"validate_request_body": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"validate_request_parameters": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"validate_request_body": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"validate_request_parameters": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }

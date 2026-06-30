@@ -10,6 +10,8 @@ description: |-
 
 Use the `aws_pinpoint_sms_channel` resource to manage End User Messaging SMS Channels.
 
+~> **NOTE:** AWS has feature frozen the SMS channel of End User Messaging.
+
 ## Example Usage
 
 ```terraform

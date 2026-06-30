@@ -33,16 +33,18 @@ func resourceInviteAccepter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"invitation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"invitation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

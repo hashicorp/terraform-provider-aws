@@ -48,203 +48,205 @@ func resourceNetworkInterface() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachment": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attachment_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"instance": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachment": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attachment_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"instance": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_primary_ipv6": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"ena_srd_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ena_srd_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"ena_srd_udp_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ena_srd_udp_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"enable_primary_ipv6": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"ena_srd_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ena_srd_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"ena_srd_udp_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ena_srd_udp_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"interface_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkInterfaceCreationType](),
-			},
-			"ipv4_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				"interface_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkInterfaceCreationType](),
 				},
-				ConflictsWith: []string{"ipv4_prefix_count"},
-			},
-			"ipv4_prefix_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv4_prefixes"},
-			},
-			"ipv6_address_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
-			},
-			"ipv6_address_list": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
-			},
-			"ipv6_address_list_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv6Address,
+				"ipv4_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"ipv4_prefix_count"},
 				},
-				ConflictsWith: []string{"ipv6_address_count", "ipv6_address_list"},
-			},
-			"ipv6_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				"ipv4_prefix_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv4_prefixes"},
 				},
-				ConflictsWith: []string{"ipv6_prefix_count"},
-			},
-			"ipv6_prefix_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_prefixes"},
-			},
-			"mac_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_ips": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"private_ip_list"},
-			},
-			"private_ips_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"private_ip_list"},
-			},
-			"private_ip_list": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"private_ips", "private_ips_count"},
-			},
-			"private_ip_list_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"source_dest_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"ipv6_address_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
+				},
+				"ipv6_address_list": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
+				},
+				"ipv6_address_list_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.IsIPv6Address,
+					},
+					ConflictsWith: []string{"ipv6_address_count", "ipv6_address_list"},
+				},
+				"ipv6_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"ipv6_prefix_count"},
+				},
+				"ipv6_prefix_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_prefixes"},
+				},
+				"mac_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"private_ips": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"private_ip_list"},
+				},
+				"private_ips_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"private_ip_list"},
+				},
+				"private_ip_list": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"private_ips", "private_ips_count"},
+				},
+				"private_ip_list_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"source_dest_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -615,7 +617,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("outpost_arn", eni.OutpostArn)
+	d.Set(names.AttrOutpostARN, eni.OutpostArn)
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)

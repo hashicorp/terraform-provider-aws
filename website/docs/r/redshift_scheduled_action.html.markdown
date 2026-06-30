@@ -101,8 +101,6 @@ This resource supports the following arguments:
 * `iam_role` - (Required) The IAM role to assume to run the scheduled action.
 * `target_action` - (Required) Target action. Documented below.
 
-### Nested Blocks
-
 #### `target_action`
 
 * `pause_cluster` - (Optional) An action that runs a `PauseCluster` API operation. Documented below.

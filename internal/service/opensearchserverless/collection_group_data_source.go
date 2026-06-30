@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -45,6 +46,11 @@ func (d *collectionGroupDataSource) Schema(ctx context.Context, _ datasource.Sch
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Description: "Description of the collection group.",
+				Computed:    true,
+			},
+			"generation": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.ServerlessGeneration](),
+				Description: "Generation of the collection group.",
 				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
@@ -115,6 +121,7 @@ type collectionGroupDataSourceModel struct {
 	CapacityLimits  fwtypes.ListNestedObjectValueOf[capacityLimitsDataSourceModel] `tfsdk:"capacity_limits"`
 	CreatedDate     timetypes.RFC3339                                              `tfsdk:"created_date"`
 	Description     types.String                                                   `tfsdk:"description"`
+	Generation      fwtypes.StringEnum[awstypes.ServerlessGeneration]              `tfsdk:"generation"`
 	ID              types.String                                                   `tfsdk:"id"`
 	Name            types.String                                                   `tfsdk:"name"`
 	StandbyReplicas types.String                                                   `tfsdk:"standby_replicas"`

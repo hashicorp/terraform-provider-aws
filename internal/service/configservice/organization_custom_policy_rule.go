@@ -46,99 +46,101 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"debug_log_delivery_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"excluded_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+				"debug_log_delivery_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
-			"input_parameters": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringIsJSON,
-				),
-			},
-			"maximum_execution_frequency": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"policy_runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"policy_text": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10000),
-			},
-			"resource_id_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 768),
-			},
-			"resource_types_scope": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Schema{
+				names.AttrDescription: {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 256),
 				},
-			},
-			"tag_key_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"tag_value_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"trigger_types": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 3,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerTypeNoSN](),
+				"excluded_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
+				"input_parameters": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringIsJSON,
+					),
+				},
+				"maximum_execution_frequency": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"policy_runtime": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"policy_text": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 10000),
+				},
+				"resource_id_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 768),
+				},
+				"resource_types_scope": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(0, 256),
+					},
+				},
+				"tag_key_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"tag_value_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"trigger_types": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 3,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerTypeNoSN](),
+					},
+				},
+			}
 		},
 	}
 }

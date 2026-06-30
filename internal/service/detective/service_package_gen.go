@@ -35,37 +35,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceGraph,
+			Factory:  resourceGraph,
 			TypeName: "aws_detective_graph",
 			Name:     "Graph",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "graph_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("graph_arn",
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
-			Factory:  ResourceInvitationAccepter,
+			Factory:  resourceInvitationAccepter,
 			TypeName: "aws_detective_invitation_accepter",
 			Name:     "Invitation Accepter",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_detective_member",
 			Name:     "Member",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
+			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_detective_organization_admin_account",
 			Name:     "Organization Admin Account",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_detective_organization_configuration",
 			Name:     "Organization Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("graph_arn",
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }

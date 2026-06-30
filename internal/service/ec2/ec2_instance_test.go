@@ -331,7 +331,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
 				),
 			},
@@ -1156,7 +1156,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				Config: testAccInstanceConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{

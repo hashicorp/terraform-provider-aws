@@ -45,49 +45,51 @@ func resourceUser() *schema.Resource {
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
-				),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-			},
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			/*
-				The UniqueID could be used as the Id(), but none of the API
-				calls allow specifying a user by the UniqueID: they require the
-				name. The only way to locate a user by UniqueID is to list them
-				all and that would make this provider unnecessarily complex
-				and inefficient. Still, there are other reasons one might want
-				the UniqueID, so we can make it available.
-			*/
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+						"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
+					),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+				},
+				"permissions_boundary": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				/*
+					The UniqueID could be used as the Id(), but none of the API
+					calls allow specifying a user by the UniqueID: they require the
+					name. The only way to locate a user by UniqueID is to list them
+					all and that would make this provider unnecessarily complex
+					and inefficient. Still, there are other reasons one might want
+					the UniqueID, so we can make it available.
+				*/
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -231,6 +233,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get(names.AttrForceDestroy).(bool) {
+		partition := meta.(*conns.AWSClient).Partition(ctx)
+
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string
@@ -246,9 +250,16 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 			{deleteServiceSpecificCredentials, "removing IAM User (%s) Service Specific Credentials: %s"},
 		} {
 			if err := v.f(ctx, conn, d.Id()); err != nil {
-				if !errs.IsA[*awstypes.NoSuchEntityException](err) {
-					return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					continue
 				}
+				// Some credential types (e.g. SSH public keys) are not available in all
+				// partitions (e.g. ISO) so List/Delete actions return errors such as
+				// InvalidAction. There's nothing to clean up, so treat it as a no-op.
+				if errs.IsUnsupportedOperationInPartitionError(partition, err) {
+					continue
+				}
+				return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
 			}
 		}
 	}

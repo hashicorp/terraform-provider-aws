@@ -10,22 +10,7 @@ description: |-
 
 Manages an Amazon OpenSearch Domain.
 
-## Elasticsearch vs. OpenSearch
-
-Amazon OpenSearch Service is the successor to Amazon Elasticsearch Service and supports OpenSearch and legacy Elasticsearch OSS (up to 7.10, the final open source version of the software).
-
-OpenSearch Domain configurations are similar in many ways to Elasticsearch Domain configurations. However, there are important differences including these:
-
-* OpenSearch has `engine_version` while Elasticsearch has `elasticsearch_version`
-* Versions are specified differently - _e.g._, `Elasticsearch_7.10` with OpenSearch vs. `7.10` for Elasticsearch.
-* `instance_type` argument values end in `search` for OpenSearch vs. `elasticsearch` for Elasticsearch (_e.g._, `t2.micro.search` vs. `t2.micro.elasticsearch`).
-* The AWS-managed service-linked role for OpenSearch is called `AWSServiceRoleForAmazonOpenSearchService` instead of `AWSServiceRoleForAmazonElasticsearchService` for Elasticsearch.
-
-There are also some potentially unexpected similarities in configurations:
-
-* ARNs for both are prefaced with `arn:aws:es:`.
-* Both OpenSearch and Elasticsearch use assume role policies that refer to the `Principal` `Service` as `es.amazonaws.com`.
-* IAM policy actions, such as those you will find in `access_policies`, are prefaced with `es:` for both.
+Amazon OpenSearch Service is the successor to Amazon Elasticsearch Service and supports OpenSearch and legacy Elasticsearch OSS (up to 7.10, the final open source version of the software). Notable differences from Elasticsearch: OpenSearch uses `engine_version` (vs `elasticsearch_version`), versions are specified as `Elasticsearch_7.10` (vs `7.10`), `instance_type` values end in `search` (vs `elasticsearch`), and the service-linked role is `AWSServiceRoleForAmazonOpenSearchService`. Similarities: ARNs use `arn:aws:es:`, assume role policies reference `es.amazonaws.com`, and IAM policy actions are prefixed with `es:`.
 
 ## Example Usage
 
@@ -356,7 +341,8 @@ The following arguments are optional:
 #### jwt_options
 
 * `enabled` - (Optional) Whether JWT authentication is enabled.
-* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `jwks_url` - (Optional) URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures. This argument can be specified only with OpenSearch versions 3.3 and later. At least one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures. At least one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`. If both `jwks_url` and `public_key` are specified, `public_key` is ignored.
 * `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
 * `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 

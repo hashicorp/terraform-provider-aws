@@ -36,48 +36,96 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_type_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content_type_profiles": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrContentType: {
-													Type:     schema.TypeString,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_type_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"content_type_profiles": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrContentType: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrFormat: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.Format](),
+													},
+													"profile_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.Format](),
-												},
-												"profile_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+											},
+										},
+									},
+								},
+							},
+							"forward_when_content_type_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"query_arg_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"forward_when_query_arg_profile_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"query_arg_profiles": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"profile_id": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"query_arg": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
@@ -85,55 +133,9 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 								},
 							},
 						},
-						"forward_when_content_type_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"query_arg_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"forward_when_query_arg_profile_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"query_arg_profiles": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									attrItems: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"profile_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"query_arg": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			}
 		},
 	}
 }

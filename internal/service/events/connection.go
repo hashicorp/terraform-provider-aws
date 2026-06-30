@@ -45,21 +45,23 @@ func resourceConnection() *schema.Resource {
 			connectionHttpParameters := func(parent string) *schema.Resource {
 				element := func() *schema.Resource {
 					return &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"is_value_secret": {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-							names.AttrKey: {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							names.AttrValue: {
-								Type:      schema.TypeString,
-								Optional:  true,
-								Sensitive: true,
-							},
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								"is_value_secret": {
+									Type:     schema.TypeBool,
+									Optional: true,
+									Default:  false,
+								},
+								names.AttrKey: {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								names.AttrValue: {
+									Type:      schema.TypeString,
+									Optional:  true,
+									Sensitive: true,
+								},
+							}
 						},
 					}
 				}
@@ -70,25 +72,27 @@ func resourceConnection() *schema.Resource {
 				}
 
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"body": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
-						names.AttrHeader: {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
-						"query_string": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"body": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+							names.AttrHeader: {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+							"query_string": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+						}
 					},
 				}
 			}

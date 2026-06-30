@@ -36,52 +36,54 @@ func resourceEmailChannel() *schema.Resource {
 
 		DeprecationMessage: "AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_* or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:       schema.TypeString,
-				Required:   true,
-				ForceNew:   true,
-				Deprecated: "application_id is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			"configuration_set": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "configuration_set is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			names.AttrEnabled: {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Default:    true,
-				Deprecated: "enabled is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			"from_address": {
-				Type:       schema.TypeString,
-				Required:   true,
-				Deprecated: "from_address is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			"identity": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-				Deprecated:   "identity is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			"orchestration_sending_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				Deprecated:   "orchestration_sending_role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				Deprecated:   "role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
-			"messages_per_second": {
-				Type:       schema.TypeInt,
-				Computed:   true,
-				Deprecated: "messages_per_second is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:       schema.TypeString,
+					Required:   true,
+					ForceNew:   true,
+					Deprecated: "application_id is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				"configuration_set": {
+					Type:       schema.TypeString,
+					Optional:   true,
+					Deprecated: "configuration_set is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				names.AttrEnabled: {
+					Type:       schema.TypeBool,
+					Optional:   true,
+					Default:    true,
+					Deprecated: "enabled is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				"from_address": {
+					Type:       schema.TypeString,
+					Required:   true,
+					Deprecated: "from_address is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				"identity": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "identity is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				"orchestration_sending_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "orchestration_sending_role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "role_arn is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+				"messages_per_second": {
+					Type:       schema.TypeInt,
+					Computed:   true,
+					Deprecated: "messages_per_second is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
+				},
+			}
 		},
 	}
 }

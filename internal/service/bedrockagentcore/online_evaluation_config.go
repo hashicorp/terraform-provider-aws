@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -304,6 +305,8 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 	configID := aws.ToString(out.OnlineEvaluationConfigId)
 
 	if _, err := waitOnlineEvaluationConfigCreated(ctx, conn, configID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("online_evaluation_config_id"), configID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
 		return
 	}

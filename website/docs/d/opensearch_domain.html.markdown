@@ -37,6 +37,7 @@ This data source exports the following attributes in addition to the arguments a
     * `internal_user_database_enabled` - Whether the internal user database is enabled.
     * `jwt_options` - Block for JWT authentication.
         * `enabled` - Whether JWT authentication is enabled.
+        * `jwks_url` - URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures.
         * `public_key` - PEM-encoded public key used to verify JWT signatures.
         * `role_key` - Element of the JWT assertion to use for roles.
         * `subject_key` - Element of the JWT assertion to use for the user name.

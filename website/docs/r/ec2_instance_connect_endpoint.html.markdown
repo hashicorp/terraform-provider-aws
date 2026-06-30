@@ -29,13 +29,6 @@ This resource supports the following arguments:
 * `subnet_id` - (Required) The ID of the subnet in which to create the EC2 Instance Connect Endpoint.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `10m`)
-- `delete` - (Default `10m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -48,6 +41,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that created the EC2 Instance Connect Endpoint.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - The ID of the VPC in which the EC2 Instance Connect Endpoint was created.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
