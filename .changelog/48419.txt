@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `monetize` action to the rule `action` block and add the `monetization_config` argument
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `monetize` action to the rule `action` block and add the `monetization_config` argument
+```
