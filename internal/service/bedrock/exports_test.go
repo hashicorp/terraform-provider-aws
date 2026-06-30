@@ -7,12 +7,14 @@ package bedrock
 var (
 	ResourceCustomModel                         = newCustomModelResource
 	ResourceGuardrail                           = newGuardrailResource
+	ResourceGuardrailResourcePolicy             = newGuardrailResourcePolicyResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 	ResourceInferenceProfile                    = newInferenceProfileResource
 
 	FindCustomModelByID                     = findCustomModelByID
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
+	FindGuardrailResourcePolicyByARN        = findGuardrailResourcePolicyByARN
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
