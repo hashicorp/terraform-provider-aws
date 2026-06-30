@@ -107,7 +107,7 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_updateState(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_updateRuleState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.InsightRule
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
