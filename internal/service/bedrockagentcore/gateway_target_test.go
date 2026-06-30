@@ -441,6 +441,52 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testi
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationInference(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.endpoint", "https://api.anthropic.com"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.operations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.operations.0.path", "/v1/messages"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.operations.0.models.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.operations.0.models.0.model", "anthropic.claude-*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -1612,6 +1658,31 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, endpoint))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationInferenceProvider(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    inference {
+      provider {
+        endpoint = "https://api.anthropic.com"
+
+        operations {
+          path = "/v1/messages"
+
+          models {
+            model = "anthropic.claude-*"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, endpoint string, listingMode awstypes.ListingMode) string {
