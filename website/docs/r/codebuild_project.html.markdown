@@ -587,7 +587,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
-* `id` - Name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
 * `public_project_alias` - The project identifier used with the public build APIs.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [
   `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -616,17 +615,17 @@ resource "aws_codebuild_project" "example" {
 - `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
-import CodeBuild Project using the `name`. For example:
+import CodeBuild Project using the `arn`. For example:
 
 ```terraform
 import {
   to = aws_codebuild_project.name
-  id = "project-name"
+  id = "arn-of-project"
 }
 ```
 
-Using `terraform import`, import CodeBuild Project using the `name`. For example:
+Using `terraform import`, import CodeBuild Project using the `arn`. For example:
 
 ```console
-% terraform import aws_codebuild_project.name project-name
+% terraform import aws_codebuild_project.name arn-of-project
 ```
