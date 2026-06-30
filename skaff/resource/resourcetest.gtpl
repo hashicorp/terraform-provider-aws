@@ -294,7 +294,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, t *testing.T, name s
 		conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
 		_, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
-		return err
+		return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 	}
 }
 
