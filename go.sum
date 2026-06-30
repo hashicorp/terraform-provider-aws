@@ -33,8 +33,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.19.25 h1:TzPVjfUZ1hsKafvYE+DIzKXIik2
 github.com/aws/aws-sdk-go-v2/credentials v1.19.25/go.mod h1:K4hw0buguVvtC74HnVfTRr0LzQQHAWPqJbBU9QGk2Pg=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 h1:r6qZHbT+wxgWO/e9vYNUEtg7lv5+UN3pRqKhLXvnArg=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29/go.mod h1:QRnaRcTVGKPGRy8w78HMQtKUGRYcnMZAANATkeVA6Mo=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.28 h1:ez4y5o7sa0uaRI8BquYOXtZpioUPhbQEh7Igm88oV9U=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.28/go.mod h1:TpmZOrQA12XKEpVypgBGZSQBsm1WUTndCiSnbDsbvug=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.29 h1:YteQL/8ZD9nS/eiLq3Ab9ldHBUvfWorEOufALZOXoXY=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.29/go.mod h1:3hj0jtS3hQmQAAZ0yz/jTA+uTAHfDpwxbISkgZ2E0d0=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 h1:f3vKqSo13fhTYb+JEcXwXefZQE26I1FB5eTSniU67ko=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29/go.mod h1:MzoLFUArKGpGD+ukmPiTPG1X5x4o6M2kq4v2dr1FiEc=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 h1:RdwIf/CuUsvJX3RgJagbOyotl/cxoLY4xviKuE7p2GY=
@@ -305,8 +305,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.6 h1:Bs2O
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.6/go.mod h1:OTctu4cW8t7/TRlTKPLT6akzyOkfceMWhtEHqtYDIQQ=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 h1:DRebniUGZ2MqiiIVmQJ04vIXr918hubdHMnarSLEWyU=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29/go.mod h1:LfRkPCD8YHDM2E5eTkos2UpwYeZnBcVarTa8L59bJHA=
-github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.29 h1:hiME6pBzC7OTl9LMtlyTWBuEl1f4QBcUmFDKC7MLXtc=
-github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.29/go.mod h1:G7RP+uhagpKtKhd1BM9N6JQqjCcGEU47K5lBVZQyRQw=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.30 h1:4HbXxyipSYxexU0juMIpdS05dilL6dbB2VQHxxN2vGU=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.30/go.mod h1:G7RP+uhagpKtKhd1BM9N6JQqjCcGEU47K5lBVZQyRQw=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.27.6 h1:Y9XZWBeffqRiydStiB5M36IOtLpgs8Uj6tIxwPelNVE=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.27.6/go.mod h1:M8+1g+ZE4i0HgLoJLE/kn+d140olYtZ5PCK9QP7L3QI=
 github.com/aws/aws-sdk-go-v2/service/invoicing v1.11.7 h1:0WMtZeGFD3tXXLGoh4xlPm+INt0TceePFPGTD8ovmXA=
@@ -475,8 +475,8 @@ github.com/aws/aws-sdk-go-v2/service/route53resolver v1.46.0 h1:VRL5qGyPAKfuAb00
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.46.0/go.mod h1:1oAVFtzaMbAf+LfMXHhUW30lKLnBWwwNbeBeUXudjCk=
 github.com/aws/aws-sdk-go-v2/service/rum v1.31.8 h1:hW68uTn9VLN5MxAZjnXUQkKXUMVRLY8jeadVAu5Of2Q=
 github.com/aws/aws-sdk-go-v2/service/rum v1.31.8/go.mod h1:NLWYu0ydTBSraHDdTuOpZppcEqPlhVS0Q4Bt14FWeSg=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.104.0 h1:ta8csKy5vN91F3i5gGR85lFV0srBqySEji7Jroes6rE=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.104.0/go.mod h1:77ZAgynvx1txMvDG8gGWoWkO1augYDxkp9JElWFgjQU=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.104.1 h1:yb03KevaOAG5e8suo79Af74vjIQvoeKmjl79WQchLrs=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.104.1/go.mod h1:mreYODw0Y4yv7xeczvqC6vciwFao8lPE9k1l1ulfY6E=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.71.5 h1:sS08pq42o+zTTacHH2bILnVX+56jIDsAmlSRKYwsB/0=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.71.5/go.mod h1:dCGIfoT6n2eToJDHoP380259fiV2AuqujN+YYZHemxo=
 github.com/aws/aws-sdk-go-v2/service/s3files v1.1.1 h1:F7tDq8LUkRLRs9R8lEl4faU8IgIGWqog9oFrqSlz3Jc=
