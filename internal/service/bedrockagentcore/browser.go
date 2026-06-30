@@ -108,62 +108,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
-			names.AttrCertificate: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
-				// SizeAtLeast(1) enforces the SDK's @length(min: 1) only when the
-				// user provides the block; the validator skips null/unknown, so
-				// omitting `certificates` entirely is still valid (block is optional).
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(200),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						names.AttrLocation: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[certificateLocationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"secrets_manager": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												// If another member is added to the union, this will need to be updated.
-												path.MatchRelative().AtParent().AtName("secrets_manager"),
-											),
-										},
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"secret_arn": schema.StringAttribute{
-													CustomType: fwtypes.ARNType,
-													Required:   true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			names.AttrCertificate: certificateSchema(ctx),
 			"enterprise_policy": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[browserEnterprisePolicyModel](ctx),
 				Validators: []validator.List{
@@ -352,6 +297,65 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 				Create: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func certificateSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
+		// SizeAtLeast(1) enforces the SDK's @length(min: 1) only when the
+		// user provides the block; the validator skips null/unknown, so
+		// omitting `certificates` entirely is still valid (block is optional).
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(200),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				names.AttrLocation: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[certificateLocationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"secrets_manager": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+									listvalidator.ExactlyOneOf(
+										// If another member is added to the union, this will need to be updated.
+										path.MatchRelative().AtParent().AtName("secrets_manager"),
+									),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"secret_arn": schema.StringAttribute{
+											CustomType: fwtypes.ARNType,
+											Required:   true,
+											PlanModifiers: []planmodifier.String{
+												stringplanmodifier.RequiresReplace(),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
