@@ -23,12 +23,11 @@ func TestAccEC2CapacityBlockReservationDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_capacity_block_reservation.test"
 
-	var reservationID string
+	reservationID := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CAPACITY_BLOCK_RESERVATION_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			reservationID = acctest.SkipIfEnvVarNotSet(t, "CAPACITY_BLOCK_RESERVATION_ID")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
