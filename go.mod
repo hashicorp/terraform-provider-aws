@@ -260,7 +260,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/sso v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.39.8
-	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.44.3
+	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/swf v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.44.0
