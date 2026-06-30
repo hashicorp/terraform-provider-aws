@@ -3579,6 +3579,16 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		}}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
 		}
+	} else if instance.InstanceLifecycle == awstypes.InstanceLifecycleTypeCapacityBlock {
+		rd.Set("instance_lifecycle", instance.InstanceLifecycle)
+		rd.Set("spot_instance_request_id", nil)
+
+		if err := rd.Set("instance_market_options", []any{map[string]any{
+			"market_type":  awstypes.MarketTypeCapacityBlock,
+			"spot_options": nil,
+		}}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+		}
 	} else {
 		rd.Set("instance_lifecycle", nil)
 		rd.Set("instance_market_options", nil)
