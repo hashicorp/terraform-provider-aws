@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrock_use_case_for_model_access", name="Use Case For Model Access")
@@ -30,12 +29,10 @@ import (
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
-// @Testing(importStateIdAttribute="account_id")
+// @Testing(importStateIdFunc=importStateIDAccountID, importStateIdAttribute="form_data")
 // @Testing(preCheck="testAccPreCheckFoundationModelUseCase")
-// @Testing(importIgnore="form_data")
 // @Testing(checkDestroyNoop=true)
 // @Testing(serialize=true)
-// @Testing(plannableImportAction="NoOp")
 func newUseCaseForModelAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &useCaseForModelAccessResource{}
 
@@ -59,10 +56,6 @@ func (r *useCaseForModelAccessResource) Schema(ctx context.Context, req resource
 			"form_data": schema.StringAttribute{
 				Required:   true,
 				CustomType: jsontypes.NormalizedType{},
-			},
-			// account_id is purely for import purposes to facilitate import (testing), as form_data can contain spaces and doesn't work as identity
-			names.AttrAccountID: schema.StringAttribute{
-				Computed: true,
 			},
 		},
 	}
@@ -99,7 +92,6 @@ func (r *useCaseForModelAccessResource) Create(ctx context.Context, req resource
 			return
 		}
 
-		plan.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 		plan.FormData = jsontypes.NewNormalizedValue(plan.FormData.ValueString())
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
@@ -119,8 +111,6 @@ func (r *useCaseForModelAccessResource) Create(ctx context.Context, req resource
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
-
-	plan.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -153,7 +143,6 @@ func (r *useCaseForModelAccessResource) Read(ctx context.Context, req resource.R
 	}
 
 	state.FormData = jsontypes.NewNormalizedValue(v.ValueString())
-	state.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -175,10 +164,9 @@ func (r *useCaseForModelAccessResource) ImportState(ctx context.Context, req res
 	r.WithImportByIdentity.ImportState(ctx, req, resp)
 
 	// Touch a value to bypass a Framework check
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAccountID), types.StringUnknown())...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("form_data"), types.StringUnknown())...)
 }
 
 type useCaseForModelAccessResourceModel struct {
-	FormData  jsontypes.Normalized `tfsdk:"form_data" autoflex:"-"`
-	AccountID types.String         `tfsdk:"account_id" computed:"true"`
+	FormData jsontypes.Normalized `tfsdk:"form_data" autoflex:"-"`
 }

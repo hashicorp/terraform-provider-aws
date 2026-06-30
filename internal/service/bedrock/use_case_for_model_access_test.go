@@ -38,14 +38,14 @@ func testAccBedrockUseCaseForModelAccess_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUseCaseForModelAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "form_data"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
+				ImportStateIdFunc:                    importStateIDAccountID(resourceName),
+				ImportStateVerifyIdentifierAttribute: "form_data",
 				ImportStateVerifyIgnore:              []string{"form_data"},
 			},
 		},
@@ -73,15 +73,14 @@ func testAccBedrockUseCaseForModelAccess_createImport(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUseCaseForModelAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "form_data"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
-				ImportStateVerifyIgnore:              []string{"form_data"},
+				ImportStateIdFunc:                    importStateIDAccountID(resourceName),
+				ImportStateVerifyIdentifierAttribute: "form_data",
 			},
 		},
 	})
@@ -131,8 +130,7 @@ resource "aws_bedrock_use_case_for_model_access" "test" {
   form_data = data.aws_bedrock_use_case_for_model_access.test.form_data
 }
 
-data "aws_bedrock_use_case_for_model_access" "test" {
-}
+data "aws_bedrock_use_case_for_model_access" "test" {}
 `
 }
 
@@ -155,4 +153,8 @@ func testAccPreCheckFoundationModelUseCaseAlreadyExists(ctx context.Context, t *
 	}
 
 	t.Fatalf("unexpected PreCheck error: %s", err)
+}
+
+func importStateIDAccountID(_ string) resource.ImportStateIdFunc {
+	return acctest.ImportStateIDAccountID(context.Background())
 }

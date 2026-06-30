@@ -65,14 +65,11 @@ func testAccBedrockUseCaseForModelAccess_Identity_basic(t *testing.T) {
 				ConfigDirectory:                      config.StaticDirectory("testdata/UseCaseForModelAccess/basic/"),
 				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
+				ImportStateIdFunc:                    importStateIDAccountID(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
-				ImportStateVerifyIgnore: []string{
-					"form_data",
-				},
+				ImportStateVerifyIdentifierAttribute: "form_data",
 			},
 
 			// Step 3: Import block with Import ID
@@ -82,7 +79,7 @@ func testAccBedrockUseCaseForModelAccess_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
+				ImportStateIdFunc: importStateIDAccountID(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{},
 				},

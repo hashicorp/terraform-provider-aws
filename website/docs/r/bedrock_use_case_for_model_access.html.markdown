@@ -43,9 +43,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `account_id` - AWS Account ID number of the account that contains the Use Case For Model Access.
+This resource exports no additional attributes.
 
 ## Import
 
