@@ -388,6 +388,10 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
+	if batchReadsEnabled() {
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+	}
+
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
 
@@ -395,7 +399,15 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	zoneID := cleanZoneID(d.Get("zone_id").(string))
+	var record *awstypes.ResourceRecordSet
+	var fqdn *string
+	var err error
+	if batchReadsEnabled() {
+		record, fqdn, err = readRecordFromCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	} else {
+		record, fqdn, err = findResourceRecordSetByFourPartKey(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
@@ -693,6 +705,11 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(createRecordImportID(d))
 
+	if batchReadsEnabled() {
+		oldSetID, _ := d.GetChange("set_identifier")
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string)))
+	}
+
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
 
@@ -749,6 +766,10 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
+	}
+
+	if batchReadsEnabled() {
+		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
 	}
 
 	return diags
