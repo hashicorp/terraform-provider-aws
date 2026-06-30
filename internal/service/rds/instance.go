@@ -2459,8 +2459,11 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		needsModify = true
 		input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 
-		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
-		if d.HasChange(names.AttrIOPS) || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage >= threshold).
+		// Do NOT send when crossing the threshold from below: AWS will automatically raise the
+		// baseline IOPS to the higher default (e.g. 12000 for MariaDB/MySQL/Postgres/DB2 at >= 400 GB), and
+		// sending the old stale value would override that.
+		if d.HasChange(names.AttrIOPS) || (!isStorageTypeGP3BelowAllocatedStorageThreshold(d) && !isGP3CrossingThresholdFromBelow(d)) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
@@ -2750,21 +2753,50 @@ func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, 
 }
 
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
+func gp3AllocatedStorageThreshold(engine string) (int, bool) {
+	switch engine {
+	case instanceEngineDB2Advanced, instanceEngineDB2Standard,
+		instanceEngineMariaDB, instanceEngineMySQL, instanceEnginePostgres:
+		// DB2, MariaDB, MySQL, and PostgreSQL: baseline 3,000 iops below 400 GB,
+		// 12,000 iops at 400 GB and above.
+		return 400, true
+	case instanceEngineOracleEnterprise, instanceEngineOracleEnterpriseCDB,
+		instanceEngineOracleStandard2, instanceEngineOracleStandard2CDB:
+		// Oracle: baseline 3,000 iops below 200 GB, 12,000 iops at 200 GB and above.
+		return 200, true
+	}
+	// SQL Server and all other engines have no iops threshold (flat 3,000 iops for gp3).
+	return 0, false
+}
+
+// isStorageTypeGP3BelowAllocatedStorageThreshold returns true when the storage type is gp3
+// and the (new/desired) allocated storage is below the engine-specific threshold.
 func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
 	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
 		return false
 	}
-
-	switch allocatedStorage, engine := d.Get(names.AttrAllocatedStorage).(int), d.Get(names.AttrEngine).(string); engine {
-	case instanceEngineDB2Advanced, instanceEngineDB2Standard:
-		return allocatedStorage < 100
-	case instanceEngineMariaDB, instanceEngineMySQL, instanceEnginePostgres:
-		return allocatedStorage < 400
-	case instanceEngineOracleEnterprise, instanceEngineOracleEnterpriseCDB, instanceEngineOracleStandard2, instanceEngineOracleStandard2CDB:
-		return allocatedStorage < 200
+	threshold, ok := gp3AllocatedStorageThreshold(d.Get(names.AttrEngine).(string))
+	if !ok {
+		return false
 	}
+	return d.Get(names.AttrAllocatedStorage).(int) < threshold
+}
 
-	return false
+// isGP3CrossingThresholdFromBelow returns true when allocated_storage transitions from strictly
+// below the gp3 threshold to at-or-above it (without the user explicitly changing iops).
+// In this case AWS automatically sets the higher baseline iops, so the provider must not
+// override it by sending the stale lower value from the state.
+func isGP3CrossingThresholdFromBelow(d *schema.ResourceData) bool {
+	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
+		return false
+	}
+	threshold, ok := gp3AllocatedStorageThreshold(d.Get(names.AttrEngine).(string))
+	if !ok {
+		return false
+	}
+	oldStorage, _ := d.GetChange(names.AttrAllocatedStorage)
+	newStorage := d.Get(names.AttrAllocatedStorage).(int)
+	return oldStorage.(int) < threshold && newStorage >= threshold
 }
 
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *types.DBInstance) {
