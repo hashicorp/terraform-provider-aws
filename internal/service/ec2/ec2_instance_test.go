@@ -7053,43 +7053,43 @@ func TestAccEC2Instance_spot_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
- 		// No subnet_id specified requires default VPC with default subnets.
- 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
- 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
- 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
- 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
- 		Steps: []resource.TestStep{
- 			{
- 				Config: testAccInstanceConfig_spot_basic(rName),
- 				Check: resource.ComposeTestCheckFunc(
- 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
- 				),
- 				ConfigStateChecks: []statecheck.StateCheck{
- 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
- 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
- 						knownvalue.ObjectExact(map[string]knownvalue.Check{
- 							"market_type": tfknownvalue.StringExact(awstypes.MarketTypeSpot),
- 							"spot_options": knownvalue.ListExact([]knownvalue.Check{
- 								knownvalue.ObjectExact(map[string]knownvalue.Check{
- 									"instance_interruption_behavior": tfknownvalue.StringExact(awstypes.SpotInstanceInterruptionBehaviorTerminate),
- 									"max_price":                      knownvalue.NotNull(),
- 									"spot_instance_type":             tfknownvalue.StringExact(awstypes.SpotInstanceTypeOneTime),
- 									"valid_until":                    tfknownvalue.StringLegacyNull(),
- 								}),
- 							}),
- 						}),
- 					})),
- 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
- 				},
- 			},
- 			{
- 				ResourceName:            resourceName,
- 				ImportState:             true,
- 				ImportStateVerify:       true,
- 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
- 			},
- 		},
- 	})
+		// No subnet_id specified requires default VPC with default subnets.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_spot_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"market_type": tfknownvalue.StringExact(awstypes.MarketTypeSpot),
+							"spot_options": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"instance_interruption_behavior": tfknownvalue.StringExact(awstypes.SpotInstanceInterruptionBehaviorTerminate),
+									"max_price":                      knownvalue.NotNull(),
+									"spot_instance_type":             tfknownvalue.StringExact(awstypes.SpotInstanceTypeOneTime),
+									"valid_until":                    tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+		},
+	})
 }
 
 func TestAccEC2Instance_spot_instanceMarketOptions(t *testing.T) {
