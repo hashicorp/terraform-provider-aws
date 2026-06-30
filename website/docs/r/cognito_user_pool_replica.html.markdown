@@ -14,8 +14,72 @@ Manages a replica of a Cognito User Pool in an additional AWS Region for multi-R
 
 ```terraform
 resource "aws_kms_key" "example" {
-  description  = "cognito-multi-region"
-  multi_region = true
+  description             = "cognito-multi-region"
+  deletion_window_in_days = 7
+  multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+# The KMS key must be replicated to the target region before creating the replica user pool.
+resource "aws_kms_replica_key" "example" {
+  provider        = aws.replica
+  primary_key_arn = aws_kms_key.example.arn
+  description     = "cognito-multi-region replica"
+
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_cognito_user_pool" "example" {
@@ -31,6 +95,8 @@ resource "aws_cognito_user_pool_replica" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
   region_name  = "us-west-2" # must differ from the primary user pool's Region
   status       = "ACTIVE"
+
+  depends_on = [aws_kms_replica_key.example]
 }
 ```
 
