@@ -17,10 +17,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkContributorInsightRuleARN(ruleName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNExact("cloudwatch", "insight-rule/"+ruleName)
+}
 
 func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -49,6 +54,13 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), checkContributorInsightRuleARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_definition"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_state"), knownvalue.StringExact("ENABLED")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
