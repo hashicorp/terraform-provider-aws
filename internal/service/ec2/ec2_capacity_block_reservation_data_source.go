@@ -164,7 +164,7 @@ func (d *capacityBlockReservationDataSource) Read(ctx context.Context, request d
 	if response.Diagnostics.HasError() {
 		return
 	}
-	
+
 	setTagsOut(ctx, output.Tags)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
