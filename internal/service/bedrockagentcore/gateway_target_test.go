@@ -1676,6 +1676,10 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
 
+  credential_provider_configuration {
+%[5]s
+  }
+
   target_configuration {
     mcp {
       mcp_server {
@@ -1691,7 +1695,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     }
   }
 }
-`, rName, endpoint, resourcePriority, toolSchema))
+`, rName, endpoint, resourcePriority, toolSchema, testAccCredentialProvider_oauth()))
 }
 
 func testAccSchema_primitive() string {
