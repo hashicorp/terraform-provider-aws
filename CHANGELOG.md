@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * data-source/aws_api_gateway_rest_api: Add `security_policy` and `endpoint_access_mode` attributes ([#47973](https://github.com/hashicorp/terraform-provider-aws/issues/47973))
 * data-source/aws_msk_cluster: Add `customer_action_status` attribute ([#48536](https://github.com/hashicorp/terraform-provider-aws/issues/48536))
 * resource/aws_api_gateway_rest_api: Add `security_policy` and `endpoint_access_mode` arguments ([#47973](https://github.com/hashicorp/terraform-provider-aws/issues/47973))
+* resource/aws_default_vpc: Add resource identity support ([#47590](https://github.com/hashicorp/terraform-provider-aws/issues/47590))
 * resource/aws_msk_cluster: Add `customer_action_status` attribute ([#48536](https://github.com/hashicorp/terraform-provider-aws/issues/48536))
 * resource/aws_securityhub_automation_rule: Deprecates `id` in favor of `arn` ([#48636](https://github.com/hashicorp/terraform-provider-aws/issues/48636))
 * resource/aws_ssmcontacts_rotation: Deprecates `id` in favor of `arn` ([#48636](https://github.com/hashicorp/terraform-provider-aws/issues/48636))
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_codeartifact_authorization_token: Mark `authorization_token` as sensitive ([#48577](https://github.com/hashicorp/terraform-provider-aws/issues/48577))
+* resource/aws_default_vpc: Fix provider panic (nil pointer dereference) when importing via an `import` block or `terraform import` ([#47590](https://github.com/hashicorp/terraform-provider-aws/issues/47590))
 * resource/aws_ecs_capacity_provider: Return the underlying error immediately instead of timing out after 20 minutes when deleting a capacity provider that is still associated with a cluster ([#48156](https://github.com/hashicorp/terraform-provider-aws/issues/48156))
 * resource/aws_iam_user: Handle `InvalidAction` errors in partitions where access key cleanup operations are not supported ([#48473](https://github.com/hashicorp/terraform-provider-aws/issues/48473))
 * resource/aws_lightsail_bucket_access_key: Mark `secret_access_key` as sensitive ([#48577](https://github.com/hashicorp/terraform-provider-aws/issues/48577))
