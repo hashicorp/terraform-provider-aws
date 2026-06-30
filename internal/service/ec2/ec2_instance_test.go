@@ -6995,8 +6995,8 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 
-	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
-	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
+	reservationID := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID")
+	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_INSTANCE_TYPE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -7005,7 +7005,7 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(startDate, endDate),
+				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
@@ -7026,7 +7026,13 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 						"aws_ec2_capacity_block_reservation.test", tfjsonpath.New("id"),
 						compare.ValuesSame(),
 					),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringLegacyNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact(string(awstypes.InstanceLifecycleTypeCapacityBlock))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"market_type":  tfknownvalue.StringExact(string(awstypes.MarketTypeCapacityBlock)),
+							"spot_options": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
 				},
 			},
@@ -10983,11 +10989,11 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, awstypes.CapacityReservationInstancePlatformLinuxUnix))
 }
 
-func testAccInstanceConfig_capacityReservation_capacityBlocksForML(startDate, endDate string) string {
+func testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.AvailableEC2InstanceTypeForRegion("p5.4xlarge"),
+		acctest.AvailableEC2InstanceTypeForRegion(instanceType),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -10995,24 +11001,19 @@ resource "aws_instance" "test" {
 
   capacity_reservation_specification {
     capacity_reservation_target {
-      capacity_reservation_id = aws_ec2_capacity_block_reservation.test.id
+      capacity_reservation_id = data.aws_ec2_capacity_block_reservation.test.id
     }
+  }
+
+  instance_market_options {
+    market_type = "capacity-block"
   }
 }
 
-resource "aws_ec2_capacity_block_reservation" "test" {
-  capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
-  instance_platform          = "Linux/UNIX"
+data "aws_ec2_capacity_block_reservation" "test" {
+  id = %[1]q
 }
-
-data "aws_ec2_capacity_block_offering" "test" {
-  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-  capacity_duration_hours = 24
-  instance_count    = 1
-  start_date_range        = %[1]q
-  end_date_range          = %[2]q
-}
-`, startDate, endDate))
+`, reservationID, instanceType))
 }
 
 func testAccInstanceConfig_templateBasic(rName string) string {
