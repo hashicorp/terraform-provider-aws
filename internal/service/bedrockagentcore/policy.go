@@ -190,7 +190,7 @@ func (r *policyResource) Create(ctx context.Context, request resource.CreateRequ
 
 	out, err := conn.CreatePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
