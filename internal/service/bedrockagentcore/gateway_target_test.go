@@ -2366,27 +2366,31 @@ resource "aws_route_table_association" "test" {
 `, rName, subnetCount))
 }
 
+// skipIfKnowledgeBaseIDEnvVarNotSet skips the test unless
+// TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID is set to the ID of an ACTIVE Bedrock
+// knowledge base in the test account/region. The connector "bedrock-knowledge-
+// bases" requires entitlement plus a real KB the gateway role can call
+// bedrock:Retrieve on — there is no offline way to fake either, so the live
+// connector test is gated behind this env var (mirroring the OSS-collection
+// and Kendra-index gating in internal/service/bedrockagent/knowledge_base_test.go).
+func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+	return acctest.SkipIfEnvVarNotSet(t, "TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID")
+}
+
 // TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector exercises
-// the connector MCP target with a FULL config (source + configurations +
-// parameter_values + parameter_overrides + enabled) at plan time only.
-//
-// Live-create acceptance is PENDING an account that is ENTITLED to a connector
-// integration. Probing CreateGatewayTarget directly against the API shows:
-//   - connectorId "bedrock-knowledge-bases" is a recognized id, but in an
-//     unentitled account every configuration resolves empty and the call fails
-//     with "Connector configurations must not be empty" (and a source-only
-//     config fails with "Connector configurations must not be null");
-//   - an unknown id (e.g. "knowledge-bases") fails with "Connector integration
-//     <id> is not available for this account".
-//
-// There is no list/describe API for the connector catalog, so a reviewer with
-// an entitled account should set connectorId + a real tool name and drop
-// PlanOnly to convert this to a live create. Plan-only still walks the schema
-// and the Expand path through `connectorConfigurationModel.Expand`, which
-// carries the JSON -> smithy document conversion for `parameter_values`.
+// the connector MCP target with a LIVE create against the "bedrock-knowledge-
+// bases" connector and a real Bedrock knowledge base. The KB id is supplied
+// via the TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID environment variable; the test is
+// skipped when it is unset. The gateway execution role is granted
+// bedrock:Retrieve on the KB ARN — without it, CreateGatewayTarget fails with
+// "Insufficient permissions to validate the specified resource."
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
 	ctx := acctest.Context(t)
+	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -2395,11 +2399,30 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testin
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "Retrieve"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
 		},
 	})
@@ -2466,4 +2489,63 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, connectorID, toolName))
+}
+
+// testAccGatewayTargetConfig_targetConfigurationConnectorLive builds a config
+// that creates a real connector gateway target backed by a pre-provisioned
+// Bedrock knowledge base. It grants the gateway execution role bedrock:Retrieve
+// on the KB ARN (required for CreateGatewayTarget to validate the resource)
+// and uses the GATEWAY_IAM_ROLE credential provider per the API contract for
+// the bedrock-knowledge-bases connector.
+//
+// testAccGatewayTargetConfig_base already declares data.aws_partition.current
+// and data.aws_region.current, so this overlay only adds the caller-identity
+// data source and the Retrieve policy.
+func testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role_policy" "kb_retrieve" {
+  name = "%[1]s-kb-retrieve"
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "bedrock:Retrieve"
+      Resource = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/%[2]s"
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = "bedrock-knowledge-bases"
+        }
+
+        configurations {
+          name = "Retrieve"
+
+          parameter_values = jsonencode({
+            knowledgeBaseId = %[2]q
+          })
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.kb_retrieve]
+}
+`, rName, kbID))
 }
