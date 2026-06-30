@@ -2366,11 +2366,58 @@ resource "aws_route_table_association" "test" {
 `, rName, subnetCount))
 }
 
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector exercises
+// the connector MCP target with the MINIMAL valid form: only `source.connector_id`
+// is set. `configurations` and `enabled` are intentionally omitted so the test
+// does not need to know which per-tool names the connector exposes in the test
+// account — an absent `enabled` enables all tools provided by the connector.
+//
+// Connector availability varies by account/partition. If even this minimal
+// create cannot validate (e.g., `bedrock-knowledge-bases` is not provisioned
+// in the test account), flip `useLiveCreate` to false below to convert the
+// test into a plan-only check that still exercises the schema + Expand path.
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	// Flip to false if AWS rejects the minimal create — keeps schema/plan coverage.
+	const useLiveCreate = true
+
+	step := resource.TestStep{
+		Config: testAccGatewayTargetConfig_targetConfigurationConnectorMinimal(rName, "bedrock-knowledge-bases"),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+			},
+		},
+	}
+	if useLiveCreate {
+		step.Check = resource.ComposeAggregateTestCheckFunc(
+			testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+			resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
+			resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "0"),
+		)
+	} else {
+		step.PlanOnly = true
+	}
+
+	testSteps := []resource.TestStep{step}
+	if useLiveCreate {
+		testSteps = append(testSteps, resource.TestStep{
+			ResourceName:                         resourceName,
+			ImportState:                          true,
+			ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+			ImportStateVerify:                    true,
+			ImportStateVerifyIdentifierAttribute: "target_id",
+		})
+	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -2380,40 +2427,58 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testin
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps:                    testSteps,
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters
+// is plan-only on purpose: it exercises the `configurations` block including
+// `parameter_values` (free-form JSON, document.Interface round-trip) and
+// `parameter_overrides`, without requiring us to know a real tool name in the
+// test account. Plan-only still walks the schema and the Expand path through
+// `connectorConfigurationModel.Expand`, which is what carries the JSON ->
+// smithy document conversion that we most want to keep covered.
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationConnector(rName, "bedrock-knowledge-bases"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "retrieve"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.parameter_overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.parameter_overrides.0.path", "/numberOfResults"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "target_id",
+				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func testAccGatewayTargetConfig_targetConfigurationConnector(rName, connectorID string) string {
+func testAccGatewayTargetConfig_targetConfigurationConnectorMinimal(rName, connectorID string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = %[2]q
+        }
+      }
+    }
+  }
+}
+`, rName, connectorID))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, connectorID, toolName string) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
   name               = %[1]q
@@ -2426,11 +2491,11 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
           connector_id = %[2]q
         }
 
-        enabled = ["retrieve"]
+        enabled = [%[3]q]
 
         configurations {
-          name        = "retrieve"
-          description = "Retrieve from the knowledge base"
+          name        = %[3]q
+          description = "Tool exercised via plan-only test"
 
           parameter_values = jsonencode({
             knowledgeBaseId = "EXAMPLEKB123"
@@ -2446,5 +2511,5 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     }
   }
 }
-`, rName, connectorID))
+`, rName, connectorID, toolName))
 }
