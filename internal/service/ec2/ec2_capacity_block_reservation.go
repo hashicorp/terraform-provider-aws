@@ -238,7 +238,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenCapacityReservation(ctx context.Context, cr *awstypes.CapacityReservation, data *capacityBlockReservationReservationModel) diag.Diagnostics {
+func flattenCapacityReservation(ctx context.Context, cr *awstypes.CapacityReservation, data *capacityBlockReservationReservationModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	diags := fwflex.Flatten(ctx, cr, data, fwflex.WithFieldNamePrefix("CapacityReservation"))
 	data.CreatedDate = fwflex.TimeToFramework(ctx, cr.CreateDate)
 	data.InstanceCount = fwflex.Int32ToFrameworkInt64(ctx, cr.TotalInstanceCount)
