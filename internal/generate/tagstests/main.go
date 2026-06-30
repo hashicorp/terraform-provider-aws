@@ -683,7 +683,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
-				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
 				return
 			}
 			if d.HasInherentRegionIdentity() {
@@ -698,6 +698,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			v.taggedResources = append(v.taggedResources, d)
+		}
+	} else {
+		if skip {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=false) specified, but resource type doesn't support tags", v.packageName, v.functionName))
+			return
 		}
 	}
 
