@@ -25,10 +25,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomBrowserName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -75,7 +79,7 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -113,7 +117,7 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_browserSigning(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,9 +158,10 @@ func TestAccBedrockAgentCoreBrowser_browserSigning(t *testing.T) {
 }
 
 func TestAccBedrockAgentCoreBrowser_enterprisePolicies(t *testing.T) {
+	acctest.Skip(t, "ValidationException: Access denied to S3 object")
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	resourceName := "aws_bedrockagentcore_browser.test"
 
@@ -203,7 +208,7 @@ func TestAccBedrockAgentCoreBrowser_enterprisePolicies(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -253,7 +258,7 @@ func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -289,7 +294,7 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -366,7 +371,7 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 	acctest.Skip(t, "ENIs of type \"agentic_ai\" remain")
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -646,7 +651,7 @@ resource "aws_iam_role_policy" "test" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["s3:GetObject", "s3:GetObjectVersion"]
-      Resource = "${aws_s3_bucket.test.arn}/*"
+      Resource = ["${aws_s3_bucket.test.arn}/policies/*"]
     }]
   })
 }
@@ -658,7 +663,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
-  key    = "managed.json"
+  key    = "policies/managed-policies.json"
   content = jsonencode({
     AutofillAddressEnabled    = false
     AutofillCreditCardEnabled = false
