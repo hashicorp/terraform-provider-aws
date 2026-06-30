@@ -6990,6 +6990,11 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	})
 }
 
+// Capacity Blocks must be purchased upfront with real money and only exist
+// for limited GPU/ML instance types, so the acceptance tests below assume an
+// existing pre-provisioned Capacity Block reservation discoverable via the
+// TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID environment variable. Tests are skipped when
+// this and TF_AWS_EC2_CAPACITY_BLOCK_INSTANCE_TYPE are not set.
 func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -7037,6 +7042,14 @@ func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
