@@ -11,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -25,7 +27,7 @@ import (
 // @FrameworkDataSource("aws_ec2_capacity_block_reservation", name="Capacity Block Reservation")
 // @Tags
 // @Testing(tagsTest=false)
-func newCapacityBlockReservationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newCapacityBlockReservationDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &capacityBlockReservationDataSource{}, nil
 }
 
@@ -168,6 +170,15 @@ func (d *capacityBlockReservationDataSource) Read(ctx context.Context, request d
 	setTagsOut(ctx, output.Tags)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (d *capacityBlockReservationDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.AtLeastOneOf(
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot(names.AttrFilter),
+		),
+	}
 }
 
 type capacityBlockReservationDataSourceModel struct {
