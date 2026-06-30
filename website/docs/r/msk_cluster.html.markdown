@@ -229,6 +229,7 @@ This resource supports the following arguments:
 
 ### broker_node_group_info connectivity_info Argument Reference
 
+* `network_type` - (Optional) Network type of the cluster. Valid values are: `IPV4` or `DUAL`. Default value: `IPV4`. Only updating from `IPV4` to `DUAL` is allowed.
 * `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
 * `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
 
@@ -360,6 +361,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `cluster_uuid` - UUID of the MSK cluster, for use in IAM policies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
+* `customer_action_status` - Status indicating whether Amazon MSK requires customer action for the cluster. Valid values are `NONE`, `ACTION_RECOMMENDED`, and `CRITICAL_ACTION_REQUIRED`.
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
@@ -382,7 +384,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_msk_cluster.example
   identity = {
-    "arn" = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+    arn = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
   }
 }
 

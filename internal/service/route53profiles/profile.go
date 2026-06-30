@@ -31,7 +31,7 @@ import (
 )
 
 // @FrameworkResource("aws_route53profiles_profile", name="Profile")
-// @Tags("identifierAttribute=arn")
+// @Tags(identifierAttribute="arn")
 func newProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &profileResource{}
 

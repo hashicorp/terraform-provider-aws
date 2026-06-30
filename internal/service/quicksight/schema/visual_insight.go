@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,8 +19,8 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
-				"visual_id":           idSchema(),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
+				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
 					Type:     schema.TypeList,
@@ -44,7 +45,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id":           idSchema(),
 													"time":                     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"custom_seasonality_value": intBetweenSchema(attrOptional, 1, 180),
+													"custom_seasonality_value": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 180),
 													"lower_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -53,10 +54,10 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"periods_backward":    intBetweenSchema(attrOptional, 0, 1000),
-													"periods_forward":     intBetweenSchema(attrOptional, 1, 1000),
-													"prediction_interval": intBetweenSchema(attrOptional, 50, 95),
-													"seasonality":         stringEnumSchema[awstypes.ForecastComputationSeasonality](attrRequired),
+													"periods_backward":    sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 0, 1000),
+													"periods_forward":     sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 1000),
+													"prediction_interval": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 50, 95),
+													"seasonality":         sdkschema.StringEnumSchema[awstypes.ForecastComputationSeasonality](sdkschema.AttrRequired),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -78,7 +79,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_size":   intBetweenSchema(attrOptional, 2, 52),
+													"period_size":   sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 2, 52),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -92,7 +93,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id": idSchema(),
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringEnumSchema[awstypes.MaximumMinimumComputationType](attrRequired),
+													names.AttrType:   sdkschema.StringEnumSchema[awstypes.MaximumMinimumComputationType](sdkschema.AttrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -149,7 +150,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_time_granularity": stringEnumSchema[awstypes.TimeGranularity](attrRequired),
+													"period_time_granularity": sdkschema.StringEnumSchema[awstypes.TimeGranularity](sdkschema.AttrRequired),
 													names.AttrValue:           measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -164,9 +165,9 @@ func insightVisualSchema() *schema.Schema {
 													"computation_id": idSchema(),
 													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrType:   stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
-													"mover_size":     intBetweenSchema(attrOptional, 1, 20),
-													"sort_order":     stringEnumSchema[awstypes.TopBottomSortOrder](attrRequired),
+													names.AttrType:   sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](sdkschema.AttrRequired),
+													"mover_size":     sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 20),
+													"sort_order":     sdkschema.StringEnumSchema[awstypes.TopBottomSortOrder](sdkschema.AttrRequired),
 													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -188,8 +189,8 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"result_size":   intBetweenSchema(attrOptional, 1, 20),
-													names.AttrType:  stringEnumSchema[awstypes.TopBottomComputationType](attrRequired),
+													"result_size":   sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 20),
+													names.AttrType:  sdkschema.StringEnumSchema[awstypes.TopBottomComputationType](sdkschema.AttrRequired),
 													names.AttrValue: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -236,15 +237,191 @@ func insightVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"narrative": stringLenBetweenSchema(attrRequired, 1, 150000),
+										"narrative": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 150000),
 									},
 								},
 							},
 						},
 					},
 				},
-				"subtitle": visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrSubtitle: visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:    visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func insightVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				attrVisualID:          idDataSourceSchema(),
+				names.AttrActions:     visualCustomActionsDataSourceSchema(),
+				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"computation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Computation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"forecast": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ForecastComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id":           idDataSourceSchema(),
+													"time":                     dimensionFieldDataSourceSchema(),
+													"custom_seasonality_value": intComputedOnly(),
+													"lower_boundary":           floatComputedOnly(),
+													names.AttrName:             stringComputedOnly(),
+													"periods_backward":         intComputedOnly(),
+													"periods_forward":          intComputedOnly(),
+													"prediction_interval":      intComputedOnly(),
+													"seasonality":              sdkschema.StringEnumDataSourceSchema[awstypes.ForecastComputationSeasonality](),
+													"upper_boundary":           floatComputedOnly(),
+													names.AttrValue:            measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"growth_rate": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GrowthRateComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"time":           dimensionFieldDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+													"period_size":    intComputedOnly(),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"maximum_minimum": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MaximumMinimumComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"time":           dimensionFieldDataSourceSchema(),
+													names.AttrType:   sdkschema.StringEnumDataSourceSchema[awstypes.MaximumMinimumComputationType](),
+													names.AttrName:   stringComputedOnly(),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"metric_comparison": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MetricComparisonComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"time":           dimensionFieldDataSourceSchema(),
+													"from_value":     measureFieldDataSourceSchema(),
+													"target_value":   measureFieldDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+												},
+											},
+										},
+										"period_over_period": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PeriodOverPeriodComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"time":           dimensionFieldDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"period_to_date": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PeriodToDateComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id":          idDataSourceSchema(),
+													"time":                    dimensionFieldDataSourceSchema(),
+													names.AttrName:            stringComputedOnly(),
+													"period_time_granularity": sdkschema.StringEnumDataSourceSchema[awstypes.TimeGranularity](),
+													names.AttrValue:           measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"top_bottom_movers": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TopBottomMoversComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"category":       dimensionFieldDataSourceSchema(),
+													"time":           dimensionFieldDataSourceSchema(),
+													names.AttrType:   sdkschema.StringEnumDataSourceSchema[awstypes.TopBottomComputationType](),
+													"mover_size":     intComputedOnly(),
+													"sort_order":     sdkschema.StringEnumDataSourceSchema[awstypes.TopBottomSortOrder](),
+													names.AttrName:   stringComputedOnly(),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"top_bottom_ranked": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TopBottomRankedComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													"category":       dimensionFieldDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+													"result_size":    intComputedOnly(),
+													names.AttrType:   sdkschema.StringEnumDataSourceSchema[awstypes.TopBottomComputationType](),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"total_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TotalAggregationComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"computation_id": idDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+													names.AttrValue:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+										"unique_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UniqueValuesComputation.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":       dimensionFieldDataSourceSchema(),
+													"computation_id": idDataSourceSchema(),
+													names.AttrName:   stringComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"custom_narrative": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomNarrativeOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"narrative": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				attrSubtitle: visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:    visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -265,7 +442,7 @@ func expandInsightVisual(tfList []any) *awstypes.InsightVisual {
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -277,7 +454,7 @@ func expandInsightVisual(tfList []any) *awstypes.InsightVisual {
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -721,7 +898,7 @@ func flattenInsightVisual(apiObject *awstypes.InsightVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id":           aws.ToString(apiObject.VisualId),
+		attrVisualID:          aws.ToString(apiObject.VisualId),
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 	}
 
@@ -735,7 +912,7 @@ func flattenInsightVisual(apiObject *awstypes.InsightVisual) []any {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}

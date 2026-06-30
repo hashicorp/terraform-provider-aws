@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_s3files_access_point
+```
+
+```release-note:new-list-resource
+aws_s3files_access_point
+```
+
+```release-note:new-data-source
+aws_s3files_access_point
+```

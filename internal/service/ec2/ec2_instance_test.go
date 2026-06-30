@@ -252,6 +252,14 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -332,7 +340,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "instance/{id}"),
 				),
 			},
@@ -1157,7 +1165,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				Config: testAccInstanceConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2495,6 +2503,84 @@ func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+// TestAccEC2Instance_tagsIgnoreChangesEmptyValue verifies that a tag listed in
+// lifecycle.ignore_changes is not overwritten when an unrelated tag in the
+// same map is updated to an empty string.
+//
+// See https://github.com/hashicorp/terraform-provider-aws/issues/48007 for the
+// root-cause analysis. In short: when a tag value is set to "", `setTagsAll`
+// marks `tags_all` as Computed, which causes `tagsResourceCRUDInterceptor`'s
+// `Finally/Update` branch to run. That branch reads desired tags from
+// `d.GetRawConfig()` (the literal user config) instead of the plan, bypassing
+// `ignore_changes` and overwriting any externally-modified tag value.
+func TestAccEC2Instance_tagsIgnoreChangesEmptyValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckHasDefaultVPCDefaultSubnets(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Initial apply: instance with stagingState tag covered by ignore_changes.
+				Config: testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, "InitialTag"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.Step", "InitialTag"),
+					resource.TestCheckResourceAttr(resourceName, "tags.stagingState", "trigger"),
+				),
+			},
+			{
+				// Sanity case: changing Step to a non-empty value preserves the
+				// out-of-band stagingState change. ignore_changes works here.
+				PreConfig: func() {
+					if err := overrideInstanceTag(ctx, t, &v, "stagingState", "CHANGED"); err != nil {
+						t.Fatalf("setting external tag: %s", err)
+					}
+				},
+				Config: testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, "UpdatedTag"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.Step", "UpdatedTag"),
+					testAccCheckInstanceAPITagValue(ctx, t, &v, "stagingState", "CHANGED"),
+				),
+			},
+			{
+				// Bug case: changing Step to an empty string must not overwrite
+				// the externally modified stagingState tag.
+				PreConfig: func() {
+					if err := overrideInstanceTag(ctx, t, &v, "stagingState", "CHANGED"); err != nil {
+						t.Fatalf("setting external tag: %s", err)
+					}
+				},
+				Config: testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceAPITagValue(ctx, t, &v, "Step", ""),
+					testAccCheckInstanceAPITagValue(ctx, t, &v, "stagingState", "CHANGED"),
+				),
 			},
 		},
 	})
@@ -7191,6 +7277,55 @@ func driftTags(ctx context.Context, t *testing.T, instance *awstypes.Instance) r
 	}
 }
 
+// overrideInstanceTag simulates an out-of-band modification of a single tag
+// on the EC2 instance, mimicking a change made directly via the AWS console
+// or another tool.
+func overrideInstanceTag(ctx context.Context, t *testing.T, instance *awstypes.Instance, key, value string) error {
+	t.Helper()
+
+	if instance == nil || instance.InstanceId == nil {
+		return fmt.Errorf("instance is nil or has no ID")
+	}
+
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+	return tfec2.CreateTags(ctx, conn, aws.ToString(instance.InstanceId), []awstypes.Tag{
+		{
+			Key:   aws.String(key),
+			Value: aws.String(value),
+		},
+	})
+}
+
+// testAccCheckInstanceAPITagValue verifies that an EC2 instance has the
+// expected tag value as reported by the AWS API. This bypasses the Terraform
+// state to detect cases where the provider has overwritten an externally
+// modified tag despite ignore_changes.
+func testAccCheckInstanceAPITagValue(ctx context.Context, t *testing.T, instance *awstypes.Instance, key, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if instance == nil || instance.InstanceId == nil {
+			return fmt.Errorf("instance is nil or has no ID")
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		output, err := tfec2.FindInstanceByID(ctx, conn, aws.ToString(instance.InstanceId))
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
+		}
+
+		for _, tag := range output.Tags {
+			if aws.ToString(tag.Key) == key {
+				got := aws.ToString(tag.Value)
+				if got != want {
+					return fmt.Errorf("EC2 Instance (%s) tag %q: got %q, want %q", aws.ToString(instance.InstanceId), key, got, want)
+				}
+				return nil
+			}
+		}
+
+		return fmt.Errorf("EC2 Instance (%s) tag %q: not found", aws.ToString(instance.InstanceId), key)
+	}
+}
+
 // testAccPreCheckHasDefaultVPCDefaultSubnets checks that the test region has
 // - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
@@ -9380,6 +9515,28 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_tagsIgnoreChangesEmptyValue(rName, stepValue string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name         = %[1]q
+    Step         = %[2]q
+    stagingState = "trigger"
+  }
+
+  lifecycle {
+    ignore_changes = [tags["stagingState"]]
+  }
+}
+`, rName, stepValue))
 }
 
 func testAccInstanceConfig_primaryNetworkInterface_basic(rName string) string {

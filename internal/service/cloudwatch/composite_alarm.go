@@ -41,83 +41,85 @@ func resourceCompositeAlarm() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"actions_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"actions_suppressor": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarm": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"extension_period": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"wait_period": {
-							Type:     schema.TypeInt,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"actions_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+					ForceNew: true,
+				},
+				"actions_suppressor": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"extension_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"wait_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"alarm_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"alarm_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"alarm_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"alarm_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"alarm_rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 10240),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"insufficient_data_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_description": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			"ok_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"alarm_rule": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 10240),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"insufficient_data_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"ok_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

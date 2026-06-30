@@ -312,6 +312,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Lambda event source mappings. For example:
+
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.example
+  identity = {
+    uuid = "12345kxodurf3443"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `uuid` (String) UUID of the event source mapping.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 
 ```terraform

@@ -11,6 +11,8 @@ on:
     paths:
       - .github/workflows/acctest-terraform-embedded-lint.yml
       - .ci/.tflint.hcl
+      - .ci/.tflint_opa.hcl
+      - .ci/opa-policies/**
       - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
       - go.sum
@@ -22,15 +24,21 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -46,6 +54,7 @@ jobs:
 
   tflint:
     name: Validate Acceptance Test Terraform
+    needs: tflint-opa-policy-tests
     runs-on: custom-ubuntu-22.04-xl
     strategy:
       matrix:
@@ -54,17 +63,17 @@ jobs:
       TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         name: Cache plugin dir
         continue-on-error: true
         timeout-minutes: 2
@@ -81,3 +90,5 @@ jobs:
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
             | .ci/scripts/validate-terraform.sh
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

@@ -26,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_data_protection_settings_association", name="Data Protection Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.DataProtectionSettings")
-// @Testing(importStateIdAttribute="data_protection_settings_arn,portal_arn")
 func newDataProtectionSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &dataProtectionSettingsAssociationResource{}, nil
 }

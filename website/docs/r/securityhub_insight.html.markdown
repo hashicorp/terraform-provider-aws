@@ -300,7 +300,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub insights using the ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  identity = {
+    arn = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+  }
+}
+
+resource "aws_securityhub_insight" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Security Hub custom insight ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub custom insights using `arn`. For example:
 
 ```terraform
 import {
@@ -309,7 +330,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub insights using the ARN. For example:
+Using `terraform import`, import Security Hub custom insights using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a

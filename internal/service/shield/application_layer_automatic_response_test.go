@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -29,6 +30,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -67,6 +69,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -76,6 +79,14 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, t, resourceName, &applicationlayerautomaticresponse),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceApplicationLayerAutomaticResponse, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_application_layer_automatic_response.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_application_layer_automatic_response.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

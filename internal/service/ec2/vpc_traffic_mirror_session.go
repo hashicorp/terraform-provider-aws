@@ -38,50 +38,52 @@ func resourceTrafficMirrorSession() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"packet_length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"session_number": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 32766),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_mirror_filter_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"traffic_mirror_target_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"virtual_network_id": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 16777216),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"packet_length": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"session_number": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 32766),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_mirror_filter_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"traffic_mirror_target_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"virtual_network_id": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 16777216),
+				},
+			}
 		},
 	}
 }

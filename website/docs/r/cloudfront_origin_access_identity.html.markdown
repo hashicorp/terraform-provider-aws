@@ -11,9 +11,9 @@ description: |-
 Creates an Amazon CloudFront origin access identity.
 
 For information about CloudFront distributions, see the
-[Amazon CloudFront Developer Guide][1]. For more information on generating
+[Amazon CloudFront Developer Guide](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html). For more information on generating
 origin access identities, see
-[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content][2].
+[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html).
 
 ## Example Usage
 
@@ -22,6 +22,52 @@ The following example below creates a CloudFront origin access identity.
 ```terraform
 resource "aws_cloudfront_origin_access_identity" "example" {
   comment = "Some comment"
+}
+```
+
+### Using With CloudFront
+
+Normally, when referencing an origin access identity in CloudFront, you need to
+prefix the ID with the `origin-access-identity/cloudfront/` special path.
+The `cloudfront_access_identity_path` allows this to be circumvented.
+The below snippet demonstrates use with the `s3_origin_config` structure for the
+[`aws_cloudfront_distribution`](/docs/providers/aws/r/cloudfront_distribution.html) resource:
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  origin {
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
+    }
+  }
+}
+```
+
+#### Updating your bucket policy
+
+Note that the AWS API may translate the `s3_canonical_user_id` `CanonicalUser`
+principal into an `AWS` IAM ARN principal when supplied in an
+[`aws_s3_bucket`](/docs/providers/aws/r/s3_bucket.html) bucket policy, causing spurious diffs in Terraform. If
+you see this behavior, use the `iam_arn` instead:
+
+```terraform
+data "aws_iam_policy_document" "s3_policy" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.example.iam_arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.s3_policy.json
 }
 ```
 
@@ -49,57 +95,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
-
-## Using With CloudFront
-
-Normally, when referencing an origin access identity in CloudFront, you need to
-prefix the ID with the `origin-access-identity/cloudfront/` special path.
-The `cloudfront_access_identity_path` allows this to be circumvented.
-The below snippet demonstrates use with the `s3_origin_config` structure for the
-[`aws_cloudfront_distribution`][3] resource:
-
-```terraform
-resource "aws_cloudfront_distribution" "example" {
-  # ... other configuration ...
-
-  origin {
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
-    }
-  }
-}
-```
-
-### Updating your bucket policy
-
-Note that the AWS API may translate the `s3_canonical_user_id` `CanonicalUser`
-principal into an `AWS` IAM ARN principal when supplied in an
-[`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
-you see this behavior, use the `iam_arn` instead:
-
-```terraform
-data "aws_iam_policy_document" "s3_policy" {
-  statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.example.arn}/*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.example.iam_arn]
-    }
-  }
-}
-
-resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.example.id
-  policy = data.aws_iam_policy_document.s3_policy.json
-}
-```
-
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
-[3]: /docs/providers/aws/r/cloudfront_distribution.html
-[4]: /docs/providers/aws/r/s3_bucket.html
 
 ## Import
 

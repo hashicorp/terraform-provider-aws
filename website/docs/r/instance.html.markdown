@@ -193,17 +193,7 @@ resource "aws_instance" "this" {
 }
 ```
 
-## Tag Guide
-
-These are the five types of tags you might encounter relative to an `aws_instance`:
-
-1. **Instance tags**: Applied to instances but not to `ebs_block_device` and `root_block_device` volumes.
-2. **Default tags**: Applied to the instance and to `ebs_block_device` and `root_block_device` volumes.
-3. **Volume tags**: Applied during creation to `ebs_block_device` and `root_block_device` volumes.
-4. **Root block device tags**: Applied only to the `root_block_device` volume. These conflict with `volume_tags`.
-5. **EBS block device tags**: Applied only to the specific `ebs_block_device` volume you configure them for and cannot be updated. These conflict with `volume_tags`.
-
-Do not use `volume_tags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+~> **Note:** There are five types of tags relevant to an `aws_instance`: (1) **instance tags** — applied to instances but not to `ebs_block_device` or `root_block_device` volumes; (2) **default tags** — applied to the instance and to those volumes; (3) **volume tags** — applied during creation to `ebs_block_device` and `root_block_device` volumes; (4) **root block device tags** — applied only to the `root_block_device` volume (conflicts with `volume_tags`); (5) **EBS block device tags** — applied only to the specific `ebs_block_device` volume and cannot be updated (conflicts with `volume_tags`). Do not use `volume_tags` if you manage block device tags outside the `aws_instance` configuration (e.g., using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource) as this causes resource cycling and inconsistent behavior.
 
 ## Argument Reference
 
@@ -373,8 +363,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Required) Type of market for the instance.
-  Valid values are `spot`, `capacity-block`, and `interruptible-capacity-reservation`.
+* `market_type` - (Optional) Type of market for the instance. Valid values are `spot`, `capacity-block`, and `interruptible-capacity-reservation`. Use `interruptible-capacity-reservation` to launch instances into [interruptible Capacity Reservations](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-consumer-procedures.html). Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options

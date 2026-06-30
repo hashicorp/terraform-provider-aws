@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -205,6 +206,16 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "2.0.0"),
 				),
 			},
+			{
+				Config: testAccLifecyclePolicyConfig_resourceSelectionWithWildCardSemanticVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "x.x.x"),
+				),
+			},
 		},
 	})
 }
@@ -271,6 +282,14 @@ func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
 					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -613,6 +632,49 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     recipe {
       name             = aws_imagebuilder_image_recipe.test.name
       semantic_version = aws_imagebuilder_image_recipe.test.version
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccLifecyclePolicyConfig_resourceSelectionWithWildCardSemanticVersion(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyConfig_base(rName),
+		testAccLifecyclePolicyConfig_baseComponent(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "2.0.0"
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_detail {
+    action {
+      type = "DELETE"
+    }
+    filter {
+      type            = "AGE"
+      value           = 6
+      retain_at_least = 10
+      unit            = "YEARS"
+    }
+  }
+  resource_selection {
+    recipe {
+      name             = aws_imagebuilder_image_recipe.test.name
+      semantic_version = "x.x.x"
     }
   }
 

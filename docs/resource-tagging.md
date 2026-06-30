@@ -157,11 +157,13 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     func ResourceExample() *schema.Resource {
         return &schema.Resource{
             /* ... other configuration ... */
-            Schema: map[string]*schema.Schema{
-                /* ... other configuration ... */
-                names.AttrTags:    tftags.TagsSchema(),
-                names.AttrTagsAll: tftags.TagsSchemaComputed(),
-            },
+            SchemaFunc: func() map[string]*schema.Schema {
+                return map[string]*schema.Schema{
+                    /* ... other configuration ... */
+                    names.AttrTags:    tftags.TagsSchema(),
+                    names.AttrTagsAll: tftags.TagsSchemaComputed(),
+                },
+            }
         }
     }
     ```
@@ -471,7 +473,7 @@ Add a new test named `_tags` with associated configurations, that verifies creat
 func TestAccEKSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
   var cluster1, cluster2, cluster3 eks.Cluster
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{

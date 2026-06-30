@@ -41,28 +41,30 @@ func resourceDashboard() *schema.Resource {
 		// the `dashboard_name` as being required, even though
 		// according to the REST API documentation both are
 		// optional: http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html#API_PutDashboard_RequestParameters
-		Schema: map[string]*schema.Schema{
-			"dashboard_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dashboard_body": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"dashboard_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dashboard_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validDashboardName,
-			},
+				"dashboard_body": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"dashboard_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validDashboardName,
+				},
+			}
 		},
 	}
 }

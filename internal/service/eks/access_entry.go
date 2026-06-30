@@ -25,13 +25,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_entry", name="Access Entry")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("principal_arn")
+// @ImportIDHandler("accessEntryImportID")
 // @Tags(identifierAttribute="access_entry_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.AccessEntry")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessEntryCreate,
@@ -39,62 +45,60 @@ func resourceAccessEntry() *schema.Resource {
 		UpdateWithoutTimeout: resourceAccessEntryUpdate,
 		DeleteWithoutTimeout: resourceAccessEntryDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_entry_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kubernetes_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_entry_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"principal_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      accessEntryTypeStandard,
-				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kubernetes_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"modified_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"principal_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      accessEntryTypeStandard,
+					ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -106,7 +110,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	clusterName := d.Get(names.AttrClusterName).(string)
 	principalARN := d.Get("principal_arn").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
-	input := &eks.CreateAccessEntryInput{
+	input := eks.CreateAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 		Tags:         getTagsIn(ctx),
@@ -122,7 +126,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateAccessEntry(ctx, input)
+		return conn.CreateAccessEntry(ctx, &input)
 	}, "The specified principalArn is invalid: invalid principal")
 
 	if err != nil {
@@ -179,7 +183,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &eks.UpdateAccessEntryInput{
+		input := eks.UpdateAccessEntryInput{
 			ClusterName:  aws.String(clusterName),
 			PrincipalArn: aws.String(principalARN),
 		}
@@ -187,7 +191,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
 		input.Username = aws.String(d.Get(names.AttrUserName).(string))
 
-		_, err = conn.UpdateAccessEntry(ctx, input)
+		_, err = conn.UpdateAccessEntry(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Access Entry (%s): %s", d.Id(), err)
@@ -207,10 +211,11 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Access Entry: %s", d.Id())
-	_, err = conn.DeleteAccessEntry(ctx, &eks.DeleteAccessEntryInput{
+	input := eks.DeleteAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
-	})
+	}
+	_, err = conn.DeleteAccessEntry(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -243,11 +248,15 @@ func accessEntryParseResourceID(id string) (string, string, error) {
 }
 
 func findAccessEntryByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, principalARN string) (*types.AccessEntry, error) {
-	input := &eks.DescribeAccessEntryInput{
+	input := eks.DescribeAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 	}
 
+	return findAccessEntry(ctx, conn, &input)
+}
+
+func findAccessEntry(ctx context.Context, conn *eks.Client, input *eks.DescribeAccessEntryInput) (*types.AccessEntry, error) {
 	output, err := conn.DescribeAccessEntry(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -265,4 +274,28 @@ func findAccessEntryByTwoPartKey(ctx context.Context, conn *eks.Client, clusterN
 	}
 
 	return output.AccessEntry, nil
+}
+
+var (
+	_ inttypes.SDKv2ImportID = accessEntryImportID{}
+)
+
+type accessEntryImportID struct{}
+
+func (accessEntryImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, principalARN, err := accessEntryParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName: clusterName,
+		"principal_arn":       principalARN,
+	}
+
+	return id, result, nil
+}
+
+func (accessEntryImportID) Create(d *schema.ResourceData) string {
+	return accessEntryCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("principal_arn").(string))
 }

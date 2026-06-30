@@ -24,20 +24,22 @@ func dataSourcePoliciesForTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoliciesForTargetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"target_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"target_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

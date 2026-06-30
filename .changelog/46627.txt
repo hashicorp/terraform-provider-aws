@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_account: Fix `AccountAlreadyClosedException` error when deleting an account that has already been closed with `close_on_deletion` set to `true`
+```

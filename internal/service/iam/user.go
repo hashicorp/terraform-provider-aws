@@ -10,9 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -43,49 +45,51 @@ func resourceUser() *schema.Resource {
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
-				),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-			},
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			/*
-				The UniqueID could be used as the Id(), but none of the API
-				calls allow specifying a user by the UniqueID: they require the
-				name. The only way to locate a user by UniqueID is to list them
-				all and that would make this provider unnecessarily complex
-				and inefficient. Still, there are other reasons one might want
-				the UniqueID, so we can make it available.
-			*/
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+						"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
+					),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+				},
+				"permissions_boundary": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				/*
+					The UniqueID could be used as the Id(), but none of the API
+					calls allow specifying a user by the UniqueID: they require the
+					name. The only way to locate a user by UniqueID is to list them
+					all and that would make this provider unnecessarily complex
+					and inefficient. Still, there are other reasons one might want
+					the UniqueID, so we can make it available.
+				*/
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -157,6 +161,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
+	// occasionally, immediately after a user is created, AWS will give an ARN like AIDAQ7SSZBKHREXAMPLE (unique ID)
+	if user, err = waitUserARNIsNotUniqueID(ctx, conn, user); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): waiting for valid ARN: %s", d.Id(), err)
+	}
+
 	resourceUserFlatten(user, d)
 	setTagsOut(ctx, user.Tags)
 
@@ -224,6 +233,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get(names.AttrForceDestroy).(bool) {
+		partition := meta.(*conns.AWSClient).Partition(ctx)
+
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string
@@ -239,9 +250,16 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 			{deleteServiceSpecificCredentials, "removing IAM User (%s) Service Specific Credentials: %s"},
 		} {
 			if err := v.f(ctx, conn, d.Id()); err != nil {
-				if !errs.IsA[*awstypes.NoSuchEntityException](err) {
-					return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					continue
 				}
+				// Some credential types (e.g. SSH public keys) are not available in all
+				// partitions (e.g. ISO) so List/Delete actions return errors such as
+				// InvalidAction. There's nothing to clean up, so treat it as a no-op.
+				if errs.IsUnsupportedOperationInPartitionError(partition, err) {
+					continue
+				}
+				return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
 			}
 		}
 	}
@@ -289,6 +307,51 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	}
 
 	return output.User, nil
+}
+
+func waitUserARNIsNotUniqueID(ctx context.Context, conn *iam.Client, user *awstypes.User) (*awstypes.User, error) {
+	if arn.IsARN(aws.ToString(user.Arn)) {
+		return user, nil
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{arnStateIsUniqueID, arnStateNotFound},
+		Target:                    []string{arnStateIsARN},
+		Refresh:                   statusUserARNValue(conn, aws.ToString(user.UserName)),
+		Timeout:                   propagationTimeout,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 5,
+		Delay:                     5 * time.Second,
+		PollInterval:              1 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.User); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusUserARNValue(conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		user, err := findUserByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, arnStateNotFound, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if arn.IsARN(aws.ToString(user.Arn)) {
+			return user, arnStateIsARN, nil
+		}
+
+		return user, arnStateIsUniqueID, nil
+	}
 }
 
 func deleteUserGroupMemberships(ctx context.Context, conn *iam.Client, user string) error {

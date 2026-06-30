@@ -263,3 +263,57 @@ func TestAccECSService_List_launchType(t *testing.T) {
 		},
 	})
 }
+
+func TestAccECSService_List_excludeExpressServices(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	expressServiceResourceName := "aws_ecs_express_gateway_service.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expressServiceCluster := tfstatecheck.StateValue()
+	expressServiceName := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_exclude_express_services/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					expressServiceCluster.GetStateValue(expressServiceResourceName, tfjsonpath.New("cluster")),
+					// `service_name` on Express Service is equivalent to `name` on regular Service
+					expressServiceName.GetStateValue(expressServiceResourceName, tfjsonpath.New(names.AttrServiceName)),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_exclude_express_services/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectNoIdentity("aws_ecs_service.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						"cluster":           expressServiceCluster.ValueCheck(),
+						names.AttrName:      expressServiceName.ValueCheck(),
+					}),
+				},
+			},
+		},
+	})
+}

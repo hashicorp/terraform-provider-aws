@@ -40,12 +40,21 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
-* `spec` - (Optional) Service mesh specification to apply.
-    * `egress_filter`- (Optional) Egress filter rules for the service mesh.
-        * `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`. Valid values are `ALLOW_ALL` and `DROP_ALL`.
-    * `service_discovery`- (Optional) The service discovery information for the service mesh.
-        * `ip_preference` - (Optional) The IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
+* `spec` - (Optional) Service mesh specification to apply. See [`spec` Block](#spec-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `spec` Block
+
+* `egress_filter` - (Optional) Egress filter rules for the service mesh. See [`egress_filter` Block](#egress_filter-block) for details.
+* `service_discovery` - (Optional) The service discovery information for the service mesh. See [`service_discovery` Block](#service_discovery-block) for details.
+
+### `egress_filter` Block
+
+* `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`. Valid values are `ALLOW_ALL` and `DROP_ALL`.
+
+### `service_discovery` Block
+
+* `ip_preference` - (Optional) The IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
 
 ## Attribute Reference
 

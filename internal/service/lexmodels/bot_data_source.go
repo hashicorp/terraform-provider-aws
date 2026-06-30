@@ -23,74 +23,76 @@ func dataSourceBot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"child_directed": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"detect_sentiment": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_model_improvements": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"failure_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"idle_session_ttl_in_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"locale": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validBotName,
-			},
-			"nlu_intent_confidence_threshold": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      BotVersionLatest,
-				ValidateFunc: validBotVersion,
-			},
-			"voice_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"child_directed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"detect_sentiment": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_model_improvements": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"failure_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"idle_session_ttl_in_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"locale": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validBotName,
+				},
+				"nlu_intent_confidence_threshold": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      BotVersionLatest,
+					ValidateFunc: validBotVersion,
+				},
+				"voice_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -278,6 +278,22 @@ func statusLocalGatewayRouteTableVPCAssociation(conn *ec2.Client, id string) ret
 	}
 }
 
+func statusLocalGatewayRouteTableVIFGroupAssociation(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findLocalGatewayRouteTableVIFGroupAssociationByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
 func statusManagedPrefixListState(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findManagedPrefixListByID(ctx, conn, id)

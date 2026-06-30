@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,7 +21,7 @@ import (
 
 func testAccProactiveEngagement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
@@ -32,6 +33,7 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -54,7 +56,7 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 
 func testAccProactiveEngagement_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
@@ -66,6 +68,7 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -83,7 +86,7 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 
 func testAccProactiveEngagement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
@@ -95,6 +98,7 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -105,6 +109,14 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceProactiveEngagement, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_proactive_engagement.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_proactive_engagement.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

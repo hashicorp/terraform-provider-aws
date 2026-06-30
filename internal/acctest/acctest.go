@@ -1168,6 +1168,8 @@ func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	}
 }
 
+// PreCheckOrganizationsAccount ensures that the default provider instance is configured with an AWS account that is *not* a member of an AWS Organization.
+// WARNING: The name suggests the *opposite* of what it does.
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1184,26 +1186,16 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
+// PreCheckOrganizationsEnabled ensures that the default provider instance is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
 	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
-func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
-	t.Helper()
-
-	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
-
-	if err != nil {
-		t.Fatalf("reading Organization service principals: %s", err)
-	}
-
-	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		t.Skipf("trusted access for %s must be enabled in AWS Organizations", servicePrincipalName)
-	}
-}
-
+// PreCheckOrganizationsEnabled ensures that the provider instance returned by `providerF` is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
 func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
 	t.Helper()
 
@@ -1220,12 +1212,29 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 	return organization
 }
 
+// PreCheckOrganizationsEnabledServicePrincipal ensures that the default provider instance is configured with an AWS account that has trusted access enabled for the specified AWS service principal in AWS Organizations.
+func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
+	t.Helper()
+
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+
+	if err != nil {
+		t.Fatalf("reading Organization service principals: %s", err)
+	}
+
+	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
+		t.Skipf("trusted access for %s must be enabled in AWS Organizations", servicePrincipalName)
+	}
+}
+
+// PreCheckOrganizationManagementAccount ensures that the default provider instance is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationManagementAccountWithProvider ensures that the provider instance returned by `providerF` is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1242,12 +1251,14 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 	}
 }
 
+// PreCheckOrganizationMemberAccount ensures that the default provider instance is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationMemberAccountWithProvider ensures that the provider instance returned by `providerF` is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1264,6 +1275,7 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+// PreCheckSameOrganization ensures that all provider instances returned by `providerFs` are configured with AWS accounts that are members of the same AWS Organization.
 func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
 	t.Helper()
 
@@ -1591,6 +1603,11 @@ func NamedProvider(name string, providers map[string]*schema.Provider) *schema.P
 	return p
 }
 
+// NewTestResourceContext bootstaps the testing context for a given resource type
+func NewTestResourceContext(ctx context.Context, rType, region string) context.Context {
+	return conns.NewResourceContext(ctx, "", "", rType, region)
+}
+
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
@@ -1639,6 +1656,9 @@ func checkSDKResourceDisappears(ctx context.Context, providerMetaF providerMetaF
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
+
+		// Bootstrap context for resource type
+		ctx = NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 
 		var state terraformsdk.InstanceState
 		err := mapstructure.Decode(rs.Primary, &state)
@@ -1883,32 +1903,36 @@ const domainNameTestTopLevelDomain domainName = "test"
 // "<random>.<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomSubdomain() string {
-	return string(RandomDomain().RandomSubdomain())
+func RandomSubdomain(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
 // "<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomDomainName() string {
-	return string(RandomDomain())
+func RandomDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t))
 }
 
 // RandomFQDomainName creates a random fully-qualified two-level domain name in the form
 // "<random>.test."
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomFQDomainName() string {
-	return string(RandomDomain().FQDN())
+func RandomFQDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).FQDN())
 }
 
 func (d domainName) Subdomain(name string) domainName {
 	return domainName(fmt.Sprintf("%s.%s", name, d))
 }
 
-func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd // standard length of 8
+func (d domainName) RandomSubdomain(t *testing.T) domainName {
+	t.Helper()
+	return d.Subdomain(RandString(t, 8)) //nolint:mnd // standard length of 8
 }
 
 func (d domainName) FQDN() domainName {
@@ -1919,8 +1943,9 @@ func (d domainName) String() string {
 	return string(d)
 }
 
-func RandomDomain() domainName {
-	return domainNameTestTopLevelDomain.RandomSubdomain()
+func RandomDomain(t *testing.T) domainName {
+	t.Helper()
+	return domainNameTestTopLevelDomain.RandomSubdomain(t)
 }
 
 // DefaultEmailAddress is the default email address to set as a
