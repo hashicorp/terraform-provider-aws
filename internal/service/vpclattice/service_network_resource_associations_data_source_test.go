@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,9 +18,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -33,6 +32,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 			{
 				Config: testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					// By service network: associations link back to the queried service network.
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_resource_associations.test-sn-1",
 						"associations.*.service_network_arn",
@@ -43,21 +43,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 						"associations.*.service_network_arn",
 						"aws_vpclattice_service_network.test-sn-2",
 						names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(
-						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
-						"associations.*.service_network_arn",
-						"aws_vpclattice_service_network.test-sn-1",
-						names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(
-						"data.aws_vpclattice_service_network_resource_associations.test-parent-resource",
-						"associations.*.service_network_arn",
-						"aws_vpclattice_service_network.test-sn-1",
-						names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(
-						"data.aws_vpclattice_service_network_resource_associations.test-ip-resource",
-						"associations.*.service_network_arn",
-						"aws_vpclattice_service_network.test-sn-2",
-						names.AttrARN),
+					// By service network: each resource configuration surfaces.
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_resource_associations.test-sn-1",
 						"associations.*.resource_configuration_arn",
@@ -73,6 +59,36 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 						"associations.*.resource_configuration_arn",
 						"aws_vpclattice_resource_configuration.ip-test",
 						names.AttrARN),
+					// Flattened scalar fields are populated and correctly paired (name + status
+					// together on the same element guards against a swapped-field regression).
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"data.aws_vpclattice_service_network_resource_associations.test-sn-1",
+						"associations.*",
+						map[string]string{
+							"resource_configuration_name": fmt.Sprintf("%s-dns", rName),
+							names.AttrStatus:               "ACTIVE",
+							"is_managed_association":        acctest.CtFalse,
+						}),
+					// By resource configuration: query is symmetric with the by-service-network path.
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+						"associations.*.service_network_arn",
+						"aws_vpclattice_service_network.test-sn-1",
+						names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.aws_vpclattice_service_network_resource_associations.test-ip-resource",
+						"associations.*.service_network_arn",
+						"aws_vpclattice_service_network.test-sn-2",
+						names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.aws_vpclattice_service_network_resource_associations.test-parent-resource",
+						"associations.*.service_network_arn",
+						"aws_vpclattice_service_network.test-sn-1",
+						names.AttrARN),
+					// The headline feature: the DNS name of a dns_resource association is surfaced.
+					resource.TestCheckResourceAttrSet(
+						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+						"associations.0.private_dns_entry.0.domain_name"),
 				),
 			},
 		},
@@ -81,10 +97,6 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 
 func testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-data "aws_caller_identity" "current" {}
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -155,36 +167,6 @@ resource "aws_vpclattice_resource_configuration" "parent-test" {
   type                        = "GROUP"
 }
 
-resource "aws_vpclattice_resource_configuration" "child-test-1" {
-  name = "%[1]s-child-1"
-
-  port_ranges = ["80"]
-
-  resource_configuration_group_id = aws_vpclattice_resource_configuration.parent-test.id
-  type                            = "CHILD"
-
-  resource_configuration_definition {
-    ip_resource {
-      ip_address = "10.10.10.10"
-    }
-  }
-}
-
-resource "aws_vpclattice_resource_configuration" "child-test-2" {
-  name = "%[1]s-child-2"
-
-  port_ranges = ["80"]
-
-  resource_configuration_group_id = aws_vpclattice_resource_configuration.parent-test.id
-  type                            = "CHILD"
-
-  resource_configuration_definition {
-    ip_resource {
-      ip_address = "172.24.0.1"
-    }
-  }
-}
-
 resource "aws_vpclattice_service_network_resource_association" "dns-test" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.dns-test.id
   service_network_identifier        = aws_vpclattice_service_network.test-sn-1.id
@@ -224,6 +206,5 @@ data "aws_vpclattice_service_network_resource_associations" "test-parent-resourc
   resource_configuration_identifier = aws_vpclattice_resource_configuration.parent-test.id
   depends_on                        = [aws_vpclattice_service_network_resource_association.parent-test]
 }
-
 `, rName)
 }
