@@ -345,6 +345,43 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMod
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerToolSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerToolSchema(rName, "https://knowledge-mcp.global.api.aws", 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.resource_priority", "500"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.0.inline_payload.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.0.inline_payload.0.payload"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -1630,6 +1667,31 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, endpoint, listingMode))
+}
+
+func testAccGatewayTargetConfig_targetConfigurationMCPServerToolSchema(rName, endpoint string, resourcePriority int) string {
+	toolSchema := `[{"name":"echo","description":"Echoes input","inputSchema":{"type":"object","properties":{"message":{"type":"string"}},"required":["message"]}}]`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint          = %[2]q
+        resource_priority = %[3]d
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = %[4]q
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, endpoint, resourcePriority, toolSchema))
 }
 
 func testAccSchema_primitive() string {
