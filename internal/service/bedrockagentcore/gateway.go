@@ -146,6 +146,32 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 										Required: true,
 									},
 								},
+								Blocks: map[string]schema.Block{
+									"payload_filter": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorPayloadFilterModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"exclude": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorPayloadExclusionSelectorModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeBetween(1, 1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"field": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.InterceptorPayloadExclusion](),
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 						"interceptor": schema.ListNestedBlock{
@@ -683,7 +709,46 @@ type gatewayInterceptorConfigurationModel struct {
 }
 
 type interceptorInputConfigurationModel struct {
-	PassRequestHeaders types.Bool `tfsdk:"pass_request_headers"`
+	PassRequestHeaders types.Bool                                                     `tfsdk:"pass_request_headers"`
+	PayloadFilter      fwtypes.ListNestedObjectValueOf[interceptorPayloadFilterModel] `tfsdk:"payload_filter"`
+}
+
+type interceptorPayloadFilterModel struct {
+	Exclude fwtypes.ListNestedObjectValueOf[interceptorPayloadExclusionSelectorModel] `tfsdk:"exclude"`
+}
+
+type interceptorPayloadExclusionSelectorModel struct {
+	Field fwtypes.StringEnum[awstypes.InterceptorPayloadExclusion] `tfsdk:"field"`
+}
+
+var (
+	_ fwflex.Expander  = interceptorPayloadExclusionSelectorModel{}
+	_ fwflex.Flattener = &interceptorPayloadExclusionSelectorModel{}
+)
+
+func (m *interceptorPayloadExclusionSelectorModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.InterceptorPayloadExclusionSelectorMemberField:
+		m.Field = fwtypes.StringEnumValue(t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("interceptor payload exclusion selector flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m interceptorPayloadExclusionSelectorModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.Field.IsNull() {
+		return &awstypes.InterceptorPayloadExclusionSelectorMemberField{
+			Value: m.Field.ValueEnum(),
+		}, diags
+	}
+	return nil, diags
 }
 
 type interceptorConfigurationModel struct {
