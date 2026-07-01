@@ -563,6 +563,7 @@ The `target_configuration` block supports exactly one of the following:
 
 * `mcp` - (Optional) Model Context Protocol (MCP) configuration. See [`mcp`](#mcp) below.
 * `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent. See [`http`](#http) below.
+* `inference` - (Optional) Inference target configuration for routing requests to a large language model (LLM) provider, either through a built-in connector or an explicitly configured provider. See [`inference`](#inference) below.
 
 ### `mcp`
 
@@ -676,6 +677,60 @@ The `s3` block for API schemas supports the following:
 
 * `uri` - (Optional) S3 URI where the schema is stored.
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+
+### `inference`
+
+The `inference` block supports exactly one of the following:
+
+* `connector` - (Optional) Connector-based inference configuration that routes requests to an LLM provider through a built-in connector with predefined provider rules. See [`connector`](#connector) below.
+* `provider` - (Optional) Provider-based inference configuration that explicitly defines the endpoint, model mapping, and operations used to route requests to an LLM provider. See [`provider`](#provider) below.
+
+### `connector`
+
+The `connector` block supports the following:
+
+* `source` - (Required) Source configuration identifying which inference connector to use. See [`source`](#source) below.
+
+### `source`
+
+The `source` block supports the following:
+
+* `connector_id` - (Required) Identifier for the inference connector (for example, `bedrock-mantle`, `openai`, or `anthropic`).
+
+### `provider`
+
+The `provider` block supports the following:
+
+* `endpoint` - (Required) HTTPS endpoint of the inference provider that the gateway forwards requests to.
+* `model_mapping` - (Optional) Configuration that translates client-facing model IDs to the model IDs expected by the provider. See [`model_mapping`](#model_mapping) below.
+* `operations` - (Optional) List of per-operation configurations that map request paths to the models supported for each operation. See [`operations`](#operations) below.
+
+### `model_mapping`
+
+The `model_mapping` block supports the following:
+
+* `provider_prefix` - (Optional) Provider prefix configuration used for model ID translation. See [`provider_prefix`](#provider_prefix) below.
+
+### `provider_prefix`
+
+The `provider_prefix` block supports the following:
+
+* `separator` - (Optional) Single character that separates the provider prefix from the model name (for example, `.`). Defaults to `.`.
+* `strip` - (Optional) Whether clients can omit the provider prefix from model IDs. If `true`, the gateway accepts model IDs without the prefix and restores the full prefixed form before forwarding to the provider. Defaults to `false`.
+
+### `operations`
+
+The `operations` block supports the following:
+
+* `path` - (Required) Request path for this operation (for example, `/v1/messages` or `/v1/responses`).
+* `provider_path` - (Optional) Provider path to forward requests to, if it differs from the request path. For example, `/anthropic/v1/messages` when the provider expects a different path than the client-facing `/v1/messages`.
+* `models` - (Optional) List of models supported for this operation. See [`models`](#models) below.
+
+### `models`
+
+The `models` block supports the following:
+
+* `model` - (Required) Model ID or glob pattern that identifies the model (for example, `anthropic.claude-opus-*` or `openai.gpt-oss-*`).
 
 ### `schema_definition`
 

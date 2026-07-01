@@ -632,6 +632,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("http"),
 									path.MatchRelative().AtParent().AtName("mcp"),
+									path.MatchRelative().AtParent().AtName("inference"),
 								),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -895,6 +896,116 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															},
 															names.AttrURI: schema.StringAttribute{
 																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"inference": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceTargetConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"connector": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConnectorTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("connector"),
+												path.MatchRelative().AtParent().AtName("provider"),
+											),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"source": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConnectorSourceModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"connector_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"provider": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProviderTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrEndpoint: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`^https://.+`),
+															"Must start with https://",
+														),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"model_mapping": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[modelMappingModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"provider_prefix": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[providerPrefixModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"separator": schema.StringAttribute{
+																			Optional: true,
+																		},
+																		"strip": schema.BoolAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"operations": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceOperationConfigurationModel](ctx),
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrPath: schema.StringAttribute{
+																Required: true,
+															},
+															"provider_path": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"models": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[modelEntryModel](ctx),
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"model": schema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -1554,8 +1665,9 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 }
 
 type targetConfigurationModel struct {
-	HTTP fwtypes.ListNestedObjectValueOf[httpTargetConfigurationModel] `tfsdk:"http"`
-	MCP  fwtypes.ListNestedObjectValueOf[mcpTargetConfigurationModel]  `tfsdk:"mcp"`
+	HTTP      fwtypes.ListNestedObjectValueOf[httpTargetConfigurationModel]      `tfsdk:"http"`
+	Inference fwtypes.ListNestedObjectValueOf[inferenceTargetConfigurationModel] `tfsdk:"inference"`
+	MCP       fwtypes.ListNestedObjectValueOf[mcpTargetConfigurationModel]       `tfsdk:"mcp"`
 }
 
 func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) string {
@@ -1577,6 +1689,15 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 			return "open_api_schema"
 		case !mcpData.SmithyModel.IsNull():
 			return "smithy_model"
+		}
+	}
+	if !m.Inference.IsNull() {
+		infData, _ := m.Inference.ToPtr(ctx)
+		switch {
+		case !infData.Connector.IsNull():
+			return "inference_connector"
+		case !infData.Provider.IsNull():
+			return "inference_provider"
 		}
 	}
 	return "unknown"
@@ -1605,6 +1726,14 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 			return diags
 		}
 		m.MCP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.TargetConfigurationMemberInference:
+		var model inferenceTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Inference = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	default:
 		diags.AddError(
@@ -1646,6 +1775,30 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 		}
 
 		return &r, diags
+
+	case !m.Inference.IsNull():
+		inferenceConfigurationData, d := m.Inference.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		expanded, d := inferenceConfigurationData.Expand(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		innerUnion, ok := expanded.(awstypes.InferenceTargetConfiguration)
+		if !ok {
+			diags.AddError(
+				"Unsupported Inference Target Configuration Type",
+				fmt.Sprintf("inference target configuration expand: unexpected type %T", expanded),
+			)
+			return nil, diags
+		}
+
+		return &awstypes.TargetConfigurationMemberInference{Value: innerUnion}, diags
 	}
 
 	return nil, diags
@@ -1847,6 +2000,128 @@ func (m mcpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 type runtimeTargetConfigurationModel struct {
 	ARN       fwtypes.ARN  `tfsdk:"arn"`
 	Qualifier types.String `tfsdk:"qualifier"`
+}
+
+type inferenceTargetConfigurationModel struct {
+	Connector fwtypes.ListNestedObjectValueOf[inferenceConnectorTargetConfigurationModel] `tfsdk:"connector"`
+	Provider  fwtypes.ListNestedObjectValueOf[inferenceProviderTargetConfigurationModel]  `tfsdk:"provider"`
+}
+
+var (
+	_ fwflex.Expander  = inferenceTargetConfigurationModel{}
+	_ fwflex.Flattener = &inferenceTargetConfigurationModel{}
+)
+
+func (m *inferenceTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.InferenceTargetConfigurationMemberConnector:
+		var model inferenceConnectorTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Connector = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case *awstypes.InferenceTargetConfigurationMemberConnector:
+		var model inferenceConnectorTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Connector = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.InferenceTargetConfigurationMemberProvider:
+		var model inferenceProviderTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Provider = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case *awstypes.InferenceTargetConfigurationMemberProvider:
+		var model inferenceProviderTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Provider = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	default:
+		diags.AddError(
+			"Unsupported Inference Target Configuration Type",
+			fmt.Sprintf("inference target configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m inferenceTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Connector.IsNull():
+		connectorData, d := m.Connector.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.InferenceTargetConfigurationMemberConnector
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, connectorData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Provider.IsNull():
+		providerData, d := m.Provider.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.InferenceTargetConfigurationMemberProvider
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, providerData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type inferenceConnectorTargetConfigurationModel struct {
+	Source fwtypes.ListNestedObjectValueOf[inferenceConnectorSourceModel] `tfsdk:"source"`
+}
+
+type inferenceConnectorSourceModel struct {
+	ConnectorID types.String `tfsdk:"connector_id"`
+}
+
+type inferenceProviderTargetConfigurationModel struct {
+	Endpoint     types.String                                                          `tfsdk:"endpoint"`
+	ModelMapping fwtypes.ListNestedObjectValueOf[modelMappingModel]                    `tfsdk:"model_mapping"`
+	Operations   fwtypes.ListNestedObjectValueOf[inferenceOperationConfigurationModel] `tfsdk:"operations"`
+}
+
+type modelMappingModel struct {
+	ProviderPrefix fwtypes.ListNestedObjectValueOf[providerPrefixModel] `tfsdk:"provider_prefix"`
+}
+
+type providerPrefixModel struct {
+	Separator types.String `tfsdk:"separator"`
+	Strip     types.Bool   `tfsdk:"strip"`
+}
+
+type inferenceOperationConfigurationModel struct {
+	Models       fwtypes.ListNestedObjectValueOf[modelEntryModel] `tfsdk:"models"`
+	Path         types.String                                     `tfsdk:"path"`
+	ProviderPath types.String                                     `tfsdk:"provider_path"`
+}
+
+type modelEntryModel struct {
+	Model types.String `tfsdk:"model"`
 }
 
 type gatewayAPIKeyCredentialProviderModel struct {
