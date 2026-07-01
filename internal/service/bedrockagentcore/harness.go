@@ -572,7 +572,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Set values for unknowns.
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, harness, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
