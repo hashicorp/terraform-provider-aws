@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,7 +35,18 @@ func resourcePackageAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourcePackageAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), ":")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("unexpected format (%q), expected domainName:packageID", d.Id())
+				}
+				domainName := idParts[0]
+				packageID := idParts[1]
+				d.Set(names.AttrDomainName, domainName)
+				d.Set("package_id", packageID)
+				d.SetId(fmt.Sprintf("%s-%s", domainName, packageID))
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
