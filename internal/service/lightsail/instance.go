@@ -111,7 +111,12 @@ func ResourceInstance() *schema.Resource {
 				"user_data": {
 					Type:     schema.TypeString,
 					Optional: true,
-					ForceNew: true,
+				},
+
+				"user_data_replace_on_change": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 
 				// additional info returned from the API
@@ -170,6 +175,10 @@ func ResourceInstance() *schema.Resource {
 				return nil
 			}),
 		),
+		customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			replace := diff.Get("user_data_replace_on_change")
+			return replace.(bool)
+		}),
 	}
 }
 
