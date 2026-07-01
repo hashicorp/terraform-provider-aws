@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCore_serial(t *testing.T) {
@@ -15,6 +16,13 @@ func TestAccBedrockAgentCore_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"TokenVaultCMK": {
 			acctest.CtBasic: testAccTokenVaultCMK_basic,
+		},
+		"PaymentManager": {
+			acctest.CtBasic:       testAccPaymentManager_basic,
+			acctest.CtDisappears:  testAccPaymentManager_disappears,
+			names.AttrDescription: testAccPaymentManager_description,
+			"tags":                testAccBedrockAgentCorePaymentManager_tagsSerial,
+			"Identity":            testAccBedrockAgentCorePaymentManager_identitySerial,
 		},
 	}
 
