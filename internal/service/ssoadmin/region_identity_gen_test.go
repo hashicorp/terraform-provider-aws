@@ -8,7 +8,6 @@ package ssoadmin_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -36,7 +35,6 @@ func testAccSSOAdminRegion_identitySerial(t *testing.T) {
 func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v ssoadmin.DescribeRegionOutput
 	resourceName := "aws_ssoadmin_region.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -59,7 +57,7 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionExists(ctx, t, resourceName, &v),
+					testAccCheckRegionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
