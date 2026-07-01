@@ -23,6 +23,8 @@ var (
 	ResourceOnlineEvaluationConfig    = newOnlineEvaluationConfigResource
 	ResourcePolicyEngine              = newPolicyEngineResource
 	ResourceRegistry                  = newRegistryResource
+	ResourcePaymentManager            = newPaymentManagerResource
+	ResourcePaymentConnector          = newPaymentConnectorResource
 	ResourcePaymentCredentialProvider = newPaymentCredentialProviderResource
 	ResourceWorkloadIdentity          = newWorkloadIdentityResource
 
@@ -44,6 +46,8 @@ var (
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
+	FindPaymentManagerByID               = findPaymentManagerByID
+	FindPaymentConnectorByTwoPartKey     = findPaymentConnectorByTwoPartKey
 	FindPaymentCredentialProviderByName  = findPaymentCredentialProviderByName
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
