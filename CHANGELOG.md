@@ -1,4 +1,4 @@
-## 6.53.0 (Unreleased)
+## 6.53.0 (July 1, 2026)
 
 BREAKING CHANGES:
 
