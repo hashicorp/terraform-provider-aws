@@ -454,6 +454,73 @@ func TestSortBrokerInstanceEndpoints(t *testing.T) {
 	}
 }
 
+func TestFlattenResourceShareARNs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		resources []types.SharedResource
+		want      []string
+	}{
+		{
+			name:      "nil",
+			resources: nil,
+			want:      nil,
+		},
+		{
+			name: "resource share and resource entries",
+			resources: []types.SharedResource{
+				{
+					Type:        types.SharedResourceTypeResourceShare,
+					ResourceArn: aws.String("resource-share-1"),
+					Status:      types.SharedResourceStatusAvailable,
+				},
+				{
+					Type:        types.SharedResourceTypeResource,
+					ResourceArn: aws.String("resource-configuration-1"),
+					DnsNames:    []string{"example.internal"},
+					Status:      types.SharedResourceStatusAvailable,
+				},
+			},
+			want: []string{"resource-share-1"},
+		},
+		{
+			name: "resource entry only",
+			resources: []types.SharedResource{
+				{
+					Type:        types.SharedResourceTypeResource,
+					ResourceArn: aws.String("resource-configuration-1"),
+					Status:      types.SharedResourceStatusAvailable,
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "pending share still surfaced",
+			resources: []types.SharedResource{
+				{
+					Type:        types.SharedResourceTypeResourceShare,
+					ResourceArn: aws.String("resource-share-1"),
+					Status:      types.SharedResourceStatusPendingCreate,
+				},
+			},
+			want: []string{"resource-share-1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfmq.FlattenResourceShareARNs(tt.resources)
+
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("FlattenResourceShareARNs() =\n  %v\nwant\n  %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNormalizeEngineVersion(t *testing.T) {
 	t.Parallel()
 
@@ -562,6 +629,7 @@ func TestNormalizeEngineVersion(t *testing.T) {
 const (
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
+	testAccRabbitVersionNormalized4_2  = "4.2"
 	// testAccNoAutoMinorVersionUpgrade   = acctest.CtFalse
 	testAccAutoMinorVersionUpgrade = acctest.CtTrue
 )
@@ -1959,6 +2027,54 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_resourceShareARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	shareResourceName := "aws_ram_resource_share.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		CheckDestroy: testAccCheckBrokerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitResourceShareARNs(rName, testAccRabbitVersionNormalized4_2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "resource_share_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_share_arns.*", shareResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// shared_resources reflects live infrastructure (e.g. rotating
+				// VPC endpoint DNS names) and is not guaranteed to round-trip.
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "shared_resources"},
+			},
+		},
+	})
+}
+
 func testAccCheckBrokerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).MQClient(ctx)
@@ -2684,6 +2800,103 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version, autoMinorVersionUpgrade)
+}
+
+func testAccBrokerConfig_rabbitResourceShareARNs(rName, version string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "gateway" {
+  name   = "%[1]s-gateway"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port       = 5671
+    to_port         = 5671
+    protocol        = "tcp"
+    security_groups = [aws_security_group.test.id]
+  }
+
+  tags = {
+    Name = "%[1]s-gateway"
+  }
+}
+
+# The resource gateway shares the broker's subnet so a single-instance broker
+# overlaps an Availability Zone with the gateway.
+resource "aws_vpclattice_resource_gateway" "test" {
+  name                           = %[1]q
+  vpc_id                         = aws_vpc.test.id
+  subnet_ids                     = [aws_subnet.test[0].id]
+  ip_address_type                = "IPV4"
+  resource_config_dns_resolution = "IN_VPC"
+  security_group_ids             = [aws_security_group.gateway.id]
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["5671"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  name                      = %[1]q
+  allow_external_principals = true
+}
+
+# Deleting the broker asynchronously removes the VPC endpoints it created for the
+# shared resource. Delay destroying the resource configuration until those
+# endpoints are gone, otherwise its deletion fails as still associated.
+resource "time_sleep" "wait_for_endpoint_cleanup" {
+  depends_on       = [aws_vpclattice_resource_configuration.test]
+  destroy_duration = "5m"
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_arn       = aws_vpclattice_resource_configuration.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+
+  depends_on = [time_sleep.wait_for_endpoint_cleanup]
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m7g.medium"
+  publicly_accessible        = false
+  security_groups            = [aws_security_group.test.id]
+  subnet_ids                 = [aws_subnet.test[0].id]
+  apply_immediately          = true
+  auto_minor_version_upgrade = true
+
+  resource_share_arns = [aws_ram_resource_share.test.arn]
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+
+  depends_on = [aws_ram_resource_association.test]
+}
+`, rName, version))
 }
 
 func testAccBrokerConfig_updateUsersSecurityGroups(rName, version, autoMinorVersionUpgrade string) string {
