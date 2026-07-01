@@ -872,29 +872,14 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 		input.LaunchTemplateName = aws.String(v)
 	}
 
-	var latestVersion bool
-
 	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
-		switch v {
-		case launchTemplateVersionDefault:
-			input.Filters = newAttributeFilterList(map[string]string{
-				"is-default-version": "true",
-			})
-		case launchTemplateVersionLatest:
-			latestVersion = true
-		default:
-			input.Versions = []string{v}
-		}
+		input.Versions = []string{v}
 	}
 
 	output, err := findLaunchTemplateVersions(ctx, conn, &input)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
-	}
-
-	if latestVersion {
-		return output[len(output)-1].LaunchTemplateData, nil
 	}
 
 	return output[0].LaunchTemplateData, nil
