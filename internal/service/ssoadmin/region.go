@@ -99,25 +99,25 @@ func (r *regionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	instanceARN := fwflex.StringValueFromFramework(ctx, plan.InstanceARN)
-	regionName := fwflex.StringValueFromFramework(ctx, plan.RegionName)
-	input := ssoadmin.AddRegionInput{
-		InstanceArn: aws.String(instanceARN),
-		RegionName:  aws.String(regionName),
+	var input ssoadmin.AddRegionInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	_, err := conn.AddRegion(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("creating SSO Region (%s/%s)", instanceARN, regionName),
+			fmt.Sprintf("creating SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
 			err.Error(),
 		)
 		return
 	}
 
-	output, err := waitRegionActive(ctx, conn, instanceARN, regionName, r.CreateTimeout(ctx, plan.Timeouts))
+	output, err := waitRegionActive(ctx, conn, aws.ToString(input.InstanceArn), aws.ToString(input.RegionName), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for SSO Region (%s/%s) to become active", instanceARN, regionName),
+			fmt.Sprintf("waiting for SSO Region (%s/%s) to become active", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
 			err.Error(),
 		)
 		return
@@ -137,9 +137,13 @@ func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	instanceARN := fwflex.StringValueFromFramework(ctx, state.InstanceARN)
-	regionName := fwflex.StringValueFromFramework(ctx, state.RegionName)
-	output, err := findRegionByTwoPartKey(ctx, conn, instanceARN, regionName)
+	var input ssoadmin.DescribeRegionInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, state, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := findRegionByTwoPartKey(ctx, conn, aws.ToString(input.InstanceArn), aws.ToString(input.RegionName))
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -147,7 +151,7 @@ func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("reading SSO Region (%s/%s)", instanceARN, regionName),
+			fmt.Sprintf("reading SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
 			err.Error(),
 		)
 		return
@@ -167,27 +171,27 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	instanceARN := fwflex.StringValueFromFramework(ctx, state.InstanceARN)
-	regionName := fwflex.StringValueFromFramework(ctx, state.RegionName)
-	input := ssoadmin.RemoveRegionInput{
-		InstanceArn: aws.String(instanceARN),
-		RegionName:  aws.String(regionName),
+	var input ssoadmin.RemoveRegionInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, state, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	_, err := conn.RemoveRegion(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("deleting SSO Region (%s/%s)", instanceARN, regionName),
+			fmt.Sprintf("deleting SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
 			err.Error(),
 		)
 		return
 	}
 
-	if err := waitRegionDeleted(ctx, conn, instanceARN, regionName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+	if err := waitRegionDeleted(ctx, conn, aws.ToString(input.InstanceArn), aws.ToString(input.RegionName), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for SSO Region (%s/%s) to be removed", instanceARN, regionName),
+			fmt.Sprintf("waiting for SSO Region (%s/%s) to be removed", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
 			err.Error(),
 		)
 		return
@@ -197,11 +201,12 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 // Finder functions.
 
 func findRegionByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instanceARN, regionName string) (*ssoadmin.DescribeRegionOutput, error) {
-	input := ssoadmin.DescribeRegionInput{
+	input := &ssoadmin.DescribeRegionInput{
 		InstanceArn: aws.String(instanceARN),
 		RegionName:  aws.String(regionName),
 	}
-	output, err := conn.DescribeRegion(ctx, &input)
+
+	output, err := conn.DescribeRegion(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
