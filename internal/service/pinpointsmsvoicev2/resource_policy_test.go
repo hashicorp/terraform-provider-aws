@@ -2,189 +2,58 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpointsmsvoicev2_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/pinpointsmsvoicev2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestResourcePolicyExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfpinpointsmsvoicev2.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
 func TestAccPinpointSMSVoiceV2ResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var resourcepolicy pinpointsmsvoicev2.DescribeResourcePolicyResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var policy pinpointsmsvoicev2.GetResourcePolicyOutput
 	resourceName := "aws_pinpointsmsvoicev2_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PinpointSMSVoiceV2EndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckResourcePolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pinpointsmsvoicev2", regexache.MustCompile(`resourcepolicy:.+$`)),
+				Config: testAccResourcePolicyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &policy),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.StringRegexp(
+						regexache.MustCompile(`arn:aws:sms-voice:[a-z0-9-]+:[0-9]{12}:phone-number/phone-.+$`))), // lintignore:AWSAT005
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy},
 			},
 		},
 	})
@@ -192,40 +61,74 @@ func TestAccPinpointSMSVoiceV2ResourcePolicy_basic(t *testing.T) {
 
 func TestAccPinpointSMSVoiceV2ResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var resourcepolicy pinpointsmsvoicev2.DescribeResourcePolicyResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var policy pinpointsmsvoicev2.GetResourcePolicyOutput
 	resourceName := "aws_pinpointsmsvoicev2_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PinpointSMSVoiceV2EndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckResourcePolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName, testAccResourcePolicyVersionNewer),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceResourcePolicy = newResourcePolicyResource
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceResourcePolicy, resourceName),
+				Config: testAccResourcePolicyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &policy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2ResourcePolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy pinpointsmsvoicev2.GetResourcePolicyOutput
+	resourceName := "aws_pinpointsmsvoicev2_resource_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckResourcePolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringRegexp(
+						regexache.MustCompile(`SendTextMessage`))),
+				},
+			},
+			{
+				Config: testAccResourcePolicyConfig_updated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringRegexp(
+						regexache.MustCompile(`SendVoiceMessage`))),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -242,55 +145,47 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
-			_, err := tfpinpointsmsvoicev2.FindResourcePolicyByID(ctx, conn, rs.Primary.ID)
+			arn := rs.Primary.Attributes[names.AttrResourceARN]
+			_, err := tfpinpointsmsvoicev2.FindResourcePolicyByARN(ctx, conn, arn)
+
 			if retry.NotFound(err) {
-				return nil
+				continue
 			}
 			if err != nil {
-			    return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingDestroyed, tfpinpointsmsvoicev2.ResNameResourcePolicy, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingDestroyed, tfpinpointsmsvoicev2.ResNameResourcePolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("End User Messaging SMS Resource Policy %s still exists", arn)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string, resourcepolicy *pinpointsmsvoicev2.DescribeResourcePolicyResponse) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n string, v *pinpointsmsvoicev2.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingExistence, tfpinpointsmsvoicev2.ResNameResourcePolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingExistence, tfpinpointsmsvoicev2.ResNameResourcePolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-		resp, err := tfpinpointsmsvoicev2.FindResourcePolicyByID(ctx, conn, rs.Primary.ID)
+		arn := rs.Primary.Attributes[names.AttrResourceARN]
+		output, err := tfpinpointsmsvoicev2.FindResourcePolicyByARN(ctx, conn, arn)
 		if err != nil {
-			return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingExistence, tfpinpointsmsvoicev2.ResNameResourcePolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*resourcepolicy = *resp
-
+		*v = *output
 		return nil
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckResourcePolicy(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-	input := &pinpointsmsvoicev2.ListResourcePolicysInput{}
-
-	_, err := conn.ListResourcePolicys(ctx, input)
+	_, err := conn.DescribePhoneNumbers(ctx, &pinpointsmsvoicev2.DescribePhoneNumbersInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -300,39 +195,63 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckResourcePolicyNotRecreated(before, after *pinpointsmsvoicev2.DescribeResourcePolicyResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ResourcePolicyId), aws.ToString(after.ResourcePolicyId); before != after {
-			return create.Error(names.PinpointSMSVoiceV2, create.ErrActionCheckingNotRecreated, tfpinpointsmsvoicev2.ResNameResourcePolicy, aws.ToString(before.ResourcePolicyId), errors.New("recreated"))
-		}
-
-		return nil
-	}
+func testAccResourcePolicyConfig_basic() string {
+	return `
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
 }
 
-func testAccResourcePolicyConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["sms-voice:SendTextMessage"]
+    resources = [aws_pinpointsmsvoicev2_phone_number.test.arn]
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.current.account_id]
+    }
+  }
 }
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_pinpointsmsvoicev2_resource_policy" "test" {
-  resource_policy_name             = %[1]q
-  engine_type             = "ActivePinpointSMSVoiceV2"
-  engine_version          = %[2]q
-  host_instance_type      = "pinpointsmsvoicev2.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  resource_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  policy       = data.aws_iam_policy_document.test.json
+}
+`
+}
 
-  logs {
-    general = true
-  }
+func testAccResourcePolicyConfig_updated() string {
+	return `
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+}
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "sms-voice:SendTextMessage",
+      "sms-voice:SendVoiceMessage",
+    ]
+    resources = [aws_pinpointsmsvoicev2_phone_number.test.arn]
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.current.account_id]
+    }
   }
 }
-`, rName, version)
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_pinpointsmsvoicev2_resource_policy" "test" {
+  resource_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  policy       = data.aws_iam_policy_document.test.json
+}
+`
 }
