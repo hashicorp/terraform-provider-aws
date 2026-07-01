@@ -80,6 +80,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newVPCEndpointConnectionsDataSource,
+			TypeName: "aws_vpc_endpoint_connections",
+			Name:     "VPC Endpoint Connections",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
