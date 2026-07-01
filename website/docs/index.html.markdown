@@ -292,7 +292,7 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
 |-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Web Identity Token|`web_identity_token`|N/A|N/A|
+|Web Identity Token|`web_identity_token`|`TF_AWS_WEB_IDENTITY_TOKEN`|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
 |Duration|`duration`|N/A|`duration_seconds`|
 |Policy|`policy`|N/A|`policy`|
@@ -593,6 +593,7 @@ The `assume_role_with_web_identity` configuration block supports the following a
   Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
 * `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token` or `web_identity_token_file` is required.
+  Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token_file` or `web_identity_token` is required.
   Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
