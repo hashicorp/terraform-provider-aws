@@ -135,6 +135,7 @@ This resource supports the following arguments:
 * `create_auth_challenge` - (Optional) ARN of the lambda creating an authentication challenge.
 * `custom_message` - (Optional) Custom Message AWS Lambda trigger.
 * `define_auth_challenge` - (Optional) Defines the authentication challenge.
+* `inbound_federation` - (Optional) Inbound federation AWS Lambda trigger that transforms federated user attributes during authentication. See [inbound_federation](#inbound_federation) below.
 * `post_authentication` - (Optional) Post-authentication AWS Lambda trigger.
 * `post_confirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `pre_authentication` - (Optional) Pre-authentication AWS Lambda trigger.
@@ -161,6 +162,11 @@ This resource supports the following arguments:
 
 * `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`, `V3_0`.
+
+#### inbound_federation
+
+* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to transform federated user attributes during authentication with external identity providers.
+* `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your inbound federation Lambda function. The only supported value is `V1_0`.
 
 ### password_policy
 
