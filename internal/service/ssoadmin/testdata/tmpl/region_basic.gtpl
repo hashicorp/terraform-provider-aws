@@ -1,4 +1,6 @@
-data "aws_ssoadmin_instances" "test" {}
+data "aws_ssoadmin_instances" "test" {
+{{- template "region" -}}
+}
 
 resource "aws_ssoadmin_region" "test" {
 {{- template "region" }}
