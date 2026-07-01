@@ -12,8 +12,12 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_bedrock_foundation_model_agreement_offers` ([#47665](https://github.com/hashicorp/terraform-provider-aws/issues/47665))
+* **New Data Source:** `aws_bedrock_use_case_for_model_access` ([#47665](https://github.com/hashicorp/terraform-provider-aws/issues/47665))
 * **New Data Source:** `aws_ec2_capacity_block_reservation` ([#48185](https://github.com/hashicorp/terraform-provider-aws/issues/48185))
 * **New List Resource:** `aws_pinpointsmsvoicev2_pool` ([#48414](https://github.com/hashicorp/terraform-provider-aws/issues/48414))
+* **New Resource:** `aws_bedrock_foundation_model_agreement` ([#47665](https://github.com/hashicorp/terraform-provider-aws/issues/47665))
+* **New Resource:** `aws_bedrock_use_case_for_model_access` ([#47665](https://github.com/hashicorp/terraform-provider-aws/issues/47665))
 * **New Resource:** `aws_pinpointsmsvoicev2_pool` ([#48414](https://github.com/hashicorp/terraform-provider-aws/issues/48414))
 
 ENHANCEMENTS:
