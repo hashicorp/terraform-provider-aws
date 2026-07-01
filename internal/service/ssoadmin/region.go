@@ -225,8 +225,6 @@ func findRegionByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instance
 	return output, nil
 }
 
-// Status and waiter functions.
-
 func statusRegion(conn *ssoadmin.Client, instanceARN, regionName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, instanceARN, regionName)
