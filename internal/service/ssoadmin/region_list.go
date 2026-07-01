@@ -86,7 +86,10 @@ func (l *regionListResource) List(ctx context.Context, request list.ListRequest,
 				data.RegionName = fwflex.StringValueToFramework(ctx, regionName)
 
 				if request.IncludeResource {
-					data.Status = fwtypes.StringEnumValue(item.Status)
+					result.Diagnostics.Append(fwflex.Flatten(ctx, &item, &data)...)
+					if result.Diagnostics.HasError() {
+						return
+					}
 				}
 
 				result.DisplayName = regionName
