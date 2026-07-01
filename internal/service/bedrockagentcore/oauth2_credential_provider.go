@@ -526,13 +526,22 @@ func (m *oauth2CredentialProviderResourceModel) clientCredentials(ctx context.Co
 	data, d := m.OAuth2ProviderConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() || data == nil {
-		return inttypes.Zero[oauth2ClientCredentialsModel](), diags
+		return newOAuth2ClientCredentials(ctx), diags
 	}
 
 	v, d := data.clientCredentials(ctx)
 	diags.Append(d...)
 
 	return v, diags
+}
+
+// newOAuth2ClientCredentials returns a client credentials model with the nested
+// object fields initialized to null. The zero value of fwtypes.ListNestedObjectValueOf
+// has no element type and panics when serialized, so it must be explicitly nulled.
+func newOAuth2ClientCredentials(ctx context.Context) oauth2ClientCredentialsModel {
+	return oauth2ClientCredentialsModel{
+		ClientSecretConfig: fwtypes.NewListNestedObjectValueOfNull[oauth2SecretReferenceModel](ctx),
+	}
 }
 
 var (
@@ -545,6 +554,10 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	// Propagate client credentials from State.
 	clientCredentials := oauth2ClientCredentialsCtxKey.FromContext(ctx)
+	// The zero value of the nested-object field panics when serialized; ensure it is valid null.
+	if clientCredentials.ClientSecretConfig.IsNull() && clientCredentials.ClientSecretConfig.ElementType(ctx) == nil {
+		clientCredentials.ClientSecretConfig = fwtypes.NewListNestedObjectValueOfNull[oauth2SecretReferenceModel](ctx)
+	}
 
 	switch t := v.(type) {
 	case awstypes.Oauth2ProviderConfigOutputMemberAtlassianOauth2ProviderConfig:
