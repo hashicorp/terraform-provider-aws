@@ -76,7 +76,7 @@ the provider configuration block parameter `assume_role`
 or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
 If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
-The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
+The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html#webidentity).
 This can be configured either using environment variables or in a named profile.
 
 When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
@@ -258,8 +258,8 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+[envvars]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
+[config]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#ConfigFileSettings
 
 ### Assume Role Configuration Reference
 
@@ -287,7 +287,7 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 Configuration for assuming an IAM role using web identify federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role_with_web_identity` block.
 
-See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
+See the assume role documentation [section on web identities](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
 |-------|--------|--------|-----------------------|
