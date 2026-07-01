@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_neptunegraph_graph: Adding import from S3, Neptune database cluster, and snapshot.  Supported by CreateGraphUsingImportTask API.
+```
