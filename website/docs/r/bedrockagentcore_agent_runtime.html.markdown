@@ -228,6 +228,8 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `private_endpoint` - (Optional) Configuration block for private endpoint of a gateway target. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint_override` - (Optional) Repeatable block to configure private endpoint overrides for the custom JWT authorizer configuration. See [`private_endpoint_override`](#private_endpoint_override) below.
 
 ### `custom_claim`
 
@@ -250,6 +252,39 @@ The `claim_match_value` block supports the following:
 
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+
+### `private_endpoint`
+
+The `private_endpoint` block supports the following:
+
+* `managed_vpc_resource` - (Optional) Configuration block for connecting to a private resource using a managed VPC Lattice resource. Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be specified. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Configuration block for connecting to a private resource using a self-managed VPC Lattice resource configuration. Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be specified. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `private_endpoint_override`
+
+The `private_endpoint_override` block supports the following:
+
+* `domain` - (Required) Domain to override with a private endpoint.
+* `private_endpoint` - (Required) Private endpoint configuration for the specified domain. See [`private_endpoint`](#private_endpoint) above for details on the configuration. Although both `self_managed_lattice_resource` and `managed_vpc_resource` are defined in the API model, only `self_managed_lattice_resource` is supported within `private_endpoint`. When `private_endpoint` is used in `private_endpoint_override`, the AWS API ignores `managed_vpc_resource`.
+
+See [the AWS documentation](https://docs.aws.amazon.com/ja_jp/bedrock-agentcore/latest/devguide/gateway-inbound-auth.html#gateway-inbound-auth-jwt-private-idp) for more details on private endpoint overrides.
+
+### `managed_vpc_resource`
+
+The `managed_vpc_resource` block supports the following:
+
+* `endpoint_ip_address_type` - (Required) IP address type for the resource configuration endpoint. Valid values are `IPV4` and `IPV6`.
+* `subnet_ids` - (Required) List of subnet IDs within the VPC where the VPC Lattice resource gateway is placed.
+* `vpc_identifier` - (Required) ID of the VPC that contains the private resource.
+* `routing_domain` - (Optional) Intermediate domain to use as the resource configuration endpoint instead of the actual target domain. See [the AWS documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-egress-private-endpoints.html#lattice-vpc-egress-routing-domain) for more details.
+* `security_group_ids` - (Optional) List of security group IDs to associate with the VPC Lattice resource gateway.
+* `tags` - (Optional) Key-value map of tags to assign to the VPC Lattice resource gateway.
+
+### `self_managed_lattice_resource`
+
+The `self_managed_lattice_resource` block supports the following:
+
+* `resource_configuration_identifier` - (Optional) ARN or ID of the VPC Lattice resource configuration.
 
 ### `filesystem_configuration`
 

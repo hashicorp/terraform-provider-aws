@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -398,6 +399,26 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
+							"private_endpoint": privateEndpointSchema(ctx),
+							"private_endpoint_override": schema.SetNestedBlock{
+								CustomType: fwtypes.NewSetNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+								Validators: []validator.Set{
+									setvalidator.SizeAtMost(5),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDomain: schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 253),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"private_endpoint": privateEndpointSchema(ctx),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -473,6 +494,85 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(6, 200),
 									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"endpoint_ip_address_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+								Required:   true,
+							},
+							"routing_domain": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+								},
+							},
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								Computed:   true,
+								Validators: []validator.Set{
+									setvalidator.ValueStringsAre(
+										stringvalidator.RegexMatches(regexache.MustCompile(`^sg-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid Security Group ID"),
+									),
+								},
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.UseStateForUnknown(),
+								},
+							},
+							names.AttrSubnetIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Required:   true,
+								Validators: []validator.Set{
+									setvalidator.ValueStringsAre(
+										stringvalidator.RegexMatches(regexache.MustCompile(`^subnet-[0-9a-zA-Z]{8,17}$`), "must be a valid Subnet ID"),
+									),
+								},
+								ElementType: types.StringType,
+							},
+							names.AttrTags: tftags.TagsAttribute(),
+							"vpc_identifier": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(regexache.MustCompile(`^vpc-(([0-9a-z]{8})|([0-9a-z]{17}))$`), "must be a valid VPC ID"),
+								},
+							},
+						},
+					},
+				},
+				"self_managed_lattice_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"resource_configuration_identifier": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(regexache.MustCompile(`^((rcfg-[0-9a-z]{17})|(arn:[a-z0-9\-]+:vpc-lattice:[a-zA-Z0-9\-]+:\d{12}:resourceconfiguration/rcfg-[0-9a-z]{17}))$`), "must be a valid Resource Configuration Identifier"),
 								},
 							},
 						},
@@ -667,7 +767,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusCreating)),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -684,7 +784,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
-		Refresh:                   statusAgentRuntime(conn, id),
+		Refresh:                   statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusUpdating)),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -701,7 +801,7 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeStatusDeleting, awstypes.AgentRuntimeStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntime(conn, id),
+		Refresh: statusAgentRuntime(conn, id, string(awstypes.AgentRuntimeStatusReady)),
 		Timeout: timeout,
 	}
 
@@ -713,19 +813,46 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+func statusAgentRuntime(conn *bedrockagentcorecontrol.Client, id string, retryState string) retry.StateRefreshFunc {
+	// Temporarily retry "HTTP request failed against private endpoint"
+	// responses during state polling, since they can occur as a transient
+	// eventual consistency issue while the private endpoint is still becoming
+	// reachable.
+
+	const maxConsecutivePrivateEndpointErrors = 5
+
+	//This counter is scoped to the returned refresh closure, so
+	// each waiter tracks consecutive private endpoint errors independently per
+	// resource.
+	consecutivePrivateEndpointErrors := 0
+
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findAgentRuntimeByID(ctx, conn, id)
+		out, err := findAgentRuntimeByIDWithoutRetry(ctx, conn, id)
 		if retry.NotFound(err) {
+			consecutivePrivateEndpointErrors = 0
 			return nil, "", nil
 		}
 
+		if isRetryableGetAgentRuntimePrivateEndpointError(err) {
+			consecutivePrivateEndpointErrors++
+			if consecutivePrivateEndpointErrors > maxConsecutivePrivateEndpointErrors {
+				return nil, "", smarterr.NewError(err)
+			}
+			return nil, retryState, nil
+		}
+
 		if err != nil {
+			consecutivePrivateEndpointErrors = 0
 			return nil, "", smarterr.NewError(err)
 		}
 
+		consecutivePrivateEndpointErrors = 0
 		return out, string(out.Status), nil
 	}
+}
+
+func isRetryableGetAgentRuntimePrivateEndpointError(err error) bool {
+	return tfawserr.ErrMessageContains(err, errCodeValidationException, "HTTP request failed against private")
 }
 
 func findAgentRuntimeByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
@@ -736,7 +863,33 @@ func findAgentRuntimeByID(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 	return findAgentRuntime(ctx, conn, &input)
 }
 
+func findAgentRuntimeByIDWithoutRetry(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+	input := bedrockagentcorecontrol.GetAgentRuntimeInput{
+		AgentRuntimeId: aws.String(id),
+	}
+
+	return findAgentRuntimeWithoutRetry(ctx, conn, &input)
+}
+
 func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetAgentRuntimeInput) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+		return findAgentRuntimeWithoutRetry(ctx, conn, input)
+	}, func(err error) (bool, error) {
+		if isRetryableGetAgentRuntimePrivateEndpointError(err) {
+			return true, smarterr.NewError(err)
+		}
+
+		return false, smarterr.NewError(err)
+	})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return out, nil
+}
+
+func findAgentRuntimeWithoutRetry(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetAgentRuntimeInput) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	out, err := conn.GetAgentRuntime(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -1086,11 +1239,13 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+	AllowedAudience          fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients           fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes            fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	CustomClaim              fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	PrivateEndpoint          fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides fwtypes.SetNestedObjectValueOf[privateEndpointOverrideModel]        `tfsdk:"private_endpoint_override"`
+	DiscoveryURL             types.String                                                        `tfsdk:"discovery_url"`
 }
 
 type customJWTAuthorizerCustomClaimModel struct {
@@ -1203,4 +1358,9 @@ func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.
 
 type workloadIdentityDetailsModel struct {
 	WorkloadIdentityARN types.String `tfsdk:"workload_identity_arn"`
+}
+
+type privateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
 }

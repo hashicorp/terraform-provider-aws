@@ -399,9 +399,9 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	// Handle EventBridge-managed resource association deletion.
+	// Handle EventBridge-managed/BedrockAgentCore-managed resource association deletion.
 	const (
-		timeout = 1 * time.Minute
+		timeout = 10 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{

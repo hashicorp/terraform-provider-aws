@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -420,8 +421,10 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"custom_claim":              knownvalue.SetSizeExact(0),
+									"discovery_url":             knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":          knownvalue.NotNull(),
+									"private_endpoint_override": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -462,8 +465,10 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"custom_claim":              knownvalue.SetSizeExact(0),
+									"discovery_url":             knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"private_endpoint":          knownvalue.NotNull(),
+									"private_endpoint_override": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -544,7 +549,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":             knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":          knownvalue.NotNull(),
+									"private_endpoint_override": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -612,7 +619,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":             knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":          knownvalue.NotNull(),
+									"private_endpoint_override": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -674,7 +683,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":             knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":          knownvalue.NotNull(),
+									"private_endpoint_override": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -687,6 +698,363 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+// This test occasionally fails with a "CREATE_FAILED" status. In such cases,
+// the failureReason returned by the GetAgentRuntime API is:
+//
+//	"An internal error occurred while processing your request."
+//
+// Re-running the test typically succeeds, suggesting that this is a
+// transient service-side issue rather than a problem with the provider code.
+func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointManagedVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPC(
+					rName,
+					rImageUri,
+					2,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("managed_vpc_resource"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("managed_vpc_resource").
+							AtSliceIndex(0).
+							AtMapKey("endpoint_ip_address_type"),
+						knownvalue.StringExact(string(awstypes.EndpointIpAddressTypeIpv4)),
+					),
+					statecheck.CompareValueCollection(
+						resourceName,
+						[]tfjsonpath.Path{
+							tfjsonpath.New("authorizer_configuration"),
+							tfjsonpath.New("custom_jwt_authorizer"),
+							tfjsonpath.New("private_endpoint"),
+							tfjsonpath.New("managed_vpc_resource"),
+							tfjsonpath.New(names.AttrSubnetIDs),
+						},
+						"aws_subnet.test[0]",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValueCollection(
+						resourceName,
+						[]tfjsonpath.Path{
+							tfjsonpath.New("authorizer_configuration"),
+							tfjsonpath.New("custom_jwt_authorizer"),
+							tfjsonpath.New("private_endpoint"),
+							tfjsonpath.New("managed_vpc_resource"),
+							tfjsonpath.New(names.AttrSubnetIDs),
+						},
+						"aws_subnet.test[1]",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("managed_vpc_resource").
+							AtSliceIndex(0).
+							AtMapKey("vpc_identifier"),
+						"aws_vpc.test",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValueCollection(
+						resourceName,
+						[]tfjsonpath.Path{
+							tfjsonpath.New("authorizer_configuration"),
+							tfjsonpath.New("custom_jwt_authorizer"),
+							tfjsonpath.New("private_endpoint"),
+							tfjsonpath.New("managed_vpc_resource"),
+							tfjsonpath.New(names.AttrSecurityGroupIDs),
+						},
+						"aws_security_group.test_runtime",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPCWithRoutingDomain(
+					rName,
+					rImageUri,
+					2,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("managed_vpc_resource").
+							AtSliceIndex(0).
+							AtMapKey("routing_domain"),
+						"aws_vpc_endpoint.test_cognito_idp",
+						tfjsonpath.New("dns_entry").AtSliceIndex(0).AtMapKey(names.AttrDNSName),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
+// This test occasionally fails with a "CREATE_FAILED" status. In such cases,
+// the failureReason returned by the GetAgentRuntime API is:
+//
+//	"An internal error occurred while processing your request."
+//
+// Re-running the test typically succeeds, suggesting that this is a
+// transient service-side issue rather than a problem with the provider code.
+func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationPrivateEndpointSelfManagedLattice(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointSelfManagedLattice(
+					rName,
+					rImageUri,
+					2,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("self_managed_lattice_resource"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("self_managed_lattice_resource").
+							AtSliceIndex(0).
+							AtMapKey("resource_configuration_identifier"),
+						"aws_vpclattice_resource_configuration.test",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointSelfManagedLatticeWithOverride(
+					rName,
+					rImageUri,
+					2,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint_override"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint_override").
+							AtSliceIndex(0).
+							AtMapKey(names.AttrDomain),
+						knownvalue.StringExact(fmt.Sprintf("cognito-idp.%s.%s", acctest.Region(), names.PartitionForRegion(acctest.Region()).DNSSuffix())),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint_override").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint_override").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("self_managed_lattice_resource"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("authorizer_configuration").
+							AtSliceIndex(0).
+							AtMapKey("custom_jwt_authorizer").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint_override").
+							AtSliceIndex(0).
+							AtMapKey("private_endpoint").
+							AtSliceIndex(0).
+							AtMapKey("self_managed_lattice_resource").
+							AtSliceIndex(0).
+							AtMapKey("resource_configuration_identifier"),
+						"aws_vpclattice_resource_configuration.test",
+						tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+				},
 			},
 		},
 	})
@@ -1388,6 +1756,375 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test_vpce" {
+  name   = "%[1]s-vpce"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-vpce"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "test_vpce" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.test_vpce.id
+  from_port         = 443
+  to_port           = 443
+  cidr_ipv4         = aws_vpc.test.cidr_block
+}
+
+resource "aws_vpc_endpoint" "test_cognito_idp" {
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.cognito-idp"
+  vpc_id              = aws_vpc.test.id
+  subnet_ids          = aws_subnet.test[*].id
+  security_group_ids  = [aws_security_group.test_vpce.id]
+
+  depends_on = [
+    aws_vpc_security_group_ingress_rule.test_vpce
+  ]
+}
+
+resource "aws_security_group" "test_runtime" {
+  name   = "%[1]s-runtime"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-runtime"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "test_runtime" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.test_runtime.id
+  from_port                    = 443
+  to_port                      = 443
+  referenced_security_group_id = aws_security_group.test_vpce.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName, subnetCount))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPC(rName, rImageUri string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+      allowed_scopes   = ["openid", "email"]
+
+      private_endpoint {
+        managed_vpc_resource {
+          vpc_identifier           = aws_vpc.test.id
+          subnet_ids               = aws_subnet.test[*].id
+          endpoint_ip_address_type = "IPV4"
+          security_group_ids       = [aws_security_group.test_runtime.id]
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [
+    aws_vpc_endpoint.test_cognito_idp,
+    aws_vpc_security_group_egress_rule.test_runtime,
+  ]
+}
+`, rName, rImageUri))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointManagedVPCWithRoutingDomain(rName, rImageUri string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+      allowed_scopes   = ["openid", "email"]
+
+      private_endpoint {
+        managed_vpc_resource {
+          vpc_identifier           = aws_vpc.test.id
+          subnet_ids               = aws_subnet.test[*].id
+          endpoint_ip_address_type = "IPV4"
+          security_group_ids       = [aws_security_group.test_runtime.id]
+          routing_domain           = aws_vpc_endpoint.test_cognito_idp.dns_entry[0].dns_name
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [
+    aws_vpc_endpoint.test_cognito_idp,
+    aws_vpc_security_group_egress_rule.test_runtime,
+  ]
+}
+`, rName, rImageUri))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointSelfManagedLattice(rName, rImageUri string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = replace("%[1]s", "_", "-")
+  type = "SINGLE"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "cognito-idp.${data.aws_region.current.region}.amazonaws.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_security_group" "test_vpclattice_gateway" {
+  name   = "%[1]s-vpclattice-gateway"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-vpclattice-gateway"
+  }
+}
+
+
+resource "aws_vpc_security_group_ingress_rule" "test_vpclattice_gateway" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.test_vpclattice_gateway.id
+  from_port         = 443
+  to_port           = 443
+  cidr_ipv4         = aws_vpc.test.cidr_block
+}
+
+resource "aws_vpc_security_group_egress_rule" "test_vpclattice_gateway" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.test_vpclattice_gateway.id
+  from_port                    = 443
+  to_port                      = 443
+  referenced_security_group_id = aws_security_group.test_vpce.id
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name               = replace("%[1]s", "_", "-")
+  vpc_id             = aws_vpc.test.id
+  subnet_ids         = aws_subnet.test[*].id
+  security_group_ids = [aws_security_group.test_vpclattice_gateway.id]
+
+  resource_config_dns_resolution = "IN_VPC"
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+      allowed_scopes   = ["openid", "email"]
+
+      private_endpoint {
+        self_managed_lattice_resource {
+          resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [
+    aws_vpc_endpoint.test_cognito_idp,
+    aws_vpc_security_group_egress_rule.test_runtime,
+  ]
+}
+`, rName, rImageUri))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointSelfManagedLatticeWithOverride(rName, rImageUri string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_authorizerConfigurationPrivateEndpointBase(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = replace("%[1]s", "_", "-")
+  type = "SINGLE"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "cognito-idp.${data.aws_region.current.region}.amazonaws.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_security_group" "test_vpclattice_gateway" {
+  name   = "%[1]s-vpclattice-gateway"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-vpclattice-gateway"
+  }
+}
+
+
+resource "aws_vpc_security_group_ingress_rule" "test_vpclattice_gateway" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.test_vpclattice_gateway.id
+  from_port         = 443
+  to_port           = 443
+  cidr_ipv4         = aws_vpc.test.cidr_block
+}
+
+resource "aws_vpc_security_group_egress_rule" "test_vpclattice_gateway" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.test_vpclattice_gateway.id
+  from_port                    = 443
+  to_port                      = 443
+  referenced_security_group_id = aws_security_group.test_vpce.id
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name               = replace("%[1]s", "_", "-")
+  vpc_id             = aws_vpc.test.id
+  subnet_ids         = aws_subnet.test[*].id
+  security_group_ids = [aws_security_group.test_vpclattice_gateway.id]
+
+  resource_config_dns_resolution = "IN_VPC"
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+      allowed_scopes   = ["openid", "email"]
+
+      private_endpoint {
+        self_managed_lattice_resource {
+          resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
+        }
+      }
+      private_endpoint_override {
+        domain = "cognito-idp.${data.aws_region.current.region}.amazonaws.com"
+        private_endpoint {
+          self_managed_lattice_resource {
+            resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
+          }
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [
+    aws_vpc_endpoint.test_cognito_idp,
+    aws_vpc_security_group_egress_rule.test_runtime,
+  ]
+}
+`, rName, rImageUri))
 }
 
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, serverProtocol string) string {
