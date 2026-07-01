@@ -2080,6 +2080,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_vpn_connection_route",
 			Name:     "VPN Connection Route",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+				inttypes.StringIdentityAttribute("vpn_connection_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      vpnConnectionRouteImportID{},
+			},
 		},
 		{
 			Factory:  resourceVPNGateway,
