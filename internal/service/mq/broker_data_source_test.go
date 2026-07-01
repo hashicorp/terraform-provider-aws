@@ -65,7 +65,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccMQBrokerDataSource_resourceShareArns(t *testing.T) {
+func TestAccMQBrokerDataSource_resourceShareARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

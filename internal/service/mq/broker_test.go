@@ -472,24 +472,24 @@ func TestFlattenResourceShareARNs(t *testing.T) {
 			resources: []types.SharedResource{
 				{
 					Type:        types.SharedResourceTypeResourceShare,
-					ResourceArn: aws.String("arn:aws:ram:eu-west-1:123456789012:resource-share/share-1"),
+					ResourceArn: aws.String("resource-share-1"),
 					Status:      types.SharedResourceStatusAvailable,
 				},
 				{
 					Type:        types.SharedResourceTypeResource,
-					ResourceArn: aws.String("arn:aws:vpc-lattice:eu-west-1:123456789012:resourceconfiguration/rcfg-1"),
-					DnsNames:    []string{"example.vpc-lattice-rsc.eu-west-1.on.aws"},
+					ResourceArn: aws.String("resource-configuration-1"),
+					DnsNames:    []string{"example.internal"},
 					Status:      types.SharedResourceStatusAvailable,
 				},
 			},
-			want: []string{"arn:aws:ram:eu-west-1:123456789012:resource-share/share-1"},
+			want: []string{"resource-share-1"},
 		},
 		{
 			name: "resource entry only",
 			resources: []types.SharedResource{
 				{
 					Type:        types.SharedResourceTypeResource,
-					ResourceArn: aws.String("arn:aws:vpc-lattice:eu-west-1:123456789012:resourceconfiguration/rcfg-1"),
+					ResourceArn: aws.String("resource-configuration-1"),
 					Status:      types.SharedResourceStatusAvailable,
 				},
 			},
@@ -500,11 +500,11 @@ func TestFlattenResourceShareARNs(t *testing.T) {
 			resources: []types.SharedResource{
 				{
 					Type:        types.SharedResourceTypeResourceShare,
-					ResourceArn: aws.String("arn:aws:ram:eu-west-1:123456789012:resource-share/share-1"),
+					ResourceArn: aws.String("resource-share-1"),
 					Status:      types.SharedResourceStatusPendingCreate,
 				},
 			},
-			want: []string{"arn:aws:ram:eu-west-1:123456789012:resource-share/share-1"},
+			want: []string{"resource-share-1"},
 		},
 	}
 
@@ -2027,7 +2027,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_RabbitMQ_resourceShareArns(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_resourceShareARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
