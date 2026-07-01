@@ -202,6 +202,65 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 	})
 }
 
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_onBehalfOfTokenExchange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: TOKEN_EXCHANGE grant type with M2M actor token.
+			{
+				Config: testAccOAuth2CredentialProviderConfig_oboTokenExchange(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.on_behalf_of_token_exchange_config.0.grant_type", "TOKEN_EXCHANGE"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.on_behalf_of_token_exchange_config.0.token_exchange_grant_type_config.0.actor_token_content", "M2M"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.on_behalf_of_token_exchange_config.0.token_exchange_grant_type_config.0.actor_token_scopes.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
+				},
+			},
+			// Step 2: switch to JWT_AUTHORIZATION_GRANT (no actor token config).
+			{
+				Config: testAccOAuth2CredentialProviderConfig_oboJWTAuthorizationGrant(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.on_behalf_of_token_exchange_config.0.grant_type", "JWT_AUTHORIZATION_GRANT"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.on_behalf_of_token_exchange_config.0.token_exchange_grant_type_config.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
@@ -444,6 +503,61 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName, clientId, clientSecret, version, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2)
+}
+
+func testAccOAuth2CredentialProviderConfig_oboTokenExchange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id_wo                  = "obo-client-id"
+      client_secret_wo              = "obo-client-secret"
+      client_credentials_wo_version = 1
+
+      oauth_discovery {
+        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration"
+      }
+
+      on_behalf_of_token_exchange_config {
+        grant_type = "TOKEN_EXCHANGE"
+
+        token_exchange_grant_type_config {
+          actor_token_content = "M2M"
+          actor_token_scopes  = ["scope1", "scope2"]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_oboJWTAuthorizationGrant(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id_wo                  = "obo-client-id"
+      client_secret_wo              = "obo-client-secret"
+      client_credentials_wo_version = 1
+
+      oauth_discovery {
+        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration"
+      }
+
+      on_behalf_of_token_exchange_config {
+        grant_type = "JWT_AUTHORIZATION_GRANT"
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccOAuth2CredentialProviderConfig_full(rName string) string {

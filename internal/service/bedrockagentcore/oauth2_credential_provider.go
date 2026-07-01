@@ -222,6 +222,43 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 											},
 										},
 									},
+									"on_behalf_of_token_exchange_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[onBehalfOfTokenExchangeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"grant_type": schema.StringAttribute{
+													Required:    true,
+													CustomType:  fwtypes.StringEnumType[awstypes.OnBehalfOfTokenExchangeGrantTypeType](),
+													Description: "The grant type for the on-behalf-of token exchange. Valid values are `TOKEN_EXCHANGE` (RFC 8693) and `JWT_AUTHORIZATION_GRANT` (RFC 7523).",
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"token_exchange_grant_type_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[tokenExchangeGrantTypeConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"actor_token_content": schema.StringAttribute{
+																Required:    true,
+																CustomType:  fwtypes.StringEnumType[awstypes.ActorTokenContentType](),
+																Description: "The content type for the actor token in the token exchange. Valid values are `M2M`, `AWS_IAM_ID_TOKEN_JWT`, and `NONE`.",
+															},
+															"actor_token_scopes": schema.SetAttribute{
+																CustomType:  fwtypes.SetOfStringType,
+																Optional:    true,
+																Description: "The scopes for the actor token. Only valid when `actor_token_content` is `M2M`.",
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -745,7 +782,18 @@ type oauth2DiscoveryModel struct {
 
 type customOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
-	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+	OAuthDiscovery                fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel]               `tfsdk:"oauth_discovery"`
+	OnBehalfOfTokenExchangeConfig fwtypes.ListNestedObjectValueOf[onBehalfOfTokenExchangeConfigModel] `tfsdk:"on_behalf_of_token_exchange_config"`
+}
+
+type onBehalfOfTokenExchangeConfigModel struct {
+	GrantType                    fwtypes.StringEnum[awstypes.OnBehalfOfTokenExchangeGrantTypeType]  `tfsdk:"grant_type"`
+	TokenExchangeGrantTypeConfig fwtypes.ListNestedObjectValueOf[tokenExchangeGrantTypeConfigModel] `tfsdk:"token_exchange_grant_type_config"`
+}
+
+type tokenExchangeGrantTypeConfigModel struct {
+	ActorTokenContent fwtypes.StringEnum[awstypes.ActorTokenContentType] `tfsdk:"actor_token_content"`
+	ActorTokenScopes  fwtypes.SetOfString                                `tfsdk:"actor_token_scopes"`
 }
 
 type githubOAuth2ProviderConfigModel struct {

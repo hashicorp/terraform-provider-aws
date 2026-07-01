@@ -77,6 +77,36 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 }
 ```
 
+### Custom OAuth Provider with On-Behalf-Of Token Exchange
+
+```terraform
+resource "aws_bedrockagentcore_oauth2_credential_provider" "obo" {
+  name = "obo-oauth-provider"
+
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id_wo                  = "obo-client-id"
+      client_secret_wo              = "obo-client-secret"
+      client_credentials_wo_version = 1
+
+      oauth_discovery {
+        discovery_url = "https://my.idp.com/.well-known/openid-configuration"
+      }
+
+      on_behalf_of_token_exchange_config {
+        grant_type = "TOKEN_EXCHANGE"
+
+        token_exchange_grant_type_config {
+          actor_token_content = "M2M"
+          actor_token_scopes  = ["scope1", "scope2"]
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -120,6 +150,10 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
+**On-Behalf-Of Token Exchange Configuration:**
+
+* `on_behalf_of_token_exchange_config` - (Optional) On-behalf-of (OBO) token exchange configuration. Enables the provider to exchange an inbound user token for a downstream access token. See [`on_behalf_of_token_exchange_config`](#on_behalf_of_token_exchange_config) below.
+
 ### `github`, `google`, `microsoft`, `salesforce`, `slack`
 
 These predefined provider blocks support the following:
@@ -152,6 +186,20 @@ The `authorization_server_metadata` block supports the following:
 * `authorization_endpoint` - (Required) OAuth2 authorization endpoint URL.
 * `token_endpoint` - (Required) OAuth2 token endpoint URL.
 * `response_types` - (Optional) Set of OAuth2 response types supported by the authorization server.
+
+### `on_behalf_of_token_exchange_config`
+
+The `on_behalf_of_token_exchange_config` block supports the following:
+
+* `grant_type` - (Required) Grant type for the on-behalf-of token exchange. Valid values: `TOKEN_EXCHANGE` (RFC 8693 token exchange), `JWT_AUTHORIZATION_GRANT` (RFC 7523 JWT authorization grant).
+* `token_exchange_grant_type_config` - (Optional) Configuration specific to the `TOKEN_EXCHANGE` grant type. See [`token_exchange_grant_type_config`](#token_exchange_grant_type_config) below.
+
+### `token_exchange_grant_type_config`
+
+The `token_exchange_grant_type_config` block supports the following:
+
+* `actor_token_content` - (Required) Content type for the actor token in the token exchange. Valid values: `M2M` (machine-to-machine client credentials token), `AWS_IAM_ID_TOKEN_JWT` (AWS IAM web identity token), `NONE` (no actor token).
+* `actor_token_scopes` - (Optional) Set of scopes for the actor token. Only valid when `actor_token_content` is `M2M`.
 
 ## Attribute Reference
 
