@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -194,7 +195,10 @@ func resourceRestAPI() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: endpointConfigurationPlantimeValidate,
+		CustomizeDiff: customdiff.All(
+			endpointConfigurationPlantimeValidate,
+			binaryMediaTypesPlantimeClear,
+		),
 	}
 }
 
@@ -640,6 +644,35 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+// binaryMediaTypes is Optional+Computed so that values derived from an
+// imported OpenAPI body are not treated as drift. That combination, however,
+// makes removing the argument from configuration a no-op: the prior value is
+// retained from state and no diff is produced. When the API is managed without
+// a body, clear the planned value if the argument is absent from configuration
+// so the removal is applied. The body path keeps the Computed behavior.
+func binaryMediaTypesPlantimeClear(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if diff.Id() == "" {
+		return nil
+	}
+
+	rawConfig := diff.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() {
+		return nil
+	}
+
+	if v := rawConfig.GetAttr("body"); v.IsKnown() && !v.IsNull() {
+		return nil
+	}
+
+	if v := rawConfig.GetAttr("binary_media_types"); v.IsKnown() && v.IsNull() {
+		if old, _ := diff.GetChange("binary_media_types"); len(old.([]any)) > 0 {
+			return diff.SetNew("binary_media_types", []any{})
+		}
+	}
+
+	return nil
 }
 
 func endpointConfigurationPlantimeValidate(_ context.Context, diff *schema.ResourceDiff, v any) error {
