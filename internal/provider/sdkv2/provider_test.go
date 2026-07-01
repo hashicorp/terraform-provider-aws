@@ -12,8 +12,10 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -433,6 +435,90 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 
 			if diff := cmp.Diff(testcase.expectedIgnoreConfig, results); diff != "" {
 				t.Errorf("Unexpected ignore_tags diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
+	ctx := t.Context()
+	testcases := map[string]struct {
+		tfMap          map[string]any
+		envvars        map[string]string
+		expectedConfig *awsbase.AssumeRoleWithWebIdentity
+	}{
+		"nil": {
+			tfMap:          nil,
+			envvars:        map[string]string{},
+			expectedConfig: nil,
+		},
+		"config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				WebIdentityTokenEnvVar: "my-token",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"envvar and config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "token2",
+			},
+			envvars: map[string]string{
+				WebIdentityTokenEnvVar: "token1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "token2",
+			},
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest
+		t.Run(name, func(t *testing.T) {
+			oldEnv := stashEnv()
+			defer popEnv(oldEnv)
+
+			for k, v := range testcase.envvars {
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
+			}
+
+			results := expandAssumeRoleWithWebIdentity(ctx, testcase.tfMap)
+
+			if results == nil && testcase.expectedConfig != nil {
+				t.Errorf("Expected assume_role_with_web_identity config to be %v, got nil", testcase.expectedConfig)
+			}
+
+			if diff := cmp.Diff(testcase.expectedConfig, results); diff != "" {
+				t.Errorf("Unexpected assume_role_with_web_identity diff: %s", diff)
 			}
 		})
 	}

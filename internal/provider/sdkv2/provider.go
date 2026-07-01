@@ -906,12 +906,10 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(4, 20000),
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 				"web_identity_token_file": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 			},
 		},
@@ -988,6 +986,13 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 	return result, diags
 }
 
+const (
+	// Environment variable specifying a web identity token.
+	//
+	// Any value read from this environment variable is superseded by any value in provider configuration.
+	WebIdentityTokenEnvVar = "TF_AWS_WEB_IDENTITY_TOKEN"
+)
+
 func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
 	if tfMap == nil {
 		return nil
@@ -1016,6 +1021,7 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *a
 		assumeRole.SessionName = v
 	}
 
+	assumeRole.WebIdentityToken = os.Getenv(WebIdentityTokenEnvVar)
 	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
