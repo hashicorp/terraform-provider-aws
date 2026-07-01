@@ -65,23 +65,6 @@ func oauth2ClientCredentialsAttributes(ctx context.Context) map[string]schema.At
 				}...),
 			},
 		},
-		"client_secret_config": schema.ListNestedAttribute{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2SecretReferenceModel](ctx),
-			Optional:   true,
-			Validators: []validator.List{
-				listvalidator.SizeAtMost(1),
-			},
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"json_key": schema.StringAttribute{
-						Required: true,
-					},
-					"secret_id": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-		},
 		"client_secret_source": schema.StringAttribute{
 			CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 			Optional:   true,
@@ -147,6 +130,25 @@ func oauth2ClientCredentialsAttributes(ctx context.Context) map[string]schema.At
 	}
 }
 
+func oauth2ClientSecretConfigBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2SecretReferenceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"json_key": schema.StringAttribute{
+					Required: true,
+				},
+				"secret_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNestedBlock {
 	attrs := oauth2ClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
@@ -158,6 +160,9 @@ func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNeste
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: attrs,
+			Blocks: map[string]schema.Block{
+				"client_secret_config": oauth2ClientSecretConfigBlock(ctx),
+			},
 		},
 	}
 }
@@ -204,6 +209,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 							NestedObject: schema.NestedBlockObject{
 								Attributes: oauth2ClientCredentialsAttributes(ctx),
 								Blocks: map[string]schema.Block{
+									"client_secret_config": oauth2ClientSecretConfigBlock(ctx),
 									"oauth_discovery": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
 										Validators: []validator.List{
