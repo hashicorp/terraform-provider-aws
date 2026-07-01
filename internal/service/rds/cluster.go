@@ -585,6 +585,11 @@ func resourceCluster() *schema.Resource {
 						},
 					},
 				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				"serverlessv2_scaling_configuration": {
 					Type:             schema.TypeList,
 					Optional:         true,
@@ -1397,6 +1402,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOkExists(names.AttrAutoMinorVersionUpgrade); ok {
+			input.AutoMinorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func(ctx context.Context) (any, error) {
 				return conn.CreateDBCluster(ctx, input)
@@ -1458,6 +1467,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	clusterARN := aws.ToString(dbc.DBClusterArn)
 	d.Set(names.AttrARN, clusterARN)
 	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
+	d.Set(names.AttrAutoMinorVersionUpgrade, dbc.AutoMinorVersionUpgrade)
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	if dbc.CertificateDetails != nil {
@@ -1637,6 +1647,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("backtrack_window") {

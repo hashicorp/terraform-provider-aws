@@ -3151,6 +3151,30 @@ func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_autoMinorVersionUpgrade_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
@@ -7059,6 +7083,21 @@ resource "aws_rds_cluster" "test" {
   master_username               = "tfacctest"
   master_password               = "avoid-plaintext-passwords"
   skip_final_snapshot           = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier         = %[1]q
+  database_name              = "test"
+  engine                     = "aurora-mysql"
+  engine_version             = "8.0.mysql_aurora.3.04.0"
+  auto_minor_version_upgrade = false
+  master_username            = "tfacctest"
+  master_password            = "avoid-plaintext-passwords"
+  skip_final_snapshot        = true
 }
 `, rName)
 }
