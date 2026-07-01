@@ -497,10 +497,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	// Resource shares can only be set via UpdateBroker, so they are applied
 	// after the broker reaches a running state.
 	if v, ok := d.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
-		_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
-			BrokerId:          aws.String(d.Id()),
-			ResourceShareArns: flex.ExpandStringValueSet(v.(*schema.Set)),
-		})
+		err := updateBrokerResourceShares(ctx, conn, d.Id(), flex.ExpandStringValueSet(v.(*schema.Set)), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
@@ -732,12 +729,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChange("resource_share_arns") {
-		input := &mq.UpdateBrokerInput{
-			BrokerId:          aws.String(d.Id()),
-			ResourceShareArns: flex.ExpandStringValueSet(d.Get("resource_share_arns").(*schema.Set)),
-		}
-
-		_, err := conn.UpdateBroker(ctx, input)
+		err := updateBrokerResourceShares(ctx, conn, d.Id(), flex.ExpandStringValueSet(d.Get("resource_share_arns").(*schema.Set)), d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
@@ -831,6 +823,68 @@ func findSharedResourcesByBrokerID(ctx context.Context, conn *mq.Client, id stri
 	}
 
 	return output, nil
+}
+
+// updateBrokerResourceShares sets the broker's resource shares and waits for them
+// to register. A broker can briefly reject the update with a ConflictException
+// immediately after reaching a running state, so the update is retried, and the
+// subsequent wait ensures the shares are attached before the broker is rebooted
+// to apply them.
+func updateBrokerResourceShares(ctx context.Context, conn *mq.Client, id string, resourceShareARNs []string, timeout time.Duration) error {
+	_, err := tfresource.RetryWhenIsA[*mq.UpdateBrokerOutput, *types.ConflictException](ctx, timeout, func(ctx context.Context) (*mq.UpdateBrokerOutput, error) {
+		return conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
+			BrokerId:          aws.String(id),
+			ResourceShareArns: resourceShareARNs,
+		})
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return waitBrokerResourceSharesAttached(ctx, conn, id, resourceShareARNs, timeout)
+}
+
+func waitBrokerResourceSharesAttached(ctx context.Context, conn *mq.Client, id string, resourceShareARNs []string, timeout time.Duration) error {
+	const (
+		attachPending  = "pending"
+		attachComplete = "attached"
+	)
+
+	stateConf := retry.StateChangeConf{
+		Pending: []string{attachPending},
+		Target:  []string{attachComplete},
+		Timeout: timeout,
+		Refresh: func(ctx context.Context) (any, string, error) {
+			sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, id)
+
+			if err != nil {
+				return nil, "", err
+			}
+
+			// A resource share is fully attached only once its RESOURCE_SHARE
+			// entry is AVAILABLE. This is reached without a reboot; the shared
+			// resources themselves become AVAILABLE only after the reboot.
+			available := make(map[string]struct{})
+			for _, sharedResource := range sharedResources {
+				if sharedResource.Type == types.SharedResourceTypeResourceShare && sharedResource.Status == types.SharedResourceStatusAvailable {
+					available[aws.ToString(sharedResource.ResourceArn)] = struct{}{}
+				}
+			}
+
+			for _, arn := range resourceShareARNs {
+				if _, ok := available[arn]; !ok {
+					return sharedResources, attachPending, nil
+				}
+			}
+
+			return sharedResources, attachComplete, nil
+		},
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func statusBrokerState(conn *mq.Client, id string) retry.StateRefreshFunc {
