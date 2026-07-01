@@ -154,6 +154,7 @@ The `model` block supports exactly one of the following:
 ### `bedrock_model_config` Block
 
 * `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
+* `additional_params` - (Optional) JSON string of additional parameters passed through to the underlying model, such as `additionalModelRequestFields` (e.g., `jsonencode({ additionalModelRequestFields = { thinking = { type = "enabled", budget_tokens = 2048 } } })`).
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.

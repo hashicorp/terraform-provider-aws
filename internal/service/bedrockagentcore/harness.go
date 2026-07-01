@@ -222,6 +222,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"additional_params": schema.StringAttribute{
+										CustomType: jsontypes.NormalizedType{},
+										Optional:   true,
+									},
 									"max_tokens": schema.Int32Attribute{
 										Optional: true,
 										Validators: []validator.Int32{
@@ -835,6 +839,11 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if t.Value.AdditionalParams != nil {
+			if json, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams); err == nil {
+				data.AdditionalParams = jsontypes.NewNormalizedValue(json)
+			}
+		}
 		m.BedrockModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.HarnessModelConfigurationMemberGeminiModelConfig:
 		var data harnessGeminiModelConfigModel
@@ -867,6 +876,11 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberBedrockModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if !data.AdditionalParams.IsNull() {
+			if json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, data.AdditionalParams), document.NewLazyDocument); err == nil {
+				r.Value.AdditionalParams = json
+			}
+		}
 		return &r, diags
 	case !m.GeminiModelConfig.IsNull():
 		data, d := m.GeminiModelConfig.ToPtr(ctx)
@@ -891,10 +905,11 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 }
 
 type harnessBedrockModelConfigModel struct {
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float32 `tfsdk:"temperature"`
-	TopP        types.Float32 `tfsdk:"top_p"`
+	AdditionalParams jsontypes.Normalized `tfsdk:"additional_params" autoflex:"-"`
+	MaxTokens        types.Int32          `tfsdk:"max_tokens"`
+	ModelID          types.String         `tfsdk:"model_id"`
+	Temperature      types.Float32        `tfsdk:"temperature"`
+	TopP             types.Float32        `tfsdk:"top_p"`
 }
 
 type harnessGeminiModelConfigModel struct {
