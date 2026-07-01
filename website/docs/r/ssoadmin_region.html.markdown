@@ -10,9 +10,9 @@ description: |-
 
 Terraform resource for managing an AWS SSO Admin Region.
 
-Adds an additional AWS Region to an IAM Identity Center instance, replicating the instance to that Region. The operation is asynchronous — Terraform waits for the Region to reach `ACTIVE` status before completing.
+Adds another AWS Region to an IAM Identity Center instance. This operation runs asynchronously, and Terraform waits until the Region status becomes `ACTIVE`.
 
-~> Only one add or remove Region workflow can be in progress at a time for a given instance. Manage multiple regions by applying them sequentially or using `depends_on` to sequence resources.
+~> For a given instance, only one Region add or remove operation can run at a time. If you manage multiple regions, apply them one at a time or use `depends_on`.
 
 ~> The primary Region of an IAM Identity Center instance cannot be removed.
 
@@ -33,29 +33,29 @@ resource "aws_ssoadmin_region" "example" {
 
 The following arguments are required:
 
-* `instance_arn` - (Required) ARN of the IAM Identity Center instance to replicate to the target Region.
-* `region_name` - (Required) Name of the AWS Region to add to the IAM Identity Center instance (for example, `us-east-1`). Changing this forces a new resource to be created.
+* `instance_arn` - (Required) ARN of the IAM Identity Center instance.
+* `region_name` - (Required) AWS Region to add (for example, `us-east-1`). Changing this forces a new resource.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where Terraform calls the SSO Admin API for this resource. Defaults to the Region in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `status` - Current status of the Region. Valid values are `ACTIVE`, `ADDING`, and `REMOVING`.
+* `status` - Current Region status. Valid values are `ACTIVE`, `ADDING`, and `REMOVING`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`) Time to wait for the Region to finish replicating (reach `ACTIVE` status).
-* `delete` - (Default `30m`) Time to wait for the Region to finish being removed.
+* `create` - (Default `30m`) Time to wait until the Region reaches `ACTIVE`.
+* `delete` - (Default `30m`) Time to wait until the Region is removed.
 
 ## Import
 
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with `identity`. For example:
 
 ```terraform
 import {
@@ -82,7 +82,7 @@ resource "aws_ssoadmin_region" "example" {
 
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Region using the `instance_arn` and `region_name`, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource with `instance_arn` and `region_name` separated by a comma (`,`). For example:
 
 ```terraform
 import {
@@ -91,7 +91,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SSO Admin Region using the `instance_arn` and `region_name`, separated by a comma (`,`). For example:
+Using `terraform import`, import this resource with `instance_arn` and `region_name` separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_ssoadmin_region.example arn:aws:sso:::instance/ssoins-1234567890abcdef,us-east-1
