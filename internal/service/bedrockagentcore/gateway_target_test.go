@@ -2391,9 +2391,12 @@ func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
 // recognized parameter is "knowledgeBaseId" (e.g. "numberOfResults" is
 // rejected), and the connector's Retrieve tool requires a MANAGED-type
 // knowledge base — a VECTOR KB fails with "Retrieve is not supported for this
-// knowledge base type", and MANAGED KBs are gated to allowlisted accounts. So
-// the supplied KB id must belong to a MANAGED (fully managed) knowledge base
-// in an entitled account/region.
+// knowledge base type". So the supplied KB id must belong to a MANAGED (fully
+// managed) knowledge base. The gateway execution role needs both
+// bedrock:Retrieve and bedrock:GetKnowledgeBase on the KB (the connector
+// validation calls GetKnowledgeBase to inspect the KB type). A time_sleep
+// guards against the freshly-created inline policy not yet having propagated
+// when the target is validated.
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
 	ctx := acctest.Context(t)
 	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
@@ -2409,6 +2412,12 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testin
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID),
@@ -2521,11 +2530,23 @@ resource "aws_iam_role_policy" "kb_retrieve" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = "bedrock:Retrieve"
+      Effect = "Allow"
+      Action = [
+        "bedrock:Retrieve",
+        "bedrock:GetKnowledgeBase",
+      ]
       Resource = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/%[2]s"
     }]
   })
+}
+
+# The gateway target create validates by assuming the gateway execution role
+# and calling the connector; wait for the freshly-created inline policy to
+# propagate before creating the target, otherwise CreateGatewayTarget fails
+# with "Insufficient permissions to validate the specified resource."
+resource "time_sleep" "wait_for_kb_retrieve" {
+  create_duration = "30s"
+  depends_on      = [aws_iam_role_policy.kb_retrieve]
 }
 
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -2554,7 +2575,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.kb_retrieve]
+  depends_on = [time_sleep.wait_for_kb_retrieve]
 }
 `, rName, kbID))
 }
