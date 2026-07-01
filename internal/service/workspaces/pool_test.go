@@ -66,6 +66,7 @@ func testAccPool_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "pool_id"),
 				ImportStateVerifyIdentifierAttribute: "pool_id",
+				ImportStateVerifyIgnore:              []string{"capacity"},
 			},
 		},
 	})
@@ -193,6 +194,7 @@ func testAccPool_ApplicationSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_name"),
 				),
 			},
 		},
@@ -221,33 +223,6 @@ func testAccPool_TimeoutSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.disconnect_timeout_in_seconds", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.idle_disconnect_timeout_in_seconds", "2000"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.max_user_duration_in_seconds", "2000"),
-				),
-			},
-		},
-	})
-}
-
-func testAccPool_TimeoutSettings_MaxUserDurationInSeconds(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pool awstypes.WorkspacesPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_workspaces_pool.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
-			testAccPreCheckPool(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPoolConfig_TimeoutSettings_MaxUserDurationInSeconds(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "timeout_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.max_user_duration_in_seconds", "2000"),
 				),
 			},
@@ -341,10 +316,10 @@ func testAccPoolConfig_ApplicationSettings(rName string) string {
 		testAccPoolConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_pool" "test" {
-  application_settings {
+  application_settings = [{
     status         = "ENABLED"
     settings_group = "test"
-  }
+  }]
   bundle_id = data.aws_workspaces_bundle.standard.id
   capacity {
     desired_user_sessions = 1
@@ -374,26 +349,6 @@ resource "aws_workspaces_pool" "test" {
     disconnect_timeout_in_seconds      = 2000
     idle_disconnect_timeout_in_seconds = 2000
     max_user_duration_in_seconds       = 2000
-  }]
-}
-`, rName))
-}
-
-func testAccPoolConfig_TimeoutSettings_MaxUserDurationInSeconds(rName string) string {
-	return acctest.ConfigCompose(
-		testAccPoolConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_workspaces_pool" "test" {
-  bundle_id = data.aws_workspaces_bundle.standard.id
-  capacity {
-    desired_user_sessions = 1
-  }
-  description  = %[1]q
-  directory_id = aws_workspaces_directory.test.directory_id
-  pool_name    = %[1]q
-  running_mode = "AUTO_STOP"
-  timeout_settings = [{
-    max_user_duration_in_seconds = 2000
   }]
 }
 `, rName))

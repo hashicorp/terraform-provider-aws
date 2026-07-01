@@ -3,11 +3,11 @@ subcategory: "WorkSpaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_pool"
 description: |-
-  Terraform resource for managing an AWS WorkSpaces Pool.
+  Manages an AWS WorkSpaces Pool.
 ---
 # Resource: aws_workspaces_pool
 
-Provides a WorkSpaces Pool in AWS WorkSpaces Service.
+Manages a WorkSpaces Pool in the AWS WorkSpaces service.
 
 ## Example Usage
 
@@ -32,9 +32,10 @@ resource "aws_workspaces_directory" "example" {
 
 resource "aws_workspaces_pool" "example" {
   bundle_id    = data.aws_workspaces_bundle.example.id
-  name         = "example-pool"
+  pool_name    = "example-pool"
   description  = "Example WorkSpaces Pool"
   directory_id = aws_workspaces_directory.example.directory_id
+  running_mode = "AUTO_STOP"
 
   capacity {
     desired_user_sessions = 10
@@ -47,18 +48,19 @@ resource "aws_workspaces_pool" "example" {
 ```terraform
 resource "aws_workspaces_pool" "example" {
   bundle_id    = data.aws_workspaces_bundle.example.id
-  name         = "example-pool"
+  pool_name    = "example-pool"
   description  = "Example WorkSpaces Pool with Application Settings"
   directory_id = aws_workspaces_directory.example.directory_id
+  running_mode = "AUTO_STOP"
 
   capacity {
     desired_user_sessions = 10
   }
 
-  application_settings {
+  application_settings = [{
     status         = "ENABLED"
     settings_group = "my-settings-group"
-  }
+  }]
 }
 ```
 
@@ -67,19 +69,20 @@ resource "aws_workspaces_pool" "example" {
 ```terraform
 resource "aws_workspaces_pool" "example" {
   bundle_id    = data.aws_workspaces_bundle.example.id
-  name         = "example-pool"
+  pool_name    = "example-pool"
   description  = "Example WorkSpaces Pool with Timeout Settings"
   directory_id = aws_workspaces_directory.example.directory_id
+  running_mode = "AUTO_STOP"
 
   capacity {
     desired_user_sessions = 10
   }
 
-  timeout_settings {
+  timeout_settings = [{
     disconnect_timeout_in_seconds      = 900
     idle_disconnect_timeout_in_seconds = 900
     max_user_duration_in_seconds       = 14400
-  }
+  }]
 }
 ```
 
@@ -88,40 +91,51 @@ resource "aws_workspaces_pool" "example" {
 The following arguments are required:
 
 * `bundle_id` - (Required) ID of the bundle for the WorkSpaces Pool.
-* `capacity` - (Required) Information about the capacity of the WorkSpaces Pool. Defined below.
+* `capacity` - (Required) Capacity configuration for the WorkSpaces Pool. Defined below.
 * `description` - (Required) Description of the WorkSpaces Pool.
 * `directory_id` - (Required) ID of the directory for the WorkSpaces Pool.
-* `name` - (Required) Name of the WorkSpaces Pool. This cannot be changed after creation.
+* `pool_name` - (Required) Name of the WorkSpaces Pool. This cannot be changed after creation.
+* `running_mode` - (Required) Running mode of the WorkSpaces Pool. Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 
 The following arguments are optional:
 
-* `application_settings` - (Optional) Information about the application settings for the WorkSpaces Pool. Defined below.
+* `application_settings` - (Optional) Application settings configuration for the WorkSpaces Pool. Defined below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout_settings` - (Optional) Information about the timeout settings for the WorkSpaces Pool. Defined below.
+* `timeout_settings` - (Optional) Timeout settings configuration for the WorkSpaces Pool. Defined below.
 
 ### capacity
 
-* `desired_user_sessions` - (Required) The desired number of user sessions for the WorkSpaces Pool.
+* `desired_user_sessions` - (Required) Desired number of user sessions for the WorkSpaces Pool.
 
 ### application_settings
 
-* `settings_group` - (Optional) The name of the settings group for the application settings.
-* `status` - (Required) The status of the application settings. Valid values are `ENABLED` and `DISABLED`.
+* `settings_group` - (Optional) Name of the settings group for the application settings.
+* `status` - (Required) Status of the application settings. Valid values are `ENABLED` and `DISABLED`.
 
 ### timeout_settings
 
-* `disconnect_timeout_in_seconds` - (Optional) The time after disconnection when a user is logged out of their WorkSpace. Must be between 1 and 36000.
-* `idle_disconnect_timeout_in_seconds` - (Optional) The time after inactivity when a user is disconnected from their WorkSpace. Must be between 1 and 36000.
-* `max_user_duration_in_seconds` - (Optional) The maximum time that a user can be connected to their WorkSpace. Must be between 1 and 432000.
+* `disconnect_timeout_in_seconds` - (Optional) Time after disconnection when a user is logged out of their WorkSpace. Must be between 1 and 36000.
+* `idle_disconnect_timeout_in_seconds` - (Optional) Time after inactivity when a user is disconnected from their WorkSpace. Must be between 1 and 36000.
+* `max_user_duration_in_seconds` - (Optional) Maximum time that a user can be connected to their WorkSpace. Must be between 1 and 432000.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the WorkSpaces Pool.
-* `id` - ID of the WorkSpaces Pool.
+* `capacity_status` - Capacity status of the WorkSpaces Pool. Defined below.
+* `created_at` - Date and time the WorkSpaces Pool was created.
+* `pool_arn` - ARN of the WorkSpaces Pool.
+* `pool_id` - ID of the WorkSpaces Pool.
+* `s3_bucket_name` - S3 bucket where application settings are stored when `application_settings` is enabled.
 * `state` - Current state of the WorkSpaces Pool.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### capacity_status
+
+* `active_user_sessions` - Number of user sessions that are currently being used for WorkSpaces in the pool.
+* `actual_user_sessions` - Number of user sessions currently being used for WorkSpaces in the pool.
+* `available_user_sessions` - Number of user sessions available for WorkSpaces in the pool.
+* `desired_user_sessions` - Number of user sessions required for WorkSpaces in the pool.
 
 ## Timeouts
 

@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -25,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,8 +32,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -65,6 +61,7 @@ type resourcePool struct {
 func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"application_settings": framework.ResourceOptionalComputedListOfObjectsAttribute[applicationSettingsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"bundle_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -75,10 +72,13 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 					),
 				},
 			},
-			"capacity_status": framework.ResourceComputedListOfObjectsAttribute[capacityStatusModel](ctx),
+			"capacity_status": framework.ResourceComputedListOfObjectsAttribute[capacityStatusModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"created_at": schema.StringAttribute{
 				Computed:   true,
 				CustomType: timetypes.RFC3339Type{},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Required: true,
@@ -134,6 +134,12 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.StringEnumType[awstypes.PoolsRunningMode](),
 				Required:   true,
 			},
+			"s3_bucket_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -145,47 +151,6 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"timeout_settings": framework.ResourceOptionalComputedListOfObjectsAttribute[timeoutSettingsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
-			"application_settings": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[applicationSettingsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(0),
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrS3BucketName: schema.StringAttribute{
-							Computed: true,
-						},
-						"settings_group": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 64),
-								stringvalidator.RegexMatches(
-									regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
-									"Settings group must contain only alphanumeric characters, underscores, periods, and hyphens",
-								),
-							},
-						},
-						names.AttrStatus: schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-							Validators: []validator.String{
-								stringvalidator.OneOf(
-									string(awstypes.ApplicationSettingsStatusEnumEnabled),
-									string(awstypes.ApplicationSettingsStatusEnumDisabled),
-								),
-							},
-						},
-					},
-				},
-			},
 			"capacity": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[capacityModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -247,6 +212,17 @@ func (r *resourcePool) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	pool, err := findPoolByID(ctx, conn, plan.PoolId.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolName.String())
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, pool, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.S3BucketName = flex.StringToFramework(ctx, pool.ApplicationSettings.S3BucketName)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -274,6 +250,7 @@ func (r *resourcePool) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.S3BucketName = flex.StringToFramework(ctx, out.ApplicationSettings.S3BucketName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -323,6 +300,17 @@ func (r *resourcePool) Update(ctx context.Context, req resource.UpdateRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolId.String())
 		return
 	}
+
+	pool, err := findPoolByID(ctx, conn, plan.PoolId.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolId.String())
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, pool, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.S3BucketName = flex.StringToFramework(ctx, pool.ApplicationSettings.S3BucketName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -475,6 +463,7 @@ type resourcePoolModel struct {
 	PoolId              types.String                                              `tfsdk:"pool_id"`
 	PoolName            types.String                                              `tfsdk:"pool_name"`
 	RunningMode         fwtypes.StringEnum[awstypes.PoolsRunningMode]             `tfsdk:"running_mode"`
+	S3BucketName        types.String                                              `tfsdk:"s3_bucket_name"`
 	State               types.String                                              `tfsdk:"state"`
 	Tags                tftags.Map                                                `tfsdk:"tags"`
 	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
@@ -483,7 +472,6 @@ type resourcePoolModel struct {
 }
 
 type applicationSettingsModel struct {
-	S3BucketName  types.String `tfsdk:"s3_bucket_name"`
 	SettingsGroup types.String `tfsdk:"settings_group"`
 	Status        types.String `tfsdk:"status"`
 }
@@ -503,25 +491,4 @@ type timeoutSettingsModel struct {
 	DisconnectTimeoutInSeconds     types.Int64 `tfsdk:"disconnect_timeout_in_seconds"`
 	IdleDisconnectTimeoutInSeconds types.Int64 `tfsdk:"idle_disconnect_timeout_in_seconds"`
 	MaxUserDurationInSeconds       types.Int64 `tfsdk:"max_user_duration_in_seconds"`
-}
-
-func sweepPools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &workspaces.DescribeWorkspacesPoolsInput{}
-	conn := client.WorkSpacesClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	output, err := conn.DescribeWorkspacesPools(ctx, input)
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-
-	if output != nil && len(output.WorkspacesPools) > 0 {
-		for _, v := range output.WorkspacesPools {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePool, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.PoolId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
