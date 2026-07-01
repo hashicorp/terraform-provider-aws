@@ -150,6 +150,7 @@ The `model` block supports exactly one of the following:
 * `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config`](#bedrock_model_config) below.
 * `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config`](#openai_model_config) below.
 * `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config`](#gemini_model_config) below.
+* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config`](#litellm_model_config) below.
 
 ### `bedrock_model_config` Block
 
@@ -174,6 +175,15 @@ The `model` block supports exactly one of the following:
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
 * `top_k` - (Optional) Top-k sampling parameter.
+
+### `litellm_model_config` Block
+
+* `model_id` - (Required) LiteLLM model ID.
+* `api_base` - (Optional) Base URL of the LiteLLM-compatible API endpoint.
+* `api_key_arn` - (Optional) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
+* `top_p` - (Optional) Top-p sampling parameter. Must be between 0 and 1.
 
 ### `system_prompt` Block
 
@@ -236,7 +246,31 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-* `path` - (Required) Path to the skill.
+Each `skill` block specifies exactly one of the following sources:
+
+* `path` - (Optional) Filesystem path to the skill definition.
+* `s3` - (Optional) S3 source for the skill. See [`s3`](#s3) below.
+* `git` - (Optional) Git repository source for the skill. See [`git`](#git) below.
+* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills`](#aws_skills) below.
+
+### `s3` Block
+
+* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
+
+### `git` Block
+
+* `url` - (Required) HTTPS URL of the git repository.
+* `path` - (Optional) Subdirectory within the repository containing the skill.
+* `auth` - (Optional) Authentication configuration for private repositories. See [`auth`](#auth) below.
+
+### `auth` Block
+
+* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
+* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
+
+### `aws_skills` Block
+
+* `paths` - (Optional) List of glob patterns to filter allowed skills (e.g., `["core-skills/*"]`).
 
 ### `truncation` Block
 
@@ -361,7 +395,11 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-* `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+The `memory` block is optional and computed. If omitted, AgentCore provisions a managed memory configuration by default. When specified, it supports exactly one of the following:
+
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration referencing an existing memory resource. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+* `managed_memory_configuration` - (Optional) Configuration for a memory resource that the harness creates and manages in your account. See [`managed_memory_configuration`](#managed_memory_configuration) below.
+* `disabled` - (Optional) Set to `true` to explicitly opt out of memory.
 
 ### `agentcore_memory_configuration` Block
 
@@ -369,6 +407,12 @@ The `claim_match_value` block supports the following:
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
 * `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
+
+### `managed_memory_configuration` Block
+
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation.
+* `event_expiry_duration` - (Optional) Event retention in days. Defaults to 30.
+* `strategies` - (Optional) Strategy types to enable. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
 
 ### `retrieval_config` Block
 

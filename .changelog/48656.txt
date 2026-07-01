@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `litellm_model_config` configuration block to `model`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `s3`, `git`, and `aws_skills` configuration blocks to `skill` and make `skill.path` optional
+```
